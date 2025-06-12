@@ -1,0 +1,619 @@
+<div class="export-container">
+  <!-- Header -->
+  <div class="export-header">
+    <div class="header-content">
+      <h1 class="header-title">
+        <i class="fas fa-file-excel"></i> Export to Excel
+      </h1>
+      <div class="header-actions">
+        <button 
+          class="btn-filters" 
+          (click)="toggleFilters()"
+          [class.active]="isFiltersOpen"
+          aria-label="Toggle Filters"
+        >
+          <i class="fas fa-filter"></i>
+          <span>Filters</span>
+        </button>
+        <button class="btn-back" (click)="navigateBack()">
+          <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="export-tabs">
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab === 'export'"
+      (click)="setActiveTab('export')">
+      <i class="fas fa-cog"></i> Export Options
+    </button>
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab === 'history'"
+      (click)="setActiveTab('history')">
+      <i class="fas fa-history"></i> Export History <span *ngIf="exportHistory.length" class="count-badge">{{exportHistory.length}}</span>
+    </button>
+  </div>
+
+  <!-- Export Options Tab -->
+  <div class="export-content" *ngIf="activeTab === 'export'">
+    <div class="export-actions">
+      <button type="button" class="btn-secondary" (click)="resetFilters()">
+        <i class="fas fa-undo"></i> Reset Filters
+      </button>
+      <button type="button" class="btn-primary" (click)="exportToExcel()" [disabled]="isLoading">
+        <i class="fas fa-file-excel"></i> 
+        <span *ngIf="!isLoading">Export to Excel</span>
+        <span *ngIf="isLoading">Exporting...</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Export History Tab -->
+  <div class="export-content" *ngIf="activeTab === 'history'">
+    <div class="history-container">
+      <div class="history-sidebar">
+        <div class="sidebar-header">
+          <h3>Export History</h3>
+          <p class="text-muted">{{exportHistory.length}} exports</p>
+        </div>
+        
+        <div class="file-list">
+          <div 
+            *ngFor="let file of exportHistory" 
+            class="file-item" 
+            [class.active]="selectedFile && selectedFile.id === file.id"
+            (click)="selectFile(file)">
+            <div class="file-icon">
+              <i class="fas fa-file-excel"></i>
+            </div>
+            <div class="file-info">
+              <div class="file-name">{{file.filename}}</div>
+              <div class="file-date">{{formatDateForDisplay(file.createdAt)}}</div>
+            </div>
+            <div class="file-actions">
+              <button class="action-button" (click)="downloadFile(file)">
+                <i class="fas fa-download"></i>
+              </button>
+              <button class="action-button delete" (click)="deleteFile(file, $event)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="empty-state" *ngIf="exportHistory.length === 0">
+            <i class="fas fa-folder-open"></i>
+            <p>No exports found</p>
+            <button class="btn-primary" (click)="setActiveTab('export')">
+              Create New Export
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="file-preview" *ngIf="selectedFile">
+        <div class="preview-header">
+          <h3>{{selectedFile.filename}}</h3>
+          <div class="preview-actions">
+            <button class="btn-primary" (click)="downloadFile(selectedFile)">
+              <i class="fas fa-download"></i> Download
+            </button>
+          </div>
+        </div>
+        
+        <div class="preview-details">
+          <div class="detail-card">
+            <div class="detail-icon">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="detail-info">
+              <div class="detail-label">Date Range</div>
+              <div class="detail-value">{{selectedFile.filters.dateRange}}</div>
+            </div>
+          </div>
+          
+          <div class="detail-card">
+            <div class="detail-icon">
+              <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="detail-info">
+              <div class="detail-label">Weigh Bridge</div>
+              <div class="detail-value">{{selectedFile.filters.weighbridge}}</div>
+            </div>
+          </div>
+          
+          <div class="detail-card">
+            <div class="detail-icon">
+              <i class="fas fa-exchange-alt"></i>
+            </div>
+            <div class="detail-info">
+              <div class="detail-label">Report Type</div>
+              <div class="detail-value">{{selectedFile.filters.reportType}}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="preview-stats">
+          <div class="stat-card">
+            <div class="stat-value">{{selectedFile.stats.totalRecords}}</div>
+            <div class="stat-label">Total Records</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-value">{{selectedFile.stats.totalVehicles}}</div>
+            <div class="stat-label">Total Vehicles</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-value">{{selectedFile.stats.totalWeight.toLocaleString()}} kg</div>
+            <div class="stat-label">Total Weight</div>
+          </div>
+        </div>
+        
+        <!-- AG Grid Implementation for Preview Data -->
+        <div class="preview-table">
+          <div class="results-header">
+            <h4>Data Preview</h4>
+            <div class="results-actions">
+              <button class="btn-export" (click)="downloadFile(selectedFile)">
+                <i class="fas fa-file-excel"></i> Export to Excel
+              </button>
+            </div>
+          </div>
+          
+          <!-- AG Grid Component -->
+          <div class="ag-grid-container">
+            <ag-grid-angular 
+              style="width: 100%; height: 400px;" 
+              class="ag-theme-alpine" 
+              [rowData]="selectedFile.previewData"
+              [columnDefs]="columnDefs" 
+              [defaultColDef]="defaultColDef" 
+              [pagination]="true" 
+              [paginationPageSize]="10"
+              [paginationPageSizeSelector]="[10, 20, 50, 100]">
+            </ag-grid-angular>
+          </div>
+          
+          <div class="preview-note">
+            <i class="fas fa-info-circle"></i> Showing preview of {{selectedFile.stats.totalRecords}} records
+          </div>
+        </div>
+      </div>
+      
+      <div class="file-preview empty" *ngIf="!selectedFile">
+        <div class="empty-state">
+          <i class="fas fa-file-excel"></i>
+          <p>Select an export file to preview</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Offcanvas Panel -->
+  <div class="filters-offcanvas-overlay" 
+       [class.show]="isFiltersOpen" 
+       (click)="closeFilters()"></div>
+  
+  <div class="filters-offcanvas" 
+       [class.show]="isFiltersOpen">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Export Filters</h5>
+      <button
+        class="btn-close"
+        (click)="closeFilters()"
+        aria-label="Close Filters"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="filters-content">
+        <!-- Basic Export Options -->
+        <div class="filter-card">
+          <div class="card-header">
+            <h2>Basic Export Options</h2>
+            <p class="text-muted">Configure the basic parameters for your export</p>
+          </div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="weighbridge">Weigh Bridge</label>
+                <div class="select-wrapper">
+                  <select id="weighbridge" [(ngModel)]="filters.weighbridge" class="form-control">
+                    <option *ngFor="let option of weighbridgeOptions" [value]="option.id">
+                      {{ option.name }}
+                    </option>
+                  </select>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="fromdate">From Date</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="date" 
+                    id="fromdate" 
+                    [(ngModel)]="filters.fromDate" 
+                    class="form-control"
+                    required>
+                  <i class="fas fa-calendar-alt"></i>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="todate">To Date</label>
+                <div class="input-wrapper">
+                  <input 
+                    type="date" 
+                    id="todate" 
+                    [(ngModel)]="filters.toDate" 
+                    class="form-control"
+                    required>
+                  <i class="fas fa-calendar-alt"></i>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="reportType">Report Type</label>
+                <div class="select-wrapper">
+                  <select id="reportType" [(ngModel)]="filters.reportType" class="form-control" required>
+                    <option value="" selected disabled>Select</option>
+                    <option *ngFor="let option of reportTypeOptions" [value]="option.id">
+                      {{ option.name }}
+                    </option>
+                  </select>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Advanced Filters Toggle -->
+        <div class="advanced-filters-toggle" (click)="toggleAdvancedFilters()">
+          <div class="toggle-icon">
+            <i class="fas" [class.fa-chevron-down]="!showAdvancedFilters" [class.fa-chevron-up]="showAdvancedFilters"></i>
+          </div>
+          <div class="toggle-text">
+            Advanced Filters
+          </div>
+          <div class="toggle-badge" *ngIf="showAdvancedFilters">
+            <span>Enabled</span>
+          </div>
+        </div>
+        
+        <!-- Advanced Filters -->
+        <div class="filter-card" *ngIf="showAdvancedFilters">
+          <div class="card-header">
+            <h2>Advanced Filters</h2>
+            <p class="text-muted">Refine your export with additional filters</p>
+          </div>
+          <div class="card-body">
+            <!-- Gross Weight Filter -->
+            <div class="filter-section">
+              <div class="filter-header">
+                <div class="checkbox-wrapper">
+                  <input 
+                    type="checkbox" 
+                    id="grossWeightFilter" 
+                    [(ngModel)]="filters.grossWeight.enabled">
+                  <label for="grossWeightFilter">Gross Weight (KG)</label>
+                </div>
+              </div>
+              
+              <div class="filter-body" *ngIf="filters.grossWeight.enabled">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="grossWeightFrom">From</label>
+                    <input 
+                      type="number" 
+                      id="grossWeightFrom" 
+                      [(ngModel)]="filters.grossWeight.from" 
+                      class="form-control">
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="grossWeightTo">To</label>
+                    <input 
+                      type="number" 
+                      id="grossWeightTo" 
+                      [(ngModel)]="filters.grossWeight.to" 
+                      class="form-control">
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Agency Filter -->
+            <div class="filter-section">
+              <div class="filter-header">
+                <div class="checkbox-wrapper">
+                  <input 
+                    type="checkbox" 
+                    id="agencyFilter" 
+                    [(ngModel)]="filters.agency.enabled">
+                  <label for="agencyFilter">Agency Name</label>
+                </div>
+              </div>
+              
+              <div class="filter-body" *ngIf="filters.agency.enabled">
+                <div class="form-group">
+                  <div class="select-wrapper">
+                    <select 
+                      [(ngModel)]="filters.agency.value" 
+                      class="form-control">
+                      <option value="" selected disabled>Select</option>
+                      <option *ngFor="let agency of agencyOptions" [value]="agency.id">
+                        {{ agency.name }}
+                      </option>
+                    </select>
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Vehicle Number Filter -->
+            <div class="filter-section">
+              <div class="filter-header">
+                <div class="checkbox-wrapper">
+                  <input 
+                    type="checkbox" 
+                    id="vehicleFilter" 
+                    [(ngModel)]="filters.vehicleNumber.enabled">
+                  <label for="vehicleFilter">Vehicle Number</label>
+                </div>
+              </div>
+              
+              <div class="filter-body" *ngIf="filters.vehicleNumber.enabled">
+                <div class="form-group">
+                  <div class="select-wrapper">
+                    <select 
+                      [(ngModel)]="filters.vehicleNumber.value" 
+                      class="form-control">
+                      <option value="" selected disabled>Select</option>
+                      <option *ngFor="let vehicle of vehicleOptions" [value]="vehicle.id">
+                        {{ vehicle.number }}
+                      </option>
+                    </select>
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Shift Filter -->
+            <div class="filter-section">
+              <div class="filter-header">
+                <div class="checkbox-wrapper">
+                  <input 
+                    type="checkbox" 
+                    id="shiftFilter" 
+                    [(ngModel)]="filters.shift.enabled"
+                    [disabled]="filters.hourly.enabled">
+                  <label for="shiftFilter">Shift</label>
+                </div>
+              </div>
+              
+              <div class="filter-body" *ngIf="filters.shift.enabled">
+                <div class="shift-options">
+                  <div class="shift-option">
+                    <input 
+                      type="checkbox" 
+                      id="shift1" 
+                      [(ngModel)]="filters.shift.shift1">
+                    <label for="shift1">Shift I</label>
+                  </div>
+                  
+                  <div class="shift-option">
+                    <input 
+                      type="checkbox" 
+                      id="shift2" 
+                      [(ngModel)]="filters.shift.shift2">
+                    <label for="shift2">Shift II</label>
+                  </div>
+                  
+                  <div class="shift-option">
+                    <input 
+                      type="checkbox" 
+                      id="shift3" 
+                      [(ngModel)]="filters.shift.shift3">
+                    <label for="shift3">Shift III</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Hourly Filter -->
+            <div class="filter-section">
+              <div class="filter-header">
+                <div class="checkbox-wrapper">
+                  <input 
+                    type="checkbox" 
+                    id="hourlyFilter" 
+                    [(ngModel)]="filters.hourly.enabled"
+                    [disabled]="filters.shift.enabled">
+                  <label for="hourlyFilter">Hourly</label>
+                </div>
+              </div>
+              
+              <div class="filter-body" *ngIf="filters.hourly.enabled">
+                <div class="hourly-options">
+                  <div class="hourly-option">
+                    <div class="checkbox-wrapper">
+                      <input 
+                        type="checkbox" 
+                        id="morningHourly" 
+                        [(ngModel)]="filters.hourly.morning">
+                      <label for="morningHourly">Morning</label>
+                    </div>
+                    
+                    <div class="form-group" *ngIf="filters.hourly.morning">
+                      <div class="select-wrapper">
+                        <select 
+                          [(ngModel)]="filters.hourly.timeValue" 
+                          class="form-control">
+                          <option value="" selected disabled>Select Time</option>
+                          <option *ngFor="let time of timeOptions.morning" [value]="time">
+                            {{ time }}
+                          </option>
+                        </select>
+                        <i class="fas fa-chevron-down"></i>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="hourly-option">
+                    <div class="checkbox-wrapper">
+                      <input 
+                        type="checkbox" 
+                        id="afternoonHourly" 
+                        [(ngModel)]="filters.hourly.afternoon">
+                      <label for="afternoonHourly">Afternoon</label>
+                    </div>
+                    
+                    <div class="form-group" *ngIf="filters.hourly.afternoon">
+                      <div class="select-wrapper">
+                        <select 
+                          [(ngModel)]="filters.hourly.timeValue" 
+                          class="form-control">
+                          <option value="" selected disabled>Select Time</option>
+                          <option *ngFor="let time of timeOptions.afternoon" [value]="time">
+                            {{ time }}
+                          </option>
+                        </select>
+                        <i class="fas fa-chevron-down"></i>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="hourly-option">
+                    <div class="checkbox-wrapper">
+                      <input 
+                        type="checkbox" 
+                        id="nightHourly" 
+                        [(ngModel)]="filters.hourly.night">
+                      <label for="nightHourly">Night</label>
+                    </div>
+                    
+                    <div class="form-group" *ngIf="filters.hourly.night">
+                      <div class="select-wrapper">
+                        <select 
+                          [(ngModel)]="filters.hourly.timeValue" 
+                          class="form-control">
+                          <option value="" selected disabled>Select Time</option>
+                          <option *ngFor="let time of timeOptions.night" [value]="time">
+                            {{ time }}
+                          </option>
+                        </select>
+                        <i class="fas fa-chevron-down"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Type of Garbage Filter -->
+            <div class="filter-section">
+              <div class="filter-header">
+                <div class="checkbox-wrapper">
+                  <input 
+                    type="checkbox" 
+                    id="garbageFilter" 
+                    [(ngModel)]="filters.garbageType.enabled">
+                  <label for="garbageFilter">Type of Garbage</label>
+                </div>
+              </div>
+              
+              <div class="filter-body" *ngIf="filters.garbageType.enabled">
+                <div class="form-group">
+                  <div class="select-wrapper">
+                    <select 
+                      [(ngModel)]="filters.garbageType.value" 
+                      class="form-control">
+                      <option value="" selected disabled>Select</option>
+                      <option *ngFor="let type of garbageTypeOptions" [value]="type.id">
+                        {{ type.name }}
+                      </option>
+                    </select>
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Ward Filter -->
+            <div class="filter-section">
+              <div class="filter-header">
+                <div class="checkbox-wrapper">
+                  <input 
+                    type="checkbox" 
+                    id="wardFilter" 
+                    [(ngModel)]="filters.ward.enabled">
+                  <label for="wardFilter">Ward</label>
+                </div>
+              </div>
+              
+              <div class="filter-body" *ngIf="filters.ward.enabled">
+                <div class="form-group">
+                  <div class="select-wrapper">
+                    <select 
+                      [(ngModel)]="filters.ward.value" 
+                      class="form-control">
+                      <option value="" selected disabled>Select</option>
+                      <option *ngFor="let ward of wardOptions" [value]="ward.id">
+                        {{ ward.name }}
+                      </option>
+                    </select>
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Work Code Filter -->
+            <div class="filter-section">
+              <div class="filter-header">
+                <div class="checkbox-wrapper">
+                  <input 
+                    type="checkbox" 
+                    id="workCodeFilter" 
+                    [(ngModel)]="filters.workCode.enabled">
+                  <label for="workCodeFilter">Work Code</label>
+                </div>
+              </div>
+              
+              <div class="filter-body" *ngIf="filters.workCode.enabled">
+                <div class="form-group">
+                  <div class="select-wrapper">
+                    <select 
+                      [(ngModel)]="filters.workCode.value" 
+                      class="form-control">
+                      <option value="" selected disabled>Select</option>
+                      <option *ngFor="let code of workCodeOptions" [value]="code">
+                        {{ code }}
+                      </option>
+                    </select>
+                    <i class="fas fa-chevron-down"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <div class="loading-text">Generating Excel Export...</div>
+  </div>
+</div>

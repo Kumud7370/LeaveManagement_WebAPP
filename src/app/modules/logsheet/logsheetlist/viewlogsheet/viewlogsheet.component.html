@@ -1,0 +1,128 @@
+<div class="logsheet-container">
+  <div class="logsheet-card">
+    <!-- Header Section -->
+    <div class="card-header">
+      <div class="header-content">
+        <div class="header-title">
+          <i class="fas fa-file-alt"></i>
+          <span>Logsheet Details</span>
+        </div>
+        <button type="button" class="close-btn" (click)="Close()">
+          <i class="fas fa-times"></i>
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="card-body">
+      <!-- Title Section -->
+      <div class="title-section">
+        <h2 class="main-title">SWM MIS</h2>
+        <h3 class="sub-title">VEHICLE LOGSHEET</h3>
+      </div>
+
+      <!-- Primary Information Grid -->
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-label">Date & Time</div>
+          <div class="info-value">{{ lstFilterData.CreatedOn || 'Not Available' }}</div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-label">Ward Name</div>
+          <div class="info-value">{{ lstFilterData.Ward || 'Not Available' }}</div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-label">Logsheet Number</div>
+          <div class="info-value highlight">{{ lstFilterData.LogsheetNumber || 'Not Available' }}</div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-label">Route Number</div>
+          <div class="info-value">{{ lstFilterData.RouteNumber || 'Not Available' }}</div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-label">Type of Waste</div>
+          <div class="info-value">{{ lstFilterData.TypeOfWaste || 'Not Available' }}</div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-label">Vehicle Number</div>
+          <div class="info-value highlight">{{ lstFilterData.VehicleNumber || 'Not Available' }}</div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-label">Driver's Name</div>
+          <div class="info-value">{{ lstFilterData.DriverName || 'Not Available' }}</div>
+        </div>
+        
+        <div class="info-card">
+          <div class="info-label">Status</div>
+          <div class="info-value">
+            <span class="status-badge" 
+                  [ngClass]="{
+                    'status-open': lstFilterData.IsClosed === 0,
+                    'status-closed': lstFilterData.IsClosed === 1,
+                    'status-cancelled': lstFilterData.IsClosed === 2
+                  }">
+              {{ lstFilterData.IsClosed === 0 ? 'Open' : lstFilterData.IsClosed === 2 ? 'Cancelled' : 'Closed' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Closure Information Section -->
+      <div class="closure-section">
+        <h4 class="section-title">
+          <i class="fas fa-clipboard-check"></i>
+          Closure Information
+        </h4>
+        
+        <div class="closure-grid">
+          <div class="closure-item">
+            <div class="closure-label">
+              <i class="fas fa-calendar-alt"></i>
+              Logsheet Closed Date & Time
+            </div>
+            <div class="closure-value">
+              {{ lstFilterData.ClosedOn || 'Not Closed Yet' }}
+            </div>
+          </div>
+          
+          <div class="closure-item">
+            <div class="closure-label">
+              <i class="fas fa-industry"></i>
+              Waste Processing Plant
+            </div>
+            <div class="closure-value">
+              {{ lstFilterData.ClosedDestination || 'Not Specified' }}
+            </div>
+          </div>
+          
+          <div class="closure-item">
+            <div class="closure-label">
+              <i class="fas fa-signature"></i>
+              Signature & Stamp
+            </div>
+            <div class="closure-value">
+              {{ lstFilterData.ClosedBy || 'Pending' }}
+            </div>
+          </div>
+          
+          <div class="closure-item full-width">
+            <div class="closure-label">
+              <i class="fas fa-comment-alt"></i>
+              Remarks
+            </div>
+            <div class="closure-value remarks">
+              {{ lstFilterData.Remark || 'No remarks available' }}
+            </div>
+          </div>
+        </div>
+      </div>     
+    </div>
+  </div>
+</div>

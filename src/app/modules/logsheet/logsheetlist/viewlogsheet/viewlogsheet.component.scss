@@ -1,0 +1,364 @@
+// Variables
+$primary-color: #1a2a6c;
+$secondary-color: #b21f1f;
+$accent-color: #00ffcc;
+$background-color: #f8f9fa;
+$card-background: #ffffff;
+$border-color: #e5e7eb;
+$text-color: #2d3748;
+$text-muted: #6b7280;
+$success-color: #10b981;
+$warning-color: #f59e0b;
+$danger-color: #ef4444;
+$info-color: #3b82f6;
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$border-radius: 12px;
+$transition-speed: 0.3s;
+
+.logsheet-container {
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, rgba($primary-color, 0.05) 0%, rgba($secondary-color, 0.05) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logsheet-card {
+  background: $card-background;
+  border-radius: $border-radius;
+  box-shadow: $shadow-lg;
+  overflow: hidden;
+  max-width: 1200px;
+  width: 100%;
+  margin: 20px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+
+  .card-header {
+    background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+    color: white;
+    padding: 0;
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem;
+
+      .header-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+
+        i {
+          font-size: 1.25rem;
+        }
+      }
+
+      .close-btn {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all $transition-speed;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.25);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+
+  .card-body {
+    padding: 2rem;
+    overflow-y: auto;
+    flex: 1;
+
+    .title-section {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, rgba($primary-color, 0.05) 0%, rgba($secondary-color, 0.05) 100%);
+      border-radius: $border-radius;
+      border: 2px solid rgba($primary-color, 0.1);
+
+      .main-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: $primary-color;
+        margin: 0 0 0.5rem 0;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+
+      .sub-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: $secondary-color;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+
+      .info-card {
+        background: $card-background;
+        border: 2px solid $border-color;
+        border-radius: $border-radius;
+        padding: 1.5rem;
+        transition: all $transition-speed;
+        position: relative;
+        overflow: hidden;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 4px;
+          height: 100%;
+          background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+        }
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: $shadow-md;
+          border-color: rgba($primary-color, 0.3);
+        }
+
+        .info-label {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: $text-muted;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: $text-color;
+          word-break: break-word;
+
+          &.highlight {
+            color: $primary-color;
+            font-weight: 700;
+            font-size: 1.25rem;
+          }
+        }
+      }
+    }
+
+    .closure-section {
+      background: $card-background;
+      border: 2px solid $border-color;
+      border-radius: $border-radius;
+      padding: 2rem;
+      box-shadow: $shadow-sm;
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: $primary-color;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba($primary-color, 0.1);
+
+        i {
+          color: $secondary-color;
+        }
+      }
+
+      .closure-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+
+        .closure-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 1rem;
+          padding: 1.25rem;
+          background: rgba($background-color, 0.5);
+          border-radius: 8px;
+          border-left: 4px solid $info-color;
+          transition: all $transition-speed;
+
+          &:hover {
+            background: rgba($info-color, 0.05);
+            transform: translateX(4px);
+          }
+
+          &.full-width {
+            grid-column: 1 / -1;
+          }
+
+          .closure-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: $text-color;
+            min-width: 200px;
+            font-size: 0.95rem;
+
+            i {
+              color: $info-color;
+              width: 16px;
+            }
+          }
+
+          .closure-value {
+            font-weight: 500;
+            color: $text-muted;
+            flex: 1;
+
+            &.remarks {
+              font-style: italic;
+              line-height: 1.6;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Status badges
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.status-open {
+    background-color: rgba($success-color, 0.1);
+    color: $success-color;
+    border: 2px solid rgba($success-color, 0.3);
+  }
+
+  &.status-closed {
+    background-color: rgba($info-color, 0.1);
+    color: $info-color;
+    border: 2px solid rgba($info-color, 0.3);
+  }
+
+  &.status-cancelled {
+    background-color: rgba($danger-color, 0.1);
+    color: $danger-color;
+    border: 2px solid rgba($danger-color, 0.3);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .logsheet-container {
+    padding: 10px;
+  }
+
+  .logsheet-card {
+    margin: 10px;
+    max-height: 95vh;
+
+    .card-body {
+      padding: 1rem;
+
+      .info-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .closure-section {
+        padding: 1rem;
+
+        .closure-grid .closure-item {
+          flex-direction: column;
+          gap: 0.5rem;
+
+          .closure-label {
+            min-width: auto;
+          }
+        }
+      }
+    }
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+
+    .close-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+// Print styles
+@media print {
+  .logsheet-container {
+    background: white;
+    padding: 0;
+  }
+
+  .logsheet-card {
+    box-shadow: none;
+    margin: 0;
+    max-height: none;
+  }
+
+  .close-btn {
+    display: none !important;
+  }
+}
+
+// Dialog specific styles for Angular Material
+:host ::ng-deep {
+  .mat-dialog-container {
+    padding: 0 !important;
+    border-radius: $border-radius !important;
+    overflow: hidden !important;
+    max-height: 90vh !important;
+    max-width: 95vw !important;
+  }
+
+  .mat-dialog-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: none !important;
+  }
+}

@@ -1,0 +1,117 @@
+<div class="sidebar" [class.expanded]="isExpanded" [class.mobile]="isMobile"
+  [class.collapsed]="!isExpanded && !isMobile">
+  <!-- Logo Section -->
+  <div class="sidebar-header">
+    <div class="logo-container">
+      <div class="logo-icon">
+        <img src="assets/images/mcgmlogo.png" alt="Logo" class="logo-img" style="width: 32px; height: 32px;">
+      </div>
+      <div *ngIf="isExpanded" [@fadeInOut]="'in'" class="logo-text">
+        <h1>SWM WMS</h1>
+        <span class="logo-subtitle">Waste Management</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile Section -->
+  <div class="user-profile" *ngIf="isExpanded" [@fadeInOut]="'in'">
+    <div class="user-avatar">
+      <img [src]="userProfile.avatar" [alt]="userProfile.name" (error)="onImageError($event)">
+      <div class="status-indicator" [class.online]="userProfile.isOnline"></div>
+    </div>
+    <div class="user-info">
+      <h3 class="user-name">{{ userProfile.name }}</h3>
+      <p class="user-role">{{ userProfile.role }}</p>
+      <span class="user-status">{{ userProfile.isOnline ? 'Online' : 'Offline' }}</span>
+    </div>
+  </div>
+
+  <!-- Collapsed User Profile -->
+  <div class="user-profile-collapsed" *ngIf="!isExpanded" [@fadeInOut]="'in'">
+    <div class="user-avatar-small">
+      <img [src]="userProfile.avatar" [alt]="userProfile.name" (error)="onImageError($event)">
+      <div class="status-indicator" [class.online]="userProfile.isOnline"></div>
+    </div>
+    <div class="tooltip user-tooltip">
+      <strong>{{ userProfile.name }}</strong><br>
+      <small>{{ userProfile.role }}</small>
+    </div>
+  </div>
+
+  <!-- Navigation Section -->
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <li *ngFor="let item of menuItems; trackBy: trackByRoute" class="nav-item">
+        <!-- Parent Menu Item -->
+        <a *ngIf="!item.children" (click)="navigateTo(item.route!)" class="nav-link"
+          [class.active]="isActive(item.route!)">
+          <i [class]="item.icon"></i>
+          <span *ngIf="isExpanded" [@fadeInOut]="'in'">{{ item.label }}</span>
+          <span *ngIf="item.badge && isExpanded" [@fadeInOut]="'in'" class="badge">{{ item.badge }}</span>
+        </a>
+
+        <!-- Parent Menu Item with Children -->
+        <a *ngIf="item.children" (click)="toggleSubmenu(item)" class="nav-link parent-link"
+          [class.active]="isParentActive(item)" [class.expanded]="item.expanded">
+          <i [class]="item.icon"></i>
+          <span *ngIf="isExpanded" [@fadeInOut]="'in'">{{ item.label }}</span>
+          <i *ngIf="isExpanded && item.children" [@fadeInOut]="'in'" class="fas fa-chevron-down submenu-arrow"
+            [class.rotated]="item.expanded"></i>
+        </a>
+
+        <!-- Submenu Items -->
+        <!-- <ul *ngIf="item.children && isExpanded" 
+            class="submenu" 
+            [@expandCollapse]="item.expanded ? 'expanded' : 'collapsed'">
+          <li *ngFor="let child of item.children" class="submenu-item">
+            <a (click)="navigateTo(child.route!)" 
+               class="submenu-link" 
+               [class.active]="isActive(child.route!)">
+              <i [class]="child.icon"></i>
+              <span>{{ child.label }}</span>
+            </a>
+          </li>
+        </ul> -->
+
+        <ul *ngIf="item.children && (isExpanded || item.expanded)" class="submenu"
+          [@expandCollapse]="item.expanded ? 'expanded' : 'collapsed'">
+          <li *ngFor="let child of item.children" class="submenu-item">
+            <a (click)="navigateTo(child.route!)" class="submenu-link" [class.active]="isActive(child.route!)">
+              <i [class]="child.icon"></i>
+              <span>{{ child.label }}</span>
+            </a>
+          </li>
+        </ul>
+
+        <!-- Tooltip for collapsed state -->
+        <div *ngIf="!isExpanded" class="tooltip">
+          {{ item.label }}
+          <span *ngIf="item.badge" class="tooltip-badge">{{ item.badge }}</span>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Footer Section -->
+  <div *ngIf="isExpanded" [@fadeInOut]="'in'" class="sidebar-footer">
+    <div class="footer-actions">
+      <button class="footer-btn" (click)="openSettings()">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </button>
+      <button class="footer-btn logout-btn" (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+    <p class="copyright">&copy; 2025 SWM WMS</p>
+  </div>
+
+  <!-- Mobile close button -->
+  <button *ngIf="isMobile && isExpanded" class="mobile-close" (click)="toggleSidebar()" [@fadeInOut]="'in'">
+    <i class="fas fa-times"></i>
+  </button>
+</div>
+
+<!-- Mobile overlay -->
+<div *ngIf="isMobile && isExpanded" class="sidebar-overlay" (click)="toggleSidebar()"></div>

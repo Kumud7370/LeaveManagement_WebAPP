@@ -1,0 +1,9 @@
+export interface TransactModel {
+  id: number;
+  date: Date;
+  vehicleNumber: string;
+  netWeight: number;
+  zone: string;
+  ward: string;
+  status: string;
+}

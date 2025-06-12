@@ -1,0 +1,274 @@
+<div class="ward-report-container">
+  <!-- Header -->
+  <div class="report-header">
+    <div class="header-content">
+      <div class="header-title">
+        <i class="fas fa-map-marker-alt"></i>
+        <h1>Ward-wise Report</h1>
+      </div>
+      <div class="header-actions">
+        <button 
+          class="btn-filters" 
+          (click)="toggleFilters()"
+          [class.active]="isFiltersOpen"
+          aria-label="Toggle Filters"
+        >
+          <i class="fas fa-filter"></i>
+          <span>Filters</span>
+        </button>
+        <button class="btn-back" (click)="navigateBack()">
+          <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <div class="loading-text">Generating Report...</div>
+  </div>
+
+  <!-- Report Content -->
+  <div class="report-content" *ngIf="showReport && !isLoading" #reportContainer>
+    <!-- Report Header -->
+    <div class="report-title-section">
+      <h2>Ward-wise Report for {{ reportForm.value.month | date:'MMMM yyyy' }}</h2>
+      <div class="report-actions">
+        <div class="view-toggle">
+          <button [class.active]="activeView === 'table'" (click)="setActiveView('table')">
+            <i class="fas fa-table"></i> Table View
+          </button>
+          <button [class.active]="activeView === 'chart'" (click)="setActiveView('chart')">
+            <i class="fas fa-chart-bar"></i> Chart View
+          </button>
+        </div>
+        <button class="btn-export" (click)="exportToExcel()">
+          <i class="fas fa-file-excel"></i> Export to Excel
+        </button>
+        <button class="btn-print" (click)="printReport()">
+          <i class="fas fa-print"></i> Print
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="fas fa-truck"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ totalVehicles | number }}</div>
+          <div class="card-label">Total Vehicles</div>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="fas fa-weight-hanging"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ totalWeight | number:'1.2-2' }}</div>
+          <div class="card-label">Total Weight (kg)</div>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="fas fa-trophy"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ topWard }}</div>
+          <div class="card-label">Highest Volume Ward</div>
+        </div>
+      </div>
+      
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ uniqueDates.length }}</div>
+          <div class="card-label">Days with Data</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table View with AG Grid - Following search-report pattern -->
+    <div class="table-view" *ngIf="activeView === 'table'">
+      <div class="results-container">
+        <div class="results-header">
+          <h2>Ward Report Data</h2>
+          <div class="results-actions">
+            <button class="btn-export" (click)="exportToExcel()">
+              <i class="fas fa-file-excel"></i> Export to Excel
+            </button>
+          </div>
+        </div>
+
+        <!-- AG Grid Component - Same as search-report -->
+        <ag-grid-angular 
+          style="width: 100%; height: 500px;" 
+          class="ag-theme-alpine" 
+          [rowData]="lstReportData"
+          [columnDefs]="columnDefs" 
+          [defaultColDef]="defaultColDef" 
+          [pagination]="true" 
+          [paginationPageSize]="10"
+          [paginationPageSizeSelector]="[10, 20, 50, 100]">
+        </ag-grid-angular>
+
+        <!-- Summary Container - Following search-report pattern -->
+        <div class="summary-container">
+          <h3>Summary</h3>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <div class="summary-label">Total Vehicles</div>
+              <div class="summary-value">{{ totalVehicles }}</div>
+            </div>
+
+            <div class="summary-item">
+              <div class="summary-label">Total Weight</div>
+              <div class="summary-value">{{ totalWeight | number:'1.2-2' }} KG <span class="unit-conversion">({{
+                  (totalWeight / 1000) | number:'1.2-2' }} Tons)</span></div>
+            </div>
+
+            <div class="summary-item">
+              <div class="summary-label">Highest Volume Ward</div>
+              <div class="summary-value">{{ topWard }}</div>
+            </div>
+
+            <div class="summary-item">
+              <div class="summary-label">Days with Data</div>
+              <div class="summary-value">{{ uniqueDates.length }}</div>
+            </div>
+          </div>
+
+          <div class="summary-note">
+            <i class="fas fa-info-circle"></i> Note: Data is aggregated by ward and date
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart View -->
+    <div class="chart-view" *ngIf="activeView === 'chart'">
+      <div class="chart-container">
+        <div class="chart-section">
+          <h3>Ward Comparison</h3>
+          <div class="chart-placeholder">
+            <!-- In a real implementation, this would be a chart component -->
+            <div class="chart-mock">
+              <div class="chart-bars">
+                <ng-container *ngFor="let ward of chartData.wardComparison?.labels; let i = index">
+                  <div class="chart-bar" 
+                       [style.height]="(chartData.wardComparison?.weightData[i] / 
+                                      (chartData.wardComparison?.weightData | max)) * 100 + '%'">
+                    <div class="bar-label">{{ ward }}</div>
+                    <div class="bar-value">{{ chartData.wardComparison?.weightData[i] | number:'1.0-0' }}</div>
+                  </div>
+                </ng-container>
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <div class="legend-color" style="background-color: #1a2a6c;"></div>
+                  <div class="legend-label">Weight (kg)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="chart-section">
+          <h3>Daily Trend</h3>
+          <div class="chart-placeholder">
+            <!-- In a real implementation, this would be a chart component -->
+            <div class="chart-mock trend-chart">
+              <div class="trend-lines">
+                <ng-container *ngFor="let dataset of chartData.trend?.datasets; let i = index">
+                  <div class="trend-line" [style.bottom]="i * 20 + '%'">
+                    <div class="line-point" *ngFor="let value of dataset.data; let j = index"
+                         [style.left]="(j / (dataset.data.length - 1)) * 100 + '%'"
+                         [style.height]="(value / 1000) * 5 + 'px'"></div>
+                  </div>
+                </ng-container>
+              </div>
+              <div class="trend-labels">
+                <div class="trend-label" *ngFor="let date of chartData.trend?.labels; let i = index"
+                     [style.left]="(i / (chartData.trend?.labels.length - 1)) * 100 + '%'">
+                  {{ date }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Data Message -->
+    <div class="no-data-message" *ngIf="flattenedData.length === 0">
+      <i class="fas fa-exclamation-circle"></i>
+      <p>No data available for the selected criteria.</p>
+      <button class="btn-primary" (click)="reportForm.reset()">Change Filters</button>
+    </div>
+  </div>
+
+  <!-- Filters Offcanvas Panel -->
+  <div class="filters-offcanvas-overlay" 
+       [class.show]="isFiltersOpen" 
+       (click)="closeFilters()"></div>
+  
+  <div class="filters-offcanvas" 
+       [class.show]="isFiltersOpen">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Report Filters</h5>
+      <button
+        class="btn-close"
+        (click)="closeFilters()"
+        aria-label="Close Filters"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="filters-content">
+        <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
+          <div class="form-group">
+            <label for="weighBridge">Weigh Bridge</label>
+            <div class="select-wrapper">
+              <select id="weighBridge" formControlName="weighBridge" class="form-control">
+                <option *ngFor="let option of weighBridgeOptions" [value]="option.id">
+                  {{ option.name }}
+                </option>
+              </select>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="month">Select Month</label>
+            <div class="input-wrapper">
+              <input type="month" id="month" formControlName="month" class="form-control">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div *ngIf="reportForm.get('month')?.invalid && reportForm.get('month')?.touched" class="error-message">
+              Month selection is required
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="reportForm.invalid || isLoading">
+              <i class="fas fa-search"></i>
+              <span *ngIf="!isLoading">Generate Report</span>
+              <span *ngIf="isLoading">Generating...</span>
+            </button>
+            <button type="button" class="btn-secondary" (click)="reportForm.reset()" [disabled]="isLoading">
+              <i class="fas fa-undo"></i> Reset
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

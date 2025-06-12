@@ -1,0 +1,188 @@
+.chart-container {
+  position: relative;
+  min-height: 400px;
+  
+  .loading-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 5;
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: #0d6efd;
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      color: #6c757d;
+      font-weight: 500;
+    }
+  }
+  
+  .no-data {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+    i {
+      font-size: 3rem;
+      color: #dee2e6;
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      color: #6c757d;
+      font-weight: 500;
+    }
+  }
+  
+  .chart-wrapper {
+    height: 400px;
+    width: 100%;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.dashboard-container {
+  padding: 1.5rem;
+  
+  app-widgets-brand {
+    display: block;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.loading-container, .error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: #0d6efd;
+    animation: spin 1s ease-in-out infinite;
+    margin-bottom: 1rem;
+  }
+  
+  i {
+    font-size: 3rem;
+    color: #dc3545;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: #6c757d;
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+  
+  .retry-btn {
+    background-color: #0d6efd;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    
+    &:hover {
+      background-color: #0b5ed7;
+    }
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.dashboard-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  
+  &-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    padding: 1.25rem 1.5rem 0.75rem;
+  }
+}
+
+.dashboard-tabs {
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  padding: 0 1rem;
+}
+
+.dashboard-tab {
+  color: #4a5568;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  position: relative;
+  text-decoration: none;
+  transition: color 0.2s;
+  
+  &:hover {
+    color: #2d3748;
+  }
+  
+  &.active {
+    color: #3182ce;
+    
+    &::after {
+      background-color: #3182ce;
+      bottom: -1px;
+      content: '';
+      height: 2px;
+      left: 0;
+      position: absolute;
+      width: 100%;
+    }
+  }
+}
+
+.dashboard-tab-content {
+  padding: 1.5rem;
+}
+
+.dashboard-tab-pane {
+  display: none;
+  
+  &.active {
+    display: block;
+  }
+}
+
+.chart-container {
+  height: 400px;
+  width: 100%;
+}

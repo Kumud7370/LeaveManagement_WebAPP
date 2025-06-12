@@ -1,0 +1,21 @@
+<div class="card">
+  <div class="card-header">
+    <h5>Dashboard Graph</h5>
+  </div>
+  <div class="card-body">
+    <div *ngIf="isLoading" class="text-center">
+      <p>Loading data...</p>
+    </div>
+    <div *ngIf="hasError" class="text-center">
+      <p>Error loading chart data.</p>
+      <button (click)="retryLoadData()" class="btn btn-primary">Retry</button>
+    </div>
+    <div *ngIf="!isLoading && !hasError" style="height: 400px;">
+      <canvas baseChart 
+              [data]="barChartDataWard" 
+              [options]="barChartOptions"
+              chartType="bar">
+      </canvas>
+    </div>
+  </div>
+</div>
