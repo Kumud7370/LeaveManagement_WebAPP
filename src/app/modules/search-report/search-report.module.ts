@@ -36,8 +36,22 @@ import { BtnMoreCellRenderer } from "./renderers/buttonMore-cell-renderer.compon
 import { CheckBoxCellRenderer } from "./renderers/checkbox-cell-renderer.component"
 
 @NgModule({
-  declarations: [BtnCellRenderer, BtnLinkCellRenderer, BtnViewCellRenderer, BtnMoreCellRenderer, CheckBoxCellRenderer],
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, SearchReportComponent],
+  
+  declarations: [],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+
+    // ✅ Import all standalone components
+    SearchReportComponent,
+    BtnCellRenderer,
+    BtnLinkCellRenderer,
+    BtnViewCellRenderer,
+    BtnMoreCellRenderer,
+    CheckBoxCellRenderer,
+  ],
   exports: [
     SearchReportComponent,
     BtnCellRenderer,
@@ -48,3 +62,4 @@ import { CheckBoxCellRenderer } from "./renderers/checkbox-cell-renderer.compone
   ],
 })
 export class SearchReportModule {}
+

@@ -1,8 +1,9 @@
 import { Component } from "@angular/core"
 import { ICellRendererAngularComp } from "ag-grid-angular"
-import type { Router } from "@angular/router"
+import { Router } from "@angular/router"
 
 @Component({
+  standalone: true,
   selector: "app-btn-view-cell-renderer",
   template: `
     <button 

@@ -1,68 +1,272 @@
 import { Routes } from '@angular/router';
-
+import { AuthGuard } from "./modules/login/auth.guard"
 import { MainLayoutComponent } from 'src/app/Layout/main-layout/main-layout.component';
 
+// export const routes: Routes = [
+//   {
+//     path: '',
+//     component: MainLayoutComponent,
+//     children: [
+//       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+//       {
+//         path: 'dashboard',
+//         loadComponent: () =>
+//           import('./modules/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+//         data: { breadcrumb: 'Dashboard' }
+//       },
+//       {
+//         path: "search-report",
+//         loadComponent: () =>
+//           import("./modules/search-report/search-report.component").then((m) => m.SearchReportComponent),
+//         data: { breadcrumb: 'Search Report' }
+//       },
+//       {
+//         path: 'export',
+//         loadComponent: () =>
+//           import('./modules/export/export.component').then((m) => m.ExportComponent),
+//         data: { breadcrumb: 'Export to Excel' }
+//       },
+//       {
+//         path: 'ward-report',
+//         loadComponent: () =>
+//           import('./modules/ward-report/ward-report.component').then((m) => m.WardReportComponent),
+//         data: { breadcrumb: 'Wardwise Report' }
+//       },
+//       {
+//         path: 'shift-report',
+//         loadComponent: () =>
+//           import('./modules/shift-report/shift-report.component').then((m) => m.ShiftReportComponent),
+//         data: { breadcrumb: 'Shiftwise Report' }
+//       },
+//       {
+//         path: 'logsheet',
+//         children: [
+//           { path: '', redirectTo: 'generatelogsheet', pathMatch: 'full' },
+//           {
+//             path: 'generatelogsheet',
+//             loadComponent: () =>
+//               import('./modules/logsheet/generatelogsheet/generatelogsheet.component').then(m => m.GeneratelogsheetComponent),
+//             data: { breadcrumb: 'Generate Logsheet' }
+//           },
+//           {
+//             path: 'logsheetlist',
+//             loadComponent: () =>
+//               import('./modules/logsheet/logsheetlist/logsheetlist.component').then(m => m.LogsheetlistComponent),
+//             data: { breadcrumb: 'Logsheet Report' }
+//           }
+//         ]
+//       },
+//       {
+//         path: 'remarks',
+//         loadComponent: () =>
+//           import('./modules/remarks/remarks.component').then((m) => m.RemarkFilterComponent),
+//         data: { breadcrumb: 'Remarks & Correction' }
+//       },
+//     ],
+//   },
+//   { path: '**', redirectTo: 'dashboard' },
+// ];
+
+// export const routes: Routes = [
+//   {
+//     path: "login",
+//     loadComponent: () => import("./modules/login/login.component").then((m) => m.LoginComponent),
+//   },
+//   {
+//     path: "",
+//     component: MainLayoutComponent,
+//     children: [
+//       { path: "", redirectTo: "dashboard", pathMatch: "full" },
+//       {
+//         path: "dashboard",
+//         loadComponent: () => import("./modules/dashboard/dashboard.component").then((m) => m.DashboardComponent),
+//         data: { breadcrumb: "Dashboard" },
+//       },
+//       {
+//         path: "search-report",
+//         loadComponent: () =>
+//           import("./modules/search-report/search-report.component").then((m) => m.SearchReportComponent),
+//         data: { breadcrumb: "Search Report" },
+//       },
+//       {
+//         path: "export",
+//         loadComponent: () => import("./modules/export/export.component").then((m) => m.ExportComponent),
+//         data: { breadcrumb: "Export to Excel" },
+//       },
+//       {
+//         path: "ward-report",
+//         loadComponent: () => import("./modules/ward-report/ward-report.component").then((m) => m.WardReportComponent),
+//         data: { breadcrumb: "Wardwise Report" },
+//       },
+//       {
+//         path: "shift-report",
+//         loadComponent: () =>
+//           import("./modules/shift-report/shift-report.component").then((m) => m.ShiftReportComponent),
+//         data: { breadcrumb: "Shiftwise Report" },
+//       },
+//       {
+//         path: "logsheet",
+//         children: [
+//           { path: "", redirectTo: "generatelogsheet", pathMatch: "full" },
+//           {
+//             path: "generatelogsheet",
+//             loadComponent: () =>
+//               import("./modules/logsheet/generatelogsheet/generatelogsheet.component").then(
+//                 (m) => m.GeneratelogsheetComponent,
+//               ),
+//             data: { breadcrumb: "Generate Logsheet" },
+//           },
+//           {
+//             path: "logsheetlist",
+//             loadComponent: () =>
+//               import("./modules/logsheet/logsheetlist/logsheetlist.component").then((m) => m.LogsheetlistComponent),
+//             data: { breadcrumb: "Logsheet Report" },
+//           },
+//         ],
+//       },
+//       {
+//         path: "remarks",
+//         loadComponent: () => import("./modules/remarks/remarks.component").then((m) => m.RemarkFilterComponent),
+//         data: { breadcrumb: "Remarks & Correction" },
+//       },
+//     ],
+//   },
+//   { path: "**", redirectTo: "login" },
+// ]
+// export const routes: Routes = [
+//   {
+//     path: "",
+//     redirectTo: "login",
+//     pathMatch: "full",
+//   },
+//   {
+//     path: "login",
+//     loadComponent: () => import("./modules/login/login.component").then((m) => m.LoginComponent),
+//   },
+//   {
+//     path: "app",
+//     component: MainLayoutComponent,
+//     children: [
+//       { path: "", redirectTo: "dashboard", pathMatch: "full" },
+//       {
+//         path: "dashboard",
+//         loadComponent: () => import("./modules/dashboard/dashboard.component").then((m) => m.DashboardComponent),
+//         data: { breadcrumb: "Dashboard" },
+//       },
+//       {
+//         path: "search-report",
+//         loadComponent: () =>
+//           import("./modules/search-report/search-report.component").then((m) => m.SearchReportComponent),
+//         data: { breadcrumb: "Search Report" },
+//       },
+//       {
+//         path: "export",
+//         loadComponent: () => import("./modules/export/export.component").then((m) => m.ExportComponent),
+//         data: { breadcrumb: "Export to Excel" },
+//       },
+//       {
+//         path: "ward-report",
+//         loadComponent: () => import("./modules/ward-report/ward-report.component").then((m) => m.WardReportComponent),
+//         data: { breadcrumb: "Wardwise Report" },
+//       },
+//       {
+//         path: "shift-report",
+//         loadComponent: () =>
+//           import("./modules/shift-report/shift-report.component").then((m) => m.ShiftReportComponent),
+//         data: { breadcrumb: "Shiftwise Report" },
+//       },
+//       {
+//         path: "logsheet",
+//         children: [
+//           { path: "", redirectTo: "generatelogsheet", pathMatch: "full" },
+//           {
+//             path: "generatelogsheet",
+//             loadComponent: () =>
+//               import("./modules/logsheet/generatelogsheet/generatelogsheet.component").then(
+//                 (m) => m.GeneratelogsheetComponent,
+//               ),
+//             data: { breadcrumb: "Generate Logsheet" },
+//           },
+//           {
+//             path: "logsheetlist",
+//             loadComponent: () =>
+//               import("./modules/logsheet/logsheetlist/logsheetlist.component").then((m) => m.LogsheetlistComponent),
+//             data: { breadcrumb: "Logsheet Report" },
+//           },
+//         ],
+//       },
+//       {
+//         path: "remarks",
+//         loadComponent: () => import("./modules/remarks/remarks.component").then((m) => m.RemarkFilterComponent),
+//         data: { breadcrumb: "Remarks & Correction" },
+//       },
+//     ],
+//   },
+//   { path: "**", redirectTo: "login" },
+// ]
 export const routes: Routes = [
   {
-    path: '',
+    path: "login",
+    loadComponent: () => import("./modules/login/login.component").then((m) => m.LoginComponent),
+  },
+  {
+    path: "",
     component: MainLayoutComponent,
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: "", redirectTo: "dashboard", pathMatch: "full" },
       {
-        path: 'dashboard',
-        loadComponent: () =>
-          import('./modules/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-        data: { breadcrumb: 'Dashboard' }
+        path: "dashboard",
+        loadComponent: () => import("./modules/dashboard/dashboard.component").then((m) => m.DashboardComponent),
+        data: { breadcrumb: "Dashboard" },
       },
       {
         path: "search-report",
         loadComponent: () =>
           import("./modules/search-report/search-report.component").then((m) => m.SearchReportComponent),
-        data: { breadcrumb: 'Search Report' }
+        data: { breadcrumb: "Search Report" },
       },
       {
-        path: 'export',
+        path: "export",
+        loadComponent: () => import("./modules/export/export.component").then((m) => m.ExportComponent),
+        data: { breadcrumb: "Export to Excel" },
+      },
+      {
+        path: "ward-report",
+        loadComponent: () => import("./modules/ward-report/ward-report.component").then((m) => m.WardReportComponent),
+        data: { breadcrumb: "Wardwise Report" },
+      },
+      {
+        path: "shift-report",
         loadComponent: () =>
-          import('./modules/export/export.component').then((m) => m.ExportComponent),
-        data: { breadcrumb: 'Export to Excel' }
+          import("./modules/shift-report/shift-report.component").then((m) => m.ShiftReportComponent),
+        data: { breadcrumb: "Shiftwise Report" },
       },
       {
-        path: 'ward-report',
-        loadComponent: () =>
-          import('./modules/ward-report/ward-report.component').then((m) => m.WardReportComponent),
-        data: { breadcrumb: 'Wardwise Report' }
-      },
-      {
-        path: 'shift-report',
-        loadComponent: () =>
-          import('./modules/shift-report/shift-report.component').then((m) => m.ShiftReportComponent),
-        data: { breadcrumb: 'Shiftwise Report' }
-      },
-      {
-        path: 'logsheet',
+        path: "logsheet",
         children: [
-          { path: '', redirectTo: 'generatelogsheet', pathMatch: 'full' },
+          { path: "", redirectTo: "generatelogsheet", pathMatch: "full" },
           {
-            path: 'generatelogsheet',
+            path: "generatelogsheet",
             loadComponent: () =>
-              import('./modules/logsheet/generatelogsheet/generatelogsheet.component').then(m => m.GeneratelogsheetComponent),
-            data: { breadcrumb: 'Generate Logsheet' }
+              import("./modules/logsheet/generatelogsheet/generatelogsheet.component").then(
+                (m) => m.GeneratelogsheetComponent,
+              ),
+            data: { breadcrumb: "Generate Logsheet" },
           },
           {
-            path: 'logsheetlist',
+            path: "logsheetlist",
             loadComponent: () =>
-              import('./modules/logsheet/logsheetlist/logsheetlist.component').then(m => m.LogsheetlistComponent),
-            data: { breadcrumb: 'Logsheet Report' }
-          }
-        ]
+              import("./modules/logsheet/logsheetlist/logsheetlist.component").then((m) => m.LogsheetlistComponent),
+            data: { breadcrumb: "Logsheet Report" },
+          },
+        ],
       },
       {
-        path: 'remarks',
-        loadComponent: () =>
-          import('./modules/remarks/remarks.component').then((m) => m.RemarkFilterComponent),
-        data: { breadcrumb: 'Remarks & Correction' }
+        path: "remarks",
+        loadComponent: () => import("./modules/remarks/remarks.component").then((m) => m.RemarkFilterComponent),
+        data: { breadcrumb: "Remarks & Correction" },
       },
     ],
   },
-  { path: '**', redirectTo: 'dashboard' },
-];
+  { path: "**", redirectTo: "" },
+]

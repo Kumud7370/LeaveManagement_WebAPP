@@ -64,7 +64,7 @@ export class DbCallingService {
       })
     );
   }
-  
+
   getVehicles(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/vehicles/list`, data).pipe(
       catchError(error => {
@@ -105,6 +105,15 @@ export class DbCallingService {
     return this.http.post<any>(`${this.apiUrl}/logsheet/generate`, obj).pipe(
       catchError(error => {
         console.error('Error generating logsheet', error);
+        return of(null);
+      })
+    );
+  }
+  
+  loginUser(data: { username: string; password: string, deviceId: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/User/userWebLogin`, data).pipe(
+      catchError(error => {
+        console.error('Login error', error);
         return of(null);
       })
     );
