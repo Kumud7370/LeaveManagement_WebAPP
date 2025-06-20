@@ -4,6 +4,9 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from "@angul
 import { Router, RouterModule } from "@angular/router"
 import { ICellRendererParams, ValueFormatterParams } from 'ag-grid-community';
 import { AgGridModule } from 'ag-grid-angular';
+import { DbCallingService } from "src/app/core/services/db-calling.service";
+
+
 @Component({
   selector: "app-search-report",
   templateUrl: "./search-report.component.html",
@@ -13,8 +16,8 @@ import { AgGridModule } from 'ag-grid-angular';
 })
 export class SearchReportComponent implements OnInit {
   // Form models
-  reportsSearchForm!: FormGroup
-
+  reportForm!: FormGroup
+  reportData: any[] = []
   // UI state
   isLoading = false
   isAdvancedSearch = false
@@ -40,8 +43,8 @@ export class SearchReportComponent implements OnInit {
 
   // Mock data for UI demonstration
   formData = {
-    Weighbridge: "",
-    FormDate: "",
+    WeighBridge: "",
+    FromDate: "",
     todate: "",
     reportType: 0,
     Gross_Weight_From: 0,
@@ -59,33 +62,51 @@ export class SearchReportComponent implements OnInit {
     ShiftTimeTo: "",
     selectNallah: "",
   }
+  // columnDefs = [
+  //   {
+  //     headerName: "Slip No",
+  //     field: "SlipSrNo",
+  //     sortable: true,
+  //     filter: true,
+  //     cellRenderer: (params: ICellRendererParams) => `<strong>${params.value}</strong>`,
+  //   },
+  //   { headerName: "Date", field: "Trans_Date", sortable: true, filter: true },
+  //   { headerName: "Time", field: "Trans_Time", sortable: true, filter: true },
+  //   { headerName: "Agency", field: "Agency_Name", sortable: true, filter: true },
+  //   { headerName: "Vehicle No", field: "Vehicle_No", sortable: true, filter: true },
+  //   { headerName: "Type of Waste", field: "Type_of_Garbage", sortable: true, filter: true },
+  //   {
+  //     headerName: "Gross Weight",
+  //     field: "Gross_Weight",
+  //     sortable: true,
+  //     filter: true,
+  //     valueFormatter: this.weightFormatter,
+  //   },
+  //   {
+  //     headerName: "Net Weight",
+  //     field: "Act_Net_Weight",
+  //     sortable: true,
+  //     filter: true,
+  //     valueFormatter: this.weightFormatter,
+  //   },
+  //   {
+  //     headerName: "Actions",
+  //     cellRenderer: this.actionCellRenderer,
+  //     colId: "actions",
+  //     sortable: false,
+  //     filter: false,
+  //     width: 120,
+  //   },
+  // ]
   columnDefs = [
-    {
-      headerName: "Slip No",
-      field: "SlipSrNo",
-      sortable: true,
-      filter: true,
-      cellRenderer: (params: ICellRendererParams) => `<strong>${params.value}</strong>`,
-    },
-    { headerName: "Date", field: "Trans_Date", sortable: true, filter: true },
-    { headerName: "Time", field: "Trans_Time", sortable: true, filter: true },
-    { headerName: "Agency", field: "Agency_Name", sortable: true, filter: true },
-    { headerName: "Vehicle No", field: "Vehicle_No", sortable: true, filter: true },
-    { headerName: "Type of Waste", field: "Type_of_Garbage", sortable: true, filter: true },
-    {
-      headerName: "Gross Weight",
-      field: "Gross_Weight",
-      sortable: true,
-      filter: true,
-      valueFormatter: this.weightFormatter,
-    },
-    {
-      headerName: "Net Weight",
-      field: "Act_Net_Weight",
-      sortable: true,
-      filter: true,
-      valueFormatter: this.weightFormatter,
-    },
+    { headerName: "Slip No", field: "slipSrNo", sortable: true, filter: true },
+    { headerName: "Date", field: "trans_Date", sortable: true, filter: true },
+    { headerName: "Time", field: "trans_Time", sortable: true, filter: true },
+    { headerName: "Agency", field: "agency_Name", sortable: true, filter: true },
+    { headerName: "Vehicle No", field: "vehicle_No", sortable: true, filter: true },
+    { headerName: "Type of Waste", field: "type_of_Garbage", sortable: true, filter: true },
+    { headerName: "Gross Weight", field: "gross_Weight", sortable: true, filter: true },
+    { headerName: "Net Weight", field: "net_Weight", sortable: true, filter: true },   
     {
       headerName: "Actions",
       cellRenderer: this.actionCellRenderer,
@@ -93,8 +114,8 @@ export class SearchReportComponent implements OnInit {
       sortable: false,
       filter: false,
       width: 120,
-    },
-  ]
+    }
+  ];
 
   defaultColDef = {
     resizable: true,
@@ -119,7 +140,7 @@ export class SearchReportComponent implements OnInit {
 
   // Data sources (mock data)
   WeighBridgeData = [
-    { id: "K", WeighBridge: "Kanjur" },
+    { id: "WBK1", WeighBridge: "Kanjur" },
     { id: "D", WeighBridge: "Deonar" },
     { id: "ALLWB", WeighBridge: "All" },
   ]
@@ -152,6 +173,20 @@ export class SearchReportComponent implements OnInit {
 
   // Results (mock data)
   lstReportData: any[] = []
+  reportmodel: {
+    WeighBridge: string;
+    reportType: number | null;
+    FromDate: string;
+    todate: string;
+    selectNallah: string;
+  } = {
+      WeighBridge: '',
+      reportType: null,
+      FromDate: '',
+      todate: '',
+      selectNallah: ''
+    };
+
 
   // Summary statistics
   totalNoOfVehicles = 0
@@ -166,18 +201,19 @@ export class SearchReportComponent implements OnInit {
 
   constructor(
     public router: Router,
-    private _fb: FormBuilder,
-  ) {}
+    private fb: FormBuilder,
+    private dbService: DbCallingService
+  ) { }
 
   ngOnInit() {
     this.initForm()
 
-    // Set default dates (current month)
-    const today = new Date()
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+    // // Set default dates (current month)
+    // const today = new Date()
+    // const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
 
-    this.formData.FormDate = this.formatDate(firstDay)
-    this.formData.todate = this.formatDate(today)
+    // this.formData.FormDate = this.formatDate(firstDay)
+    // this.formData.todate = this.formatDate(today)
   }
 
   formatDate(date: Date): string {
@@ -188,13 +224,15 @@ export class SearchReportComponent implements OnInit {
   }
 
   initForm() {
-    this.reportsSearchForm = this._fb.group({
-      Weighbridge: [""],
-      FormDate: [""],
-      todate: [""],
-      selectNallah: [""],
-      reportType: [""],
-    })
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    this.reportForm = this.fb.group({
+      WeighBridge: [''],
+      FromDate: [this.formatDate(firstDay)],
+      todate: [this.formatDate(today)],
+      reportType: [0]
+    });   
   }
 
   toggleAdvancedSearch() {
@@ -214,20 +252,19 @@ export class SearchReportComponent implements OnInit {
   }
 
   // Form event handlers
-  getWeighBridge(event: any) {
-    const value = event.target.value
-    if (value === "Kanjur") {
-      this.formData.Weighbridge = "K"
-    } else if (value === "Deonar") {
-      this.formData.Weighbridge = "D"
+  getWeighBridge(e: any) {
+    const selected = e.target.value;
+    if (selected === 'Kanjur') {
+      this.reportmodel.WeighBridge = 'K';
+    } else if (selected === 'Deonar') {
+      this.reportmodel.WeighBridge = 'D';
     } else {
-      this.formData.Weighbridge = "ALLWB"
+      this.reportmodel.WeighBridge = '';
     }
   }
 
-  getreportType(event: any) {
-    this.formData.reportType = Number(event.target.value)
-    this.ReportTypesAactive = true
+  getreportType(e: any) {
+    this.reportmodel.reportType = Number(e.target.value);
   }
 
   getNallah(event: any) {
@@ -393,27 +430,49 @@ export class SearchReportComponent implements OnInit {
 
   // Search submission
   onSubmit() {
-    if (!this.formData.FormDate || !this.formData.todate) {
-      alert("Please enter From Date and To Date")
-      return
+    const formValues = this.reportForm.value;
+    // Validation
+    if (!formValues.FromDate || !formValues.todate) {
+      alert("Please enter From Date and To Date");
+      return;
     }
 
-    if (new Date(this.formData.FormDate) > new Date(this.formData.todate)) {
-      alert("From Date must be less than To Date")
-      return
+    if (new Date(formValues.FromDate) > new Date(formValues.todate)) {
+      alert("From Date must be less than To Date");
+      return;
     }
 
-    this.isLoading = true
+    // Create payload with explicit value extraction
+    const basicPayload = {
+      WeighBridge: this.reportForm.get('WeighBridge')?.value || '',
+      FromDate: this.reportForm.get('FromDate')?.value,
+      todate: this.reportForm.get('todate')?.value,
+      reportType: this.reportForm.get('reportType')?.value
+    };    
+   
+    this.dbService.getSearchReports(basicPayload).subscribe(
+      (response) => {
+       
+        if (response && (response as any).data) {
+          this.reportData = (response as any).data;
+        } else {
+          this.reportData = [];
+        }
+      },
+      (error) => {
+        console.error('API Error:', error);
+        this.reportData = [];
+      }
+    );
 
-    // Simulate API call with timeout
+    this.isLoading = true;
+
     setTimeout(() => {
-      // Generate mock data for demonstration
-      this.generateMockResults()
-      this.isLoading = false
-      this.activeTab = "search"
-    }, 1000)
+      //this.generateMockResults();
+      this.isLoading = false;
+      this.activeTab = "search";
+    }, 1000);
   }
-
   generateMockResults() {
     // Generate 20 mock records
     this.lstReportData = Array(20)
@@ -486,54 +545,49 @@ export class SearchReportComponent implements OnInit {
   }
 
   resetForm() {
-    // Reset form data
-    this.formData = {
-      Weighbridge: "",
-      FormDate: "",
-      todate: "",
-      reportType: 0,
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    this.reportForm.reset({
+      WeighBridge: '',
+      FromDate: this.formatDate(firstDay),
+      todate: this.formatDate(today),
+      reportType: '',
       Gross_Weight_From: 0,
       Gross_Weight_To: 0,
-      agencyName: "",
-      Vehicle_No: "",
-      TypeOfGarbage: "",
-      Ward: "",
-      Work_code: "",
-      Act_Shift: "",
-      Act_Shift_UL: "",
-      Trans_Time: "",
-      Trans_Time_UL: "",
-      ShiftTimeFrom: "",
-      ShiftTimeTo: "",
-      selectNallah: "",
-    }
+      agencyName: '',
+      Vehicle_No: '',
+      TypeOfGarbage: '',
+      Ward: '',
+      Work_code: '',
+      Act_Shift: '',
+      Act_Shift_UL: '',
+      Trans_Time: '',
+      Trans_Time_UL: '',
+      ShiftTimeFrom: '',
+      ShiftTimeTo: '',
+      selectNallah: ''
+    });
 
     // Reset all filter states
-    this.GrossWeightInKAactive = false
-    this.AgencynameIsAactive = false
-    this.vehicleNumberIsAactive = false
-    this.TypeOfGarbageIsAactive = false
-    this.WardIsAactive = false
-    this.WorkCodeIsAactive = false
-    this.ShiftIsAactive = false
-    this.ShiftIsAactive1 = false
-    this.ShiftIsAactive2 = false
-    this.ShiftIsAactive3 = false
-    this.HourlyIsAactive = false
-    this.morningHourlyIsAactive = false
-    this.afternoonHourlyIsAactive = false
-    this.nightHourlyIsAactive = false
-    this.ReportTypesAactive = false
-
-    // Set default dates (current month)
-    const today = new Date()
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
-
-    this.formData.FormDate = this.formatDate(firstDay)
-    this.formData.todate = this.formatDate(today)
+    this.GrossWeightInKAactive = false;
+    this.AgencynameIsAactive = false;
+    this.vehicleNumberIsAactive = false;
+    this.TypeOfGarbageIsAactive = false;
+    this.WardIsAactive = false;
+    this.WorkCodeIsAactive = false;
+    this.ShiftIsAactive = false;
+    this.ShiftIsAactive1 = false;
+    this.ShiftIsAactive2 = false;
+    this.ShiftIsAactive3 = false;
+    this.HourlyIsAactive = false;
+    this.morningHourlyIsAactive = false;
+    this.afternoonHourlyIsAactive = false;
+    this.nightHourlyIsAactive = false;
+    this.ReportTypesAactive = false;
 
     // Reset results
-    this.lstReportData = []
-    this.activeTab = "search"
+    this.lstReportData = [];
+    this.activeTab = "search";
   }
 }

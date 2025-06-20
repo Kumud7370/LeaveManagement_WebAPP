@@ -23,24 +23,7 @@
   </div>
 
   <!-- Report Content -->
-  <div class="report-content">
-    <!-- Summary Cards -->
-    <div class="summary-cards">
-      <div class="summary-card" *ngFor="let card of [
-        { icon: 'fa-truck', value: vehiclesFilteredList.length, label: 'Available Vehicles' },
-        { icon: 'fa-map-marker-alt', value: wardList.length, label: 'Total Wards' },
-        { icon: 'fa-route', value: routesFilteredList.length, label: 'Total Routes' },
-        { icon: 'fa-recycle', value: wasteTypeList.length, label: 'Waste Types' }
-      ]">
-        <div class="card-icon">
-          <i class="fas" [ngClass]="card.icon"></i>
-        </div>
-        <div class="card-content">
-          <div class="card-value">{{ card.value }}</div>
-          <div class="card-label">{{ card.label }}</div>
-        </div>
-      </div>
-    </div>
+  <div class="report-content">  
 
     <!-- Filter Form -->
     <div class="filters-content">
@@ -128,7 +111,6 @@
               </div>
             </div>
 
-            
             <div class="form-group">
               <label for="typeofwaste">Type Of Waste <span class="required">*</span></label>
               <div class="input-field-container">
@@ -162,7 +144,23 @@
         </div>
       </form>
     </div>
-
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card" *ngFor="let card of [
+        { icon: 'fa-truck', value: vehiclesFilteredList.length, label: 'Available Vehicles' },
+        { icon: 'fa-map-marker-alt', value: wardList.length, label: 'Total Wards' },
+        { icon: 'fa-route', value: routesFilteredList.length, label: 'Total Routes' },
+        { icon: 'fa-recycle', value: wasteTypeList.length, label: 'Waste Types' }
+      ]">
+        <div class="card-icon">
+          <i class="fas" [ngClass]="card.icon"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ card.value }}</div>
+          <div class="card-label">{{ card.label }}</div>
+        </div>
+      </div>
+    </div>
     <!-- Success Message -->
     <div class="success-message" *ngIf="showSuccessMessage">
       <i class="fas fa-check-circle"></i>

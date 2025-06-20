@@ -109,7 +109,7 @@ export class DbCallingService {
       })
     );
   }
-  
+
   loginUser(data: { username: string; password: string, deviceId: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/User/userWebLogin`, data).pipe(
       catchError(error => {
@@ -117,6 +117,14 @@ export class DbCallingService {
         return of(null);
       })
     );
+  }
+  getSearchReports(payload: any) {
+    return this.http.post(`${this.apiUrl}/Report/GetSearchReports`, payload).pipe(
+      catchError(error => {
+        console.error('Error generating report', error);
+        return of(null);
+      })
+    )
   }
 
 }

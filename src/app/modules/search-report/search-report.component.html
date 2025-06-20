@@ -26,7 +26,7 @@
   </div>
 
   <!-- Search Form Actions (Simplified) -->
-  <div class="report-content" *ngIf="activeTab === 'search'">        
+  <div class="report-content" *ngIf="activeTab === 'search'">
     <div class="results-container">
       <div class="results-header">
         <h2>Search Results</h2>
@@ -36,11 +36,11 @@
           </button>
         </div>
       </div>
-      <ag-grid-angular *ngIf="lstReportData && lstReportData.length> 0" style="width: 100%; height: 500px;"
-        class="ag-theme-alpine" [rowData]="lstReportData" [columnDefs]="columnDefs" [defaultColDef]="defaultColDef"
+      <ag-grid-angular *ngIf="reportData && reportData.length> 0" style="width: 100%; height: 500px;"
+        class="ag-theme-alpine" [rowData]="reportData" [columnDefs]="columnDefs" [defaultColDef]="defaultColDef"
         [pagination]="true" [paginationPageSize]="10"
         [paginationPageSizeSelector]="[10, 20, 50, 100]"></ag-grid-angular>
-      <div class="summary-container" *ngIf="lstReportData && lstReportData.length> 0">
+      <div class="summary-container" *ngIf="reportData && reportData.length> 0">
         <h3>Summary</h3>
         <div class="summary-grid">
           <div class="summary-item">
@@ -97,7 +97,7 @@
     </div>
     <div class="offcanvas-body">
       <div class="filters-content">
-        <form [formGroup]="reportsSearchForm" (ngSubmit)="onSubmit()">
+        <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
           <!-- Basic Search Criteria -->
           <div class="filter-card">
             <div class="card-header">
@@ -106,34 +106,36 @@
             <div class="card-body">
               <div class="form-row">
                 <div class="form-group">
-                  <label for="weighbridge">Weigh Bridge</label>
-                  <select id="weighbridge" (change)="getWeighBridge($event)" class="form-control">
-                    <option value="ALLWB" selected>ALL</option>
-                    <option *ngFor="let w of WeighBridgeData" [value]="w.id">
-                      {{ w.WeighBridge }}
+                  <!-- <label for="WeighBrigde">Weigh Bridge</label>
+                  <select formControlName="WeighBrigde">
+                    <option value="">-- Select --</option>
+                    <option *ngFor="let wb of WeighBridgeData" [value]="wb.id">{{ wb.WeighBridge }}</option>
+                  </select> -->
+                  <label for="weighBridge">Weigh Bridge:</label>
+                  <select formControlName="WeighBridge" id="WeighBridge" class="form-control">
+                    <option value="">-- Select --</option>
+                    <option *ngFor="let bridge of WeighBridgeData" [value]="bridge.id">
+                      {{ bridge.WeighBridge }}
                     </option>
                   </select>
                 </div>
 
                 <div class="form-group">
                   <label for="fromdate">From Date</label>
-                  <input type="date" id="fromdate" name="fromdate" [(ngModel)]="formData.FormDate"
-                    [ngModelOptions]="{standalone: true}" class="form-control" required>
+                  <input type="date" formControlName="FromDate" class="form-control" required />
                 </div>
 
+                <!-- To Date -->
                 <div class="form-group">
                   <label for="todate">To Date</label>
-                  <input type="date" id="todate" name="todate" [(ngModel)]="formData.todate"
-                    [ngModelOptions]="{standalone: true}" class="form-control" required>
+                  <input type="date" formControlName="todate" class="form-control" required />
                 </div>
 
                 <div class="form-group">
                   <label for="reportType">Report Type</label>
-                  <select id="reportType" (change)="getreportType($event)" class="form-control" required>
-                    <option value="" selected disabled>Select</option>
-                    <option *ngFor="let r of reportTypeList" [value]="r.id">
-                      {{ r.value }}
-                    </option>
+                  <select formControlName="reportType" class="form-control">
+                    <option value="">-- Select --</option>
+                    <option *ngFor="let type of reportTypeList" [value]="type.id">{{ type.value }}</option>
                   </select>
                 </div>
                 <div class="search-actions">
@@ -145,7 +147,7 @@
                     <span *ngIf="!isLoading">Search</span>
                     <span *ngIf="isLoading">Searching...</span>
                   </button>
-                </div>                
+                </div>
               </div>
             </div>
           </div>

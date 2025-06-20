@@ -78,7 +78,7 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
 
         // Ensure the API URL doesn't have double slashes
         const baseUrl = this.apiUrl.endsWith('/') ? this.apiUrl.slice(0, -1) : this.apiUrl;
-        
+
         console.log('Base API URL:', baseUrl);
         console.log('Making API calls to:');
         console.log('- Vehicles:', `${baseUrl}/Logsheet/getVehicles`);
@@ -143,9 +143,12 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
                 }
                 console.log('Routes loaded:', this.routesFilteredList.length);
 
-                // Process waste types data - based on your controller, it should return ApiResponse<List<RouteWasteType>>
-                if (results.wasteTypes?.data && Array.isArray(results.wasteTypes.data)) {
-                    this.wasteTypeList = results.wasteTypes.data;
+                // Process waste types data - based on your controller, it should return ApiResponse<List<RouteWasteType>>                
+                if (
+                    results.wasteTypes?.data?.wasteTypeData &&
+                    Array.isArray(results.wasteTypes.data.wasteTypeData)
+                ) {
+                    this.wasteTypeList = results.wasteTypes.data.wasteTypeData;
                 } else {
                     this.wasteTypeList = [];
                 }
@@ -175,9 +178,9 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
     testWasteTypesEndpoint() {
         const baseUrl = this.apiUrl.endsWith('/') ? this.apiUrl.slice(0, -1) : this.apiUrl;
         const wasteTypesUrl = `${baseUrl}/Logsheet/getWasteTypes`;
-        
+
         console.log('Testing waste types endpoint:', wasteTypesUrl);
-        
+
         this.http.get<any>(wasteTypesUrl).subscribe({
             next: (response) => {
                 console.log('Waste Types API Response:', response);
@@ -221,7 +224,7 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
         }
 
         const baseUrl = this.apiUrl.endsWith('/') ? this.apiUrl.slice(0, -1) : this.apiUrl;
-        
+
         this.loading = true
         this.http.post<any>(`${baseUrl}/Logsheet/generateLogsheet`, object).subscribe({
             next: (response: any) => {
