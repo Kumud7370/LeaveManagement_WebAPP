@@ -60,7 +60,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   navItems: NavItem[] = [
     { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
     { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
-    { label: "Export to Excel", route: "/export", icon: "fas fa-file-excel" },
+    //{ label: "Export to Excel", route: "/export", icon: "fas fa-file-excel" },
     { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
     { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
     {

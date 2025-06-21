@@ -5,7 +5,8 @@ import { Router, RouterModule } from "@angular/router"
 import { ICellRendererParams, ValueFormatterParams } from 'ag-grid-community';
 import { AgGridModule } from 'ag-grid-angular';
 import { DbCallingService } from "src/app/core/services/db-calling.service";
-
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 
 @Component({
   selector: "app-search-report",
@@ -106,7 +107,7 @@ export class SearchReportComponent implements OnInit {
     { headerName: "Vehicle No", field: "vehicle_No", sortable: true, filter: true },
     { headerName: "Type of Waste", field: "type_of_Garbage", sortable: true, filter: true },
     { headerName: "Gross Weight", field: "gross_Weight", sortable: true, filter: true },
-    { headerName: "Net Weight", field: "net_Weight", sortable: true, filter: true },   
+    { headerName: "Net Weight", field: "net_Weight", sortable: true, filter: true },
     {
       headerName: "Actions",
       cellRenderer: this.actionCellRenderer,
@@ -232,7 +233,7 @@ export class SearchReportComponent implements OnInit {
       FromDate: [this.formatDate(firstDay)],
       todate: [this.formatDate(today)],
       reportType: [0]
-    });   
+    });
   }
 
   toggleAdvancedSearch() {
@@ -448,11 +449,11 @@ export class SearchReportComponent implements OnInit {
       FromDate: this.reportForm.get('FromDate')?.value,
       todate: this.reportForm.get('todate')?.value,
       reportType: this.reportForm.get('reportType')?.value
-    };    
-   
+    };
+
     this.dbService.getSearchReports(basicPayload).subscribe(
       (response) => {
-       
+
         if (response && (response as any).data) {
           this.reportData = (response as any).data;
         } else {
@@ -536,12 +537,19 @@ export class SearchReportComponent implements OnInit {
   }
 
   exportToExcel() {
-    if (!this.lstReportData || this.lstReportData.length === 0) {
+    if (!this.reportData || this.reportData.length === 0) {
       alert("There is no data to export")
       return
     }
 
-    alert("Export to Excel functionality would be implemented here")
+    const worksheet = XLSX.utils.json_to_sheet(this.reportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Report');
+
+    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+    const data: Blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    FileSaver.saveAs(data, 'report.xlsx');
   }
 
   resetForm() {
