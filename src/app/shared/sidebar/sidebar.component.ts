@@ -126,7 +126,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.sidebarService.expand()
       }
     }
-  }  
+  }
 
   private updateExpandedStates() {
     this.menuItems.forEach((item) => {
@@ -181,6 +181,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   logout() {
-    console.log("Logging out...")
+    localStorage.removeItem('token');
+    localStorage.removeItem('deviceId');
+    this.router.navigate(['/login']);
+    
   }
 }

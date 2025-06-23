@@ -58,11 +58,7 @@
                     <div *ngIf="f['password'].errors?.['required']">
                         <i class="fas fa-exclamation-circle"></i>
                         Password is required
-                    </div>
-                    <!-- <div *ngIf="f['password'].errors?.['minlength']">
-                        <i class="fas fa-exclamation-circle"></i>
-                        Password must be at least 6 characters
-                    </div> -->
+                    </div>                 
                 </div>
             </div>
 
@@ -107,35 +103,5 @@
                 <a href="#" class="signup-link" (click)="onSignUp($event)">Sign up here</a>
             </p>
         </div>
-    </div>
-
-    <!-- Credentials Info Panel -->
-    <!-- <div class="info-panel">
-        <div class="info-content">
-            <h3>Demo Credentials</h3>
-            <p>Use these credentials to access the dashboard:</p>
-            <div class="credentials">
-                <div class="credential">
-                    <strong>Username:</strong> admin
-                </div>
-                <div class="credential">
-                    <strong>Password:</strong> password
-                </div>
-            </div>
-            <div class="security-features">
-                <div class="feature">
-                    <i class="fas fa-shield-check"></i>
-                    <span>SSL Encrypted</span>
-                </div>
-                <div class="feature">
-                    <i class="fas fa-lock"></i>
-                    <span>Secure Login</span>
-                </div>
-                <div class="feature">
-                    <i class="fas fa-user-shield"></i>
-                    <span>Privacy Protected</span>
-                </div>
-            </div>
-        </div>
-    </div> -->
+    </div>    
 </div>
