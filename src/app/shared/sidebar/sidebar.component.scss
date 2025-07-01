@@ -9,13 +9,14 @@
   width: 260px;
   height: 100%;
   background: #c4d0e0;
+  // background: linear-gradient(to bottom, #1a2a6c 0%, #4e285f 50%, #b92b27 100%);
   color: #fff;
   transition: width 0.3s ease, transform 0.3s ease;
   overflow: hidden;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
   position: relative;
   z-index: 100;
-
+// $accent-color: #00ffcc;
   &.expanded {
     width: 260px;
   }
@@ -225,7 +226,8 @@
 
         &.active {
           background: rgba(0, 0, 0, 0.3);
-          color: white;
+          // color: white;
+          color: #00ffcc;
           font-weight: 600;
 
           &::before {
