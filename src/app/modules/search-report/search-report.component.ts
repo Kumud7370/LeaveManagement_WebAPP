@@ -7,6 +7,9 @@ import { AgGridModule } from 'ag-grid-angular';
 import { DbCallingService } from "src/app/core/services/db-calling.service";
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
+import { ViewChild } from '@angular/core';
+import { AgGridAngular } from 'ag-grid-angular';
+
 
 @Component({
   selector: "app-search-report",
@@ -536,20 +539,127 @@ export class SearchReportComponent implements OnInit {
     this.router.navigateByUrl("/dashboard")
   }
 
+
+  @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
+
+  // exportToExcel() {
+  //   if (!this.reportData || this.reportData.length === 0) {
+  //     alert("There is no data to export");
+  //     return;
+  //   }
+
+  //   // Get filtered data from AG Grid
+  //   const filteredData: any[] = [];
+  //   this.agGrid.api.forEachNodeAfterFilter((node) => {
+  //     if (node.data) {
+  //       filteredData.push(node.data);
+  //     }
+  //   });
+
+  //   if (filteredData.length === 0) {
+  //     alert("No filtered data to export");
+  //     return;
+  //   }
+
+  //   // Define a mapping from field names to column headers
+  //   const columnMapping: { [key: string]: string } = {
+  //     slipSrNo: "Slip No",
+  //     trans_Date: "Date",
+  //     trans_Time: "Time",
+  //     agency_Name: "Agency",
+  //     vehicle_No: "Vehicle No",
+  //     type_of_Garbage: "Type of Waste",
+  //     gross_Weight: "Gross Weight",
+  //     net_Weight: "Net Weight",
+  //   };
+
+  //   // Transform filteredData to match UI headers
+  //   const transformedData = filteredData.map(item => {
+  //     const newItem: { [key: string]: any } = {};
+  //     for (const key in columnMapping) {
+  //       newItem[columnMapping[key]] = item[key];
+  //     }
+  //     return newItem;
+  //   });
+
+  //   // Create Excel file using filtered data
+  //   const worksheet = XLSX.utils.json_to_sheet(transformedData);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, 'Report');
+
+  //   const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  //   const data: Blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+  //   FileSaver.saveAs(data, 'report.xlsx');
+  // }
   exportToExcel() {
     if (!this.reportData || this.reportData.length === 0) {
-      alert("There is no data to export")
-      return
+      alert("There is no data to export");
+      return;
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(this.reportData);
+    const filteredData: any[] = [];
+    this.agGrid.api.forEachNodeAfterFilter((node: any) => {
+      if (node.data) {
+        filteredData.push(node.data);
+      }
+    });
+
+    if (filteredData.length === 0) {
+      alert("No filtered data to export");
+      return;
+    }
+
+    // Column mapping from API fields to UI headers
+    const columnMapping: { [key: string]: string } = {
+      slipSrNo: "Slip No",
+      trans_Date: "Date",
+      trans_Time: "Time",
+      agency_Name: "Agency",
+      vehicle_No: "Vehicle No",
+      type_of_Garbage: "Type of Waste",
+      gross_Weight: "Gross Weight",
+      net_Weight: "Net Weight",
+    };
+
+    // Convert to UI-based headers
+    const transformedData = filteredData.map(item => {
+      const row: { [key: string]: any } = {};
+      for (const field in columnMapping) {
+        row[columnMapping[field]] = item[field];
+      }
+      return row;
+    });
+
+    // Create worksheet without header
+    const worksheet = XLSX.utils.json_to_sheet(transformedData);
+
+    // Prepend UI-based header row at A1
+    const headerRow = Object.values(columnMapping);
+    XLSX.utils.sheet_add_aoa(worksheet, [headerRow], { origin: "A1" });
+
+    // Adjust column widths
+    const colWidths = headerRow.map(header => {
+      const columnContent = [header, ...transformedData.map(row => String(row[header] ?? ""))];
+      const maxLength = Math.max(...columnContent.map(val => val.length));
+      return { wch: maxLength + 2 };
+    });
+    worksheet["!cols"] = colWidths;
+
+    // Optional: Bold header styling (note: requires `xlsx-style` or pro version)
+    headerRow.forEach((_, colIndex) => {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex });
+      if (worksheet[cellAddress]) {
+        worksheet[cellAddress].s = {
+          font: { bold: true }
+        };
+      }
+    });
+
+    // Create and save workbook
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Report');
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
 
-    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-
-    const data: Blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    FileSaver.saveAs(data, 'report.xlsx');
+    XLSX.writeFile(workbook, "report.xlsx");
   }
 
   resetForm() {
