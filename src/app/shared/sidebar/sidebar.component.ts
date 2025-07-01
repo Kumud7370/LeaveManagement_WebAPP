@@ -82,7 +82,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
+  private getRoleName(roleId: string | number): string {
+    const roles: Record<string | number, string> = {
+      1: 'Admin',
+      2: 'General User',
 
+    };
+    return roles[roleId] || 'Unknown';
+  }
   ngOnInit() {
     if (this.isBrowser) {
       this.checkScreenSize()
@@ -102,7 +109,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
         }
       }),
     )
-
+    const storedUsername = localStorage.getItem('username');
+    const storedRole = localStorage.getItem('role');
+    if (storedUsername) {
+      this.userProfile.name = storedUsername;
+    }
+    if (storedRole) {
+      this.userProfile.role = this.getRoleName(storedRole);
+    }
     this.activeRoute = this.router.url
     this.updateExpandedStates()
   }
@@ -184,6 +198,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     localStorage.removeItem('token');
     localStorage.removeItem('deviceId');
     this.router.navigate(['/login']);
-    
+
   }
 }

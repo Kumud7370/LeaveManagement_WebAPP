@@ -62,7 +62,9 @@ export class LoginComponent implements OnInit {
       next: (res: any) => {
         if (res && res.status === 'success') {
           // Login successful
-          localStorage.setItem('token', res.data.token); // Save token if needed
+          localStorage.setItem('token', res.data.token); 
+          localStorage.setItem('username', username);
+           localStorage.setItem('role', res.data.role);
           this.router.navigate(['/app/dashboard']);
         } else {
           this.loginError = 'Invalid username or password';
