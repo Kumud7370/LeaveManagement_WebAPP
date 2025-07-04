@@ -7,12 +7,8 @@
         <h1>Ward-wise Report</h1>
       </div>
       <div class="header-actions">
-        <button 
-          class="btn-filters" 
-          (click)="toggleFilters()"
-          [class.active]="isFiltersOpen"
-          aria-label="Toggle Filters"
-        >
+        <button class="btn-filters" (click)="toggleFilters()" [class.active]="isFiltersOpen"
+          aria-label="Toggle Filters">
           <i class="fas fa-filter"></i>
           <span>Filters</span>
         </button>
@@ -52,49 +48,6 @@
       </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="summary-cards">
-      <div class="summary-card">
-        <div class="card-icon">
-          <i class="fas fa-truck"></i>
-        </div>
-        <div class="card-content">
-          <div class="card-value">{{ totalVehicles | number }}</div>
-          <div class="card-label">Total Vehicles</div>
-        </div>
-      </div>
-      
-      <div class="summary-card">
-        <div class="card-icon">
-          <i class="fas fa-weight-hanging"></i>
-        </div>
-        <div class="card-content">
-          <div class="card-value">{{ totalWeight | number:'1.2-2' }}</div>
-          <div class="card-label">Total Weight (kg)</div>
-        </div>
-      </div>
-      
-      <div class="summary-card">
-        <div class="card-icon">
-          <i class="fas fa-trophy"></i>
-        </div>
-        <div class="card-content">
-          <div class="card-value">{{ topWard }}</div>
-          <div class="card-label">Highest Volume Ward</div>
-        </div>
-      </div>
-      
-      <div class="summary-card">
-        <div class="card-icon">
-          <i class="fas fa-calendar-check"></i>
-        </div>
-        <div class="card-content">
-          <div class="card-value">{{ uniqueDates.length }}</div>
-          <div class="card-label">Days with Data</div>
-        </div>
-      </div>
-    </div>
-
     <!-- Table View with AG Grid - Following search-report pattern -->
     <div class="table-view" *ngIf="activeView === 'table'">
       <div class="results-container">
@@ -106,9 +59,9 @@
             </button>
           </div>
         </div>
-
         <!-- AG Grid Component - Same as search-report -->
         <ag-grid-angular 
+          #agGrid
           style="width: 100%; height: 500px;" 
           class="ag-theme-alpine" 
           [rowData]="lstReportData"
@@ -118,33 +71,29 @@
           [paginationPageSize]="10"
           [paginationPageSizeSelector]="[10, 20, 50, 100]">
         </ag-grid-angular>
-
+        
         <!-- Summary Container - Following search-report pattern -->
         <div class="summary-container">
           <h3>Summary</h3>
           <div class="summary-grid">
             <div class="summary-item">
-              <div class="summary-label">Total Vehicles</div>
-              <div class="summary-value">{{ totalVehicles }}</div>
+              <div class="summary-label">Days with Data</div>
+              <div class="summary-value">{{ daysWithData }}</div>
             </div>
-
+            <div class="summary-item">
+              <div class="summary-label">Highest Volume Ward</div>
+              <div class="summary-value">{{ topWard || 'N/A' }}</div>
+            </div>
             <div class="summary-item">
               <div class="summary-label">Total Weight</div>
               <div class="summary-value">{{ totalWeight | number:'1.2-2' }} KG <span class="unit-conversion">({{
                   (totalWeight / 1000) | number:'1.2-2' }} Tons)</span></div>
             </div>
-
             <div class="summary-item">
-              <div class="summary-label">Highest Volume Ward</div>
-              <div class="summary-value">{{ topWard }}</div>
-            </div>
-
-            <div class="summary-item">
-              <div class="summary-label">Days with Data</div>
-              <div class="summary-value">{{ uniqueDates.length }}</div>
+              <div class="summary-label">Total Vehicles</div>
+              <div class="summary-value">{{ totalVehicles }}</div>
             </div>
           </div>
-
           <div class="summary-note">
             <i class="fas fa-info-circle"></i> Note: Data is aggregated by ward and date
           </div>
@@ -156,50 +105,100 @@
     <div class="chart-view" *ngIf="activeView === 'chart'">
       <div class="chart-container">
         <div class="chart-section">
-          <h3>Ward Comparison</h3>
+          <h3>Ward Weight Comparison</h3>
           <div class="chart-placeholder">
-            <!-- In a real implementation, this would be a chart component -->
-            <div class="chart-mock">
+            <div class="chart-mock" *ngIf="chartData.wardComparison">
               <div class="chart-bars">
-                <ng-container *ngFor="let ward of chartData.wardComparison?.labels; let i = index">
-                  <div class="chart-bar" 
-                       [style.height]="(chartData.wardComparison?.weightData[i] / 
-                                      (chartData.wardComparison?.weightData | max)) * 100 + '%'">
-                    <div class="bar-label">{{ ward }}</div>
-                    <div class="bar-value">{{ chartData.wardComparison?.weightData[i] | number:'1.0-0' }}</div>
-                  </div>
-                </ng-container>
+                <div class="chart-bar" 
+                     *ngFor="let ward of chartData.wardComparison.labels; let i = index"
+                     [style.height]="getBarHeight(chartData.wardComparison.weightData[i], chartData.wardComparison.weightData) + '%'">
+                  <div class="bar-label">{{ ward }}</div>
+                  <div class="bar-value">{{ chartData.wardComparison.weightData[i] | number:'1.0-0' }} kg</div>
+                </div>
               </div>
               <div class="chart-legend">
                 <div class="legend-item">
                   <div class="legend-color" style="background-color: #1a2a6c;"></div>
-                  <div class="legend-label">Weight (kg)</div>
+                  <div class="legend-label">Total Weight (kg)</div>
                 </div>
               </div>
+            </div>
+            <div *ngIf="!chartData.wardComparison" class="no-chart-data">
+              <p>No data available for ward comparison</p>
             </div>
           </div>
         </div>
         
         <div class="chart-section">
-          <h3>Daily Trend</h3>
+          <h3>Ward Vehicle Count Comparison</h3>
           <div class="chart-placeholder">
-            <!-- In a real implementation, this would be a chart component -->
-            <div class="chart-mock trend-chart">
-              <div class="trend-lines">
-                <ng-container *ngFor="let dataset of chartData.trend?.datasets; let i = index">
-                  <div class="trend-line" [style.bottom]="i * 20 + '%'">
-                    <div class="line-point" *ngFor="let value of dataset.data; let j = index"
-                         [style.left]="(j / (dataset.data.length - 1)) * 100 + '%'"
-                         [style.height]="(value / 1000) * 5 + 'px'"></div>
-                  </div>
-                </ng-container>
-              </div>
-              <div class="trend-labels">
-                <div class="trend-label" *ngFor="let date of chartData.trend?.labels; let i = index"
-                     [style.left]="(i / (chartData.trend?.labels.length - 1)) * 100 + '%'">
-                  {{ date }}
+            <div class="chart-mock" *ngIf="chartData.wardComparison">
+              <div class="chart-bars">
+                <div class="chart-bar" 
+                     *ngFor="let ward of chartData.wardComparison.labels; let i = index"
+                     [style.height]="getBarHeight(chartData.wardComparison.vehicleData[i], chartData.wardComparison.vehicleData) + '%'"
+                     style="background: linear-gradient(to top, #10b981, #059669);">
+                  <div class="bar-label">{{ ward }}</div>
+                  <div class="bar-value">{{ chartData.wardComparison.vehicleData[i] | number:'1.0-0' }}</div>
                 </div>
               </div>
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <div class="legend-color" style="background-color: #10b981;"></div>
+                  <div class="legend-label">Total Vehicles</div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="!chartData.wardComparison" class="no-chart-data">
+              <p>No data available for vehicle comparison</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-section" style="grid-column: 1 / -1;">
+          <h3>Daily Trend</h3>
+          <div class="chart-placeholder">
+            <div class="chart-mock trend-chart" *ngIf="chartData.trend">
+              <div class="trend-lines">
+                <div class="trend-line" style="bottom: 60%;">
+                  <div class="line-point" 
+                       *ngFor="let weight of chartData.trend.datasets[0].data; let j = index"
+                       [style.left]="(j / (chartData.trend.datasets[0].data.length - 1)) * 100 + '%'"
+                       [style.height]="getTrendHeight(weight, chartData.trend.datasets[0].data) + 'px'"
+                       style="background-color: #1a2a6c;"
+                       [title]="'Weight: ' + (weight | number:'1.0-0') + ' kg'">
+                  </div>
+                </div>
+                <div class="trend-line" style="bottom: 20%;">
+                  <div class="line-point" 
+                       *ngFor="let vehicles of chartData.trend.datasets[1].data; let j = index"
+                       [style.left]="(j / (chartData.trend.datasets[1].data.length - 1)) * 100 + '%'"
+                       [style.height]="getTrendHeight(vehicles, chartData.trend.datasets[1].data) + 'px'"
+                       style="background-color: #10b981;"
+                       [title]="'Vehicles: ' + vehicles">
+                  </div>
+                </div>
+              </div>
+              <div class="trend-labels">
+                <div class="trend-label" 
+                     *ngFor="let date of chartData.trend.labels; let i = index"
+                     [style.left]="(i / (chartData.trend.labels.length - 1)) * 100 + '%'">
+                  {{ date | date:'MMM dd' }}
+                </div>
+              </div>
+              <div class="chart-legend" style="margin-top: 1rem;">
+                <div class="legend-item">
+                  <div class="legend-color" style="background-color: #1a2a6c;"></div>
+                  <div class="legend-label">Daily Weight (kg)</div>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background-color: #10b981;"></div>
+                  <div class="legend-label">Daily Vehicles</div>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="!chartData.trend" class="no-chart-data">
+              <p>No data available for daily trend</p>
             </div>
           </div>
         </div>
@@ -207,7 +206,7 @@
     </div>
 
     <!-- No Data Message -->
-    <div class="no-data-message" *ngIf="flattenedData.length === 0">
+    <div class="no-data-message" *ngIf="lstReportData.length === 0">
       <i class="fas fa-exclamation-circle"></i>
       <p>No data available for the selected criteria.</p>
       <button class="btn-primary" (click)="reportForm.reset()">Change Filters</button>
@@ -215,19 +214,11 @@
   </div>
 
   <!-- Filters Offcanvas Panel -->
-  <div class="filters-offcanvas-overlay" 
-       [class.show]="isFiltersOpen" 
-       (click)="closeFilters()"></div>
-  
-  <div class="filters-offcanvas" 
-       [class.show]="isFiltersOpen">
+  <div class="filters-offcanvas-overlay" [class.show]="isFiltersOpen" (click)="closeFilters()"></div>
+  <div class="filters-offcanvas" [class.show]="isFiltersOpen">
     <div class="offcanvas-header">
       <h5 class="offcanvas-title">Report Filters</h5>
-      <button
-        class="btn-close"
-        (click)="closeFilters()"
-        aria-label="Close Filters"
-      >
+      <button class="btn-close" (click)="closeFilters()" aria-label="Close Filters">
         <i class="fas fa-times"></i>
       </button>
     </div>
@@ -245,7 +236,6 @@
               <i class="fas fa-chevron-down"></i>
             </div>
           </div>
-          
           <div class="form-group">
             <label for="month">Select Month</label>
             <div class="input-wrapper">
@@ -256,7 +246,6 @@
               Month selection is required
             </div>
           </div>
-          
           <div class="form-actions">
             <button type="submit" class="btn-primary" [disabled]="reportForm.invalid || isLoading">
               <i class="fas fa-search"></i>
