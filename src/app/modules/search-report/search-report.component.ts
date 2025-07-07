@@ -22,6 +22,7 @@ export class SearchReportComponent implements OnInit {
   // Form models
   reportForm!: FormGroup
   reportData: any[] = []
+
   // UI state
   isLoading = false
   isAdvancedSearch = false
@@ -66,42 +67,7 @@ export class SearchReportComponent implements OnInit {
     ShiftTimeTo: "",
     selectNallah: "",
   }
-  // columnDefs = [
-  //   {
-  //     headerName: "Slip No",
-  //     field: "SlipSrNo",
-  //     sortable: true,
-  //     filter: true,
-  //     cellRenderer: (params: ICellRendererParams) => `<strong>${params.value}</strong>`,
-  //   },
-  //   { headerName: "Date", field: "Trans_Date", sortable: true, filter: true },
-  //   { headerName: "Time", field: "Trans_Time", sortable: true, filter: true },
-  //   { headerName: "Agency", field: "Agency_Name", sortable: true, filter: true },
-  //   { headerName: "Vehicle No", field: "Vehicle_No", sortable: true, filter: true },
-  //   { headerName: "Type of Waste", field: "Type_of_Garbage", sortable: true, filter: true },
-  //   {
-  //     headerName: "Gross Weight",
-  //     field: "Gross_Weight",
-  //     sortable: true,
-  //     filter: true,
-  //     valueFormatter: this.weightFormatter,
-  //   },
-  //   {
-  //     headerName: "Net Weight",
-  //     field: "Act_Net_Weight",
-  //     sortable: true,
-  //     filter: true,
-  //     valueFormatter: this.weightFormatter,
-  //   },
-  //   {
-  //     headerName: "Actions",
-  //     cellRenderer: this.actionCellRenderer,
-  //     colId: "actions",
-  //     sortable: false,
-  //     filter: false,
-  //     width: 120,
-  //   },
-  // ]
+
   columnDefs = [
     { headerName: "Slip No", field: "slipSrNo", sortable: true, filter: true },
     { headerName: "Date", field: "trans_Date", sortable: true, filter: true },
@@ -118,19 +84,21 @@ export class SearchReportComponent implements OnInit {
       sortable: false,
       filter: false,
       width: 120,
-    }
-  ];
+    },
+  ]
 
   defaultColDef = {
     resizable: true,
     flex: 1,
   }
+
   weightFormatter(params: any) {
     if (params.value != null) {
       return params.value.toFixed(2)
     }
     return ""
   }
+
   actionCellRenderer(params: any) {
     return `
       <button class="btn-view" title="View">
@@ -167,6 +135,7 @@ export class SearchReportComponent implements OnInit {
   WardData = [{ WardName: "Ward A" }, { WardName: "Ward B" }, { WardName: "Ward C" }]
 
   uniqueWorkcode = ["WC001", "WC002", "WC003"]
+
   uniqueZone = ["North", "South", "East", "West"]
 
   morningHourDDL = ["7 AM-7:59:59 AM", "8 AM-8:59:59 AM", "9 AM-9:59:59 AM", "10 AM-10:59:59 AM", "11 AM-11:59:59 AM"]
@@ -177,20 +146,20 @@ export class SearchReportComponent implements OnInit {
 
   // Results (mock data)
   lstReportData: any[] = []
-  reportmodel: {
-    WeighBridge: string;
-    reportType: number | null;
-    FromDate: string;
-    todate: string;
-    selectNallah: string;
-  } = {
-      WeighBridge: '',
-      reportType: null,
-      FromDate: '',
-      todate: '',
-      selectNallah: ''
-    };
 
+  reportmodel: {
+    WeighBridge: string
+    reportType: number | null
+    FromDate: string
+    todate: string
+    selectNallah: string
+  } = {
+    WeighBridge: "",
+    reportType: null,
+    FromDate: "",
+    todate: "",
+    selectNallah: "",
+  }
 
   // Summary statistics
   totalNoOfVehicles = 0
@@ -206,18 +175,44 @@ export class SearchReportComponent implements OnInit {
   constructor(
     public router: Router,
     private fb: FormBuilder,
-    private dbService: DbCallingService
-  ) { }
+    private dbService: DbCallingService,
+  ) {}
 
   ngOnInit() {
     this.initForm()
+    // Load initial data automatically with current date
+    this.loadInitialData()
+  }
 
-    // // Set default dates (current month)
-    // const today = new Date()
-    // const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+  // NEW METHOD: Load initial data automatically
+  loadInitialData() {
+    const today = new Date()
+    const basicPayload = {
+      WeighBridge: "",
+      FromDate: this.formatDate(today),
+      todate: this.formatDate(today),
+      reportType: 0,
+    }
 
-    // this.formData.FormDate = this.formatDate(firstDay)
-    // this.formData.todate = this.formatDate(today)
+    this.isLoading = true
+    this.dbService.getSearchReports(basicPayload).subscribe(
+      (response) => {
+        this.isLoading = false
+        if (response && (response as any).data) {
+          this.reportData = (response as any).data
+          this.calculateSummaryStatistics()
+        } else {
+          this.reportData = []
+          this.resetSummaryStatistics()
+        }
+      },
+      (error) => {
+        console.error("API Error:", error)
+        this.isLoading = false
+        this.reportData = []
+        this.resetSummaryStatistics()
+      },
+    )
   }
 
   formatDate(date: Date): string {
@@ -228,15 +223,14 @@ export class SearchReportComponent implements OnInit {
   }
 
   initForm() {
-    const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-
+    const today = new Date()
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
     this.reportForm = this.fb.group({
-      WeighBridge: [''],
+      WeighBridge: [""],
       FromDate: [this.formatDate(firstDay)],
       todate: [this.formatDate(today)],
-      reportType: [0]
-    });
+      reportType: [0],
+    })
   }
 
   toggleAdvancedSearch() {
@@ -257,18 +251,18 @@ export class SearchReportComponent implements OnInit {
 
   // Form event handlers
   getWeighBridge(e: any) {
-    const selected = e.target.value;
-    if (selected === 'Kanjur') {
-      this.reportmodel.WeighBridge = 'K';
-    } else if (selected === 'Deonar') {
-      this.reportmodel.WeighBridge = 'D';
+    const selected = e.target.value
+    if (selected === "Kanjur") {
+      this.reportmodel.WeighBridge = "K"
+    } else if (selected === "Deonar") {
+      this.reportmodel.WeighBridge = "D"
     } else {
-      this.reportmodel.WeighBridge = '';
+      this.reportmodel.WeighBridge = ""
     }
   }
 
   getreportType(e: any) {
-    this.reportmodel.reportType = Number(e.target.value);
+    this.reportmodel.reportType = Number(e.target.value)
   }
 
   getNallah(event: any) {
@@ -434,79 +428,46 @@ export class SearchReportComponent implements OnInit {
 
   // Search submission
   onSubmit() {
-    const formValues = this.reportForm.value;
+    const formValues = this.reportForm.value
     // Validation
     if (!formValues.FromDate || !formValues.todate) {
-      alert("Please enter From Date and To Date");
-      return;
+      alert("Please enter From Date and To Date")
+      return
     }
-
     if (new Date(formValues.FromDate) > new Date(formValues.todate)) {
-      alert("From Date must be less than To Date");
-      return;
+      alert("From Date must be less than To Date")
+      return
     }
 
     // Create payload with explicit value extraction
     const basicPayload = {
-      WeighBridge: this.reportForm.get('WeighBridge')?.value || '',
-      FromDate: this.reportForm.get('FromDate')?.value,
-      todate: this.reportForm.get('todate')?.value,
-      reportType: this.reportForm.get('reportType')?.value
-    };
+      WeighBridge: this.reportForm.get("WeighBridge")?.value || "",
+      FromDate: this.reportForm.get("FromDate")?.value,
+      todate: this.reportForm.get("todate")?.value,
+      reportType: this.reportForm.get("reportType")?.value,
+    }
 
+    this.isLoading = true
     this.dbService.getSearchReports(basicPayload).subscribe(
       (response) => {
-
+        this.isLoading = false
         if (response && (response as any).data) {
-          this.reportData = (response as any).data;
+          this.reportData = (response as any).data
+          // Calculate summary statistics after data is loaded
+          this.calculateSummaryStatistics()
         } else {
-          this.reportData = [];
+          this.reportData = []
+          this.resetSummaryStatistics()
         }
+        this.activeTab = "search"
       },
       (error) => {
-        console.error('API Error:', error);
-        this.reportData = [];
-      }
-    );
-
-    this.isLoading = true;
-
-    setTimeout(() => {
-      //this.generateMockResults();
-      this.isLoading = false;
-      this.activeTab = "search";
-    }, 1000);
-  }
-  generateMockResults() {
-    // Generate 20 mock records
-    this.lstReportData = Array(20)
-      .fill(0)
-      .map((_, index) => ({
-        VerifiedStatus: index % 3 === 0 ? "Y" : "N",
-        AuthorizedStatus: index % 4 === 0 ? "Y" : "N",
-        DeliveryLocation: index % 2 === 0 ? "Kanjur" : "Deonar",
-        SlipSrNo: `SLP${10000 + index}`,
-        Trans_Date: this.formatDisplayDate(new Date()),
-        Trans_Time: `${(8 + (index % 12)).toString().padStart(2, "0")}:${((index * 5) % 60).toString().padStart(2, "0")}`,
-        DC_No: `DC${5000 + index}`,
-        Agency_Name: this.AgencyData[index % this.AgencyData.length].FirmName,
-        Vehicle_No: this.VehcleData[index % this.VehcleData.length].Veh_Num,
-        VehicleType: index % 3 === 0 ? "Truck" : index % 3 === 1 ? "Dumper" : "Tipper",
-        WorkCode: this.uniqueWorkcode[index % this.uniqueWorkcode.length],
-        Ward: this.WardData[index % this.WardData.length].WardName,
-        Type_of_Garbage: this.GarbageData[index % this.GarbageData.length].GarbageType,
-        Gross_Weight: 1000 + index * 100,
-        Trans_Date_UL: this.formatDisplayDate(new Date()),
-        Trans_Time_UL: `${(10 + (index % 12)).toString().padStart(2, "0")}:${((index * 7) % 60).toString().padStart(2, "0")}`,
-        Unladen_Weight: 500 + index * 50,
-        Act_Net_Weight: 500 + index * 50,
-        In_Vehicle_Image: "https://via.placeholder.com/150",
-        Out_Vehicle_Image: "https://via.placeholder.com/150",
-        Trans_Type: index % 2 === 0 ? "I" : "O",
-      }))
-
-    // Calculate summary statistics
-    this.calculateSummaryStatistics()
+        console.error("API Error:", error)
+        this.isLoading = false
+        this.reportData = []
+        this.resetSummaryStatistics()
+      },
+    )
   }
 
   formatDisplayDate(date: Date): string {
@@ -516,22 +477,65 @@ export class SearchReportComponent implements OnInit {
     return `${day}-${month}-${year}`
   }
 
+  // FIXED: Updated to use reportData instead of lstReportData
   calculateSummaryStatistics() {
-    this.totalNoOfVehicles = this.lstReportData.length
-    this.totalInVehicles = this.lstReportData.filter((item) => item.Trans_Type === "I").length
-    this.totalOutVehicles = this.lstReportData.filter((item) => item.Trans_Type === "O").length
+    if (!this.reportData || this.reportData.length === 0) {
+      this.resetSummaryStatistics()
+      return
+    }
 
-    const grossWeightTotal = this.lstReportData.reduce((sum, item) => sum + Number(item.Gross_Weight || 0), 0)
+    // Use reportData (from API) instead of lstReportData
+    const dataToCalculate = this.reportData
+    this.totalNoOfVehicles = dataToCalculate.length
+
+    // Count In and Out vehicles based on reportType or trans_Type field
+    this.totalInVehicles = dataToCalculate.filter(
+      (item) => item.trans_Type === "I" || item.reportType === 1 || item.type === "In",
+    ).length
+
+    this.totalOutVehicles = dataToCalculate.filter(
+      (item) => item.trans_Type === "O" || item.reportType === 0 || item.type === "Out",
+    ).length
+
+    // Calculate gross weight totals
+    const grossWeightTotal = dataToCalculate.reduce((sum, item) => {
+      const weight = Number(item.gross_Weight || item.Gross_Weight || 0)
+      return sum + weight
+    }, 0)
+
     this.totalGrossWeightInKG = Number.parseFloat(grossWeightTotal.toFixed(2))
     this.totalGrossWeightInTon = Number.parseFloat((this.totalGrossWeightInKG / 1000).toFixed(2))
 
-    const netWeightTotal = this.lstReportData.reduce((sum, item) => sum + Number(item.Act_Net_Weight || 0), 0)
+    // Calculate net weight totals
+    const netWeightTotal = dataToCalculate.reduce((sum, item) => {
+      const weight = Number(item.net_Weight || item.Act_Net_Weight || 0)
+      return sum + weight
+    }, 0)
+
     this.totalActualNetWeightInKG = Number.parseFloat(netWeightTotal.toFixed(2))
     this.totalActualNetWeightInTon = Number.parseFloat((this.totalActualNetWeightInKG / 1000).toFixed(2))
 
-    const unladenWeightTotal = this.lstReportData.reduce((sum, item) => sum + Number(item.Unladen_Weight || 0), 0)
+    // Calculate unladen weight totals
+    const unladenWeightTotal = dataToCalculate.reduce((sum, item) => {
+      const weight = Number(item.unladen_Weight || item.Unladen_Weight || 0)
+      return sum + weight
+    }, 0)
+
     this.totalUnladenWeightInKg = Number.parseFloat(unladenWeightTotal.toFixed(2))
     this.totalUnladenWeightInTon = Number.parseFloat((this.totalUnladenWeightInKg / 1000).toFixed(2))
+  }
+
+  // ADDED: Method to reset summary statistics
+  resetSummaryStatistics() {
+    this.totalNoOfVehicles = 0
+    this.totalInVehicles = 0
+    this.totalOutVehicles = 0
+    this.totalGrossWeightInKG = 0
+    this.totalGrossWeightInTon = 0
+    this.totalUnladenWeightInKg = 0
+    this.totalUnladenWeightInTon = 0
+    this.totalActualNetWeightInKG = 0
+    this.totalActualNetWeightInTon = 0
   }
 
   // Navigation
@@ -539,74 +543,24 @@ export class SearchReportComponent implements OnInit {
     this.router.navigateByUrl("/dashboard")
   }
 
+  @ViewChild(AgGridAngular) agGrid!: AgGridAngular
 
-  @ViewChild(AgGridAngular) agGrid!: AgGridAngular;
-
-  // exportToExcel() {
-  //   if (!this.reportData || this.reportData.length === 0) {
-  //     alert("There is no data to export");
-  //     return;
-  //   }
-
-  //   // Get filtered data from AG Grid
-  //   const filteredData: any[] = [];
-  //   this.agGrid.api.forEachNodeAfterFilter((node) => {
-  //     if (node.data) {
-  //       filteredData.push(node.data);
-  //     }
-  //   });
-
-  //   if (filteredData.length === 0) {
-  //     alert("No filtered data to export");
-  //     return;
-  //   }
-
-  //   // Define a mapping from field names to column headers
-  //   const columnMapping: { [key: string]: string } = {
-  //     slipSrNo: "Slip No",
-  //     trans_Date: "Date",
-  //     trans_Time: "Time",
-  //     agency_Name: "Agency",
-  //     vehicle_No: "Vehicle No",
-  //     type_of_Garbage: "Type of Waste",
-  //     gross_Weight: "Gross Weight",
-  //     net_Weight: "Net Weight",
-  //   };
-
-  //   // Transform filteredData to match UI headers
-  //   const transformedData = filteredData.map(item => {
-  //     const newItem: { [key: string]: any } = {};
-  //     for (const key in columnMapping) {
-  //       newItem[columnMapping[key]] = item[key];
-  //     }
-  //     return newItem;
-  //   });
-
-  //   // Create Excel file using filtered data
-  //   const worksheet = XLSX.utils.json_to_sheet(transformedData);
-  //   const workbook = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(workbook, worksheet, 'Report');
-
-  //   const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  //   const data: Blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-  //   FileSaver.saveAs(data, 'report.xlsx');
-  // }
   exportToExcel() {
     if (!this.reportData || this.reportData.length === 0) {
-      alert("There is no data to export");
-      return;
+      alert("There is no data to export")
+      return
     }
 
-    const filteredData: any[] = [];
+    const filteredData: any[] = []
     this.agGrid.api.forEachNodeAfterFilter((node: any) => {
       if (node.data) {
-        filteredData.push(node.data);
+        filteredData.push(node.data)
       }
-    });
+    })
 
     if (filteredData.length === 0) {
-      alert("No filtered data to export");
-      return;
+      alert("No filtered data to export")
+      return
     }
 
     // Column mapping from API fields to UI headers
@@ -619,93 +573,94 @@ export class SearchReportComponent implements OnInit {
       type_of_Garbage: "Type of Waste",
       gross_Weight: "Gross Weight",
       net_Weight: "Net Weight",
-    };
+    }
 
     // Convert to UI-based headers
-    const transformedData = filteredData.map(item => {
-      const row: { [key: string]: any } = {};
+    const transformedData = filteredData.map((item) => {
+      const row: { [key: string]: any } = {}
       for (const field in columnMapping) {
-        row[columnMapping[field]] = item[field];
+        row[columnMapping[field]] = item[field]
       }
-      return row;
-    });
+      return row
+    })
 
     // Create worksheet without header
-    const worksheet = XLSX.utils.json_to_sheet(transformedData);
+    const worksheet = XLSX.utils.json_to_sheet(transformedData)
 
     // Prepend UI-based header row at A1
-    const headerRow = Object.values(columnMapping);
-    XLSX.utils.sheet_add_aoa(worksheet, [headerRow], { origin: "A1" });
+    const headerRow = Object.values(columnMapping)
+    XLSX.utils.sheet_add_aoa(worksheet, [headerRow], { origin: "A1" })
 
     // Adjust column widths
-    const colWidths = headerRow.map(header => {
-      const columnContent = [header, ...transformedData.map(row => String(row[header] ?? ""))];
-      const maxLength = Math.max(...columnContent.map(val => val.length));
-      return { wch: maxLength + 2 };
-    });
-    worksheet["!cols"] = colWidths;
+    const colWidths = headerRow.map((header) => {
+      const columnContent = [header, ...transformedData.map((row) => String(row[header] ?? ""))]
+      const maxLength = Math.max(...columnContent.map((val) => val.length))
+      return { wch: maxLength + 2 }
+    })
+    worksheet["!cols"] = colWidths
 
     // Optional: Bold header styling (note: requires `xlsx-style` or pro version)
     headerRow.forEach((_, colIndex) => {
-      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex });
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex })
       if (worksheet[cellAddress]) {
         worksheet[cellAddress].s = {
-          font: { bold: true }
-        };
+          font: { bold: true },
+        }
       }
-    });
+    })
 
     // Create and save workbook
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-
-    XLSX.writeFile(workbook, "report.xlsx");
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "report.xlsx")
+    XLSX.writeFile(workbook, "report.xlsx")
   }
 
   resetForm() {
-    const today = new Date();
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const today = new Date()
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
 
     this.reportForm.reset({
-      WeighBridge: '',
+      WeighBridge: "",
       FromDate: this.formatDate(firstDay),
       todate: this.formatDate(today),
-      reportType: '',
+      reportType: "",
       Gross_Weight_From: 0,
       Gross_Weight_To: 0,
-      agencyName: '',
-      Vehicle_No: '',
-      TypeOfGarbage: '',
-      Ward: '',
-      Work_code: '',
-      Act_Shift: '',
-      Act_Shift_UL: '',
-      Trans_Time: '',
-      Trans_Time_UL: '',
-      ShiftTimeFrom: '',
-      ShiftTimeTo: '',
-      selectNallah: ''
-    });
+      agencyName: "",
+      Vehicle_No: "",
+      TypeOfGarbage: "",
+      Ward: "",
+      Work_code: "",
+      Act_Shift: "",
+      Act_Shift_UL: "",
+      Trans_Time: "",
+      Trans_Time_UL: "",
+      ShiftTimeFrom: "",
+      ShiftTimeTo: "",
+      selectNallah: "",
+    })
 
     // Reset all filter states
-    this.GrossWeightInKAactive = false;
-    this.AgencynameIsAactive = false;
-    this.vehicleNumberIsAactive = false;
-    this.TypeOfGarbageIsAactive = false;
-    this.WardIsAactive = false;
-    this.WorkCodeIsAactive = false;
-    this.ShiftIsAactive = false;
-    this.ShiftIsAactive1 = false;
-    this.ShiftIsAactive2 = false;
-    this.ShiftIsAactive3 = false;
-    this.HourlyIsAactive = false;
-    this.morningHourlyIsAactive = false;
-    this.afternoonHourlyIsAactive = false;
-    this.nightHourlyIsAactive = false;
-    this.ReportTypesAactive = false;
+    this.GrossWeightInKAactive = false
+    this.AgencynameIsAactive = false
+    this.vehicleNumberIsAactive = false
+    this.TypeOfGarbageIsAactive = false
+    this.WardIsAactive = false
+    this.WorkCodeIsAactive = false
+    this.ShiftIsAactive = false
+    this.ShiftIsAactive1 = false
+    this.ShiftIsAactive2 = false
+    this.ShiftIsAactive3 = false
+    this.HourlyIsAactive = false
+    this.morningHourlyIsAactive = false
+    this.afternoonHourlyIsAactive = false
+    this.nightHourlyIsAactive = false
+    this.ReportTypesAactive = false
 
-    // Reset results
-    this.lstReportData = [];
-    this.activeTab = "search";
+    // Reset results and summary
+    this.reportData = []
+    this.lstReportData = []
+    this.resetSummaryStatistics()
+    this.activeTab = "search"
   }
 }

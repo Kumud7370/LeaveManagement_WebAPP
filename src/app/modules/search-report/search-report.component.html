@@ -31,54 +31,71 @@
       <div class="results-header">
         <h2>Search Results</h2>
         <div class="results-actions">
-          <button class="btn-export" (click)="exportToExcel()">
+          <button class="btn-export" (click)="exportToExcel()" [disabled]="!reportData || reportData.length === 0">
             <i class="fas fa-file-excel"></i> Export to Excel
           </button>
         </div>
       </div>
-      <ag-grid-angular *ngIf="reportData && reportData.length> 0" style="width: 100%; height: 500px;"
-        class="ag-theme-alpine" [rowData]="reportData" [columnDefs]="columnDefs" [defaultColDef]="defaultColDef"
-        [pagination]="true" [paginationPageSize]="10"
-        [paginationPageSizeSelector]="[10, 20, 50, 100]"></ag-grid-angular>
-      <div class="summary-container" *ngIf="reportData && reportData.length> 0">
+
+      <!-- Show grid always, with loading state or data -->
+      <div class="grid-container">
+        <ag-grid-angular 
+          style="width: 100%; height: 500px;"
+          class="ag-theme-alpine" 
+          [rowData]="reportData" 
+          [columnDefs]="columnDefs" 
+          [defaultColDef]="defaultColDef"
+          [pagination]="true" 
+          [paginationPageSize]="10"
+          [paginationPageSizeSelector]="[10, 20, 50, 100]"
+          [loading]="isLoading">
+        </ag-grid-angular>
+      </div>
+
+      <!-- Show summary always, with data or empty state -->
+      <div class="summary-container">
         <h3>Summary</h3>
-        <div class="summary-grid">
+        <div class="summary-grid" *ngIf="reportData && reportData.length > 0; else noDataSummary">
           <div class="summary-item">
             <div class="summary-label">Total Vehicles</div>
             <div class="summary-value">{{ totalNoOfVehicles }}</div>
           </div>
-
           <div class="summary-item">
             <div class="summary-label">In Vehicles</div>
             <div class="summary-value">{{ totalInVehicles }}</div>
           </div>
-
           <div class="summary-item">
             <div class="summary-label">Out Vehicles</div>
             <div class="summary-value">{{ totalOutVehicles }}</div>
           </div>
-
           <div class="summary-item">
             <div class="summary-label">Gross Weight</div>
             <div class="summary-value">{{ totalGrossWeightInKG | number:'1.2-2' }} KG <span class="unit-conversion">({{
                 totalGrossWeightInTon | number:'1.2-2' }} Tons)</span></div>
           </div>
-
           <div class="summary-item">
             <div class="summary-label">Unladen Weight</div>
             <div class="summary-value">{{ totalUnladenWeightInKg | number:'1.2-2' }} KG <span
                 class="unit-conversion">({{
                 totalUnladenWeightInTon | number:'1.2-2' }} Tons)</span></div>
           </div>
-
           <div class="summary-item">
             <div class="summary-label">Net Weight</div>
             <div class="summary-value">{{ totalActualNetWeightInKG | number:'1.2-2' }} KG <span
                 class="unit-conversion">({{ totalActualNetWeightInTon | number:'1.2-2' }} Tons)</span></div>
           </div>
         </div>
+        
+        <!-- Template for when no data is available -->
+        <ng-template #noDataSummary>
+          <div class="no-data-message">
+            <i class="fas fa-info-circle"></i>
+            <span *ngIf="isLoading">Loading data...</span>
+            <span *ngIf="!isLoading">No data available for the selected criteria.</span>
+          </div>
+        </ng-template>
 
-        <div class="summary-note">
+        <div class="summary-note" *ngIf="reportData && reportData.length > 0">
           <i class="fas fa-info-circle"></i> Note: Cancelled slips are excluded from calculations
         </div>
       </div>
@@ -87,7 +104,6 @@
 
   <!-- Filters Offcanvas Panel -->
   <div class="filters-offcanvas-overlay" [class.show]="isFiltersOpen" (click)="closeFilters()"></div>
-
   <div class="filters-offcanvas" [class.show]="isFiltersOpen">
     <div class="offcanvas-header">
       <h5 class="offcanvas-title">Search Filters</h5>
@@ -106,11 +122,6 @@
             <div class="card-body">
               <div class="form-row">
                 <div class="form-group">
-                  <!-- <label for="WeighBrigde">Weigh Bridge</label>
-                  <select formControlName="WeighBrigde">
-                    <option value="">-- Select --</option>
-                    <option *ngFor="let wb of WeighBridgeData" [value]="wb.id">{{ wb.WeighBridge }}</option>
-                  </select> -->
                   <label for="weighBridge">Weigh Bridge:</label>
                   <select formControlName="WeighBridge" id="WeighBridge" class="form-control">
                     <option value="">-- Select --</option>
@@ -119,18 +130,15 @@
                     </option>
                   </select>
                 </div>
-
                 <div class="form-group">
                   <label for="fromdate">From Date</label>
                   <input type="date" formControlName="FromDate" class="form-control" required />
                 </div>
-
                 <!-- To Date -->
                 <div class="form-group">
                   <label for="todate">To Date</label>
                   <input type="date" formControlName="todate" class="form-control" required />
                 </div>
-
                 <div class="form-group">
                   <label for="reportType">Report Type</label>
                   <select formControlName="reportType" class="form-control">
@@ -151,13 +159,11 @@
               </div>
             </div>
           </div>
-
           <!-- Advanced Search Options -->
           <div class="advanced-search-toggle" (click)="toggleAdvancedSearch()">
             <i class="fas" [class.fa-chevron-down]="!isAdvancedSearch" [class.fa-chevron-up]="isAdvancedSearch"></i>
             Advanced Search Options
           </div>
-
           <div class="filter-card" *ngIf="isAdvancedSearch && ReportTypesAactive">
             <div class="card-header">
               <h2>Advanced Filters</h2>
@@ -172,7 +178,6 @@
                     <label for="grossWeightFilter">Gross Weight (KG)</label>
                   </div>
                 </div>
-
                 <div class="filter-body" *ngIf="GrossWeightInKAactive">
                   <div class="form-row">
                     <div class="form-group">
@@ -180,7 +185,6 @@
                       <input type="number" id="grossWeightFrom" [(ngModel)]="formData.Gross_Weight_From"
                         [ngModelOptions]="{standalone: true}" class="form-control">
                     </div>
-
                     <div class="form-group">
                       <label for="grossWeightTo">To</label>
                       <input type="number" id="grossWeightTo" [(ngModel)]="formData.Gross_Weight_To"
@@ -189,7 +193,6 @@
                   </div>
                 </div>
               </div>
-
               <!-- Agency Filter -->
               <div class="filter-section">
                 <div class="filter-header">
@@ -199,7 +202,6 @@
                     <label for="agencyFilter">Agency Name</label>
                   </div>
                 </div>
-
                 <div class="filter-body" *ngIf="AgencynameIsAactive">
                   <div class="form-group">
                     <select (change)="getAgencyname($event)" class="form-control">
@@ -211,7 +213,6 @@
                   </div>
                 </div>
               </div>
-
               <!-- Vehicle Number Filter -->
               <div class="filter-section">
                 <div class="filter-header">
@@ -221,7 +222,6 @@
                     <label for="vehicleFilter">Vehicle Number</label>
                   </div>
                 </div>
-
                 <div class="filter-body" *ngIf="vehicleNumberIsAactive">
                   <div class="form-group">
                     <select (change)="getvehicleNumber($event)" class="form-control">
@@ -233,7 +233,6 @@
                   </div>
                 </div>
               </div>
-
               <!-- Shift Filter -->
               <div class="filter-section">
                 <div class="filter-header">
@@ -244,7 +243,6 @@
                     <label for="shiftFilter">Shift</label>
                   </div>
                 </div>
-
                 <div class="filter-body" *ngIf="ShiftIsAactive">
                   <div class="shift-options">
                     <div class="shift-option">
@@ -252,13 +250,11 @@
                         [ngModelOptions]="{standalone: true}" (change)="isShift1Change($event)">
                       <label for="shift1">Shift I</label>
                     </div>
-
                     <div class="shift-option">
                       <input type="checkbox" id="shift2" [(ngModel)]="ShiftIsAactive2"
                         [ngModelOptions]="{standalone: true}" (change)="isShift2Change($event)">
                       <label for="shift2">Shift II</label>
                     </div>
-
                     <div class="shift-option">
                       <input type="checkbox" id="shift3" [(ngModel)]="ShiftIsAactive3"
                         [ngModelOptions]="{standalone: true}" (change)="isShift3Change($event)">
@@ -267,7 +263,6 @@
                   </div>
                 </div>
               </div>
-
               <!-- Hourly Filter -->
               <div class="filter-section">
                 <div class="filter-header">
@@ -278,7 +273,6 @@
                     <label for="hourlyFilter">Hourly</label>
                   </div>
                 </div>
-
                 <div class="filter-body" *ngIf="HourlyIsAactive">
                   <div class="hourly-options">
                     <div class="hourly-option">
@@ -287,7 +281,6 @@
                           [ngModelOptions]="{standalone: true}" (change)="morningHourlyIsAactiveChange($event)">
                         <label for="morningHourly">Morning</label>
                       </div>
-
                       <div class="form-group" *ngIf="morningHourlyIsAactive">
                         <select (change)="getMorningHour($event)" class="form-control">
                           <option value="" selected disabled>Select Time</option>
@@ -297,14 +290,12 @@
                         </select>
                       </div>
                     </div>
-
                     <div class="hourly-option">
                       <div class="checkbox-wrapper">
                         <input type="checkbox" id="afternoonHourly" [(ngModel)]="afternoonHourlyIsAactive"
                           [ngModelOptions]="{standalone: true}" (change)="afternoonHourlyIsAactiveChange($event)">
                         <label for="afternoonHourly">Afternoon</label>
                       </div>
-
                       <div class="form-group" *ngIf="afternoonHourlyIsAactive">
                         <select (change)="getafternoonHour($event)" class="form-control">
                           <option value="" selected disabled>Select Time</option>
@@ -314,14 +305,12 @@
                         </select>
                       </div>
                     </div>
-
                     <div class="hourly-option">
                       <div class="checkbox-wrapper">
                         <input type="checkbox" id="nightHourly" [(ngModel)]="nightHourlyIsAactive"
                           [ngModelOptions]="{standalone: true}" (change)="nightHourlyIsAactiveChange($event)">
                         <label for="nightHourly">Night</label>
                       </div>
-
                       <div class="form-group" *ngIf="nightHourlyIsAactive">
                         <select (change)="getnightHour($event)" class="form-control">
                           <option value="" selected disabled>Select Time</option>
@@ -334,7 +323,6 @@
                   </div>
                 </div>
               </div>
-
               <!-- Type of Garbage Filter -->
               <div class="filter-section">
                 <div class="filter-header">
@@ -344,7 +332,6 @@
                     <label for="garbageFilter">Type of Garbage</label>
                   </div>
                 </div>
-
                 <div class="filter-body" *ngIf="TypeOfGarbageIsAactive">
                   <div class="form-group">
                     <select (change)="getTypeOfGarbage($event)" class="form-control">
@@ -356,7 +343,6 @@
                   </div>
                 </div>
               </div>
-
               <!-- Ward Filter -->
               <div class="filter-section">
                 <div class="filter-header">
@@ -366,7 +352,6 @@
                     <label for="wardFilter">Ward</label>
                   </div>
                 </div>
-
                 <div class="filter-body" *ngIf="WardIsAactive">
                   <div class="form-group">
                     <select (change)="getWard($event)" class="form-control">
