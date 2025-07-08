@@ -2,28 +2,26 @@ import { Component, OnInit, ViewChild, ElementRef } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angular/forms"
 import { Router, RouterModule } from "@angular/router"
-import { ICellRendererParams, ValueFormatterParams } from 'ag-grid-community'
-import { AgGridModule } from 'ag-grid-angular'
+import { ICellRendererParams } from "ag-grid-community"
+import { AgGridModule, AgGridAngular } from "ag-grid-angular"
 import * as XLSX from "xlsx"
-
-// Using a type-only declaration since we're not actually using the library in this demo
-declare const saveAs: (blob: Blob, filename: string) => void
+import { DbCallingService } from "src/app/core/services/db-calling.service"
 
 @Component({
-    selector: "app-shift-report",
-    templateUrl: "./shift-report.component.html",
-    styleUrls: ["./shift-report.component.scss"],
-    standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterModule, AgGridModule],
+  selector: "app-shift-report",
+  templateUrl: "./shift-report.component.html",
+  styleUrls: ["./shift-report.component.scss"],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, AgGridModule],
 })
 export class ShiftReportComponent implements OnInit {
   @ViewChild("reportContainer") reportContainer!: ElementRef
+  @ViewChild("agGrid") agGrid!: AgGridAngular
 
   // UI state
   isLoading = false
-  showReport = false
-  activeView = "table" // 'table' or 'chart'
-  isFiltersOpen = false // New state for offcanvas
+  showReport = true
+  isFiltersOpen = false
 
   // Form
   reportForm!: FormGroup
@@ -31,17 +29,17 @@ export class ShiftReportComponent implements OnInit {
   // Data
   weighBridgeOptions = [
     { id: "all", name: "All" },
-    { id: "K", name: "Kanjur" },
-    { id: "D", name: "Deonar" },
+    { id: "WBK1", name: "Kanjur" },
+    { id: "WBD1", name: "Deonar" },
   ]
 
-  // Mock data for demonstration
+  // Raw data from API
   shiftData: any[] = []
   flattenedData: any[] = []
   uniqueWards: string[] = []
   uniqueShifts: string[] = ["Shift I", "Shift II", "Shift III"]
 
-  // AG Grid configuration - Following search-report pattern
+  // AG Grid configuration
   lstReportData: any[] = []
   columnDefs: any[] = []
   defaultColDef = {
@@ -57,17 +55,72 @@ export class ShiftReportComponent implements OnInit {
   topWard = ""
   topShift = ""
 
-  // Chart data
-  chartData: any = {}
-
   constructor(
     private fb: FormBuilder,
     private router: Router,
-  ) {}
+    private dbCallingService: DbCallingService,
+  ) { }
 
   ngOnInit() {
     this.initForm()
     this.setupColumnDefs()
+    // Load initial data automatically
+    this.loadInitialData()
+  }
+
+  // Load initial data automatically with current month
+  loadInitialData() {
+    const currentDate = new Date()
+    const lastMonth = new Date(currentDate)
+    lastMonth.setMonth(currentDate.getMonth() - 1)
+
+    this.isLoading = true
+    const weighBridge = ""
+    const fromDate = this.formatDateForInput(lastMonth)
+    const toDate = this.formatDateForInput(currentDate)
+
+    const payload = {
+      WeighBridge: weighBridge,
+      FromDate: fromDate,
+      ToDate: toDate,
+      FullDate: "",
+      WardName: "",
+      Act_Shift: "",
+      TransactionDate: fromDate,
+    }
+
+    console.log("Loading initial data with payload:", payload)
+
+    this.dbCallingService.getShiftwiseReport(payload).subscribe({
+      next: (response) => {
+        console.log("Initial API Response:", response)
+
+        // Check for success - your API returns serviceResponse: 1 for success
+        if (
+          response &&
+          (response.serviceResponse === 1 || response.ServiceResponse === "Successful") &&
+          response.wardData?.length
+        ) {
+          console.log("Processing initial ward data:", response.wardData)
+
+          // Assign the data to shiftData for processing
+          this.shiftData = response.wardData
+          this.processDataForGrid()
+          this.calculateSummaryFromProcessedData()
+
+          console.log("Initial processed data:", this.lstReportData)
+        } else {
+          console.log("No initial data found")
+          this.resetData()
+        }
+        this.isLoading = false
+      },
+      error: (error) => {
+        console.error("Initial API Error:", error)
+        this.resetData()
+        this.isLoading = false
+      },
+    })
   }
 
   initForm() {
@@ -123,71 +176,147 @@ export class ShiftReportComponent implements OnInit {
     this.isLoading = true
     this.closeFilters() // Close filters panel after submission
 
-    // Simulate API call
-    setTimeout(() => {
-      this.generateMockData()
-      this.processData()
-      this.setupDynamicColumns()
-      this.prepareGridData()
-      this.prepareChartData()
-      this.showReport = true
-      this.isLoading = false
-    }, 1000)
-  }
+    const formValues = this.reportForm.value
+    const weighBridge = formValues.weighBridge === "all" ? "" : formValues.weighBridge
+    const fromDate = formValues.fromDate
+    const toDate = formValues.toDate
 
-  generateMockData() {
-    // Generate ward names
-    const wardNames = ["Ward A", "Ward B", "Ward C", "Ward D", "Ward E", "Ward F"]
-    this.uniqueWards = wardNames
+    const payload = {
+      WeighBridge: weighBridge,
+      FromDate: fromDate,
+      ToDate: toDate,
+      FullDate: "",
+      WardName: "",
+      Act_Shift: "",
+      TransactionDate: fromDate,
+    }
 
-    // Generate data for each ward and shift
-    this.shiftData = []
+    console.log("Submitting with payload:", payload)
 
-    wardNames.forEach((ward) => {
-      this.uniqueShifts.forEach((shift) => {
-        // Skip some combinations to simulate missing data
-        if (Math.random() > 0.9) return
+    this.dbCallingService.getShiftwiseReport(payload).subscribe({
+      next: (response) => {
+        console.log("API Response:", response)
 
-        const vehicleCount = Math.floor(Math.random() * 30) + 5
-        const totalNetWeight = Math.floor(Math.random() * 3000) + 500
+        // Check for success - your API returns serviceResponse: 1 for success
+        if (
+          response &&
+          (response.serviceResponse === 1 || response.ServiceResponse === "Successful") &&
+          response.wardData?.length
+        ) {
+          console.log("Processing ward data:", response.wardData)
 
-        this.shiftData.push({
-          WardName: ward,
-          Shift: shift,
-          VehicleCount: vehicleCount,
-          TotalNetWeight: totalNetWeight,
-          WeighBridge: this.reportForm.value.weighBridge,
-        })
-      })
+          // Assign the data to shiftData for processing
+          this.shiftData = response.wardData
+          this.processDataForGrid()
+          this.calculateSummaryFromProcessedData()
+
+          console.log("Processed data:", this.lstReportData)
+          alert("Data retrieved successfully!")
+        } else {
+          console.log("No data found or invalid response")
+          alert(response?.msg || "No data found")
+          this.resetData()
+        }
+        this.isLoading = false
+      },
+      error: (error) => {
+        console.error("API Error:", error)
+        alert("Failed to fetch data")
+        this.resetData()
+        this.isLoading = false
+      },
     })
   }
 
-  processData() {
-    // Extract unique ward names
-    const uniqueWardNames = Array.from(new Set(this.shiftData.map((item) => item.WardName)))
+  private handleApiResponse(response: any) {
+    // Check for different possible response structures
+    let dataArray: any[] = []
+
+    if (response && response.ServiceResponse === "Successful") {
+      // Try WardData first (based on your C# code)
+      if (response.WardData && Array.isArray(response.WardData)) {
+        dataArray = response.WardData
+      }
+      // Fallback to ShiftData if WardData doesn't exist
+      else if (response.ShiftData && Array.isArray(response.ShiftData)) {
+        dataArray = response.ShiftData
+      }
+    }
+
+    if (dataArray && dataArray.length > 0) {
+      console.log("Processing data array:", dataArray)
+      this.shiftData = dataArray
+      this.processDataForGrid()
+      this.calculateSummaryFromProcessedData()
+      alert("Data retrieved successfully!")
+    } else {
+      console.log("No data found in response")
+      alert(response?.msg || "No data found for the selected criteria")
+      this.resetData()
+    }
+  }
+
+  private handleApiError() {
+    alert("Failed to fetch data. Please try again.")
+    this.resetData()
+  }
+
+  private resetData() {
+    this.shiftData = []
+    this.lstReportData = []
+    this.flattenedData = []
+    this.resetSummaryStatistics()
+  }
+
+  processDataForGrid() {
+    if (!this.shiftData || this.shiftData.length === 0) {
+      this.lstReportData = []
+      this.flattenedData = []
+      this.uniqueWards = []
+      return
+    }
+
+    console.log("Processing data for grid:", this.shiftData)
+
+    // Get unique ward names - your API returns wardName
+    this.uniqueWards = Array.from(new Set(this.shiftData.map((d) => d.wardName))).filter(
+      (ward) => ward && ward.trim() !== "",
+    )
+
+    console.log("Unique wards:", this.uniqueWards)
 
     // Create flattened data structure
-    this.flattenedData = uniqueWardNames.map((wardName) => {
+    this.flattenedData = this.uniqueWards.map((wardName) => {
       const row: any = { WardName: wardName }
       let totalVehicleCount = 0
       let totalNetWeight = 0
 
       this.uniqueShifts.forEach((shift) => {
-        const shiftData = this.shiftData.find((d) => d.WardName === wardName && d.Shift === shift)
+        // Find data for this ward and shift
+        // Your API returns act_Shift with values like "II", so we need to map them
+        const shiftMapping: { [key: string]: string } = {
+          "Shift I": "I",
+          "Shift II": "II",
+          "Shift III": "III",
+        }
 
-        const vehicleCount = shiftData?.VehicleCount || 0
-        const netWeight = shiftData?.TotalNetWeight || 0
+        const shiftData = this.shiftData.filter((d) => {
+          return d.wardName === wardName && d.act_Shift === shiftMapping[shift]
+        })
+
+        console.log(`Data for ${wardName} - ${shift}:`, shiftData)
+
+        const vehicleCount = shiftData.reduce((sum, item) => sum + (item.vehicleCount || 0), 0)
+        const netWeight = shiftData.reduce((sum, item) => sum + (item.totalNetWeight || 0), 0)
 
         row[`${shift}_VehicleCount`] = vehicleCount
         row[`${shift}_TotalNetWeight`] = netWeight.toFixed(2)
-
         totalVehicleCount += vehicleCount
         totalNetWeight += netWeight
       })
 
       row["TotalVehicleCount"] = totalVehicleCount
       row["TotalNetWeight"] = totalNetWeight.toFixed(2)
-
       return row
     })
 
@@ -209,18 +338,20 @@ export class ShiftReportComponent implements OnInit {
 
       totalRow[`${shift}_VehicleCount`] = shiftTotal.vehicles
       totalRow[`${shift}_TotalNetWeight`] = shiftTotal.weight.toFixed(2)
-
       grandTotalVehicles += shiftTotal.vehicles
       grandTotalWeight += shiftTotal.weight
     })
 
     totalRow["TotalVehicleCount"] = grandTotalVehicles
     totalRow["TotalNetWeight"] = grandTotalWeight.toFixed(2)
-
     this.flattenedData.push(totalRow)
 
-    // Calculate summary metrics
-    this.calculateSummaryMetrics()
+    console.log("Flattened data:", this.flattenedData)
+
+    this.setupDynamicColumns()
+    this.lstReportData = [...this.flattenedData]
+
+    console.log("Final lstReportData:", this.lstReportData)
   }
 
   setupDynamicColumns() {
@@ -262,7 +393,6 @@ export class ShiftReportComponent implements OnInit {
         field: `${shift}_TotalNetWeight`,
         width: 120,
         flex: 0,
-        valueFormatter: this.weightFormatter,
         cellRenderer: (params: ICellRendererParams) => {
           const value = params.value ? Number(params.value).toFixed(2) : "0.00"
           if (params.data?.WardName === "Total") {
@@ -293,7 +423,6 @@ export class ShiftReportComponent implements OnInit {
       field: "TotalNetWeight",
       width: 130,
       flex: 0,
-      valueFormatter: this.weightFormatter,
       cellRenderer: (params: ICellRendererParams) => {
         const value = params.value ? Number(params.value).toFixed(2) : "0.00"
         if (params.data?.WardName === "Total") {
@@ -304,21 +433,14 @@ export class ShiftReportComponent implements OnInit {
     })
   }
 
-  weightFormatter(params: any) {
-    if (params.value != null) {
-      return Number(params.value).toFixed(2)
+  calculateSummaryFromProcessedData() {
+    if (!this.flattenedData || this.flattenedData.length === 0) {
+      this.resetSummaryStatistics()
+      return
     }
-    return "0.00"
-  }
 
-  prepareGridData() {
-    this.lstReportData = [...this.flattenedData]
-  }
-
-  calculateSummaryMetrics() {
     // Calculate total vehicles and weight (excluding Total row)
     const dataWithoutTotal = this.flattenedData.filter((row) => row.WardName !== "Total")
-
     this.totalVehicles = dataWithoutTotal.reduce((sum, row) => sum + row.TotalVehicleCount, 0)
     this.totalWeight = dataWithoutTotal.reduce((sum, row) => sum + Number.parseFloat(row.TotalNetWeight), 0)
 
@@ -332,9 +454,11 @@ export class ShiftReportComponent implements OnInit {
 
     // Find the shift with the highest weight
     const shiftTotals = new Map<string, number>()
-    this.shiftData.forEach((item) => {
-      const currentTotal = shiftTotals.get(item.Shift) || 0
-      shiftTotals.set(item.Shift, currentTotal + item.TotalNetWeight)
+    this.uniqueShifts.forEach((shift) => {
+      const shiftTotal = dataWithoutTotal.reduce((sum, row) => {
+        return sum + Number.parseFloat(row[`${shift}_TotalNetWeight`] || 0)
+      }, 0)
+      shiftTotals.set(shift, shiftTotal)
     })
 
     let maxWeight = 0
@@ -344,40 +468,21 @@ export class ShiftReportComponent implements OnInit {
         this.topShift = shift
       }
     })
-  }
 
-  prepareChartData() {
-    // Prepare data for the ward comparison chart
-    const wardsExcludingTotal = this.flattenedData.filter((row) => row.WardName !== "Total")
-
-    this.chartData.wardComparison = {
-      labels: wardsExcludingTotal.map((row) => row.WardName),
-      vehicleData: wardsExcludingTotal.map((row) => row.TotalVehicleCount),
-      weightData: wardsExcludingTotal.map((row) => Number.parseFloat(row.TotalNetWeight)),
-    }
-
-    // Prepare data for the shift comparison chart
-    const shiftTotals = new Map<string, { vehicleCount: number; totalNetWeight: number }>()
-
-    this.shiftData.forEach((item) => {
-      const shift = item.Shift
-      if (!shiftTotals.has(shift)) {
-        shiftTotals.set(shift, { vehicleCount: 0, totalNetWeight: 0 })
-      }
-      const current = shiftTotals.get(shift)!
-      current.vehicleCount += item.VehicleCount
-      current.totalNetWeight += item.TotalNetWeight
+    console.log("Summary calculated:", {
+      totalVehicles: this.totalVehicles,
+      totalWeight: this.totalWeight,
+      topWard: this.topWard,
+      topShift: this.topShift,
     })
-
-    this.chartData.shiftComparison = {
-      labels: Array.from(shiftTotals.keys()),
-      vehicleData: Array.from(shiftTotals.values()).map((data) => data.vehicleCount),
-      weightData: Array.from(shiftTotals.values()).map((data) => data.totalNetWeight),
-    }
   }
 
-  setActiveView(view: string) {
-    this.activeView = view
+  resetSummaryStatistics() {
+    this.totalVehicles = 0
+    this.totalWeight = 0
+    this.topWard = ""
+    this.topShift = ""
+    this.uniqueWards = []
   }
 
   exportToExcel() {
@@ -386,63 +491,121 @@ export class ShiftReportComponent implements OnInit {
       return
     }
 
-    const workbook = XLSX.utils.book_new()
-    const worksheetData: any[][] = []
-
-    // Create headers
-    const headers = ["Ward Name"]
-    const subHeaders = [""]
-
-    this.uniqueShifts.forEach((shift) => {
-      headers.push(shift, "")
-      subHeaders.push("Vehicles", "Weight")
+    // Get filtered data from AG Grid
+    const filteredData: any[] = []
+    this.agGrid.api.forEachNodeAfterFilter((node: any) => {
+      if (node.data) {
+        filteredData.push(node.data)
+      }
     })
 
-    headers.push("Total Vehicle Count", "Total Net Weight")
-    subHeaders.push("", "")
+    if (filteredData.length === 0) {
+      alert("No filtered data to export")
+      return
+    }
 
-    worksheetData.push(headers)
-    worksheetData.push(subHeaders)
+    // Create Excel data in the required format
+    const excelData: any[] = []
 
-    // Add data rows
-    this.flattenedData.forEach((row) => {
+    // First row - Headers with merged cells for shifts
+    const headerRow1: any[] = ["Ward"]
+    this.uniqueShifts.forEach((shift) => {
+      headerRow1.push(shift, "") // Empty cell for merging
+    })
+    headerRow1.push("Total", "")
+
+    // Second row - Sub-headers
+    const headerRow2: any[] = [""]
+    this.uniqueShifts.forEach(() => {
+      headerRow2.push("Vehicle", "Net Weight")
+    })
+    headerRow2.push("Total Vehicles", "Net Weight KG")
+
+    // Add header rows
+    excelData.push(headerRow1)
+    excelData.push(headerRow2)
+
+    // Add filtered ward data rows (excluding Total row for now)
+    const dataWithoutTotal = filteredData.filter((row) => row.WardName !== "Total")
+    dataWithoutTotal.forEach((row) => {
       const dataRow = [row.WardName]
-
       this.uniqueShifts.forEach((shift) => {
         dataRow.push(row[`${shift}_VehicleCount`] || 0)
-        dataRow.push(row[`${shift}_TotalNetWeight`] || 0)
+        dataRow.push(Number(row[`${shift}_TotalNetWeight`]) || 0)
       })
-
-      dataRow.push(row.TotalVehicleCount)
-      dataRow.push(row.TotalNetWeight)
-
-      worksheetData.push(dataRow)
+      dataRow.push(row.TotalVehicleCount || 0)
+      dataRow.push(Number(row.TotalNetWeight) || 0)
+      excelData.push(dataRow)
     })
 
-    // Create worksheet and append to workbook
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
-    XLSX.utils.book_append_sheet(workbook, worksheet, "ShiftWiseReport")
-
-    // Generate Excel file
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" })
-
-    // Save file
-    const fileName = `ShiftWiseReport_${this.reportForm.value.fromDate}_${this.reportForm.value.toDate}.xlsx`
-    saveAs(blob, fileName)
-  }
-
-  getMaxValue(values: number[]): number {
-    if (!values || values.length === 0) {
-      return 0
+    // Add total row
+    const totalRowData = filteredData.find((row) => row.WardName === "Total")
+    if (totalRowData) {
+      const totalRow: string[] = ["Total"]
+      this.uniqueShifts.forEach((shift) => {
+        const vehicleCount = totalRowData[`${shift}_VehicleCount`] ?? 0
+        const totalNetWeight = totalRowData[`${shift}_TotalNetWeight`] ?? 0
+        totalRow.push(vehicleCount.toString())
+        totalRow.push(Number(totalNetWeight).toString())
+      })
+      const totalVehicleCount = totalRowData.TotalVehicleCount ?? 0
+      const totalNetWeight = totalRowData.TotalNetWeight ?? 0
+      totalRow.push(totalVehicleCount.toString())
+      totalRow.push(Number(totalNetWeight).toString())
+      excelData.push(totalRow)
     }
-    return Math.max(...values)
+
+    // Create worksheet
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData)
+
+    // Set up merges for shift headers
+    worksheet["!merges"] = []
+    for (let i = 0; i < this.uniqueShifts.length; i++) {
+      const startCol = 1 + i * 2
+      worksheet["!merges"].push({
+        s: { r: 0, c: startCol },
+        e: { r: 0, c: startCol + 1 },
+      })
+    }
+
+    // Merge Total header
+    const totalStartCol = 1 + this.uniqueShifts.length * 2
+    worksheet["!merges"].push({
+      s: { r: 0, c: totalStartCol },
+      e: { r: 0, c: totalStartCol + 1 },
+    })
+
+    // Auto-adjust column widths based on content length
+    const colWidths = [];
+    for (let col = 0; col < excelData[0].length; col++) {
+      let maxLen = 10; // Minimum width
+      for (let row = 0; row < excelData.length; row++) {
+        const cellValue = excelData[row][col];
+        if (cellValue != null) {
+          const cellLen = cellValue.toString().length;
+          if (cellLen > maxLen) {
+            maxLen = cellLen;
+          }
+        }
+      }
+      colWidths.push({ wch: maxLen + 2 }); // Add some padding
+    }
+    worksheet["!cols"] = colWidths;
+
+    // Create and save workbook
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Shift Report")
+    const fileName = `Shift_Report_${this.reportForm.value.fromDate}_${this.reportForm.value.toDate}.xlsx`
+    XLSX.writeFile(workbook, fileName)
   }
 
   getShiftTotal(shift: string): { vehicleCount: number; totalNetWeight: number } {
-    const shiftData = this.shiftData.filter((item) => item.Shift === shift)
-    const vehicleCount = shiftData.reduce((sum, item) => sum + item.VehicleCount, 0)
-    const totalNetWeight = shiftData.reduce((sum, item) => sum + item.TotalNetWeight, 0)
+    const dataWithoutTotal = this.flattenedData.filter((row) => row.WardName !== "Total")
+    const vehicleCount = dataWithoutTotal.reduce((sum, row) => sum + (row[`${shift}_VehicleCount`] || 0), 0)
+    const totalNetWeight = dataWithoutTotal.reduce(
+      (sum, row) => sum + Number.parseFloat(row[`${shift}_TotalNetWeight`] || "0"),
+      0,
+    )
     return { vehicleCount, totalNetWeight }
   }
 

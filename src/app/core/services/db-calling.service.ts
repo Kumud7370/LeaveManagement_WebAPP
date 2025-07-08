@@ -118,7 +118,7 @@ export class DbCallingService {
       })
     );
   }
-  
+
   getSearchReports(payload: any) {
     return this.http.post(`${this.apiUrl}/Report/GetSearchReports`, payload).pipe(
       catchError(error => {
@@ -140,9 +140,29 @@ export class DbCallingService {
     return this.http.post<any>(`${this.apiUrl}/Report/GetWardwiseReport`, data).pipe(
       catchError((error) => {
         console.error("Error fetching wardwise report", error)
-        
+
         return of({ WardData: [], ServiceResponse: "Failed", msg: "Error fetching data" })
       }),
     )
   }
+
+  getShiftwiseReport(data: {
+    WeighBridge: string;
+    FromDate: string;
+    ToDate: string;
+    Act_Shift: string;
+    WardName: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Report/getShiftwiseReport`, data).pipe(
+      catchError((error) => {
+        console.error("Error fetching shiftwise report", error);
+        return of({
+          ShiftData: [],
+          ServiceResponse: "Failed",
+          msg: "Error fetching shiftwise data"
+        });
+      })
+    );
+  }
+
 }

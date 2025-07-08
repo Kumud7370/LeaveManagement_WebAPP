@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common"
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angular/forms"
 import { Router, RouterModule } from "@angular/router"
 import { AgGridModule, AgGridAngular } from 'ag-grid-angular'
-import * as XLSX from "xlsx"
+import * as XLSX from "xlsx";
 import { MaxPipe } from "src/app/shared/max.pipe"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
 
@@ -19,17 +19,20 @@ declare const saveAs: (blob: Blob, filename: string) => void
 export class WardReportComponent implements OnInit {
   @ViewChild("reportContainer") reportContainer!: ElementRef
   @ViewChild("agGrid") agGrid!: AgGridAngular
+
   isLoading = false
-  showReport = false
-  activeView = "table"
+  showReport = true // Always show report section
+  activeView = "table" // Only table view now
   isFiltersOpen = false
+
   reportForm!: FormGroup
+
   weighBridgeOptions = [
     { id: "ALLWB", name: "All" },
     { id: "WBK1", name: "Kanjur" },
     { id: "WBD1", name: "Deonar" },
   ]
-  chartData: any = {}
+
   wardData: any[] = []
   uniqueDates: string[] = []
   flattenedData: any[] = []
@@ -41,6 +44,7 @@ export class WardReportComponent implements OnInit {
     sortable: true,
     filter: true,
   }
+
   totalVehicles = 0
   totalWeight = 0
   topWard = ""
@@ -50,11 +54,59 @@ export class WardReportComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private dbCallingService: DbCallingService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.initForm()
     this.setupColumnDefs()
+    // Load initial data automatically with current month
+    this.loadInitialData()
+  }
+
+  // NEW METHOD: Load initial data automatically
+  loadInitialData() {
+    const currentDate = new Date()
+    const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`
+
+    this.isLoading = true
+
+    const weighBridge = ""
+    const fromDate = `${currentMonth}-01`
+    const [year, month] = currentMonth.split("-")
+    const lastDay = new Date(Number(year), Number(month), 0).getDate()
+    const toDate = `${currentMonth}-${String(lastDay).padStart(2, "0")}`
+
+    const payload = {
+      WeighBrigde: weighBridge,
+      FromDate: fromDate,
+      ToDate: toDate,
+      FullDate: "",
+      WardName: "",
+      Act_Shift: "",
+      TransactionDate: fromDate,
+    }
+
+    this.dbCallingService.getWardwiseReport(payload).subscribe({
+      next: (response) => {
+        if (response && response.serviceResponse === 1 && response.wardData) {
+          this.wardData = response.wardData
+          this.processDataForGrid()
+          this.calculateSummaryFromProcessedData()
+        } else {
+          this.wardData = []
+          this.lstReportData = []
+          this.resetSummaryStatistics()
+        }
+        this.isLoading = false
+      },
+      error: (error) => {
+        console.error("API Error:", error)
+        this.wardData = []
+        this.lstReportData = []
+        this.resetSummaryStatistics()
+        this.isLoading = false
+      },
+    })
   }
 
   initForm() {
@@ -83,6 +135,7 @@ export class WardReportComponent implements OnInit {
     if (this.reportForm.invalid) return
     this.isLoading = true
     this.isFiltersOpen = false
+
     const formValues = this.reportForm.value
     const weighBridge = formValues.weighBridge === "all" ? "" : formValues.weighBridge
     const fromDate = `${formValues.month}-01`
@@ -104,148 +157,65 @@ export class WardReportComponent implements OnInit {
       next: (response) => {
         if (response && response.serviceResponse === 1 && response.wardData) {
           this.wardData = response.wardData
-          // Directly bind raw API data
-          this.lstReportData = this.wardData
-          // Setup static columns (not dynamic)
-          this.setupRawColumnDefs()
-          // Calculate summary metrics from raw data
-          this.calculateSummaryFromRawData()
-          this.showReport = true
+          this.processDataForGrid()
+          this.calculateSummaryFromProcessedData()
         } else {
           alert(response?.msg || "No data found")
           this.wardData = []
           this.lstReportData = []
-          this.showReport = false
+          this.resetSummaryStatistics()
         }
         this.isLoading = false
       },
       error: (error) => {
         console.error("API Error:", error)
         alert("Failed to fetch data")
+        this.wardData = []
+        this.lstReportData = []
+        this.resetSummaryStatistics()
         this.isLoading = false
       },
     })
   }
 
-  calculateSummaryFromRawData() {
+  processDataForGrid() {
     if (!this.wardData || this.wardData.length === 0) {
-      this.totalVehicles = 0
-      this.totalWeight = 0
-      this.topWard = ""
-      this.daysWithData = 0
+      this.lstReportData = []
       this.uniqueDates = []
       return
     }
 
-    // Calculate total vehicles and weight
-    this.totalVehicles = this.wardData.reduce((sum, item) => sum + (item.vehicleCount || 0), 0)
-    this.totalWeight = this.wardData.reduce((sum, item) => sum + (item.totalNetWeight || 0), 0)
-
-    // Calculate unique dates
+    // Get unique dates and sort them
     this.uniqueDates = Array.from(new Set(this.wardData.map((d) => this.formatDate(d.transactionDate)))).sort()
-    this.daysWithData = this.uniqueDates.length
 
-    // Calculate highest volume ward
-    const wardTotals = this.wardData.reduce((acc, item) => {
-      const wardName = item.wardName || "Unknown"
-      if (!acc[wardName]) {
-        acc[wardName] = { vehicles: 0, weight: 0 }
-      }
-      acc[wardName].vehicles += item.vehicleCount || 0
-      acc[wardName].weight += item.totalNetWeight || 0
-      return acc
-    }, {} as any)
-
-    let maxWeight = 0
-    this.topWard = ""
-    Object.keys(wardTotals).forEach((wardName) => {
-      if (wardTotals[wardName].weight > maxWeight) {
-        maxWeight = wardTotals[wardName].weight
-        this.topWard = wardName
-      }
-    })
-    this.processChartData()
-  }
-
-  processChartData() {
-    if (!this.wardData || this.wardData.length === 0) {
-      this.chartData = {}
-      return
-    }
-
-    // Ward comparison data
-    const wardTotals = this.wardData.reduce((acc, item) => {
-      const wardName = item.wardName || "Unknown"
-      if (!acc[wardName]) {
-        acc[wardName] = { vehicles: 0, weight: 0 }
-      }
-      acc[wardName].vehicles += item.vehicleCount || 0
-      acc[wardName].weight += item.totalNetWeight || 0
-      return acc
-    }, {} as any)
-
-    const wardNames = Object.keys(wardTotals)
-    const wardWeights = wardNames.map((name) => wardTotals[name].weight)
-    const wardVehicles = wardNames.map((name) => wardTotals[name].vehicles)
-
-    // Daily trend data
-    const dailyTotals = this.wardData.reduce((acc, item) => {
-      const date = this.formatDate(item.transactionDate)
-      if (!acc[date]) {
-        acc[date] = { vehicles: 0, weight: 0 }
-      }
-      acc[date].vehicles += item.vehicleCount || 0
-      acc[date].weight += item.totalNetWeight || 0
-      return acc
-    }, {} as any)
-
-    const dates = Object.keys(dailyTotals).sort()
-    const dailyWeights = dates.map((date) => dailyTotals[date].weight)
-    const dailyVehicles = dates.map((date) => dailyTotals[date].vehicles)
-
-    this.chartData = {
-      wardComparison: {
-        labels: wardNames,
-        weightData: wardWeights,
-        vehicleData: wardVehicles,
-      },
-      trend: {
-        labels: dates,
-        datasets: [
-          {
-            label: "Weight",
-            data: dailyWeights,
-          },
-          {
-            label: "Vehicles",
-            data: dailyVehicles,
-          },
-        ],
-      },
-    }
-  }
-
-  processData() {
-    this.uniqueDates = Array.from(new Set(this.wardData.map((d) => this.formatDate(d.transactionDate)))).sort()
+    // Get unique ward names
     const uniqueWardNames = Array.from(new Set(this.wardData.map((d) => d.wardName)))
+
+    // Create flattened data for grid
     this.flattenedData = uniqueWardNames.map((wardName) => {
       const row: any = { wardName }
       let totalVehicleCount = 0
       let totalNetWeight = 0
+
       this.uniqueDates.forEach((date) => {
         const item = this.wardData.find((d) => this.formatDate(d.transactionDate) === date && d.wardName === wardName)
         const vehicles = item?.vehicleCount || 0
         const weight = item?.totalNetWeight || 0
+
         row[`${date}_VehicleCount`] = vehicles
         row[`${date}_TotalNetWeight`] = weight.toFixed(2)
+
         totalVehicleCount += vehicles
         totalNetWeight += weight
       })
+
       row["TotalVehicleCount"] = totalVehicleCount
       row["TotalNetWeight"] = totalNetWeight.toFixed(2)
       return row
     })
-    this.calculateSummaryMetrics()
+
+    this.setupDynamicColumns()
+    this.lstReportData = this.flattenedData
   }
 
   setupDynamicColumns() {
@@ -259,6 +229,7 @@ export class WardReportComponent implements OnInit {
         cellRenderer: (params: any) => `<strong>${params.value}</strong>`,
       },
     ]
+
     this.uniqueDates.forEach((date) => {
       this.columnDefs.push(
         {
@@ -273,22 +244,19 @@ export class WardReportComponent implements OnInit {
         },
       )
     })
+
     this.columnDefs.push(
       { headerName: "Total Vehicles", field: "TotalVehicleCount", width: 130 },
       { headerName: "Total Weight", field: "TotalNetWeight", width: 130 },
     )
   }
 
-  prepareGridData() {
-    this.lstReportData = this.flattenedData 
-    console.log("Grid Data:", this.lstReportData)
-  }
+  calculateSummaryFromProcessedData() {
+    if (!this.flattenedData || this.flattenedData.length === 0) {
+      this.resetSummaryStatistics()
+      return
+    }
 
-  formatDate(dateStr: string): string {
-    return new Date(dateStr).toISOString().split("T")[0] // yyyy-MM-dd
-  }
-
-  calculateSummaryMetrics() {
     const totalRow = this.flattenedData.reduce(
       (acc, curr) => {
         acc.TotalVehicleCount += curr.TotalVehicleCount
@@ -297,8 +265,33 @@ export class WardReportComponent implements OnInit {
       },
       { TotalVehicleCount: 0, TotalNetWeight: 0 },
     )
+
     this.totalVehicles = totalRow.TotalVehicleCount
     this.totalWeight = Number.parseFloat(totalRow.TotalNetWeight.toFixed(2))
+    this.daysWithData = this.uniqueDates.length
+
+    // Find top ward by weight
+    let maxWeight = 0
+    this.topWard = ""
+    this.flattenedData.forEach((ward) => {
+      const weight = Number.parseFloat(ward.TotalNetWeight)
+      if (weight > maxWeight) {
+        maxWeight = weight
+        this.topWard = ward.wardName
+      }
+    })
+  }
+
+  resetSummaryStatistics() {
+    this.totalVehicles = 0
+    this.totalWeight = 0
+    this.topWard = ""
+    this.daysWithData = 0
+    this.uniqueDates = []
+  }
+
+  formatDate(dateStr: string): string {
+    return new Date(dateStr).toISOString().split("T")[0] // yyyy-MM-dd
   }
 
   toggleFilters() {
@@ -321,24 +314,14 @@ export class WardReportComponent implements OnInit {
     window.print()
   }
 
-  setupRawColumnDefs() {
-    this.columnDefs = [
-      { headerName: "Ward Name", field: "wardName" },
-      { headerName: "Transaction Date", field: "transactionDate" },
-      { headerName: "Full Date", field: "fullDate" },
-      { headerName: "Vehicle Count", field: "vehicleCount" },
-      { headerName: "Total Net Weight", field: "totalNetWeight" },
-      { headerName: "Shift", field: "act_Shift" },
-      { headerName: "Weighbridge", field: "weighBrigde" },
-    ]
-  }
-
+  //Export to Excel
   exportToExcel() {
     if (!this.lstReportData || this.lstReportData.length === 0) {
       alert("There is no data to export")
       return
     }
 
+    // Get filtered data from AG Grid
     const filteredData: any[] = []
     this.agGrid.api.forEachNodeAfterFilter((node: any) => {
       if (node.data) {
@@ -351,80 +334,144 @@ export class WardReportComponent implements OnInit {
       return
     }
 
-    // Column mapping from API fields to UI headers
-    const columnMapping: { [key: string]: string } = {
-      wardName: "Ward Name",
-      transactionDate: "Transaction Date",
-      fullDate: "Full Date",
-      vehicleCount: "Vehicle Count",
-      totalNetWeight: "Total Net Weight (kg)",
-      act_Shift: "Shift",
-      weighBrigde: "Weighbridge",
+    // Get unique dates from filtered data
+    const filteredUniqueDates = Array.from(new Set(
+      this.uniqueDates.filter(date => {
+        // Check if any filtered ward has data for this date
+        return filteredData.some(ward =>
+          ward[`${date}_VehicleCount`] > 0 || parseFloat(ward[`${date}_TotalNetWeight`] || "0") > 0
+        )
+      })
+    )).sort()
+
+    
+    const excelData: any[] = []
+
+    // First row - only "Date" header and empty cell at first
+    const headerRow1: any[] = ["Date"];
+
+    filteredUniqueDates.forEach(date => {
+      const formattedDate = this.formatDateForExcel(date);
+      headerRow1.push(formattedDate, ""); // Keep one blank cell, will be merged
+    });
+
+    // Second row - Rowlabel + subheaders
+    const headerRow2: any[] = ["Rowlabel"];
+    filteredUniqueDates.forEach(() => {
+      headerRow2.push("Vehicles", "Weight");
+    });
+
+    // Add header rows to data
+    excelData.push(headerRow1)
+    excelData.push(headerRow2)
+
+    // Add filtered ward data rows
+    filteredData.forEach(ward => {
+      const row: any[] = [ward.wardName]
+      filteredUniqueDates.forEach(date => {
+        row.push(
+          ward[`${date}_VehicleCount`] || 0,
+          parseFloat(ward[`${date}_TotalNetWeight`] || "0")
+        )
+      })
+      excelData.push(row)
+    })
+
+    // Add total row based on filtered data
+    const totalRow: any[] = ["Total"]
+    filteredUniqueDates.forEach(date => {
+      let totalVehiclesForDate = 0
+      let totalWeightForDate = 0
+
+      filteredData.forEach(ward => {
+        totalVehiclesForDate += ward[`${date}_VehicleCount`] || 0
+        totalWeightForDate += parseFloat(ward[`${date}_TotalNetWeight`] || "0")
+      })
+
+      totalRow.push(totalVehiclesForDate, totalWeightForDate)
+    })
+    excelData.push(totalRow)
+
+    // Create worksheet
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData)
+
+    // Style the headers
+    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1')
+
+    // Merge date cells across "Vehicles" and "Weight" columns
+    worksheet['!merges'] = [];
+    for (let i = 0; i < filteredUniqueDates.length; i++) {
+      const startCol = 1 + (i * 2);
+      worksheet['!merges'].push({
+        s: { r: 0, c: startCol },
+        e: { r: 0, c: startCol + 1 }
+      });
     }
 
-    // Convert to UI-based headers
-    const transformedData = filteredData.map((item) => {
-      const row: { [key: string]: any } = {}
-      for (const field in columnMapping) {
-        row[columnMapping[field]] = item[field]
-      }
-      return row
-    })
-
-    // Create worksheet without header
-    const worksheet = XLSX.utils.json_to_sheet(transformedData)
-
-    // Prepend UI-based header row at A1
-    const headerRow = Object.values(columnMapping)
-    XLSX.utils.sheet_add_aoa(worksheet, [headerRow], { origin: "A1" })
-
-    // Adjust column widths
-    const colWidths = headerRow.map((header) => {
-      const columnContent = [header, ...transformedData.map((row) => String(row[header] ?? ""))]
-      const maxLength = Math.max(...columnContent.map((val) => val.length))
-      return { wch: maxLength + 2 }
-    })
-    worksheet["!cols"] = colWidths
-
-    // Bold header styling
-    headerRow.forEach((_, colIndex) => {
-      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex })
+    // Style first header row ("Date")
+    for (let col = 0; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col })
       if (worksheet[cellAddress]) {
         worksheet[cellAddress].s = {
           font: { bold: true },
+          fill: { fgColor: { rgb: "E6E6FA" } },
+          alignment: { horizontal: "center", vertical: "center" }
         }
       }
-    })
+    }
 
-    // Create summary sheet
-    const summaryData = [
-      { Metric: "Days with Data", Value: this.daysWithData },
-      { Metric: "Highest Volume Ward", Value: this.topWard || "N/A" },
-      { Metric: "Total Weight (kg)", Value: this.totalWeight },
-      { Metric: "Total Vehicles", Value: this.totalVehicles },
-    ]
-
-    const summaryWorksheet = XLSX.utils.json_to_sheet(summaryData)
-    const summaryHeaderRow = ["Metric", "Value"]
-    XLSX.utils.sheet_add_aoa(summaryWorksheet, [summaryHeaderRow], { origin: "A1" })
-
-    // Style summary headers
-    summaryHeaderRow.forEach((_, colIndex) => {
-      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex })
-      if (summaryWorksheet[cellAddress]) {
-        summaryWorksheet[cellAddress].s = {
+    // Style second header row
+    for (let col = 0; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col })
+      if (worksheet[cellAddress]) {
+        worksheet[cellAddress].s = {
           font: { bold: true },
+          fill: { fgColor: { rgb: "F0F0F0" } },
+          alignment: { horizontal: "center", vertical: "center" }
         }
       }
-    })
+    }
+
+    // Style total row
+    const totalRowIndex = excelData.length - 1
+    for (let col = 0; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: totalRowIndex, c: col })
+      if (worksheet[cellAddress]) {
+        worksheet[cellAddress].s = {
+          font: { bold: true },
+          fill: { fgColor: { rgb: "FFFF99" } }
+        }
+      }
+    }
+
+    // Style first column (Ward names)
+    for (let row = 0; row <= range.e.r; row++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: row, c: 0 })
+      if (worksheet[cellAddress]) {
+        if (!worksheet[cellAddress].s) worksheet[cellAddress].s = {}
+        worksheet[cellAddress].s.font = { bold: true }
+      }
+    }
+
+    // Set column widths
+    const colWidths = [{ wch: 15 }] // First column width
+    for (let i = 0; i < filteredUniqueDates.length; i++) {
+      colWidths.push({ wch: 10 }, { wch: 12 }) // Vehicles and Weight columns
+    }
+    worksheet['!cols'] = colWidths
 
     // Create and save workbook
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Ward Report Data")
-    XLSX.utils.book_append_sheet(workbook, summaryWorksheet, "Summary")
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Ward Report")
 
     const fileName = `Ward_Report_${this.reportForm.value.month}.xlsx`
     XLSX.writeFile(workbook, fileName)
+  }
+
+  formatDateForExcel(dateStr: string): string {
+    // Convert yyyy-MM-dd to dd-MM-yyyy format for Excel
+    const [year, month, day] = dateStr.split('-')
+    return `${day}-${month}-${year}`
   }
 
   getBarHeight(value: number, dataArray: number[]): number {

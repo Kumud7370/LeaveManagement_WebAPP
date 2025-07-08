@@ -663,4 +663,8 @@ export class SearchReportComponent implements OnInit {
     this.resetSummaryStatistics()
     this.activeTab = "search"
   }
+
+  printReport() {
+    window.print()
+  }
 }
