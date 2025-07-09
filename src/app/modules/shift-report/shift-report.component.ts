@@ -267,7 +267,7 @@ export class ShiftReportComponent implements OnInit {
     this.flattenedData = []
     this.resetSummaryStatistics()
   }
-
+  
   processDataForGrid() {
     if (!this.shiftData || this.shiftData.length === 0) {
       this.lstReportData = []
@@ -278,12 +278,19 @@ export class ShiftReportComponent implements OnInit {
 
     console.log("Processing data for grid:", this.shiftData)
 
-    // Get unique ward names - your API returns wardName
+    // Get unique ward names - FIXED: your API returns wardName, not Ward
     this.uniqueWards = Array.from(new Set(this.shiftData.map((d) => d.wardName))).filter(
       (ward) => ward && ward.trim() !== "",
     )
 
     console.log("Unique wards:", this.uniqueWards)
+
+    // Get unique shifts from the actual data - FIXED: Use actual shift values from API
+    this.uniqueShifts = Array.from(new Set(this.shiftData.map((d) => d.act_Shift))).filter(
+      (shift) => shift && shift.trim() !== "",
+    )
+
+    console.log("Unique shifts:", this.uniqueShifts)
 
     // Create flattened data structure
     this.flattenedData = this.uniqueWards.map((wardName) => {
@@ -292,20 +299,14 @@ export class ShiftReportComponent implements OnInit {
       let totalNetWeight = 0
 
       this.uniqueShifts.forEach((shift) => {
-        // Find data for this ward and shift
-        // Your API returns act_Shift with values like "II", so we need to map them
-        const shiftMapping: { [key: string]: string } = {
-          "Shift I": "I",
-          "Shift II": "II",
-          "Shift III": "III",
-        }
-
+        // FIXED: Find data for this ward and shift using correct property names
         const shiftData = this.shiftData.filter((d) => {
-          return d.wardName === wardName && d.act_Shift === shiftMapping[shift]
+          return d.wardName === wardName && d.act_Shift === shift
         })
 
         console.log(`Data for ${wardName} - ${shift}:`, shiftData)
 
+        // FIXED: Use correct property names from API response
         const vehicleCount = shiftData.reduce((sum, item) => sum + (item.vehicleCount || 0), 0)
         const netWeight = shiftData.reduce((sum, item) => sum + (item.totalNetWeight || 0), 0)
 
