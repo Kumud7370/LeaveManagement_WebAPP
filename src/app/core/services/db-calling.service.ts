@@ -129,7 +129,7 @@ export class DbCallingService {
   }
 
   getWardwiseReport(data: {
-    WeighBrigde: string;
+    WeighBridge: string;
     FromDate: string;
     ToDate: string;
     FullDate: string;

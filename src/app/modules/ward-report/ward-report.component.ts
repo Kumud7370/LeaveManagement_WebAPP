@@ -77,7 +77,7 @@ export class WardReportComponent implements OnInit {
     const toDate = `${currentMonth}-${String(lastDay).padStart(2, "0")}`
 
     const payload = {
-      WeighBrigde: weighBridge,
+      WeighBridge: weighBridge,
       FromDate: fromDate,
       ToDate: toDate,
       FullDate: "",
@@ -144,7 +144,7 @@ export class WardReportComponent implements OnInit {
     const toDate = `${formValues.month}-${String(lastDay).padStart(2, "0")}`
 
     const payload = {
-      WeighBrigde: weighBridge,
+      WeighBridge: weighBridge,
       FromDate: fromDate,
       ToDate: toDate,
       FullDate: "",
