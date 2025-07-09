@@ -14,7 +14,7 @@ declare const saveAs: (blob: Blob, filename: string) => void
   templateUrl: "./ward-report.component.html",
   styleUrls: ["./ward-report.component.scss"],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, AgGridModule, MaxPipe],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, AgGridModule],
 })
 export class WardReportComponent implements OnInit {
   @ViewChild("reportContainer") reportContainer!: ElementRef

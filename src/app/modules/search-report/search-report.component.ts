@@ -2,15 +2,12 @@ import { Component, type OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from "@angular/forms"
 import { Router, RouterModule } from "@angular/router"
-import { ICellRendererParams, ValueFormatterParams } from 'ag-grid-community';
 import { AgGridModule } from 'ag-grid-angular';
 import { DbCallingService } from "src/app/core/services/db-calling.service";
 import * as XLSX from 'xlsx';
-import * as FileSaver from 'file-saver';
 import { ViewChild } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
-
-
+import { Validators } from '@angular/forms';
 @Component({
   selector: "app-search-report",
   templateUrl: "./search-report.component.html",
@@ -110,16 +107,15 @@ export class SearchReportComponent implements OnInit {
     `
   }
 
-  // Data sources (mock data)
   WeighBridgeData = [
-    { id: "WBK1", WeighBridge: "Kanjur" },
-    { id: "D", WeighBridge: "Deonar" },
     { id: "ALLWB", WeighBridge: "All" },
+    { id: "WBK1", WeighBridge: "Kanjur" },
+    { id: "D", WeighBridge: "Deonar" }
   ]
 
   reportTypeList = [
-    { id: 0, value: "Out" },
     { id: 1, value: "In" },
+    { id: 0, value: "Out" }
   ]
 
   AgencyData = [
@@ -154,12 +150,12 @@ export class SearchReportComponent implements OnInit {
     todate: string
     selectNallah: string
   } = {
-    WeighBridge: "",
-    reportType: null,
-    FromDate: "",
-    todate: "",
-    selectNallah: "",
-  }
+      WeighBridge: "",
+      reportType: null,
+      FromDate: "",
+      todate: "",
+      selectNallah: "",
+    }
 
   // Summary statistics
   totalNoOfVehicles = 0
@@ -176,7 +172,7 @@ export class SearchReportComponent implements OnInit {
     public router: Router,
     private fb: FormBuilder,
     private dbService: DbCallingService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.initForm()
@@ -188,10 +184,10 @@ export class SearchReportComponent implements OnInit {
   loadInitialData() {
     const today = new Date()
     const basicPayload = {
-      WeighBridge: "",
+      WeighBridge: "ALLWB",
       FromDate: this.formatDate(today),
       todate: this.formatDate(today),
-      reportType: 0,
+      reportType: 1,
     }
 
     this.isLoading = true
@@ -226,10 +222,11 @@ export class SearchReportComponent implements OnInit {
     const today = new Date()
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
     this.reportForm = this.fb.group({
-      WeighBridge: [""],
+      //WeighBridge: [""],
+      WeighBridge: ["ALLWB", Validators.required],
       FromDate: [this.formatDate(firstDay)],
       todate: [this.formatDate(today)],
-      reportType: [0],
+      reportType: [1],
     })
   }
 

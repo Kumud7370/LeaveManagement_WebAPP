@@ -38,8 +38,7 @@
         <div class="results-header">
           <h2>Search Report Data</h2>
           <div class="report-actions">
-            <button class="btn-export" (click)="exportToExcel()"
-              [disabled]="!reportData || reportData.length === 0">
+            <button class="btn-export" (click)="exportToExcel()" [disabled]="!reportData || reportData.length === 0">
               <i class="fas fa-file-excel"></i> Export to Excel
             </button>
             <button class="btn-print" (click)="printReport()">
@@ -50,16 +49,9 @@
 
         <!-- AG Grid Component -->
         <div class="grid-container">
-          <ag-grid-angular 
-            style="width: 100%; height: 500px;"
-            class="ag-theme-alpine" 
-            [rowData]="reportData"
-            [columnDefs]="columnDefs" 
-            [defaultColDef]="defaultColDef"
-            [pagination]="true" 
-            [paginationPageSize]="10"
-            [paginationPageSizeSelector]="[10, 20, 50, 100]" 
-            [loading]="isLoading">
+          <ag-grid-angular style="width: 100%; height: 500px;" class="ag-theme-alpine" [rowData]="reportData"
+            [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="10"
+            [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading">
           </ag-grid-angular>
         </div>
 
@@ -81,19 +73,20 @@
             </div>
             <div class="summary-item">
               <div class="summary-label">Gross Weight</div>
-              <div class="summary-value">{{ totalGrossWeightInKG | number:'1.2-2' }} KG <span class="unit-conversion">({{
-                totalGrossWeightInTon | number:'1.2-2' }} Tons)</span></div>
+              <div class="summary-value">{{ totalGrossWeightInKG | number:'1.2-2' }} KG <span
+                  class="unit-conversion">({{
+                  totalGrossWeightInTon | number:'1.2-2' }} Tons)</span></div>
             </div>
             <div class="summary-item">
               <div class="summary-label">Unladen Weight</div>
               <div class="summary-value">{{ totalUnladenWeightInKg | number:'1.2-2' }} KG <span
-                class="unit-conversion">({{
-                totalUnladenWeightInTon | number:'1.2-2' }} Tons)</span></div>
+                  class="unit-conversion">({{
+                  totalUnladenWeightInTon | number:'1.2-2' }} Tons)</span></div>
             </div>
             <div class="summary-item">
               <div class="summary-label">Net Weight</div>
               <div class="summary-value">{{ totalActualNetWeightInKG | number:'1.2-2' }} KG <span
-                class="unit-conversion">({{ totalActualNetWeightInTon | number:'1.2-2' }} Tons)</span></div>
+                  class="unit-conversion">({{ totalActualNetWeightInTon | number:'1.2-2' }} Tons)</span></div>
             </div>
           </div>
 
@@ -151,29 +144,30 @@
                   <i class="fas fa-chevron-down"></i>
                 </div>
               </div>
-              
               <div class="form-group">
                 <label for="fromdate">From Date</label>
                 <div class="input-wrapper">
                   <input type="date" formControlName="FromDate" class="form-control" required />
                   <i class="fas fa-calendar-alt"></i>
                 </div>
-                <div *ngIf="reportForm.get('FromDate')?.invalid && reportForm.get('FromDate')?.touched" class="error-message">
+                <div *ngIf="reportForm.get('FromDate')?.invalid && reportForm.get('FromDate')?.touched"
+                  class="error-message">
                   From date is required
                 </div>
               </div>
-              
+
               <div class="form-group">
                 <label for="todate">To Date</label>
                 <div class="input-wrapper">
                   <input type="date" formControlName="todate" class="form-control" required />
                   <i class="fas fa-calendar-alt"></i>
                 </div>
-                <div *ngIf="reportForm.get('todate')?.invalid && reportForm.get('todate')?.touched" class="error-message">
+                <div *ngIf="reportForm.get('todate')?.invalid && reportForm.get('todate')?.touched"
+                  class="error-message">
                   To date is required
                 </div>
               </div>
-              
+
               <div class="form-group">
                 <label for="reportType">Report Type</label>
                 <div class="select-wrapper">
@@ -184,7 +178,7 @@
                   <i class="fas fa-chevron-down"></i>
                 </div>
               </div>
-              
+
               <div class="form-actions">
                 <button type="submit" class="btn-primary" [disabled]="isLoading" (click)="onSubmit()">
                   <i class="fas fa-search"></i>
@@ -203,7 +197,7 @@
             <i class="fas" [class.fa-chevron-down]="!isAdvancedSearch" [class.fa-chevron-up]="isAdvancedSearch"></i>
             Advanced Search Options
           </div>
-          
+
           <div class="filter-card" *ngIf="isAdvancedSearch">
             <div class="card-header">
               <h2>Advanced Filters</h2>
