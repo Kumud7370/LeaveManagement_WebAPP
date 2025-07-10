@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angula
 import { Router, RouterModule } from "@angular/router"
 import { AgGridModule, AgGridAngular } from 'ag-grid-angular'
 import * as XLSX from "xlsx";
-import { MaxPipe } from "src/app/shared/max.pipe"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
 
 declare const saveAs: (blob: Blob, filename: string) => void
@@ -21,14 +20,14 @@ export class WardReportComponent implements OnInit {
   @ViewChild("agGrid") agGrid!: AgGridAngular
 
   isLoading = false
-  showReport = true // Always show report section
-  activeView = "table" // Only table view now
+  showReport = true
+  activeView = "table"
   isFiltersOpen = false
 
   reportForm!: FormGroup
 
   weighBridgeOptions = [
-    { id: "ALLWB", name: "All" },
+    { id: "all", name: "All" },
     { id: "WBK1", name: "Kanjur" },
     { id: "WBD1", name: "Deonar" },
   ]
@@ -37,6 +36,7 @@ export class WardReportComponent implements OnInit {
   uniqueDates: string[] = []
   flattenedData: any[] = []
   lstReportData: any[] = []
+
   columnDefs: any[] = []
   defaultColDef = {
     resizable: true,
@@ -54,56 +54,58 @@ export class WardReportComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private dbCallingService: DbCallingService,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.initForm()
     this.setupColumnDefs()
-    // Load initial data automatically with current month
     this.loadInitialData()
   }
 
-  // NEW METHOD: Load initial data automatically
   loadInitialData() {
     const currentDate = new Date()
     const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`
 
     this.isLoading = true
-
     const weighBridge = ""
     const fromDate = `${currentMonth}-01`
-    const [year, month] = currentMonth.split("-")
-    const lastDay = new Date(Number(year), Number(month), 0).getDate()
-    const toDate = `${currentMonth}-${String(lastDay).padStart(2, "0")}`
 
     const payload = {
       WeighBridge: weighBridge,
       FromDate: fromDate,
-      ToDate: toDate,
+      ToDate: "", // Not used by Wardwise SP
       FullDate: "",
       WardName: "",
       Act_Shift: "",
       TransactionDate: fromDate,
     }
 
+    console.log("Loading initial wardwise data with payload:", payload)
+
     this.dbCallingService.getWardwiseReport(payload).subscribe({
       next: (response) => {
-        if (response && response.serviceResponse === 1 && response.wardData) {
+        console.log("Initial Wardwise API Response:", response)
+
+        // Check for success - consistent with shiftwise logic
+        if (
+          response &&
+          (response.serviceResponse === 1 || response.ServiceResponse === "Successful") &&
+          response.wardData?.length
+        ) {
+          console.log("Processing initial wardwise data:", response.wardData)
           this.wardData = response.wardData
           this.processDataForGrid()
           this.calculateSummaryFromProcessedData()
+          console.log("Initial wardwise processed data:", this.lstReportData)
         } else {
-          this.wardData = []
-          this.lstReportData = []
-          this.resetSummaryStatistics()
+          console.log("No initial wardwise data found")
+          this.resetData()
         }
         this.isLoading = false
       },
       error: (error) => {
-        console.error("API Error:", error)
-        this.wardData = []
-        this.lstReportData = []
-        this.resetSummaryStatistics()
+        console.error("Initial Wardwise API Error:", error)
+        this.resetData()
         this.isLoading = false
       },
     })
@@ -112,6 +114,7 @@ export class WardReportComponent implements OnInit {
   initForm() {
     const currentDate = new Date()
     const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`
+
     this.reportForm = this.fb.group({
       weighBridge: ["all", Validators.required],
       month: [currentMonth, Validators.required],
@@ -133,49 +136,63 @@ export class WardReportComponent implements OnInit {
 
   onSubmit() {
     if (this.reportForm.invalid) return
+
     this.isLoading = true
     this.isFiltersOpen = false
 
     const formValues = this.reportForm.value
     const weighBridge = formValues.weighBridge === "all" ? "" : formValues.weighBridge
     const fromDate = `${formValues.month}-01`
-    const [year, month] = formValues.month.split("-")
-    const lastDay = new Date(Number(year), Number(month), 0).getDate()
-    const toDate = `${formValues.month}-${String(lastDay).padStart(2, "0")}`
 
     const payload = {
       WeighBridge: weighBridge,
       FromDate: fromDate,
-      ToDate: toDate,
+      ToDate: "", // Not used by Wardwise SP
       FullDate: "",
       WardName: "",
       Act_Shift: "",
       TransactionDate: fromDate,
     }
 
+    console.log("Submitting wardwise with payload:", payload)
+
     this.dbCallingService.getWardwiseReport(payload).subscribe({
       next: (response) => {
-        if (response && response.serviceResponse === 1 && response.wardData) {
+        console.log("Wardwise API Response:", response)
+
+        // Check for success - consistent with shiftwise logic
+        if (
+          response &&
+          (response.serviceResponse === 1 || response.ServiceResponse === "Successful") &&
+          response.wardData?.length
+        ) {
+          console.log("Processing wardwise data:", response.wardData)
           this.wardData = response.wardData
           this.processDataForGrid()
           this.calculateSummaryFromProcessedData()
+          console.log("Wardwise processed data:", this.lstReportData)
+          alert("Wardwise data retrieved successfully!")
         } else {
-          alert(response?.msg || "No data found")
-          this.wardData = []
-          this.lstReportData = []
-          this.resetSummaryStatistics()
+          console.log("No wardwise data found or invalid response")
+          alert(response?.msg || "No wardwise data found")
+          this.resetData()
         }
         this.isLoading = false
       },
       error: (error) => {
-        console.error("API Error:", error)
-        alert("Failed to fetch data")
-        this.wardData = []
-        this.lstReportData = []
-        this.resetSummaryStatistics()
+        console.error("Wardwise API Error:", error)
+        alert("Failed to fetch wardwise data")
+        this.resetData()
         this.isLoading = false
       },
     })
+  }
+
+  private resetData() {
+    this.wardData = []
+    this.lstReportData = []
+    this.flattenedData = []
+    this.resetSummaryStatistics()
   }
 
   processDataForGrid() {
@@ -185,11 +202,17 @@ export class WardReportComponent implements OnInit {
       return
     }
 
-    // Get unique dates and sort them
-    this.uniqueDates = Array.from(new Set(this.wardData.map((d) => this.formatDate(d.transactionDate)))).sort()
+    console.log("Processing wardwise data for grid:", this.wardData)
 
-    // Get unique ward names
-    const uniqueWardNames = Array.from(new Set(this.wardData.map((d) => d.wardName)))
+    // Get unique dates and sort them - FIXED: use correct property name
+    this.uniqueDates = Array.from(
+      new Set(this.wardData.map((d) => this.formatDate(d.transactionDate || d.TransactionDate))),
+    ).sort()
+    console.log("Unique dates:", this.uniqueDates)
+
+    // Get unique ward names - FIXED: use correct property name
+    const uniqueWardNames = Array.from(new Set(this.wardData.map((d) => d.wardName || d.WardName)))
+    console.log("Unique ward names:", uniqueWardNames)
 
     // Create flattened data for grid
     this.flattenedData = uniqueWardNames.map((wardName) => {
@@ -198,9 +221,18 @@ export class WardReportComponent implements OnInit {
       let totalNetWeight = 0
 
       this.uniqueDates.forEach((date) => {
-        const item = this.wardData.find((d) => this.formatDate(d.transactionDate) === date && d.wardName === wardName)
-        const vehicles = item?.vehicleCount || 0
-        const weight = item?.totalNetWeight || 0
+        // FIXED: Find data for this ward and date using correct property names
+        const dateData = this.wardData.filter((d) => {
+          const itemDate = this.formatDate(d.transactionDate || d.TransactionDate)
+          const itemWard = d.wardName || d.WardName
+          return itemDate === date && itemWard === wardName
+        })
+
+        console.log(`Data for ${wardName} - ${date}:`, dateData)
+
+        // FIXED: Use correct property names from API response
+        const vehicles = dateData.reduce((sum, item) => sum + (item.vehicleCount || item.VehicleCount || 0), 0)
+        const weight = dateData.reduce((sum, item) => sum + (item.totalNetWeight || item.TotalNetWeight || 0), 0)
 
         row[`${date}_VehicleCount`] = vehicles
         row[`${date}_TotalNetWeight`] = weight.toFixed(2)
@@ -211,11 +243,16 @@ export class WardReportComponent implements OnInit {
 
       row["TotalVehicleCount"] = totalVehicleCount
       row["TotalNetWeight"] = totalNetWeight.toFixed(2)
+
       return row
     })
 
+    console.log("Flattened wardwise data:", this.flattenedData)
+
     this.setupDynamicColumns()
-    this.lstReportData = this.flattenedData
+    this.lstReportData = [...this.flattenedData]
+
+    console.log("Final wardwise lstReportData:", this.lstReportData)
   }
 
   setupDynamicColumns() {
@@ -280,6 +317,13 @@ export class WardReportComponent implements OnInit {
         this.topWard = ward.wardName
       }
     })
+
+    console.log("Wardwise summary calculated:", {
+      totalVehicles: this.totalVehicles,
+      totalWeight: this.totalWeight,
+      topWard: this.topWard,
+      daysWithData: this.daysWithData,
+    })
   }
 
   resetSummaryStatistics() {
@@ -291,6 +335,7 @@ export class WardReportComponent implements OnInit {
   }
 
   formatDate(dateStr: string): string {
+    if (!dateStr) return ""
     return new Date(dateStr).toISOString().split("T")[0] // yyyy-MM-dd
   }
 
@@ -302,10 +347,6 @@ export class WardReportComponent implements OnInit {
     this.isFiltersOpen = false
   }
 
-  setActiveView(view: string) {
-    this.activeView = view
-  }
-
   navigateBack() {
     this.router.navigateByUrl("/dashboard")
   }
@@ -314,7 +355,6 @@ export class WardReportComponent implements OnInit {
     window.print()
   }
 
-  //Export to Excel
   exportToExcel() {
     if (!this.lstReportData || this.lstReportData.length === 0) {
       alert("There is no data to export")
@@ -335,59 +375,52 @@ export class WardReportComponent implements OnInit {
     }
 
     // Get unique dates from filtered data
-    const filteredUniqueDates = Array.from(new Set(
-      this.uniqueDates.filter(date => {
-        // Check if any filtered ward has data for this date
-        return filteredData.some(ward =>
-          ward[`${date}_VehicleCount`] > 0 || parseFloat(ward[`${date}_TotalNetWeight`] || "0") > 0
-        )
-      })
-    )).sort()
+    const filteredUniqueDates = Array.from(
+      new Set(
+        this.uniqueDates.filter((date) => {
+          return filteredData.some(
+            (ward) => ward[`${date}_VehicleCount`] > 0 || Number.parseFloat(ward[`${date}_TotalNetWeight`] || "0") > 0,
+          )
+        }),
+      ),
+    ).sort()
 
-    
     const excelData: any[] = []
 
-    // First row - only "Date" header and empty cell at first
-    const headerRow1: any[] = ["Date"];
+    // First row - Date headers
+    const headerRow1: any[] = ["Date"]
+    filteredUniqueDates.forEach((date) => {
+      const formattedDate = this.formatDateForExcel(date)
+      headerRow1.push(formattedDate, "")
+    })
 
-    filteredUniqueDates.forEach(date => {
-      const formattedDate = this.formatDateForExcel(date);
-      headerRow1.push(formattedDate, ""); // Keep one blank cell, will be merged
-    });
-
-    // Second row - Rowlabel + subheaders
-    const headerRow2: any[] = ["Rowlabel"];
+    // Second row - Sub-headers
+    const headerRow2: any[] = ["Rowlabel"]
     filteredUniqueDates.forEach(() => {
-      headerRow2.push("Vehicles", "Weight");
-    });
+      headerRow2.push("Vehicles", "Weight")
+    })
 
-    // Add header rows to data
     excelData.push(headerRow1)
     excelData.push(headerRow2)
 
     // Add filtered ward data rows
-    filteredData.forEach(ward => {
+    filteredData.forEach((ward) => {
       const row: any[] = [ward.wardName]
-      filteredUniqueDates.forEach(date => {
-        row.push(
-          ward[`${date}_VehicleCount`] || 0,
-          parseFloat(ward[`${date}_TotalNetWeight`] || "0")
-        )
+      filteredUniqueDates.forEach((date) => {
+        row.push(ward[`${date}_VehicleCount`] || 0, Number.parseFloat(ward[`${date}_TotalNetWeight`] || "0"))
       })
       excelData.push(row)
     })
 
-    // Add total row based on filtered data
+    // Add total row
     const totalRow: any[] = ["Total"]
-    filteredUniqueDates.forEach(date => {
+    filteredUniqueDates.forEach((date) => {
       let totalVehiclesForDate = 0
       let totalWeightForDate = 0
-
-      filteredData.forEach(ward => {
+      filteredData.forEach((ward) => {
         totalVehiclesForDate += ward[`${date}_VehicleCount`] || 0
-        totalWeightForDate += parseFloat(ward[`${date}_TotalNetWeight`] || "0")
+        totalWeightForDate += Number.parseFloat(ward[`${date}_TotalNetWeight`] || "0")
       })
-
       totalRow.push(totalVehiclesForDate, totalWeightForDate)
     })
     excelData.push(totalRow)
@@ -395,94 +428,32 @@ export class WardReportComponent implements OnInit {
     // Create worksheet
     const worksheet = XLSX.utils.aoa_to_sheet(excelData)
 
-    // Style the headers
-    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1')
-
-    // Merge date cells across "Vehicles" and "Weight" columns
-    worksheet['!merges'] = [];
+    // Merge date cells
+    worksheet["!merges"] = []
     for (let i = 0; i < filteredUniqueDates.length; i++) {
-      const startCol = 1 + (i * 2);
-      worksheet['!merges'].push({
+      const startCol = 1 + i * 2
+      worksheet["!merges"].push({
         s: { r: 0, c: startCol },
-        e: { r: 0, c: startCol + 1 }
-      });
-    }
-
-    // Style first header row ("Date")
-    for (let col = 0; col <= range.e.c; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col })
-      if (worksheet[cellAddress]) {
-        worksheet[cellAddress].s = {
-          font: { bold: true },
-          fill: { fgColor: { rgb: "E6E6FA" } },
-          alignment: { horizontal: "center", vertical: "center" }
-        }
-      }
-    }
-
-    // Style second header row
-    for (let col = 0; col <= range.e.c; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: 1, c: col })
-      if (worksheet[cellAddress]) {
-        worksheet[cellAddress].s = {
-          font: { bold: true },
-          fill: { fgColor: { rgb: "F0F0F0" } },
-          alignment: { horizontal: "center", vertical: "center" }
-        }
-      }
-    }
-
-    // Style total row
-    const totalRowIndex = excelData.length - 1
-    for (let col = 0; col <= range.e.c; col++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: totalRowIndex, c: col })
-      if (worksheet[cellAddress]) {
-        worksheet[cellAddress].s = {
-          font: { bold: true },
-          fill: { fgColor: { rgb: "FFFF99" } }
-        }
-      }
-    }
-
-    // Style first column (Ward names)
-    for (let row = 0; row <= range.e.r; row++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: 0 })
-      if (worksheet[cellAddress]) {
-        if (!worksheet[cellAddress].s) worksheet[cellAddress].s = {}
-        worksheet[cellAddress].s.font = { bold: true }
-      }
+        e: { r: 0, c: startCol + 1 },
+      })
     }
 
     // Set column widths
-    const colWidths = [{ wch: 15 }] // First column width
+    const colWidths = [{ wch: 15 }]
     for (let i = 0; i < filteredUniqueDates.length; i++) {
-      colWidths.push({ wch: 10 }, { wch: 12 }) // Vehicles and Weight columns
+      colWidths.push({ wch: 10 }, { wch: 12 })
     }
-    worksheet['!cols'] = colWidths
+    worksheet["!cols"] = colWidths
 
     // Create and save workbook
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, "Ward Report")
-
     const fileName = `Ward_Report_${this.reportForm.value.month}.xlsx`
     XLSX.writeFile(workbook, fileName)
   }
 
   formatDateForExcel(dateStr: string): string {
-    // Convert yyyy-MM-dd to dd-MM-yyyy format for Excel
-    const [year, month, day] = dateStr.split('-')
+    const [year, month, day] = dateStr.split("-")
     return `${day}-${month}-${year}`
-  }
-
-  getBarHeight(value: number, dataArray: number[]): number {
-    if (!dataArray || dataArray.length === 0) return 0
-    const maxValue = Math.max(...dataArray)
-    return maxValue > 0 ? (value / maxValue) * 100 : 0
-  }
-
-  getTrendHeight(value: number, dataArray: number[]): number {
-    if (!dataArray || dataArray.length === 0) return 2
-    const maxValue = Math.max(...dataArray)
-    return maxValue > 0 ? Math.max(2, (value / maxValue) * 50) : 2
   }
 }
