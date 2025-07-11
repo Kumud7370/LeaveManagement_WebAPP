@@ -164,5 +164,56 @@ export class DbCallingService {
       })
     );
   }
+  getBillableSearchData(data: {
+    UserId: number;
+    Zone: string | null;
+    Parentcode: string | null;
+    Workcode: string | null;
+    FromDate: string;
+    ToDate: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Report/GetBillableSearchData`, data).pipe(
+      catchError((error) => {
+        console.error("Error fetching billable search data", error);
+        return of({
+          Data: [],
+          ServiceResponse: 0,
+          msg: "Error fetching billable data"
+        });
+      })
+    );
+  }
 
+  sendToVerifyBillingData(data: {
+    UserId: number;
+    SlipSrNoNew: string;
+    BillingStatus: number;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Report/BillingVerification`, data).pipe(
+      catchError((error) => {
+        console.error("Error sending billing data for verification", error);
+        return of({
+          ServiceResponse: 0,
+          msg: "Error sending data for verification"
+        });
+      })
+    );
+  }
+
+  rejectBillingData(data: {
+    UserId: number;
+    SlipSrNoNew: string;
+    BillingStatus: number;
+    Remark?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Report/BillingReject`, data).pipe(
+      catchError((error) => {
+        console.error("Error rejecting billing data", error);
+        return of({
+          ServiceResponse: 0,
+          msg: "Error rejecting billing data"
+        });
+      })
+    );
+  }
 }

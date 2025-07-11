@@ -73,6 +73,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       ],
     },
     // { label: "Remarks & Correction", route: "/remarks", icon: "fas fa-clipboard-check" },
+    { label: "Billing Report", route: "/billing-report", icon: "fas fa-file-invoice-dollar" },
   ]
 
   menuItems = this.navItems
