@@ -26,7 +26,7 @@
   <!-- Loading Indicator -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="spinner"></div>
-    <div class="loading-text">Generating Report...</div>
+    <div class="loading-text">Processing...</div>
   </div>
 
   <!-- Report Content -->
@@ -36,21 +36,111 @@
       <h2>Billing Report: {{ getSelectedMonthYear() }}</h2>
     </div>
 
+    <!-- Quick Filter Controls -->
+    <div class="quick-filter-section">
+      <div class="quick-filter-header">
+        <h3><i class="fas fa-filter"></i> Smart Filters & Selection</h3>
+        <button class="btn-toggle-quick-filters" (click)="toggleQuickFilters()" [class.active]="isQuickFiltersOpen">
+          <i class="fas fa-cog"></i> Advanced Filters
+        </button>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="quick-actions">
+        <button class="btn-quick-action current-month" (click)="selectCurrentMonthData()" [disabled]="isLoading">
+          <i class="fas fa-calendar-day"></i>
+          <span>Current Month</span>
+        </button>
+        <button class="btn-quick-action current-year" (click)="selectCurrentYearData()" [disabled]="isLoading">
+          <i class="fas fa-calendar-alt"></i>
+          <span>Current Year</span>
+        </button>
+        <button class="btn-quick-action select-all" (click)="selectAllVisibleData()" [disabled]="isLoading">
+          <i class="fas fa-check-square"></i>
+          <span>Select All Visible</span>
+        </button>
+        <button class="btn-quick-action clear-selection" (click)="clearGridSelection()" [disabled]="isLoading">
+          <i class="fas fa-times-circle"></i>
+          <span>Clear Selection</span>
+        </button>
+      </div>
+
+      <!-- Advanced Filter Panel -->
+      <div class="advanced-filters" [class.show]="isQuickFiltersOpen">
+        <form [formGroup]="quickFilterForm" (ngSubmit)="applyQuickFilter()">
+          <div class="filter-row">
+            <div class="form-group">
+              <label>Filter Type</label>
+              <select formControlName="filterType" class="form-control">
+                <option value="all">All Data</option>
+                <option value="month">By Month</option>
+                <option value="year">By Year</option>
+                <option value="dateRange">Custom Date Range</option>
+              </select>
+            </div>
+
+            <div class="form-group" *ngIf="quickFilterForm.get('filterType')?.value === 'month'">
+              <label>Month</label>
+              <select formControlName="selectedMonth" class="form-control">
+                <option *ngFor="let month of months" [value]="month.value">{{ month.name }}</option>
+              </select>
+            </div>
+
+            <div class="form-group" *ngIf="quickFilterForm.get('filterType')?.value === 'month' || quickFilterForm.get('filterType')?.value === 'year'">
+              <label>Year</label>
+              <select formControlName="selectedYear" class="form-control">
+                <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+              </select>
+            </div>
+
+            <div class="form-group" *ngIf="quickFilterForm.get('filterType')?.value === 'dateRange'">
+              <label>From Date</label>
+              <input type="date" formControlName="customFromDate" class="form-control">
+            </div>
+
+            <div class="form-group" *ngIf="quickFilterForm.get('filterType')?.value === 'dateRange'">
+              <label>To Date</label>
+              <input type="date" formControlName="customToDate" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <button type="submit" class="btn-apply-filter" [disabled]="isLoading">
+                <i class="fas fa-search"></i> Apply Filter
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Current Filter Display -->
+      <div class="current-filter-display" *ngIf="currentFilterType !== 'all'">
+        <span class="filter-label">Current Filter:</span>
+        <span class="filter-value">{{ getFilterTypeText() }}</span>
+        <button class="btn-clear-filter" (click)="quickFilterForm.patchValue({filterType: 'all'}); applyQuickFilter()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
     <!-- Table View with AG Grid -->
     <div class="table-view">
       <div class="results-container">
         <div class="results-header">
           <h2>Billing Data</h2>
           <div class="report-actions">
-            <button class="btn-verify" (click)="sendToVerification()" 
+            <button class="btn-go-verification" (click)="goForVerification()" 
               [disabled]="!hasSelectedRows() || isLoading">
-              <i class="fas fa-check-circle"></i> Send to Verification
+              <i class="fas fa-paper-plane"></i> Go for Verification ({{ selectedRowsCount }})
+            </button>
+            <button class="btn-verify" (click)="sendForMonthlyVerification()" 
+              [disabled]="isLoading">
+              <i class="fas fa-calendar-check"></i> Send All
             </button>
             <button class="btn-export" (click)="exportToExcel()"
-              [disabled]="!billableSearchData || billableSearchData.length === 0">
-              <i class="fas fa-file-excel"></i> Export to Excel
+              [disabled]="!billableSearchData || billableSearchData.length === 0 || isLoading">
+              <i class="fas fa-file-excel"></i> Export
             </button>
-            <button class="btn-print" (click)="printReport()">
+            <button class="btn-print" (click)="printReport()" [disabled]="isLoading">
               <i class="fas fa-print"></i> Print
             </button>
           </div>
@@ -58,19 +148,45 @@
 
         <!-- AG Grid Component -->
         <div class="grid-container">
+          <div class="grid-controls">
+            <div class="grid-controls-left">
+              <span class="grid-info">
+                Showing {{ (filteredData.length > 0 ? filteredData : billableSearchData).length }} records
+                <span *ngIf="selectedRowsCount > 0" class="selected-info">({{ selectedRowsCount }} selected)</span>
+              </span>
+            </div>
+            <div class="grid-controls-right">
+              <button class="btn-grid-control" (click)="autoSizeAllColumns()" title="Auto-size columns" [disabled]="isLoading">
+                <i class="fas fa-expand-arrows-alt"></i> Auto Size
+              </button>
+              <button class="btn-grid-control" (click)="sizeColumnsToFit()" title="Fit to width" [disabled]="isLoading">
+                <i class="fas fa-compress-arrows-alt"></i> Fit Width
+              </button>
+            </div>
+          </div>
+          
           <ag-grid-angular 
             #agGrid
             style="width: 100%; height: 500px;"
             class="ag-theme-alpine"
-            [rowData]="billableSearchData"
+            [rowData]="filteredData.length > 0 ? filteredData : billableSearchData"
             [columnDefs]="columnDefs"
             [defaultColDef]="defaultColDef"
             [pagination]="true"
-            [paginationPageSize]="10"
+            [paginationPageSize]="20"
             [paginationPageSizeSelector]="[10, 20, 50, 100]"
             [loading]="isLoading"
             [rowSelection]="rowSelection"
+            [suppressColumnVirtualisation]="true"
+            [suppressRowVirtualisation]="false"
+            [animateRows]="false"
+            [enableCellTextSelection]="true"
+            [suppressRowClickSelection]="true"
+            [rowBuffer]="10"
+            [suppressLoadingOverlay]="false"
+            [suppressNoRowsOverlay]="false"
             (gridReady)="onGridReady($event)"
+            (firstDataRendered)="onFirstDataRendered($event)"
             (selectionChanged)="onSelectionChanged($event)">
           </ag-grid-angular>
         </div>
@@ -78,7 +194,7 @@
         <!-- Summary Container -->
         <div class="summary-container">
           <h3>Summary</h3>
-          <div class="summary-grid" *ngIf="billableSearchData && billableSearchData.length > 0; else noDataSummary">
+          <div class="summary-grid" *ngIf="(filteredData.length > 0 ? filteredData : billableSearchData).length > 0; else noDataSummary">
             <div class="summary-item">
               <div class="summary-label">Total Vehicles</div>
               <div class="summary-value">{{ totalNoOfVehicles }}</div>
@@ -125,8 +241,9 @@
             </div>
           </ng-template>
 
-          <div class="summary-note" *ngIf="billableSearchData && billableSearchData.length > 0">
-            <i class="fas fa-info-circle"></i> Note: Select records and click "Send to Verification" to update billing status
+          <div class="summary-note" *ngIf="(filteredData.length > 0 ? filteredData : billableSearchData).length > 0">
+            <i class="fas fa-info-circle"></i> 
+            Use Smart Filters to select data by month, year, or date range, then click "Go for Verification"
           </div>
         </div>
       </div>
@@ -152,30 +269,6 @@
     <div class="offcanvas-body">
       <div class="filters-content">
         <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
-          <div class="form-group">
-            <label for="month">Month</label>
-            <div class="select-wrapper">
-              <select id="month" formControlName="month" class="form-control">
-                <option *ngFor="let month of months" [value]="month.value">
-                  {{ month.name }}
-                </option>
-              </select>
-              <i class="fas fa-chevron-down"></i>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="year">Year</label>
-            <div class="select-wrapper">
-              <select id="year" formControlName="year" class="form-control">
-                <option *ngFor="let year of years" [value]="year">
-                  {{ year }}
-                </option>
-              </select>
-              <i class="fas fa-chevron-down"></i>
-            </div>
-          </div>
-
           <div class="form-group">
             <label for="fromDate">From Date</label>
             <div class="input-wrapper">
