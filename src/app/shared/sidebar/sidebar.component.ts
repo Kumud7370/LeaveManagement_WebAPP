@@ -4,6 +4,7 @@ import { Router, NavigationEnd, RouterModule } from "@angular/router"
 import { SidebarService } from "../sidebar/sidebar.service"
 import type { Subscription } from "rxjs"
 import { trigger, state, style, transition, animate } from "@angular/animations"
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 interface NavItem {
   label: string
@@ -24,7 +25,7 @@ interface UserProfile {
 @Component({
   selector: "app-sidebar",
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, MatTooltipModule],
   templateUrl: "./sidebar.component.html",
   styleUrls: ["./sidebar.component.scss"],
   animations: [
@@ -74,6 +75,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     },
     // { label: "Remarks & Correction", route: "/remarks", icon: "fas fa-clipboard-check" },
     { label: "Billing Report", route: "/billing-report", icon: "fas fa-file-invoice-dollar" },
+    { label: "Verification", route: "/verifications", icon: "fas fa-check-circle" },
   ]
 
   menuItems = this.navItems

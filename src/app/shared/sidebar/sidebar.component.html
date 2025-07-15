@@ -42,13 +42,15 @@
   <nav class="sidebar-nav">
     <ul class="nav-list">
       <li *ngFor="let item of menuItems; trackBy: trackByRoute" class="nav-item">
-        <!-- Parent Menu Item -->
+        <!-- Parent Menu Item -->        
         <a *ngIf="!item.children" (click)="navigateTo(item.route!)" class="nav-link"
-          [class.active]="isActive(item.route!)">
+          [class.active]="isActive(item.route!)" [matTooltip]="!isExpanded ? item.label : null"
+          matTooltipPosition="right">
           <i [class]="item.icon"></i>
           <span *ngIf="isExpanded" [@fadeInOut]="'in'">{{ item.label }}</span>
           <span *ngIf="item.badge && isExpanded" [@fadeInOut]="'in'" class="badge">{{ item.badge }}</span>
         </a>
+
 
         <!-- Parent Menu Item with Children -->
         <a *ngIf="item.children" (click)="toggleSubmenu(item)" class="nav-link parent-link"
@@ -59,26 +61,14 @@
             [class.rotated]="item.expanded"></i>
         </a>
 
-        <!-- Submenu Items -->
-        <!-- <ul *ngIf="item.children && isExpanded" 
-            class="submenu" 
-            [@expandCollapse]="item.expanded ? 'expanded' : 'collapsed'">
-          <li *ngFor="let child of item.children" class="submenu-item">
-            <a (click)="navigateTo(child.route!)" 
-               class="submenu-link" 
-               [class.active]="isActive(child.route!)">
-              <i [class]="child.icon"></i>
-              <span>{{ child.label }}</span>
-            </a>
-          </li>
-        </ul> -->
-
+        <!-- Submenu Items --> 
         <ul *ngIf="item.children && (isExpanded || item.expanded)" class="submenu"
           [@expandCollapse]="item.expanded ? 'expanded' : 'collapsed'">
           <li *ngFor="let child of item.children" class="submenu-item">
-            <a (click)="navigateTo(child.route!)" class="submenu-link" [class.active]="isActive(child.route!)">
+            <a (click)="navigateTo(child.route!)" class="submenu-link" [class.active]="isActive(child.route!)"
+              [matTooltip]="!isExpanded ? child.label : null" matTooltipPosition="right">
               <i [class]="child.icon"></i>
-              <span>{{ child.label }}</span>
+              <span *ngIf="isExpanded">{{ child.label }}</span>
             </a>
           </li>
         </ul>

@@ -216,4 +216,79 @@ export class DbCallingService {
       })
     );
   }
+
+  // VERIFICATION METHODS
+  getVerificationData(data: {
+    UserId: number
+    SlipSrNos: string
+    FromDate: string
+    ToDate: string
+    Status: number
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Verification/GetVerificationData`, data).pipe(
+      catchError((error) => {
+        console.error("Error fetching verification data", error)
+        return of({
+          Data: [],
+          ServiceResponse: 0,
+          msg: "Error fetching verification data",
+        })
+      }),
+    )
+  }
+
+  getPendingVerifications(data: {
+    UserId: number
+    Status: number
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Verification/GetPendingVerifications`, data).pipe(
+      catchError((error) => {
+        console.error("Error fetching pending verifications", error)
+        return of({
+          Data: [],
+          ServiceResponse: 0,
+          msg: "Error fetching pending verifications",
+        })
+      }),
+    )
+  }
+
+  performVerificationAction(data: {
+    UserId: number
+    VerifierId: number
+    SlipSrNo: string
+    Action: string
+    Remark: string
+    VerificationDate: string
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Verification/PerformAction`, data).pipe(
+      catchError((error) => {
+        console.error("Error performing verification action", error)
+        return of({
+          ServiceResponse: 0,
+          msg: "Error performing verification action",
+        })
+      }),
+    )
+  }
+
+  performBulkVerificationAction(data: {
+    UserId: number
+    VerifierId: number
+    SlipSrNos: string
+    Action: string
+    Remark: string
+    VerificationDate: string
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Verification/PerformBulkAction`, data).pipe(
+      catchError((error) => {
+        console.error("Error performing bulk verification action", error)
+        return of({
+          ServiceResponse: 0,
+          msg: "Error performing bulk verification action",
+        })
+      }),
+    )
+  }
 }
+

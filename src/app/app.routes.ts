@@ -67,10 +67,15 @@ export const routes: Routes = [
         loadComponent: () => import("./modules/remarks/remarks.component").then((m) => m.RemarkFilterComponent),
         data: { breadcrumb: "Remarks & Correction" },
       },
-            {
+      {
         path: "billing-report",
         loadComponent: () => import("./modules/billing-report/billing-report.component").then((m) => m.BillingReportComponent),
         data: { breadcrumb: "Billing Report" },
+      },
+      {
+        path: "verifications",
+        loadComponent: () => import("./modules/verifications/verification.component").then((m) => m.VerificationComponent),
+        data: { breadcrumb: "Verification" },
       },
     ],
   },
