@@ -6,17 +6,10 @@
         <i class="fas fa-clipboard-check"></i>
         <h1>Verification Center</h1>
       </div>
-      <div class="verifier-info">
-        <div class="verifier-details">
-          <div class="verifier-name">{{ verifierInfo.name }}</div>
-          <div class="verifier-designation">{{ verifierInfo.designation }}</div>
-          <div class="verifier-department">{{ verifierInfo.department }}</div>
-        </div>
-        <div class="header-actions">
-          <button class="btn-back" (click)="navigateBack()">
-            <i class="fas fa-arrow-left"></i> Back to Billing Report
-          </button>
-        </div>
+      <div class="header-actions">
+        <button class="btn-back" (click)="navigateBack()">
+          <i class="fas fa-arrow-left"></i> Back to Billing Report
+        </button>
       </div>
     </div>
   </div>
@@ -24,95 +17,148 @@
   <!-- Loading Indicator -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="spinner"></div>
-    <div class="loading-text">Processing verification...</div>
+    <div class="loading-text">Loading verification data...</div>
+  </div>
+
+  <!-- Route Info -->
+  <div class="route-info-panel">
+    <div class="route-info">
+      <i class="fas fa-info-circle"></i>
+      <span>{{ getRouteInfo() }}</span>
+    </div>
+  </div>
+
+  <!-- Add Date Filter Panel after route-info-panel -->
+  <div class="date-filter-panel">
+    <div class="filter-header">
+      <h3><i class="fas fa-calendar-alt"></i> Date Filters</h3>
+      <span class="total-records">Total Records: {{ verificationData.length }}</span>
+    </div>
+    
+    <form [formGroup]="dateFilterForm" class="date-filter-form">
+      <div class="filter-row">
+        <div class="form-group">
+          <label>Filter Type</label>
+          <select formControlName="filterType" class="form-control" (change)="applyDateFilter()">
+            <option value="all">All Records</option>
+            <option value="month">By Month</option>
+            <option value="year">By Year</option>
+            <option value="dateRange">Custom Date Range</option>
+          </select>
+        </div>
+        
+        <div class="form-group" *ngIf="dateFilterForm.get('filterType')?.value === 'month'">
+          <label>Month</label>
+          <select formControlName="selectedMonth" class="form-control" (change)="applyDateFilter()">
+            <option *ngFor="let month of months" [value]="month.value">{{ month.name }}</option>
+          </select>
+        </div>
+        
+        <div class="form-group" *ngIf="dateFilterForm.get('filterType')?.value === 'month' || dateFilterForm.get('filterType')?.value === 'year'">
+          <label>Year</label>
+          <select formControlName="selectedYear" class="form-control" (change)="applyDateFilter()">
+            <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+          </select>
+        </div>
+        
+        <div class="form-group" *ngIf="dateFilterForm.get('filterType')?.value === 'dateRange'">
+          <label>From Date</label>
+          <input type="date" formControlName="customFromDate" class="form-control" (change)="applyDateFilter()">
+        </div>
+        
+        <div class="form-group" *ngIf="dateFilterForm.get('filterType')?.value === 'dateRange'">
+          <label>To Date</label>
+          <input type="date" formControlName="customToDate" class="form-control" (change)="applyDateFilter()">
+        </div>
+        
+        <div class="form-group">
+          <button type="button" class="btn-reset-filter" (click)="dateFilterForm.patchValue({filterType: 'all'}); applyDateFilter()">
+            <i class="fas fa-refresh"></i> Reset Filter
+          </button>
+        </div>
+      </div>
+    </form>
+    
+    <div class="current-filter-display" *ngIf="dateFilterForm.get('filterType')?.value !== 'all'">
+      <span class="filter-label">Active Filter:</span>
+      <span class="filter-value">{{ getFilterDisplayText() }}</span>
+      <span class="filtered-count">Showing {{ filteredData.length }} of {{ verificationData.length }} records</span>
+    </div>
   </div>
 
   <!-- Verification Content -->
   <div class="verification-content" *ngIf="!isLoading">
-    <!-- Status Filter Bar -->
-    <div class="status-filter-bar">
-      <h3><i class="fas fa-filter"></i> Filter by Status</h3>
-      <div class="status-buttons">
-        <button 
-          class="btn-status-filter" 
-          [class.active]="currentStatusFilter === 'all'"
-          (click)="filterByStatus('all')">
-          All ({{ totalRecords }})
-        </button>
-        <button 
-          class="btn-status-filter pending" 
-          [class.active]="currentStatusFilter === 'pending'"
-          (click)="filterByStatus('pending')">
-          Pending ({{ pendingCount }})
-        </button>
-        <button 
-          class="btn-status-filter approved" 
-          [class.active]="currentStatusFilter === 'approved'"
-          (click)="filterByStatus('approved')">
-          Approved ({{ approvedCount }})
-        </button>
-        <button 
-          class="btn-status-filter rejected" 
-          [class.active]="currentStatusFilter === 'rejected'"
-          (click)="filterByStatus('rejected')">
-          Rejected ({{ rejectedCount }})
-        </button>
-        <button 
-          class="btn-status-filter sent-back" 
-          [class.active]="currentStatusFilter === 'sent_back'"
-          (click)="filterByStatus('sent_back')">
-          Sent Back ({{ sentBackCount }})
-        </button>
-      </div>
+    <!-- Status Filter Tabs -->
+    <div class="status-filter-tabs">
+      <button 
+        class="status-tab" 
+        [class.active]="currentStatusFilter === 'all'"
+        (click)="filterByStatus('all')">
+        All Records ({{ totalRecords }})
+      </button>
+      <button 
+        class="status-tab pending" 
+        [class.active]="currentStatusFilter === 'pending'"
+        (click)="filterByStatus('pending')">
+        Pending ({{ pendingCount }})
+      </button>
+      <button 
+        class="status-tab approved" 
+        [class.active]="currentStatusFilter === 'approved'"
+        (click)="filterByStatus('approved')">
+        Approved ({{ approvedCount }})
+      </button>
+      <button 
+        class="status-tab rejected" 
+        [class.active]="currentStatusFilter === 'rejected'"
+        (click)="filterByStatus('rejected')">
+        Rejected ({{ rejectedCount }})
+      </button>
+      <button 
+        class="status-tab sent-back" 
+        [class.active]="currentStatusFilter === 'sent_back'"
+        (click)="filterByStatus('sent_back')">
+        Sent Back ({{ sentBackCount }})
+      </button>
     </div>
 
     <!-- Bulk Actions Panel -->
-    <div class="bulk-actions-panel">
-      <div class="bulk-actions-header">
-        <h3><i class="fas fa-tasks"></i> Bulk Actions</h3>
-        <span class="selected-count" *ngIf="selectedRowsCount > 0">
-          {{ selectedRowsCount }} records selected
-        </span>
-      </div>
-      <form [formGroup]="bulkActionForm" class="bulk-actions-form">
-        <div class="form-row">
-          <div class="form-group">
-            <select formControlName="bulkAction" class="form-control">
-              <option value="">Select Action</option>
-              <option value="approve">Approve Selected</option>
-              <option value="reject">Reject Selected</option>
-              <option value="send_back">Send Back Selected</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <input 
-              type="text" 
-              formControlName="bulkRemark" 
-              class="form-control" 
-              placeholder="Bulk action remark (optional)">
-          </div>
-          <div class="form-group">
-            <button 
-              type="button" 
-              class="btn-bulk-action" 
-              (click)="performBulkAction()"
-              [disabled]="!hasSelectedRows() || !bulkActionForm.get('bulkAction')?.value || isLoading">
-              <i class="fas fa-bolt"></i> Execute Bulk Action
-            </button>
-          </div>
+    <div class="bulk-actions-panel" *ngIf="hasSelectedRows()">
+      <form [formGroup]="bulkActionForm" class="bulk-form">
+        <div class="bulk-form-group">
+          <label>Bulk Action:</label>
+          <select formControlName="bulkAction" class="form-control">
+            <option value="">Select Action</option>
+            <option value="3">Approve Selected</option>
+            <option value="-2">Reject Selected</option>
+            <option value="4">Send Back Selected</option>
+          </select>
+        </div>
+        <div class="bulk-form-group">
+          <label>Remark:</label>
+          <input type="text" formControlName="bulkRemark" class="form-control" placeholder="Optional remark">
+        </div>
+        <div class="bulk-form-group">
+          <button type="button" class="btn-bulk-action" (click)="performBulkAction()" 
+                  [disabled]="!bulkActionForm.get('bulkAction')?.value">
+            <i class="fas fa-tasks"></i>
+            Apply to {{ selectedRowsCount }} Selected
+          </button>
         </div>
       </form>
     </div>
 
-    <!-- Verification Table -->
-    <div class="verification-table">
-      <div class="table-header">
-        <h2>Records for Verification</h2>
-        <div class="table-actions">
-          <button class="btn-export" (click)="exportToExcel()" [disabled]="isLoading">
+    <!-- Verification Grid -->
+    <div class="verification-grid-container">
+      <div class="grid-header">
+        <h2>Verification Records</h2>
+        <div class="grid-actions">
+          <button class="btn-export" (click)="exportToExcel()" 
+                  [disabled]="verificationData.length === 0">
             <i class="fas fa-file-excel"></i> Export
           </button>
-          <button class="btn-print" (click)="printReport()" [disabled]="isLoading">
+          <button class="btn-print" (click)="printReport()" 
+                  [disabled]="verificationData.length === 0">
             <i class="fas fa-print"></i> Print
           </button>
         </div>
@@ -127,47 +173,58 @@
           </span>
         </div>
         <div class="grid-controls-right">
-          <button class="btn-grid-control" (click)="autoSizeAllColumns()" title="Auto-size columns" [disabled]="isLoading">
+          <button class="btn-grid-control" (click)="autoSizeAllColumns()" title="Auto-size columns">
             <i class="fas fa-expand-arrows-alt"></i> Auto Size
           </button>
-          <button class="btn-grid-control" (click)="sizeColumnsToFit()" title="Fit to width" [disabled]="isLoading">
+          <button class="btn-grid-control" (click)="sizeColumnsToFit()" title="Fit to width">
             <i class="fas fa-compress-arrows-alt"></i> Fit Width
-          </button>
-          <button class="btn-grid-control" (click)="clearGridSelection()" title="Clear selection" [disabled]="isLoading">
-            <i class="fas fa-times-circle"></i> Clear Selection
           </button>
         </div>
       </div>
 
       <!-- AG Grid -->
-      <ag-grid-angular 
-        #agGrid
-        style="width: 100%; height: 600px;"
-        class="ag-theme-alpine verification-grid"
-        [rowData]="filteredData.length > 0 ? filteredData : verificationData"
-        [columnDefs]="columnDefs"
-        [defaultColDef]="defaultColDef"
-        [pagination]="true"
-        [paginationPageSize]="20"
-        [paginationPageSizeSelector]="[10, 20, 50, 100]"
-        [loading]="isLoading"
-        [rowSelection]="rowSelection"
-        [suppressColumnVirtualisation]="true"
-        [suppressRowVirtualisation]="false"
-        [animateRows]="false"
-        [enableCellTextSelection]="true"
-        [suppressRowClickSelection]="true"
-        [rowBuffer]="10"
-        [suppressLoadingOverlay]="false"
-        [suppressNoRowsOverlay]="false"
-        (gridReady)="onGridReady($event)"
-        (firstDataRendered)="onFirstDataRendered($event)"
-        (selectionChanged)="onSelectionChanged($event)">
-      </ag-grid-angular>
+      <div class="grid-wrapper">
+        <ag-grid-angular 
+          #agGrid
+          style="width: 100%; height: 600px;"
+          class="ag-theme-alpine"
+          [rowData]="filteredData.length > 0 ? filteredData : verificationData"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [pagination]="true"
+          [paginationPageSize]="20"
+          [paginationPageSizeSelector]="[10, 20, 50, 100]"
+          [loading]="isLoading"
+          [rowSelection]="rowSelection"
+          [suppressColumnVirtualisation]="true"
+          [suppressRowVirtualisation]="false"
+          [animateRows]="false"
+          [enableCellTextSelection]="true"
+          [suppressRowClickSelection]="true"
+          [rowBuffer]="10"
+          [suppressLoadingOverlay]="false"
+          [suppressNoRowsOverlay]="false"
+          (gridReady)="onGridReady($event)"
+          (firstDataRendered)="onFirstDataRendered($event)"
+          (selectionChanged)="onSelectionChanged($event)">
+        </ag-grid-angular>
+      </div>
+    </div>
+
+    <!-- No Data Message -->
+    <div class="no-data-message" *ngIf="verificationData.length === 0 && !isLoading">
+      <i class="fas fa-exclamation-circle"></i>
+      <h3>No Verification Data Found</h3>
+      <p>No records found that require verification. All records may already be processed.</p>
+      <div class="no-data-actions">
+        <button class="btn-primary" (click)="navigateBack()">
+          <i class="fas fa-arrow-left"></i> Back to Billing Report
+        </button>
+      </div>
     </div>
 
     <!-- Summary Panel -->
-    <div class="summary-panel">
+    <div class="summary-panel" *ngIf="verificationData.length > 0">
       <h3>Verification Summary</h3>
       <div class="summary-grid">
         <div class="summary-item total">
@@ -190,99 +247,98 @@
           <div class="summary-label">Sent Back</div>
           <div class="summary-value">{{ sentBackCount }}</div>
         </div>
-        <div class="summary-item verifier">
-          <div class="summary-label">Verified By</div>
-          <div class="summary-value">{{ verifierInfo.name }}</div>
-        </div>
-        <div class="summary-item date">
-          <div class="summary-label">Verification Date</div>
-          <div class="summary-value">{{ getCurrentDateString() }}</div>
-        </div>
-        <div class="summary-item selected">
-          <div class="summary-label">Selected Records</div>
-          <div class="summary-value">{{ selectedRowsCount }}</div>
-        </div>
       </div>
-    </div>
-
-    <!-- No Data Message -->
-    <div class="no-data-message" *ngIf="verificationData.length === 0 && !isLoading">
-      <i class="fas fa-inbox"></i>
-      <p>No records available for verification.</p>
-      <button class="btn-primary" (click)="navigateBack()">Go Back to Billing Report</button>
+      <div class="verifier-info">
+        <p><strong>Verifier:</strong> {{ verifierInfo.name }} ({{ verifierInfo.designation }})</p>
+        <p><strong>Department:</strong> {{ verifierInfo.department }}</p>
+        <p><strong>Date:</strong> {{ getCurrentDateString() }}</p>
+      </div>
     </div>
   </div>
 
   <!-- Verification Detail Panel -->
-  <div class="verification-panel-overlay" [class.show]="showVerificationPanel" (click)="closeVerificationPanel()"></div>
-  <div class="verification-panel" [class.show]="showVerificationPanel">
-    <div class="panel-header">
-      <h5 class="panel-title">Record Details</h5>
-      <button class="btn-close" (click)="closeVerificationPanel()" aria-label="Close Panel">
+  <div class="verification-detail-overlay" [class.show]="showVerificationPanel" (click)="closeVerificationPanel()"></div>
+  <div class="verification-detail-panel" [class.show]="showVerificationPanel">
+    <div class="detail-header">
+      <h3>Record Details</h3>
+      <button class="btn-close" (click)="closeVerificationPanel()">
         <i class="fas fa-times"></i>
       </button>
     </div>
-    <div class="panel-body" *ngIf="selectedRecord">
-      <div class="record-details">
-        <div class="detail-row">
+    <div class="detail-content" *ngIf="selectedRecord">
+      <div class="detail-grid">
+        <div class="detail-item">
           <label>Slip No:</label>
           <span>{{ selectedRecord.slipSrNo }}</span>
         </div>
-        <div class="detail-row">
+        <div class="detail-item">
           <label>DC No:</label>
           <span>{{ selectedRecord.dC_No }}</span>
         </div>
-        <div class="detail-row">
+        <div class="detail-item">
           <label>Transaction Date:</label>
           <span>{{ selectedRecord.trans_Date | date }}</span>
         </div>
-        <div class="detail-row">
+        <div class="detail-item">
           <label>Agency:</label>
           <span>{{ selectedRecord.agency_Name }}</span>
         </div>
-        <div class="detail-row">
+        <div class="detail-item">
           <label>Vehicle No:</label>
           <span>{{ selectedRecord.vehicle_No }}</span>
         </div>
-        <div class="detail-row">
+        <div class="detail-item">
           <label>Ward:</label>
           <span>{{ selectedRecord.ward }}</span>
         </div>
-        <div class="detail-row">
+        <div class="detail-item">
           <label>Gross Weight:</label>
-          <span>{{ selectedRecord.gross_Weight }} KG</span>
+          <span>{{ selectedRecord.gross_Weight | number }} KG</span>
         </div>
-        <div class="detail-row">
+        <div class="detail-item">
           <label>Net Weight:</label>
-          <span>{{ selectedRecord.act_Net_Weight }} KG</span>
+          <span>{{ selectedRecord.act_Net_Weight | number }} KG</span>
         </div>
-        <div class="detail-row">
+        <div class="detail-item">
           <label>Location:</label>
           <span>{{ selectedRecord.weighbridge }}</span>
         </div>
-        <div class="detail-row">
-          <label>Current Status:</label>
-          <span class="status-badge status-{{ selectedRecord.verificationAction || 'pending' }}">
-            {{ getActionText(selectedRecord.verificationAction || 'pending') }}
+        <div class="detail-item">
+          <label>Status:</label>
+          <span class="{{ getStatusClass(selectedRecord.billingStatus) }}">
+            {{ getBillingStatusText(selectedRecord.billingStatus) }}
           </span>
         </div>
-        <div class="detail-row" *ngIf="selectedRecord.remark">
+        <div class="detail-item full-width">
           <label>Remark:</label>
-          <span>{{ selectedRecord.remark }}</span>
+          <span>{{ selectedRecord.remark || 'No remark' }}</span>
         </div>
       </div>
-
-      <div class="panel-actions" *ngIf="!selectedRecord.verificationAction || selectedRecord.verificationAction === 'pending'">
-        <button class="btn-panel-action approve" (click)="approveRecord(selectedRecord.slipSrNo); closeVerificationPanel()">
-          <i class="fas fa-check"></i> Approve
-        </button>
-        <button class="btn-panel-action reject" (click)="rejectRecord(selectedRecord.slipSrNo); closeVerificationPanel()">
-          <i class="fas fa-times"></i> Reject
-        </button>
-        <button class="btn-panel-action send-back" (click)="sendBackRecord(selectedRecord.slipSrNo); closeVerificationPanel()">
-          <i class="fas fa-undo"></i> Send Back
-        </button>
-      </div>
+      
+      <!-- Verification Form -->
+      <form [formGroup]="verificationForm" class="verification-form" *ngIf="selectedRecord.billingStatus === 1">
+        <div class="form-group">
+          <label>Action:</label>
+          <select formControlName="action" class="form-control">
+            <option value="">Select Action</option>
+            <option value="3">Approve</option>
+            <option value="-2">Reject</option>
+            <option value="4">Send Back</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Remark:</label>
+          <textarea formControlName="remark" class="form-control" rows="3" 
+                    placeholder="Enter verification remark..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-primary" 
+                  (click)="performVerificationAction(selectedRecord.slipSrNo, verificationForm.get('action')?.value, verificationForm.get('remark')?.value)"
+                  [disabled]="!verificationForm.get('action')?.value">
+            <i class="fas fa-check"></i> Apply Action
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

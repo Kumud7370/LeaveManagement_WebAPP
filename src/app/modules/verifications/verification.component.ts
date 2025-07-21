@@ -36,16 +36,16 @@ interface VerificationData {
   billingRemark: string
   submittedBy?: string
   submittedDate?: string
+  verifiedBy?: string
+  verifiedDate?: string
   verificationAction?: "pending" | "approved" | "rejected" | "sent_back"
 }
 
 interface VerificationRequest {
   UserId: number
-  VerifierId: number
-  SlipSrNo: string
-  Action: "approve" | "reject" | "send_back"
-  Remark: string
-  VerificationDate: string
+  SlipSrNoNew: string
+  BillingStatus: number
+  Remark?: string
 }
 
 interface VerificationResponse {
@@ -78,11 +78,20 @@ export class VerificationComponent implements OnInit {
   // Forms
   verificationForm!: FormGroup
   bulkActionForm!: FormGroup
+  dateFilterForm!: FormGroup
 
   // Data
   verificationData: VerificationData[] = []
   filteredData: VerificationData[] = []
   selectedRowsCount = 0
+
+  // Route parameters
+  routeParams = {
+    slipNos: "",
+    fromDate: "",
+    toDate: "",
+    source: "",
+  }
 
   // Verifier information
   verifierInfo: VerifierInfo = {
@@ -119,6 +128,23 @@ export class VerificationComponent implements OnInit {
   rejectedCount = 0
   sentBackCount = 0
 
+  // Add month and year options:
+  months = [
+    { value: 1, name: "January" },
+    { value: 2, name: "February" },
+    { value: 3, name: "March" },
+    { value: 4, name: "April" },
+    { value: 5, name: "May" },
+    { value: 6, name: "June" },
+    { value: 7, name: "July" },
+    { value: 8, name: "August" },
+    { value: 9, name: "September" },
+    { value: 10, name: "October" },
+    { value: 11, name: "November" },
+    { value: 12, name: "December" },
+  ]
+  years: number[] = []
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -133,10 +159,13 @@ export class VerificationComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    console.log("🚀 Verification Component Initialized")
+    this.initYears()
     this.initVerifierInfo()
     this.initForms()
     this.setupColumnDefs()
     this.loadVerificationData()
+    this.setupGlobalActions()
   }
 
   ngOnDestroy(): void {
@@ -144,7 +173,7 @@ export class VerificationComponent implements OnInit {
   }
 
   initVerifierInfo(): void {
-    // Get verifier information from session storage or user service
+    // Get verifier information from session storage
     const userId = Number(sessionStorage.getItem("UserId")) || 1
     const userName = sessionStorage.getItem("UserName") || "Verifier"
     const userDesignation = sessionStorage.getItem("UserDesignation") || "Senior Officer"
@@ -156,6 +185,8 @@ export class VerificationComponent implements OnInit {
       designation: userDesignation,
       department: userDepartment,
     }
+
+    console.log("👤 Verifier Info:", this.verifierInfo)
   }
 
   initForms(): void {
@@ -170,6 +201,16 @@ export class VerificationComponent implements OnInit {
     this.bulkActionForm = this.fb.group({
       bulkAction: ["", Validators.required],
       bulkRemark: [""],
+    })
+
+    // Date filter form - start with current year as default
+    const currentDate = new Date()
+    this.dateFilterForm = this.fb.group({
+      filterType: ["year"], // Default to current year instead of "all"
+      selectedMonth: [currentDate.getMonth() + 1],
+      selectedYear: [currentDate.getFullYear()],
+      customFromDate: [""],
+      customToDate: [""],
     })
   }
 
@@ -194,10 +235,10 @@ export class VerificationComponent implements OnInit {
         pinned: "left",
         cellRenderer: (params: ICellRendererParams) => {
           const data = params.data as VerificationData
-          const isProcessed = data.verificationAction && data.verificationAction !== "pending"
+          const isProcessed = data.billingStatus && data.billingStatus > 1
 
           if (isProcessed) {
-            return `<span class="action-status ${data.verificationAction}">${this.getActionText(data.verificationAction!)}</span>`
+            return `<span class="action-status ${this.getStatusClass(data.billingStatus)}">${this.getBillingStatusText(data.billingStatus)}</span>`
           }
 
           return `
@@ -221,14 +262,13 @@ export class VerificationComponent implements OnInit {
       },
       {
         headerName: "Status",
-        field: "verificationAction",
+        field: "billingStatus",
         minWidth: 120,
         maxWidth: 150,
         cellRenderer: (params: ICellRendererParams) => {
-          const status = params.data?.verificationAction || "pending"
-          const statusClass = `status-${status}`
-          const statusText = this.getActionText(status)
-
+          const status = params.data?.billingStatus || 0
+          const statusClass = this.getStatusClass(status)
+          const statusText = this.getBillingStatusText(status)
           return `<span class="${statusClass}">${statusText}</span>`
         },
       },
@@ -312,98 +352,211 @@ export class VerificationComponent implements OnInit {
   }
 
   loadVerificationData(): void {
+    console.log("📊 Loading ALL verification data...")
     this.isLoading = true
 
-    // Get data from route parameters or load from API
+    // Get route parameters but don't restrict by date
     this.route.queryParams.subscribe((params) => {
-      const fromDate = params["fromDate"]
-      const toDate = params["toDate"]
-      const slipNos = params["slipNos"]
+      console.log("🔗 Route params received:", params)
 
-      if (slipNos) {
-        this.loadSpecificRecords(slipNos, fromDate, toDate)
-      } else {
-        this.loadPendingVerifications()
+      this.routeParams = {
+        slipNos: params["slipNos"] || "",
+        fromDate: params["fromDate"] || "",
+        toDate: params["toDate"] || "",
+        source: params["source"] || "",
       }
+
+      // Load all pending verification records
+      this.loadAllPendingRecords()
     })
   }
 
-  loadSpecificRecords(slipNos: string, fromDate: string, toDate: string): void {
+  async loadAllPendingRecords(): Promise<void> {
+    console.log("📋 Loading verification records with proper date filtering...")
+
+    // Determine the appropriate date range
+    const dateRange = this.getDateRangeForLoading()
+
     const obj = {
       UserId: this.verifierInfo.id,
-      SlipSrNos: slipNos,
-      FromDate: fromDate,
-      ToDate: toDate,
-      Status: 1, // Sent for verification
+      Zone: null,
+      Parentcode: null,
+      Workcode: null,
+      FromDate: dateRange.fromDate,
+      ToDate: dateRange.toDate,
     }
 
-    this.dbCallingService.getVerificationData(obj).subscribe({
+    console.log("📤 API Call - getBillableSearchData with date range:", obj)
+
+    this.dbCallingService.getBillableSearchData(obj).subscribe({
       next: (response: any) => {
-        console.log("Verification Data Response:", response)
-        this.processVerificationResponse(response)
+        console.log("📥 Records Response:", response)
+        this.processAllRecordsResponse(response)
       },
       error: (error: any) => {
-        console.error("Verification Data Error:", error)
-        this.handleLoadError()
+        console.error("❌ Records Error:", error)
+        this.handleNoData()
       },
     })
   }
 
-  loadPendingVerifications(): void {
-    const obj = {
-      UserId: this.verifierInfo.id,
-      Status: 1, // Pending verification
+  private getDateRangeForLoading(): { fromDate: string; toDate: string } {
+    // If we have route parameters with dates, use those
+    if (this.routeParams.fromDate && this.routeParams.toDate) {
+      console.log("🎯 Using route parameter dates:", this.routeParams.fromDate, "to", this.routeParams.toDate)
+      return {
+        fromDate: this.routeParams.fromDate,
+        toDate: this.routeParams.toDate,
+      }
     }
 
-    this.dbCallingService.getPendingVerifications(obj).subscribe({
-      next: (response: any) => {
-        console.log("Pending Verifications Response:", response)
-        this.processVerificationResponse(response)
-      },
-      error: (error: any) => {
-        console.error("Pending Verifications Error:", error)
-        this.handleLoadError()
-      },
-    })
+    // Check current date filter settings
+    const filterValues = this.dateFilterForm.value
+    if (filterValues.filterType !== "all") {
+      return this.getDateRangeFromFilter(filterValues)
+    }
+
+    // Default: Load current year data
+    const currentYear = new Date().getFullYear()
+    const fromDate = `${currentYear}-01-01`
+    const toDate = `${currentYear}-12-31`
+
+    console.log("📅 Using default current year range:", fromDate, "to", toDate)
+    return { fromDate, toDate }
   }
 
-  processVerificationResponse(response: any): void {
+  private getDateRangeFromFilter(filterValues: any): { fromDate: string; toDate: string } {
+    switch (filterValues.filterType) {
+      case "month":
+        const monthStart = new Date(filterValues.selectedYear, filterValues.selectedMonth - 1, 1)
+        const monthEnd = new Date(filterValues.selectedYear, filterValues.selectedMonth, 0)
+        return {
+          fromDate: this.formatDateForInput(monthStart),
+          toDate: this.formatDateForInput(monthEnd),
+        }
+      case "year":
+        return {
+          fromDate: `${filterValues.selectedYear}-01-01`,
+          toDate: `${filterValues.selectedYear}-12-31`,
+        }
+      case "dateRange":
+        return {
+          fromDate: filterValues.customFromDate,
+          toDate: filterValues.customToDate,
+        }
+      default:
+        // Default to current year
+        const currentYear = new Date().getFullYear()
+        return {
+          fromDate: `${currentYear}-01-01`,
+          toDate: `${currentYear}-12-31`,
+        }
+    }
+  }
+
+  private formatDateForInput(date: Date): string {
+    return date.toISOString().split("T")[0]
+  }
+
+  processAllRecordsResponse(response: any): void {
+    console.log("🔄 Processing all records response:", response)
+
     let data: VerificationData[] = []
     let serviceResponse = 0
 
+    // Handle different response formats
     if (response?.data && Array.isArray(response.data)) {
       data = response.data
       serviceResponse = response.serviceResponse || 1
     } else if (response?.Data && Array.isArray(response.Data)) {
       data = response.Data
       serviceResponse = response.ServiceResponse || 1
+    } else if (Array.isArray(response)) {
+      data = response
+      serviceResponse = 1
+    } else {
+      console.log("❌ Unknown response format")
+      this.handleNoData()
+      return
     }
 
+    console.log("📊 Total records from API:", data.length)
+
     if (serviceResponse > 0 && data.length > 0) {
-      // Add verification status to each record
-      this.verificationData = data.map((item) => ({
-        ...item,
-        verificationAction: item.verificationAction || "pending",
-      }))
-      this.filteredData = [...this.verificationData]
-      this.calculateSummary()
-      this.scheduleColumnResize()
+      // Filter for records that need verification (status 1) or are already in verification process
+      let verificationRecords = data.filter((item) => {
+        // Include records with status 1 (sent for verification), 2 (verified), 3 (approved), -2 (rejected), 4 (sent back)
+        return (
+          item.billingStatus === 1 ||
+          item.billingStatus === 2 ||
+          item.billingStatus === 3 ||
+          item.billingStatus === -2 ||
+          item.billingStatus === 4
+        )
+      })
+
+      console.log("📋 Records needing verification:", verificationRecords.length)
+
+      // If we have specific slip numbers from route params, filter by those
+      if (this.routeParams.slipNos) {
+        const slipArray = this.routeParams.slipNos.split(",").map((s) => s.trim())
+        const specificRecords = verificationRecords.filter((item) => slipArray.includes(item.slipSrNo))
+
+        if (specificRecords.length > 0) {
+          verificationRecords = specificRecords
+          console.log("🎯 Filtered to specific slip numbers:", specificRecords.length)
+        }
+      }
+
+      if (verificationRecords.length > 0) {
+        console.log("✅ Setting verification data:", verificationRecords.length, "records")
+        this.verificationData = verificationRecords
+        this.filteredData = [...this.verificationData]
+        this.calculateSummary()
+        this.scheduleColumnResize()
+      } else {
+        console.log("⚠️ No verification records found")
+        this.handleNoData()
+      }
     } else {
-      this.resetData()
+      console.log("❌ No data or service response failed")
+      this.handleNoData()
     }
 
     this.isLoading = false
     this.cdr.detectChanges()
   }
 
-  handleLoadError(): void {
+  handleNoData(): void {
+    console.log("📭 No verification data found")
     this.resetData()
-    this.isLoading = false
-    this.cdr.detectChanges()
-    Swal.fire({
-      text: "Failed to load verification data",
-      icon: "error",
-    })
+
+    setTimeout(() => {
+      if (this.verificationData.length === 0) {
+        Swal.fire({
+          title: "No Verification Data",
+          text: "No records found that require verification. All records may already be processed.",
+          icon: "info",
+          confirmButtonText: "Go Back to Billing Report",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.navigateBack()
+          }
+        })
+      }
+    }, 1000)
+  }
+
+  getCurrentMonthStart(): string {
+    const now = new Date()
+    const start = new Date(now.getFullYear(), now.getMonth(), 1)
+    return start.toISOString().split("T")[0]
+  }
+
+  getCurrentMonthEnd(): string {
+    const now = new Date()
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    return end.toISOString().split("T")[0]
   }
 
   // Action methods exposed to window for button clicks
@@ -427,7 +580,7 @@ export class VerificationComponent implements OnInit {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        this.performVerificationAction(slipSrNo, "approve", "Approved by verifier")
+        this.performVerificationAction(slipSrNo, "3", "Approved by verifier")
       }
     })
   }
@@ -452,7 +605,7 @@ export class VerificationComponent implements OnInit {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        this.performVerificationAction(slipSrNo, "reject", result.value)
+        this.performVerificationAction(slipSrNo, "-2", result.value)
       }
     })
   }
@@ -477,7 +630,7 @@ export class VerificationComponent implements OnInit {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        this.performVerificationAction(slipSrNo, "send_back", result.value)
+        this.performVerificationAction(slipSrNo, "4", result.value)
       }
     })
   }
@@ -490,50 +643,44 @@ export class VerificationComponent implements OnInit {
     this.showVerificationPanel = true
   }
 
-  performVerificationAction(slipSrNo: string, action: "approve" | "reject" | "send_back", remark: string): void {
+  performVerificationAction(slipSrNo: string, status: string, remark: string): void {
     this.isLoading = true
 
-    const obj: VerificationRequest = {
-      UserId: Number(sessionStorage.getItem("UserId")) || 1,
-      VerifierId: this.verifierInfo.id,
-      SlipSrNo: slipSrNo,
-      Action: action,
+    const obj = {
+      UserId: this.verifierInfo.id,
+      SlipSrNoNew: slipSrNo,
+      BillingStatus: Number.parseInt(status),
       Remark: remark || "",
-      VerificationDate: new Date().toISOString(),
     }
 
-    this.dbCallingService.performVerificationAction(obj).subscribe({
-      next: (response: VerificationResponse) => {
-        this.isLoading = false
-        if (response.ServiceResponse === 1) {
-          // Map action to verification status
-          let verificationAction: "pending" | "approved" | "rejected" | "sent_back"
-          switch (action) {
-            case "approve":
-              verificationAction = "approved"
-              break
-            case "reject":
-              verificationAction = "rejected"
-              break
-            case "send_back":
-              verificationAction = "sent_back"
-              break
-            default:
-              verificationAction = "pending"
-          }
+    console.log("🔄 Performing verification action:", obj)
 
+    // Use the appropriate service method based on status
+    const serviceCall =
+      status === "3" ? this.dbCallingService.sendToVerifyBillingData(obj) : this.dbCallingService.rejectBillingData(obj)
+
+    serviceCall.subscribe({
+      next: (response: any) => {
+        this.isLoading = false
+        console.log("✅ Verification action response:", response)
+
+        if (response.ServiceResponse === 1) {
           // Update local data
           const recordIndex = this.verificationData.findIndex((r) => r.slipSrNo === slipSrNo)
           if (recordIndex !== -1) {
-            this.verificationData[recordIndex].verificationAction = verificationAction
+            this.verificationData[recordIndex].billingStatus = Number.parseInt(status)
             this.verificationData[recordIndex].billingRemark = remark
+            this.verificationData[recordIndex].verifiedBy = this.verifierInfo.name
+            this.verificationData[recordIndex].verifiedDate = new Date().toISOString()
           }
 
           // Update filtered data
           const filteredIndex = this.filteredData.findIndex((r) => r.slipSrNo === slipSrNo)
           if (filteredIndex !== -1) {
-            this.filteredData[filteredIndex].verificationAction = verificationAction
+            this.filteredData[filteredIndex].billingStatus = Number.parseInt(status)
             this.filteredData[filteredIndex].billingRemark = remark
+            this.filteredData[filteredIndex].verifiedBy = this.verifierInfo.name
+            this.filteredData[filteredIndex].verifiedDate = new Date().toISOString()
           }
 
           this.calculateSummary()
@@ -541,22 +688,22 @@ export class VerificationComponent implements OnInit {
 
           Swal.fire({
             title: "Success!",
-            text: response.msg || `Record ${slipSrNo} ${verificationAction} successfully!`,
+            text: response.msg || `Record ${slipSrNo} processed successfully!`,
             icon: "success",
             timer: 2000,
           })
         } else {
           Swal.fire({
-            text: response.msg || `Failed to ${action} record`,
+            text: response.msg || `Failed to process record`,
             icon: "error",
           })
         }
       },
       error: (error: any) => {
         this.isLoading = false
-        console.error(`${action} Error:`, error)
+        console.error("❌ Verification Error:", error)
         Swal.fire({
-          text: `Failed to ${action} record`,
+          text: `Failed to process record`,
           icon: "error",
         })
       },
@@ -575,20 +722,17 @@ export class VerificationComponent implements OnInit {
 
     const formValues = this.bulkActionForm.value
     const selectedRows = this.gridApi.getSelectedRows()
-    const eligibleRows = selectedRows.filter(
-      (row: VerificationData) => !row.verificationAction || row.verificationAction === "pending",
-    )
+    const eligibleRows = selectedRows.filter((row: VerificationData) => row.billingStatus === 1)
 
     if (eligibleRows.length === 0) {
       Swal.fire({
-        text: "Selected records are already processed",
+        text: "Selected records are not eligible for verification",
         icon: "warning",
       })
       return
     }
 
     const actionText = this.getActionText(formValues.bulkAction)
-
     Swal.fire({
       title: `Confirm Bulk ${actionText}`,
       text: `${actionText} ${eligibleRows.length} selected records?`,
@@ -608,46 +752,40 @@ export class VerificationComponent implements OnInit {
     const slipNos = records.map((r) => r.slipSrNo).join(",")
 
     const obj = {
-      UserId: Number(sessionStorage.getItem("UserId")) || 1,
-      VerifierId: this.verifierInfo.id,
-      SlipSrNos: slipNos,
-      Action: action,
+      UserId: this.verifierInfo.id,
+      SlipSrNoNew: slipNos,
+      BillingStatus: Number.parseInt(action),
       Remark: remark || "",
-      VerificationDate: new Date().toISOString(),
     }
 
-    this.dbCallingService.performBulkVerificationAction(obj).subscribe({
-      next: (response: VerificationResponse) => {
-        this.isLoading = false
-        if (response.ServiceResponse === 1) {
-          // Map action to verification status
-          let verificationAction: "pending" | "approved" | "rejected" | "sent_back"
-          switch (action) {
-            case "approve":
-              verificationAction = "approved"
-              break
-            case "reject":
-              verificationAction = "rejected"
-              break
-            case "send_back":
-              verificationAction = "sent_back"
-              break
-            default:
-              verificationAction = "pending"
-          }
+    console.log("🔄 Performing bulk action:", obj)
 
-          // Update local data
+    // Use the appropriate service method based on action
+    const serviceCall =
+      action === "3" ? this.dbCallingService.sendToVerifyBillingData(obj) : this.dbCallingService.rejectBillingData(obj)
+
+    serviceCall.subscribe({
+      next: (response: any) => {
+        this.isLoading = false
+        console.log("✅ Bulk action response:", response)
+
+        if (response.ServiceResponse === 1) {
+          // Update local data for all processed records
           records.forEach((record) => {
             const recordIndex = this.verificationData.findIndex((r) => r.slipSrNo === record.slipSrNo)
             if (recordIndex !== -1) {
-              this.verificationData[recordIndex].verificationAction = verificationAction
+              this.verificationData[recordIndex].billingStatus = Number.parseInt(action)
               this.verificationData[recordIndex].billingRemark = remark
+              this.verificationData[recordIndex].verifiedBy = this.verifierInfo.name
+              this.verificationData[recordIndex].verifiedDate = new Date().toISOString()
             }
 
             const filteredIndex = this.filteredData.findIndex((r) => r.slipSrNo === record.slipSrNo)
             if (filteredIndex !== -1) {
-              this.filteredData[filteredIndex].verificationAction = verificationAction
+              this.filteredData[filteredIndex].billingStatus = Number.parseInt(action)
               this.filteredData[filteredIndex].billingRemark = remark
+              this.filteredData[filteredIndex].verifiedBy = this.verifierInfo.name
+              this.filteredData[filteredIndex].verifiedDate = new Date().toISOString()
             }
           })
 
@@ -669,7 +807,7 @@ export class VerificationComponent implements OnInit {
       },
       error: (error: any) => {
         this.isLoading = false
-        console.error("Bulk Action Error:", error)
+        console.error("❌ Bulk Action Error:", error)
         Swal.fire({
           text: "Failed to process bulk action",
           icon: "error",
@@ -685,7 +823,25 @@ export class VerificationComponent implements OnInit {
     if (status === "all") {
       this.filteredData = [...this.verificationData]
     } else {
-      this.filteredData = this.verificationData.filter((item) => item.verificationAction === status)
+      let statusValue: number
+      switch (status) {
+        case "pending":
+          statusValue = 1
+          break
+        case "approved":
+          statusValue = 3
+          break
+        case "rejected":
+          statusValue = -2
+          break
+        case "sent_back":
+          statusValue = 4
+          break
+        default:
+          statusValue = 1
+      }
+
+      this.filteredData = this.verificationData.filter((item) => item.billingStatus === statusValue)
     }
 
     this.calculateSummary()
@@ -693,19 +849,173 @@ export class VerificationComponent implements OnInit {
     this.scheduleColumnResize()
   }
 
+  applyDateFilter(): void {
+    const filterValues = this.dateFilterForm.value
+    console.log("🔄 Applying date filter:", filterValues)
+
+    // For 'all' filter type, just show existing data
+    if (filterValues.filterType === "all") {
+      this.filteredData = [...this.verificationData]
+      this.calculateSummary()
+      this.clearGridSelection()
+      this.scheduleColumnResize()
+      return
+    }
+
+    // For specific date filters, reload data from API
+    this.isLoading = true
+    const dateRange = this.getDateRangeFromFilter(filterValues)
+
+    const obj = {
+      UserId: this.verifierInfo.id,
+      Zone: null,
+      Parentcode: null,
+      Workcode: null,
+      FromDate: dateRange.fromDate,
+      ToDate: dateRange.toDate,
+    }
+
+    console.log("📤 API Call for date filter:", obj)
+
+    this.dbCallingService.getBillableSearchData(obj).subscribe({
+      next: (response: any) => {
+        console.log("📥 Filtered Records Response:", response)
+        this.processFilteredRecordsResponse(response)
+      },
+      error: (error: any) => {
+        console.error("❌ Filtered Records Error:", error)
+        this.isLoading = false
+        this.cdr.detectChanges()
+        Swal.fire({
+          text: "Failed to load filtered data",
+          icon: "error",
+        })
+      },
+    })
+  }
+
+  private processFilteredRecordsResponse(response: any): void {
+    let data: VerificationData[] = []
+    let serviceResponse = 0
+
+    // Handle different response formats
+    if (response?.data && Array.isArray(response.data)) {
+      data = response.data
+      serviceResponse = response.serviceResponse || 1
+    } else if (response?.Data && Array.isArray(response.Data)) {
+      data = response.Data
+      serviceResponse = response.ServiceResponse || 1
+    } else if (Array.isArray(response)) {
+      data = response
+      serviceResponse = 1
+    }
+
+    if (serviceResponse > 0 && data.length > 0) {
+      // Filter for records that need verification
+      const verificationRecords = data.filter((item) => {
+        return (
+          item.billingStatus === 1 ||
+          item.billingStatus === 2 ||
+          item.billingStatus === 3 ||
+          item.billingStatus === -2 ||
+          item.billingStatus === 4
+        )
+      })
+
+      console.log("📋 Filtered verification records:", verificationRecords.length)
+
+      // Update both main data and filtered data
+      this.verificationData = verificationRecords
+      this.filteredData = [...verificationRecords]
+
+      // Apply current status filter if any
+      if (this.currentStatusFilter !== "all") {
+        this.filterByStatus(this.currentStatusFilter)
+      }
+
+      this.calculateSummary()
+      this.scheduleColumnResize()
+    } else {
+      // No data found for the selected filter
+      this.verificationData = []
+      this.filteredData = []
+      this.calculateSummary()
+    }
+
+    this.isLoading = false
+    this.cdr.detectChanges()
+  }
+
+  filterByMonth(month: number, year: number): void {
+    this.filteredData = this.verificationData.filter((item) => {
+      const itemDate = new Date(item.trans_Date)
+      return itemDate.getMonth() + 1 === month && itemDate.getFullYear() === year
+    })
+  }
+
+  filterByYear(year: number): void {
+    this.filteredData = this.verificationData.filter((item) => {
+      const itemDate = new Date(item.trans_Date)
+      return itemDate.getFullYear() === year
+    })
+  }
+
+  filterByDateRange(fromDate: string, toDate: string): void {
+    const from = new Date(fromDate)
+    const to = new Date(toDate)
+    this.filteredData = this.verificationData.filter((item) => {
+      const itemDate = new Date(item.trans_Date)
+      return itemDate >= from && itemDate <= to
+    })
+  }
+
   // Utility methods
   getActionText(action: string): string {
     switch (action) {
-      case "approve":
+      case "3":
         return "Approved"
-      case "reject":
+      case "-2":
         return "Rejected"
-      case "send_back":
+      case "4":
         return "Sent Back"
-      case "pending":
+      case "1":
         return "Pending"
       default:
         return "Unknown"
+    }
+  }
+
+  getBillingStatusText(status: number): string {
+    switch (status) {
+      case 1:
+        return "Sent for Verification"
+      case 2:
+        return "Verified"
+      case 3:
+        return "Approved"
+      case -2:
+        return "Rejected"
+      case 4:
+        return "Sent Back"
+      default:
+        return "Pending"
+    }
+  }
+
+  getStatusClass(status: number): string {
+    switch (status) {
+      case 1:
+        return "status-pending"
+      case 2:
+        return "status-verified"
+      case 3:
+        return "status-approved"
+      case -2:
+        return "status-rejected"
+      case 4:
+        return "status-sent_back"
+      default:
+        return "status-pending"
     }
   }
 
@@ -715,14 +1025,11 @@ export class VerificationComponent implements OnInit {
 
   calculateSummary(): void {
     const dataToCalculate = this.filteredData.length > 0 ? this.filteredData : this.verificationData
-
     this.totalRecords = dataToCalculate.length
-    this.pendingCount = dataToCalculate.filter(
-      (item) => !item.verificationAction || item.verificationAction === "pending",
-    ).length
-    this.approvedCount = dataToCalculate.filter((item) => item.verificationAction === "approved").length
-    this.rejectedCount = dataToCalculate.filter((item) => item.verificationAction === "rejected").length
-    this.sentBackCount = dataToCalculate.filter((item) => item.verificationAction === "sent_back").length
+    this.pendingCount = dataToCalculate.filter((item) => item.billingStatus === 1).length
+    this.approvedCount = dataToCalculate.filter((item) => item.billingStatus === 3).length
+    this.rejectedCount = dataToCalculate.filter((item) => item.billingStatus === -2).length
+    this.sentBackCount = dataToCalculate.filter((item) => item.billingStatus === 4).length
   }
 
   resetData(): void {
@@ -739,8 +1046,6 @@ export class VerificationComponent implements OnInit {
   onGridReady(params: any): void {
     this.gridApi = params.api
     this.isGridReady = true
-    this.setupGlobalActions()
-
     setTimeout(() => {
       this.scheduleColumnResize()
     }, 100)
@@ -805,7 +1110,6 @@ export class VerificationComponent implements OnInit {
   // Export and print methods
   exportToExcel(): void {
     const dataToExport = this.filteredData.length > 0 ? this.filteredData : this.verificationData
-
     if (!dataToExport || dataToExport.length === 0) {
       Swal.fire({
         text: "No data to export",
@@ -824,7 +1128,7 @@ export class VerificationComponent implements OnInit {
       "Gross Weight (Kg)": Number(item.gross_Weight),
       "Net Weight (Kg)": Number(item.act_Net_Weight),
       Location: item.weighbridge,
-      Status: this.getActionText(item.verificationAction || "pending"),
+      Status: this.getBillingStatusText(item.billingStatus),
       Remark: item.billingRemark || item.remark,
       "Verified By": this.verifierInfo.name,
       "Verification Date": this.getCurrentDateString(),
@@ -833,7 +1137,6 @@ export class VerificationComponent implements OnInit {
     const worksheet = XLSX.utils.json_to_sheet(exportData)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, "Verification Report")
-
     const fileName = `Verification_Report_${new Date().toISOString().split("T")[0]}.xlsx`
     XLSX.writeFile(workbook, fileName)
   }
@@ -850,5 +1153,40 @@ export class VerificationComponent implements OnInit {
   closeVerificationPanel(): void {
     this.showVerificationPanel = false
     this.selectedRecord = null
+  }
+
+  // Get current route info for display
+  getRouteInfo(): string {
+    if (this.routeParams.source === "billing-report") {
+      return `Showing specific records sent from Billing Report (${this.verificationData.length} total verification records loaded)`
+    } else if (this.routeParams.source === "billing-report-view") {
+      return `Showing all verification records (${this.verificationData.length} total records loaded)`
+    } else {
+      return `Showing all pending verification records (${this.verificationData.length} total records loaded)`
+    }
+  }
+
+  initYears(): void {
+    const currentYear = new Date().getFullYear()
+    for (let year = currentYear; year >= currentYear - 10; year--) {
+      this.years.push(year)
+    }
+  }
+
+  // Add method to display current filter text
+  getFilterDisplayText(): string {
+    const filterValues = this.dateFilterForm.value
+
+    switch (filterValues.filterType) {
+      case "month":
+        const monthName = this.months.find((m) => m.value === filterValues.selectedMonth)?.name
+        return `${monthName} ${filterValues.selectedYear}`
+      case "year":
+        return `Year ${filterValues.selectedYear}`
+      case "dateRange":
+        return `${filterValues.customFromDate} to ${filterValues.customToDate}`
+      default:
+        return "All Records"
+    }
   }
 }

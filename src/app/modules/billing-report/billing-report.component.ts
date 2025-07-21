@@ -106,7 +106,6 @@ export class BillingReportComponent implements OnInit {
     { value: 11, name: "November" },
     { value: 12, name: "December" },
   ]
-
   years: number[] = []
 
   // AG Grid configuration
@@ -209,7 +208,6 @@ export class BillingReportComponent implements OnInit {
           const status = params.data?.billingStatus
           let statusText = "Pending"
           let statusClass = "status-pending"
-
           switch (status) {
             case 1:
               statusText = "Sent for Verification"
@@ -223,11 +221,18 @@ export class BillingReportComponent implements OnInit {
               statusText = "Approved"
               statusClass = "status-approved"
               break
+            case -2:
+              statusText = "Rejected"
+              statusClass = "status-rejected"
+              break
+            case 4:
+              statusText = "Sent Back"
+              statusClass = "status-sent-back"
+              break
             default:
               statusText = "Pending"
               statusClass = "status-pending"
           }
-
           return `<span class="${statusClass}">${statusText}</span>`
         },
       },
@@ -345,7 +350,6 @@ export class BillingReportComponent implements OnInit {
 
   loadBillingData(fromDate: string, toDate: string): void {
     this.isLoading = true
-
     const obj = {
       UserId: Number(sessionStorage.getItem("UserId")) || 1,
       Zone: null,
@@ -358,11 +362,9 @@ export class BillingReportComponent implements OnInit {
     this.dbCallingService.getBillableSearchData(obj).subscribe({
       next: (response: any) => {
         console.log("API Response:", response)
-
         // Handle different response formats
         let data: BillingData[] = []
         let serviceResponse = 0
-
         if (response?.data && Array.isArray(response.data)) {
           data = response.data
           serviceResponse = response.serviceResponse || 1
@@ -375,12 +377,12 @@ export class BillingReportComponent implements OnInit {
           this.billableSearchData = data
           this.filteredData = [...data]
           this.calculateSummary()
-
           // Trigger resize only once after data is loaded
           this.scheduleColumnResize()
         } else {
           this.resetData()
         }
+
         this.isLoading = false
         this.cdr.detectChanges()
       },
@@ -393,6 +395,102 @@ export class BillingReportComponent implements OnInit {
           text: "Failed to fetch data",
           icon: "error",
         })
+      },
+    })
+  }
+
+  // Enhanced verification method for selected rows
+  goForVerification(): void {
+    if (!this.hasSelectedRows()) {
+      Swal.fire({
+        text: "Please select records to send for verification",
+        icon: "warning",
+      })
+      return
+    }
+
+    const selectedRows = this.gridApi.getSelectedRows()
+    const eligibleRows = selectedRows.filter((row: BillingData) => !row.billingStatus || row.billingStatus === 0)
+
+    if (eligibleRows.length === 0) {
+      Swal.fire({
+        text: "Selected records are already processed or not eligible for verification",
+        icon: "warning",
+      })
+      return
+    }
+
+    const filterTypeText = this.getFilterTypeText()
+    Swal.fire({
+      title: "Confirm Verification",
+      text: `Send ${eligibleRows.length} selected records (${filterTypeText}) for verification?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Send Selected",
+      cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.performSelectedVerification(eligibleRows)
+      }
+    })
+  }
+
+  performSelectedVerification(eligibleRows: BillingData[]): void {
+    this.isLoading = true
+    const slipNos = eligibleRows.map((row: BillingData) => row.slipSrNo).join(",")
+    const formValues = this.reportForm.value
+
+    const obj: VerificationRequest = {
+      UserId: Number(sessionStorage.getItem("UserId")) || 1,
+      SlipSrNoNew: slipNos,
+      BillingStatus: 1,
+      FromDate: formValues.fromDate,
+      ToDate: formValues.toDate,
+    }
+
+    this.dbCallingService.sendToVerifyBillingData(obj).subscribe({
+      next: (response: VerificationResponse) => {
+        this.isLoading = false
+        if (response.ServiceResponse === 1) {
+          Swal.fire({
+            title: "Success!",
+            text: response.msg || `${eligibleRows.length} selected records sent for verification successfully!`,
+            icon: "success",
+          }).then(() => {
+            // Navigate to verification page with the sent records
+            this.router.navigate(["/verification"], {
+              queryParams: {
+                slipNos: slipNos,
+                fromDate: formValues.fromDate,
+                toDate: formValues.toDate,
+              },
+            })
+          })
+        } else {
+          Swal.fire({
+            text: response.msg || "Failed to send selected records for verification",
+            icon: "error",
+          })
+        }
+      },
+      error: (error: any) => {
+        this.isLoading = false
+        console.error("Verification Error:", error)
+        Swal.fire({
+          text: "Failed to send selected records for verification",
+          icon: "error",
+        })
+      },
+    })
+  }
+
+  // View verification page for all sent records
+  viewVerificationPage(): void {
+    const formValues = this.reportForm.value
+    this.router.navigate(["/verification"], {
+      queryParams: {
+        fromDate: formValues.fromDate,
+        toDate: formValues.toDate,
       },
     })
   }
@@ -416,7 +514,6 @@ export class BillingReportComponent implements OnInit {
     if (needsNewData) {
       // Load new data from API
       let fromDate: string, toDate: string
-
       switch (filterValues.filterType) {
         case "month":
           const monthStart = new Date(filterValues.selectedYear, filterValues.selectedMonth - 1, 1)
@@ -473,7 +570,6 @@ export class BillingReportComponent implements OnInit {
         this.filterByDateRange(filterValues.customFromDate, filterValues.customToDate)
         break
     }
-
     this.calculateSummary()
     this.scheduleColumnResize()
   }
@@ -618,7 +714,6 @@ export class BillingReportComponent implements OnInit {
   onGridReady(params: any): void {
     this.gridApi = params.api
     this.isGridReady = true
-
     // Initial column sizing
     setTimeout(() => {
       this.scheduleColumnResize()
@@ -636,43 +731,6 @@ export class BillingReportComponent implements OnInit {
     return this.selectedRowsCount > 0
   }
 
-  // Enhanced verification method for selected rows
-  goForVerification(): void {
-    if (!this.hasSelectedRows()) {
-      Swal.fire({
-        text: "Please select records to send for verification",
-        icon: "warning",
-      })
-      return
-    }
-
-    const selectedRows = this.gridApi.getSelectedRows()
-    const eligibleRows = selectedRows.filter((row: BillingData) => !row.billingStatus || row.billingStatus === 0)
-
-    if (eligibleRows.length === 0) {
-      Swal.fire({
-        text: "Selected records are already processed or not eligible for verification",
-        icon: "warning",
-      })
-      return
-    }
-
-    const filterTypeText = this.getFilterTypeText()
-
-    Swal.fire({
-      title: "Confirm Verification",
-      text: `Send ${eligibleRows.length} selected records (${filterTypeText}) for verification?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Yes, Send Selected",
-      cancelButtonText: "Cancel",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.performSelectedVerification(eligibleRows)
-      }
-    })
-  }
-
   getFilterTypeText(): string {
     switch (this.currentFilterType) {
       case "month":
@@ -686,49 +744,6 @@ export class BillingReportComponent implements OnInit {
       default:
         return "All Data"
     }
-  }
-
-  performSelectedVerification(eligibleRows: BillingData[]): void {
-    this.isLoading = true
-
-    const slipNos = eligibleRows.map((row: BillingData) => row.slipSrNo).join(",")
-    const formValues = this.reportForm.value
-
-    const obj: VerificationRequest = {
-      UserId: Number(sessionStorage.getItem("UserId")) || 1,
-      SlipSrNoNew: slipNos,
-      BillingStatus: 1,
-      FromDate: formValues.fromDate,
-      ToDate: formValues.toDate,
-    }
-
-    this.dbCallingService.sendToVerifyBillingData(obj).subscribe({
-      next: (response: VerificationResponse) => {
-        this.isLoading = false
-        if (response.ServiceResponse === 1) {
-          Swal.fire({
-            title: "Success!",
-            text: response.msg || `${eligibleRows.length} selected records sent for verification successfully!`,
-            icon: "success",
-          })
-          // Reload data to reflect changes
-          this.loadBillingData(formValues.fromDate, formValues.toDate)
-        } else {
-          Swal.fire({
-            text: response.msg || "Failed to send selected records for verification",
-            icon: "error",
-          })
-        }
-      },
-      error: (error: any) => {
-        this.isLoading = false
-        console.error("Verification Error:", error)
-        Swal.fire({
-          text: "Failed to send selected records for verification",
-          icon: "error",
-        })
-      },
-    })
   }
 
   // Legacy method - kept for backward compatibility
@@ -761,9 +776,9 @@ export class BillingReportComponent implements OnInit {
     const formValues = this.reportForm.value
     const fromDate = new Date(formValues.fromDate)
     const toDate = new Date(formValues.toDate)
-
     const monthName = this.months[fromDate.getMonth()]?.name
     const year = fromDate.getFullYear()
+
     const periodText =
       fromDate.getMonth() === toDate.getMonth() && fromDate.getFullYear() === toDate.getFullYear()
         ? `${monthName} ${year}`
@@ -785,7 +800,6 @@ export class BillingReportComponent implements OnInit {
 
   performMonthlyVerification(eligibleRows: BillingData[], fromDate: string, toDate: string): void {
     this.isLoading = true
-
     const slipNos = eligibleRows.map((row: BillingData) => row.slipSrNo).join(",")
 
     const obj: VerificationRequest = {
@@ -806,8 +820,16 @@ export class BillingReportComponent implements OnInit {
               response.msg ||
               `Monthly record sent for verification successfully! ${eligibleRows.length} records updated.`,
             icon: "success",
+          }).then(() => {
+            // Navigate to verification page
+            this.router.navigate(["/verification"], {
+              queryParams: {
+                slipNos: slipNos,
+                fromDate: fromDate,
+                toDate: toDate,
+              },
+            })
           })
-          this.loadBillingData(fromDate, toDate)
         } else {
           Swal.fire({
             text: response.msg || "Failed to send monthly record for verification",
@@ -846,7 +868,6 @@ export class BillingReportComponent implements OnInit {
     if (formValues.fromDate && formValues.toDate) {
       const fromDate = new Date(formValues.fromDate)
       const toDate = new Date(formValues.toDate)
-
       if (fromDate.getMonth() === toDate.getMonth() && fromDate.getFullYear() === toDate.getFullYear()) {
         const monthName = this.months[fromDate.getMonth()]?.name
         return `${monthName} ${fromDate.getFullYear()}`
@@ -854,13 +875,11 @@ export class BillingReportComponent implements OnInit {
         return `${formValues.fromDate} to ${formValues.toDate}`
       }
     }
-
     return "Current Period"
   }
 
   exportToExcel(): void {
     const dataToExport = this.filteredData.length > 0 ? this.filteredData : this.billableSearchData
-
     if (!dataToExport || dataToExport.length === 0) {
       Swal.fire({
         text: "No data to export",
@@ -904,7 +923,6 @@ export class BillingReportComponent implements OnInit {
     const worksheet = XLSX.utils.json_to_sheet(exportData)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, "Billing Report")
-
     const fileName = `Billing_Report_${this.getSelectedMonthYear().replace(/[^a-zA-Z0-9]/g, "_")}.xlsx`
     XLSX.writeFile(workbook, fileName)
   }
@@ -917,6 +935,10 @@ export class BillingReportComponent implements OnInit {
         return "Verified"
       case 3:
         return "Approved"
+      case -2:
+        return "Rejected"
+      case 4:
+        return "Sent Back"
       default:
         return "Pending"
     }
