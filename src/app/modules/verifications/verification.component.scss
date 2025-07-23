@@ -367,6 +367,17 @@ $transition-speed: 0.2s;
       }
     }
 
+    &.verified {
+      border-color: $info-color;
+      color: $info-color;
+
+      &.active {
+        background-color: $info-color;
+        color: white;
+        border-color: $info-color;
+      }
+    }
+
     &.approved {
       border-color: $success-color;
       color: $success-color;
@@ -717,8 +728,18 @@ $transition-speed: 0.2s;
         transition: all $transition-speed;
         font-size: 0.75rem;
 
+        &.verify {
+          color: $info-color;
+
+          &:hover {
+            background-color: $info-color;
+            color: white;
+          }
+        }
+
         &.approve {
           color: $success-color;
+
           &:hover {
             background-color: $success-color;
             color: white;
@@ -727,6 +748,7 @@ $transition-speed: 0.2s;
 
         &.reject {
           color: $danger-color;
+
           &:hover {
             background-color: $danger-color;
             color: white;
@@ -734,15 +756,17 @@ $transition-speed: 0.2s;
         }
 
         &.send-back {
-          color: $info-color;
+          color: $warning-color;
+
           &:hover {
-            background-color: $info-color;
+            background-color: $warning-color;
             color: white;
           }
         }
 
         &.view {
           color: $primary-color;
+
           &:hover {
             background-color: $primary-color;
             color: white;
@@ -773,8 +797,8 @@ $transition-speed: 0.2s;
     }
 
     .status-verified {
-      background-color: rgba($success-color, 0.1);
-      color: darken($success-color, 10%);
+      background-color: rgba($info-color, 0.1);
+      color: darken($info-color, 10%);
       padding: 0.25rem 0.5rem;
       border-radius: 12px;
       font-size: 0.75rem;
@@ -784,8 +808,8 @@ $transition-speed: 0.2s;
     }
 
     .status-approved {
-      background-color: rgba($accent-color, 0.1);
-      color: darken($accent-color, 30%);
+      background-color: rgba($success-color, 0.1);
+      color: darken($success-color, 10%);
       padding: 0.25rem 0.5rem;
       border-radius: 12px;
       font-size: 0.75rem;
@@ -806,8 +830,8 @@ $transition-speed: 0.2s;
     }
 
     .status-sent_back {
-      background-color: rgba($info-color, 0.1);
-      color: darken($info-color, 10%);
+      background-color: rgba($warning-color, 0.1);
+      color: darken($warning-color, 10%);
       padding: 0.25rem 0.5rem;
       border-radius: 12px;
       font-size: 0.75rem;
@@ -964,6 +988,7 @@ $transition-speed: 0.2s;
       &::before {
         background: linear-gradient(135deg, $primary-color 0%, darken($primary-color, 10%) 100%);
       }
+
       .summary-value {
         color: $primary-color;
       }
@@ -973,8 +998,19 @@ $transition-speed: 0.2s;
       &::before {
         background: linear-gradient(135deg, $warning-color 0%, darken($warning-color, 10%) 100%);
       }
+
       .summary-value {
         color: $warning-color;
+      }
+    }
+
+    &.verified {
+      &::before {
+        background: linear-gradient(135deg, $info-color 0%, darken($info-color, 10%) 100%);
+      }
+
+      .summary-value {
+        color: $info-color;
       }
     }
 
@@ -982,6 +1018,7 @@ $transition-speed: 0.2s;
       &::before {
         background: linear-gradient(135deg, $success-color 0%, darken($success-color, 10%) 100%);
       }
+
       .summary-value {
         color: $success-color;
       }
@@ -991,6 +1028,7 @@ $transition-speed: 0.2s;
       &::before {
         background: linear-gradient(135deg, $danger-color 0%, darken($danger-color, 10%) 100%);
       }
+
       .summary-value {
         color: $danger-color;
       }
@@ -998,10 +1036,11 @@ $transition-speed: 0.2s;
 
     &.sent-back {
       &::before {
-        background: linear-gradient(135deg, $info-color 0%, darken($info-color, 10%) 100%);
+        background: linear-gradient(135deg, $warning-color 0%, darken($warning-color, 10%) 100%);
       }
+
       .summary-value {
-        color: $info-color;
+        color: $warning-color;
       }
     }
   }
@@ -1169,6 +1208,15 @@ $transition-speed: 0.2s;
             font-weight: 600;
           }
 
+          &.status-verified {
+            background-color: rgba($info-color, 0.1);
+            color: darken($info-color, 10%);
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+          }
+
           &.status-approved {
             background-color: rgba($success-color, 0.1);
             color: darken($success-color, 10%);
@@ -1188,8 +1236,8 @@ $transition-speed: 0.2s;
           }
 
           &.status-sent_back {
-            background-color: rgba($info-color, 0.1);
-            color: darken($info-color, 10%);
+            background-color: rgba($warning-color, 0.1);
+            color: darken($warning-color, 10%);
             padding: 0.25rem 0.75rem;
             border-radius: 15px;
             font-size: 0.75rem;
@@ -1267,6 +1315,7 @@ $transition-speed: 0.2s;
 
 // Print styles
 @media print {
+
   .verification-header,
   .debug-panel,
   .route-info-panel,

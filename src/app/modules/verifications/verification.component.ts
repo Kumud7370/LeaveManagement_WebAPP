@@ -102,7 +102,7 @@ export class VerificationComponent implements OnInit {
   }
 
   // Filter state
-  currentStatusFilter: "all" | "pending" | "approved" | "rejected" | "sent_back" = "all"
+  currentStatusFilter: "all" | "pending" | "verified" | "approved" | "rejected" | "sent_back" = "all"
 
   // Performance optimization
   private resizeSubject = new Subject<void>()
@@ -124,6 +124,7 @@ export class VerificationComponent implements OnInit {
   // Summary metrics
   totalRecords = 0
   pendingCount = 0
+  verifiedCount = 0
   approvedCount = 0
   rejectedCount = 0
   sentBackCount = 0
@@ -158,8 +159,12 @@ export class VerificationComponent implements OnInit {
     })
   }
 
+  // Add this getter method after the constructor
+  get currentUsername(): string {
+    return localStorage.getItem("username") || ""
+  }
+
   ngOnInit(): void {
-    console.log("🚀 Verification Component Initialized")
     this.initYears()
     this.initVerifierInfo()
     this.initForms()
@@ -235,23 +240,78 @@ export class VerificationComponent implements OnInit {
         pinned: "left",
         cellRenderer: (params: ICellRendererParams) => {
           const data = params.data as VerificationData
-          const isProcessed = data.billingStatus && data.billingStatus > 1
+          const userName = localStorage.getItem("username")
+          const billingStatus = data.billingStatus
 
-          if (isProcessed) {
-            return `<span class="action-status ${this.getStatusClass(data.billingStatus)}">${this.getBillingStatusText(data.billingStatus)}</span>`
+          // Show status text if billing is already processed beyond the user's scope
+          if (billingStatus && billingStatus > 3) {
+            return `<span class="action-status ${this.getStatusClass(billingStatus)}">${this.getBillingStatusText(billingStatus)}</span>`
           }
 
+          // SE: Show buttons if billingStatus is 1 (Pending)
+          if (userName === "SE-01" && billingStatus === 1) {
+            return `
+              <div class="action-buttons">
+                <button class="btn-action verify" onclick="window.verifyRecord('${data.slipSrNo}')" title="Verify">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn-action reject" onclick="window.rejectRecord('${data.slipSrNo}')" title="Reject">
+                  <i class="fas fa-times"></i>
+                </button>
+                <button class="btn-action send-back" onclick="window.sendBackRecord('${data.slipSrNo}')" title="Send Back">
+                  <i class="fas fa-undo"></i>
+                </button>
+                <button class="btn-action view" onclick="window.viewRecord('${data.slipSrNo}')" title="View Details">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            `
+          }
+
+          // AE: Show buttons if billingStatus is 2 (Verified by SE)
+          if (userName === "AE-01" && billingStatus === 2) {
+            return `
+              <div class="action-buttons">
+                <button class="btn-action approve" onclick="window.approveRecord('${data.slipSrNo}')" title="Approve">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn-action reject" onclick="window.rejectRecord('${data.slipSrNo}')" title="Reject">
+                  <i class="fas fa-times"></i>
+                </button>
+                <button class="btn-action send-back" onclick="window.sendBackRecord('${data.slipSrNo}')" title="Send Back">
+                  <i class="fas fa-undo"></i>
+                </button>
+                <button class="btn-action view" onclick="window.viewRecord('${data.slipSrNo}')" title="View Details">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            `
+          }
+
+          // CO: Show all buttons for all statuses
+          if (userName === "CO-01") {
+            return `
+              <div class="action-buttons">
+                <button class="btn-action approve" onclick="window.approveRecord('${data.slipSrNo}')" title="Approve">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn-action reject" onclick="window.rejectRecord('${data.slipSrNo}')" title="Reject">
+                  <i class="fas fa-times"></i>
+                </button>
+                <button class="btn-action send-back" onclick="window.sendBackRecord('${data.slipSrNo}')" title="Send Back">
+                  <i class="fas fa-undo"></i>
+                </button>
+                <button class="btn-action view" onclick="window.viewRecord('${data.slipSrNo}')" title="View Details">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            `
+          }
+
+          // Others: Show only status text and view button
           return `
             <div class="action-buttons">
-              <button class="btn-action approve" onclick="window.approveRecord('${data.slipSrNo}')" title="Approve">
-                <i class="fas fa-check"></i>
-              </button>
-              <button class="btn-action reject" onclick="window.rejectRecord('${data.slipSrNo}')" title="Reject">
-                <i class="fas fa-times"></i>
-              </button>
-              <button class="btn-action send-back" onclick="window.sendBackRecord('${data.slipSrNo}')" title="Send Back">
-                <i class="fas fa-undo"></i>
-              </button>
+              <span class="action-status ${this.getStatusClass(billingStatus)}">${this.getBillingStatusText(billingStatus)}</span>
               <button class="btn-action view" onclick="window.viewRecord('${data.slipSrNo}')" title="View Details">
                 <i class="fas fa-eye"></i>
               </button>
@@ -352,28 +412,63 @@ export class VerificationComponent implements OnInit {
   }
 
   loadVerificationData(): void {
-    console.log("📊 Loading ALL verification data...")
     this.isLoading = true
+    const dateRange = this.getDateRangeForLoading()
 
-    // Get route parameters but don't restrict by date
-    this.route.queryParams.subscribe((params) => {
-      console.log("🔗 Route params received:", params)
+    const obj = {
+      UserId: this.verifierInfo.id,
+      Zone: null,
+      Parentcode: null,
+      Workcode: null,
+      FromDate: dateRange.fromDate,
+      ToDate: dateRange.toDate,
+    }
 
-      this.routeParams = {
-        slipNos: params["slipNos"] || "",
-        fromDate: params["fromDate"] || "",
-        toDate: params["toDate"] || "",
-        source: params["source"] || "",
-      }
+    this.dbCallingService.getBillableSearchData(obj).subscribe({
+      next: (response: { msg: string; serviceResponse: number; data: VerificationData[] }) => {
+        // Store ALL verification records for viewing purposes
+        this.verificationData = response.data.filter((item) => {
+          return (
+            item.billingStatus === 1 ||
+            item.billingStatus === 2 ||
+            item.billingStatus === 3 ||
+            item.billingStatus === -2 ||
+            item.billingStatus === 4
+          )
+        })
 
-      // Load all pending verification records
-      this.loadAllPendingRecords()
+        const loggedInUser = localStorage.getItem("username")
+
+        // Filter what's displayed in the grid based on user role
+        if (loggedInUser === "SE-01") {
+          // SE sees records with status 1 (Pending)
+          this.filteredData = this.verificationData.filter((item) => item.billingStatus === 1)
+        } else if (loggedInUser === "AE-01") {
+          // AE sees records with status 2 (Verified by SE) and 3 (approved) for their workflow
+          this.filteredData = this.verificationData.filter(
+            (item) => item.billingStatus === 2 || item.billingStatus === 3,
+          )
+        } else if (loggedInUser === "CO-01") {
+          // CO sees all records
+          this.filteredData = this.verificationData
+        } else {
+          this.filteredData = this.verificationData
+        }
+
+        this.calculateSummary()
+        this.isLoading = false
+        this.cdr.detectChanges()
+      },
+      error: (err) => {
+        console.error("Error loading verification data:", err)
+        this.isLoading = false
+        this.cdr.detectChanges()
+      },
     })
   }
 
   async loadAllPendingRecords(): Promise<void> {
     console.log("📋 Loading verification records with proper date filtering...")
-
     // Determine the appropriate date range
     const dateRange = this.getDateRangeForLoading()
 
@@ -460,7 +555,6 @@ export class VerificationComponent implements OnInit {
 
   processAllRecordsResponse(response: any): void {
     console.log("🔄 Processing all records response:", response)
-
     let data: VerificationData[] = []
     let serviceResponse = 0
 
@@ -501,7 +595,6 @@ export class VerificationComponent implements OnInit {
       if (this.routeParams.slipNos) {
         const slipArray = this.routeParams.slipNos.split(",").map((s) => s.trim())
         const specificRecords = verificationRecords.filter((item) => slipArray.includes(item.slipSrNo))
-
         if (specificRecords.length > 0) {
           verificationRecords = specificRecords
           console.log("🎯 Filtered to specific slip numbers:", specificRecords.length)
@@ -530,7 +623,6 @@ export class VerificationComponent implements OnInit {
   handleNoData(): void {
     console.log("📭 No verification data found")
     this.resetData()
-
     setTimeout(() => {
       if (this.verificationData.length === 0) {
         Swal.fire({
@@ -561,10 +653,30 @@ export class VerificationComponent implements OnInit {
 
   // Action methods exposed to window for button clicks
   setupGlobalActions(): void {
-    ;(window as any).approveRecord = (slipSrNo: string) => this.approveRecord(slipSrNo)
-    ;(window as any).rejectRecord = (slipSrNo: string) => this.rejectRecord(slipSrNo)
-    ;(window as any).sendBackRecord = (slipSrNo: string) => this.sendBackRecord(slipSrNo)
-    ;(window as any).viewRecord = (slipSrNo: string) => this.viewRecord(slipSrNo)
+    ; (window as any).verifyRecord = (slipSrNo: string) => this.verifyRecord(slipSrNo)
+      ; (window as any).approveRecord = (slipSrNo: string) => this.approveRecord(slipSrNo)
+      ; (window as any).rejectRecord = (slipSrNo: string) => this.rejectRecord(slipSrNo)
+      ; (window as any).sendBackRecord = (slipSrNo: string) => this.sendBackRecord(slipSrNo)
+      ; (window as any).viewRecord = (slipSrNo: string) => this.viewRecord(slipSrNo)
+  }
+
+  // NEW: Verify record method for SE (sets status to 2 - Verified)
+  verifyRecord(slipSrNo: string): void {
+    const record = this.verificationData.find((r) => r.slipSrNo === slipSrNo)
+    if (!record) return
+
+    Swal.fire({
+      title: "Verify Record",
+      text: `Are you sure you want to verify record ${slipSrNo}? This will send it to AE for approval.`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Verify",
+      cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.performVerificationAction(slipSrNo, "2", "Verified by SE - Ready for AE approval")
+      }
+    })
   }
 
   approveRecord(slipSrNo: string): void {
@@ -636,11 +748,23 @@ export class VerificationComponent implements OnInit {
   }
 
   viewRecord(slipSrNo: string): void {
+    console.log("🔍 Viewing record:", slipSrNo)
     const record = this.verificationData.find((r) => r.slipSrNo === slipSrNo)
-    if (!record) return
 
+    if (!record) {
+      console.error("❌ Record not found:", slipSrNo)
+      Swal.fire({
+        title: "Record Not Found",
+        text: `Could not find record with slip number: ${slipSrNo}`,
+        icon: "error",
+      })
+      return
+    }
+
+    console.log("✅ Found record:", record)
     this.selectedRecord = record
     this.showVerificationPanel = true
+    this.cdr.detectChanges() // Force change detection
   }
 
   performVerificationAction(slipSrNo: string, status: string, remark: string): void {
@@ -657,15 +781,17 @@ export class VerificationComponent implements OnInit {
 
     // Use the appropriate service method based on status
     const serviceCall =
-      status === "3" ? this.dbCallingService.sendToVerifyBillingData(obj) : this.dbCallingService.rejectBillingData(obj)
+      status === "3" || status === "2"
+        ? this.dbCallingService.sendToVerifyBillingData(obj)
+        : this.dbCallingService.rejectBillingData(obj)
 
     serviceCall.subscribe({
       next: (response: any) => {
         this.isLoading = false
         console.log("✅ Verification action response:", response)
 
-        if (response.ServiceResponse === 1) {
-          // Update local data
+        if (response.ServiceResponse === 1 || response.ServiceResponse === "1") {
+          // Update local data in verificationData array
           const recordIndex = this.verificationData.findIndex((r) => r.slipSrNo === slipSrNo)
           if (recordIndex !== -1) {
             this.verificationData[recordIndex].billingStatus = Number.parseInt(status)
@@ -674,7 +800,7 @@ export class VerificationComponent implements OnInit {
             this.verificationData[recordIndex].verifiedDate = new Date().toISOString()
           }
 
-          // Update filtered data
+          // Update filtered data array
           const filteredIndex = this.filteredData.findIndex((r) => r.slipSrNo === slipSrNo)
           if (filteredIndex !== -1) {
             this.filteredData[filteredIndex].billingStatus = Number.parseInt(status)
@@ -683,15 +809,53 @@ export class VerificationComponent implements OnInit {
             this.filteredData[filteredIndex].verifiedDate = new Date().toISOString()
           }
 
+          // Update selected record if it's currently being viewed
+          if (this.selectedRecord && this.selectedRecord.slipSrNo === slipSrNo) {
+            this.selectedRecord.billingStatus = Number.parseInt(status)
+            this.selectedRecord.billingRemark = remark
+            this.selectedRecord.verifiedBy = this.verifierInfo.name
+            this.selectedRecord.verifiedDate = new Date().toISOString()
+          }
+
+          // Recalculate summary with updated data
           this.calculateSummary()
-          this.gridApi?.refreshCells()
+
+          // Force grid refresh and change detection
+          if (this.gridApi) {
+            this.gridApi.refreshCells({ force: true })
+            this.gridApi.redrawRows()
+          }
+
+          // Force Angular change detection
+          this.cdr.detectChanges()
+
+          // Show appropriate success message based on status
+          let successMessage = ""
+          switch (status) {
+            case "2":
+              successMessage = `Record ${slipSrNo} verified successfully! Sent to AE for approval.`
+              break
+            case "3":
+              successMessage = `Record ${slipSrNo} approved successfully!`
+              break
+            case "-2":
+              successMessage = `Record ${slipSrNo} rejected successfully!`
+              break
+            case "4":
+              successMessage = `Record ${slipSrNo} sent back for corrections!`
+              break
+            default:
+              successMessage = `Record ${slipSrNo} processed successfully!`
+          }
 
           Swal.fire({
             title: "Success!",
-            text: response.msg || `Record ${slipSrNo} processed successfully!`,
+            text: response.msg || successMessage,
             icon: "success",
             timer: 2000,
+            showConfirmButton: false,
           })
+          this.loadVerificationData()
         } else {
           Swal.fire({
             text: response.msg || `Failed to process record`,
@@ -722,11 +886,21 @@ export class VerificationComponent implements OnInit {
 
     const formValues = this.bulkActionForm.value
     const selectedRows = this.gridApi.getSelectedRows()
-    const eligibleRows = selectedRows.filter((row: VerificationData) => row.billingStatus === 1)
+    const userName = localStorage.getItem("username")
+
+    // Filter eligible rows based on user role
+    let eligibleRows = []
+    if (userName === "SE-01") {
+      eligibleRows = selectedRows.filter((row: VerificationData) => row.billingStatus === 1)
+    } else if (userName === "AE-01") {
+      eligibleRows = selectedRows.filter((row: VerificationData) => row.billingStatus === 2)
+    } else {
+      eligibleRows = selectedRows.filter((row: VerificationData) => row.billingStatus === 1 || row.billingStatus === 2)
+    }
 
     if (eligibleRows.length === 0) {
       Swal.fire({
-        text: "Selected records are not eligible for verification",
+        text: "Selected records are not eligible for verification by your role",
         icon: "warning",
       })
       return
@@ -762,7 +936,9 @@ export class VerificationComponent implements OnInit {
 
     // Use the appropriate service method based on action
     const serviceCall =
-      action === "3" ? this.dbCallingService.sendToVerifyBillingData(obj) : this.dbCallingService.rejectBillingData(obj)
+      action === "3" || action === "2"
+        ? this.dbCallingService.sendToVerifyBillingData(obj)
+        : this.dbCallingService.rejectBillingData(obj)
 
     serviceCall.subscribe({
       next: (response: any) => {
@@ -789,14 +965,23 @@ export class VerificationComponent implements OnInit {
             }
           })
 
+          // Recalculate summary and refresh grid
           this.calculateSummary()
-          this.gridApi?.refreshCells()
+
+          if (this.gridApi) {
+            this.gridApi.refreshCells({ force: true })
+            this.gridApi.redrawRows()
+          }
+
           this.clearGridSelection()
+          this.cdr.detectChanges()
 
           Swal.fire({
             title: "Success!",
             text: response.msg || `${records.length} records processed successfully!`,
             icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
           })
         } else {
           Swal.fire({
@@ -817,7 +1002,7 @@ export class VerificationComponent implements OnInit {
   }
 
   // Filter methods
-  filterByStatus(status: "all" | "pending" | "approved" | "rejected" | "sent_back"): void {
+  filterByStatus(status: "all" | "pending" | "verified" | "approved" | "rejected" | "sent_back"): void {
     this.currentStatusFilter = status
 
     if (status === "all") {
@@ -827,6 +1012,9 @@ export class VerificationComponent implements OnInit {
       switch (status) {
         case "pending":
           statusValue = 1
+          break
+        case "verified":
+          statusValue = 2
           break
         case "approved":
           statusValue = 3
@@ -972,6 +1160,8 @@ export class VerificationComponent implements OnInit {
   // Utility methods
   getActionText(action: string): string {
     switch (action) {
+      case "2":
+        return "Verified"
       case "3":
         return "Approved"
       case "-2":
@@ -1024,12 +1214,24 @@ export class VerificationComponent implements OnInit {
   }
 
   calculateSummary(): void {
+    // Always calculate summary based on what's currently being displayed
     const dataToCalculate = this.filteredData.length > 0 ? this.filteredData : this.verificationData
+
     this.totalRecords = dataToCalculate.length
     this.pendingCount = dataToCalculate.filter((item) => item.billingStatus === 1).length
+    this.verifiedCount = dataToCalculate.filter((item) => item.billingStatus === 2).length
     this.approvedCount = dataToCalculate.filter((item) => item.billingStatus === 3).length
     this.rejectedCount = dataToCalculate.filter((item) => item.billingStatus === -2).length
     this.sentBackCount = dataToCalculate.filter((item) => item.billingStatus === 4).length
+
+    console.log("📊 Summary updated:", {
+      total: this.totalRecords,
+      pending: this.pendingCount,
+      verified: this.verifiedCount,
+      approved: this.approvedCount,
+      rejected: this.rejectedCount,
+      sentBack: this.sentBackCount,
+    })
   }
 
   resetData(): void {
@@ -1037,6 +1239,7 @@ export class VerificationComponent implements OnInit {
     this.filteredData = []
     this.totalRecords = 0
     this.pendingCount = 0
+    this.verifiedCount = 0
     this.approvedCount = 0
     this.rejectedCount = 0
     this.sentBackCount = 0
@@ -1110,6 +1313,7 @@ export class VerificationComponent implements OnInit {
   // Export and print methods
   exportToExcel(): void {
     const dataToExport = this.filteredData.length > 0 ? this.filteredData : this.verificationData
+
     if (!dataToExport || dataToExport.length === 0) {
       Swal.fire({
         text: "No data to export",
@@ -1137,6 +1341,7 @@ export class VerificationComponent implements OnInit {
     const worksheet = XLSX.utils.json_to_sheet(exportData)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, "Verification Report")
+
     const fileName = `Verification_Report_${new Date().toISOString().split("T")[0]}.xlsx`
     XLSX.writeFile(workbook, fileName)
   }
@@ -1176,7 +1381,6 @@ export class VerificationComponent implements OnInit {
   // Add method to display current filter text
   getFilterDisplayText(): string {
     const filterValues = this.dateFilterForm.value
-
     switch (filterValues.filterType) {
       case "month":
         const monthName = this.months.find((m) => m.value === filterValues.selectedMonth)?.name
@@ -1188,5 +1392,21 @@ export class VerificationComponent implements OnInit {
       default:
         return "All Records"
     }
+  }
+
+  canActOnRecord(record: VerificationData): boolean {
+    const loggedInUser = localStorage.getItem("username")
+    if (!record) return false
+
+    if (loggedInUser === "SE-01" && record.billingStatus === 1) {
+      return true
+    } else if (loggedInUser === "AE-01" && record.billingStatus === 2) {
+      return true
+    } else if (loggedInUser === "CO-01") {
+      // If CO-01 should be able to take actions on all statuses:
+      return true
+    }
+
+    return false
   }
 }

@@ -34,7 +34,7 @@
       <h3><i class="fas fa-calendar-alt"></i> Date Filters</h3>
       <span class="total-records">Total Records: {{ verificationData.length }}</span>
     </div>
-    
+
     <form [formGroup]="dateFilterForm" class="date-filter-form">
       <div class="filter-row">
         <div class="form-group">
@@ -46,39 +46,41 @@
             <option value="dateRange">Custom Date Range</option>
           </select>
         </div>
-        
+
         <div class="form-group" *ngIf="dateFilterForm.get('filterType')?.value === 'month'">
           <label>Month</label>
           <select formControlName="selectedMonth" class="form-control" (change)="applyDateFilter()">
             <option *ngFor="let month of months" [value]="month.value">{{ month.name }}</option>
           </select>
         </div>
-        
-        <div class="form-group" *ngIf="dateFilterForm.get('filterType')?.value === 'month' || dateFilterForm.get('filterType')?.value === 'year'">
+
+        <div class="form-group"
+          *ngIf="dateFilterForm.get('filterType')?.value === 'month' || dateFilterForm.get('filterType')?.value === 'year'">
           <label>Year</label>
           <select formControlName="selectedYear" class="form-control" (change)="applyDateFilter()">
             <option *ngFor="let year of years" [value]="year">{{ year }}</option>
           </select>
         </div>
-        
+
         <div class="form-group" *ngIf="dateFilterForm.get('filterType')?.value === 'dateRange'">
           <label>From Date</label>
           <input type="date" formControlName="customFromDate" class="form-control" (change)="applyDateFilter()">
         </div>
-        
+
         <div class="form-group" *ngIf="dateFilterForm.get('filterType')?.value === 'dateRange'">
           <label>To Date</label>
           <input type="date" formControlName="customToDate" class="form-control" (change)="applyDateFilter()">
         </div>
-        
+
         <div class="form-group">
-          <button type="button" class="btn-reset-filter" (click)="dateFilterForm.patchValue({filterType: 'all'}); applyDateFilter()">
+          <button type="button" class="btn-reset-filter"
+            (click)="dateFilterForm.patchValue({filterType: 'all'}); applyDateFilter()">
             <i class="fas fa-refresh"></i> Reset Filter
           </button>
         </div>
       </div>
     </form>
-    
+
     <div class="current-filter-display" *ngIf="dateFilterForm.get('filterType')?.value !== 'all'">
       <span class="filter-label">Active Filter:</span>
       <span class="filter-value">{{ getFilterDisplayText() }}</span>
@@ -90,33 +92,26 @@
   <div class="verification-content" *ngIf="!isLoading">
     <!-- Status Filter Tabs -->
     <div class="status-filter-tabs">
-      <button 
-        class="status-tab" 
-        [class.active]="currentStatusFilter === 'all'"
-        (click)="filterByStatus('all')">
+      <button class="status-tab" [class.active]="currentStatusFilter === 'all'" (click)="filterByStatus('all')">
         All Records ({{ totalRecords }})
       </button>
-      <button 
-        class="status-tab pending" 
-        [class.active]="currentStatusFilter === 'pending'"
+      <button class="status-tab pending" [class.active]="currentStatusFilter === 'pending'"
         (click)="filterByStatus('pending')">
         Pending ({{ pendingCount }})
       </button>
-      <button 
-        class="status-tab approved" 
-        [class.active]="currentStatusFilter === 'approved'"
+      <button class="status-tab verified" [class.active]="currentStatusFilter === 'verified'"
+        (click)="filterByStatus('verified')">
+        Verified ({{ verifiedCount }})
+      </button>
+      <button class="status-tab approved" [class.active]="currentStatusFilter === 'approved'"
         (click)="filterByStatus('approved')">
         Approved ({{ approvedCount }})
       </button>
-      <button 
-        class="status-tab rejected" 
-        [class.active]="currentStatusFilter === 'rejected'"
+      <button class="status-tab rejected" [class.active]="currentStatusFilter === 'rejected'"
         (click)="filterByStatus('rejected')">
         Rejected ({{ rejectedCount }})
       </button>
-      <button 
-        class="status-tab sent-back" 
-        [class.active]="currentStatusFilter === 'sent_back'"
+      <button class="status-tab sent-back" [class.active]="currentStatusFilter === 'sent_back'"
         (click)="filterByStatus('sent_back')">
         Sent Back ({{ sentBackCount }})
       </button>
@@ -129,7 +124,9 @@
           <label>Bulk Action:</label>
           <select formControlName="bulkAction" class="form-control">
             <option value="">Select Action</option>
-            <option value="3">Approve Selected</option>
+            <option value="2" *ngIf="currentUsername === 'SE-01'">Verify Selected</option>
+            <option value="3" *ngIf="currentUsername === 'AE-01' || currentUsername === 'CO-01'">Approve Selected
+            </option>
             <option value="-2">Reject Selected</option>
             <option value="4">Send Back Selected</option>
           </select>
@@ -139,8 +136,8 @@
           <input type="text" formControlName="bulkRemark" class="form-control" placeholder="Optional remark">
         </div>
         <div class="bulk-form-group">
-          <button type="button" class="btn-bulk-action" (click)="performBulkAction()" 
-                  [disabled]="!bulkActionForm.get('bulkAction')?.value">
+          <button type="button" class="btn-bulk-action" (click)="performBulkAction()"
+            [disabled]="!bulkActionForm.get('bulkAction')?.value">
             <i class="fas fa-tasks"></i>
             Apply to {{ selectedRowsCount }} Selected
           </button>
@@ -153,12 +150,10 @@
       <div class="grid-header">
         <h2>Verification Records</h2>
         <div class="grid-actions">
-          <button class="btn-export" (click)="exportToExcel()" 
-                  [disabled]="verificationData.length === 0">
+          <button class="btn-export" (click)="exportToExcel()" [disabled]="verificationData.length === 0">
             <i class="fas fa-file-excel"></i> Export
           </button>
-          <button class="btn-print" (click)="printReport()" 
-                  [disabled]="verificationData.length === 0">
+          <button class="btn-print" (click)="printReport()" [disabled]="verificationData.length === 0">
             <i class="fas fa-print"></i> Print
           </button>
         </div>
@@ -184,29 +179,14 @@
 
       <!-- AG Grid -->
       <div class="grid-wrapper">
-        <ag-grid-angular 
-          #agGrid
-          style="width: 100%; height: 600px;"
-          class="ag-theme-alpine"
-          [rowData]="filteredData.length > 0 ? filteredData : verificationData"
-          [columnDefs]="columnDefs"
-          [defaultColDef]="defaultColDef"
-          [pagination]="true"
-          [paginationPageSize]="20"
-          [paginationPageSizeSelector]="[10, 20, 50, 100]"
-          [loading]="isLoading"
-          [rowSelection]="rowSelection"
-          [suppressColumnVirtualisation]="true"
-          [suppressRowVirtualisation]="false"
-          [animateRows]="false"
-          [enableCellTextSelection]="true"
-          [suppressRowClickSelection]="true"
-          [rowBuffer]="10"
-          [suppressLoadingOverlay]="false"
-          [suppressNoRowsOverlay]="false"
-          (gridReady)="onGridReady($event)"
-          (firstDataRendered)="onFirstDataRendered($event)"
-          (selectionChanged)="onSelectionChanged($event)">
+        <ag-grid-angular #agGrid style="width: 100%; height: 600px;" class="ag-theme-alpine"
+          [rowData]="filteredData.length > 0 ? filteredData : verificationData" [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="20"
+          [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading" [rowSelection]="rowSelection"
+          [suppressColumnVirtualisation]="true" [suppressRowVirtualisation]="false" [animateRows]="false"
+          [enableCellTextSelection]="true" [suppressRowClickSelection]="true" [rowBuffer]="10"
+          [suppressLoadingOverlay]="false" [suppressNoRowsOverlay]="false" (gridReady)="onGridReady($event)"
+          (firstDataRendered)="onFirstDataRendered($event)" (selectionChanged)="onSelectionChanged($event)">
         </ag-grid-angular>
       </div>
     </div>
@@ -235,6 +215,10 @@
           <div class="summary-label">Pending Verification</div>
           <div class="summary-value">{{ pendingCount }}</div>
         </div>
+        <div class="summary-item verified">
+          <div class="summary-label">Verified</div>
+          <div class="summary-value">{{ verifiedCount }}</div>
+        </div>
         <div class="summary-item approved">
           <div class="summary-label">Approved</div>
           <div class="summary-value">{{ approvedCount }}</div>
@@ -257,7 +241,8 @@
   </div>
 
   <!-- Verification Detail Panel -->
-  <div class="verification-detail-overlay" [class.show]="showVerificationPanel" (click)="closeVerificationPanel()"></div>
+  <div class="verification-detail-overlay" [class.show]="showVerificationPanel" (click)="closeVerificationPanel()">
+  </div>
   <div class="verification-detail-panel" [class.show]="showVerificationPanel">
     <div class="detail-header">
       <h3>Record Details</h3>
@@ -314,27 +299,28 @@
           <span>{{ selectedRecord.remark || 'No remark' }}</span>
         </div>
       </div>
-      
+
       <!-- Verification Form -->
-      <form [formGroup]="verificationForm" class="verification-form" *ngIf="selectedRecord.billingStatus === 1">
+      <form [formGroup]="verificationForm" class="verification-form" *ngIf="canActOnRecord(selectedRecord)">
         <div class="form-group">
           <label>Action:</label>
           <select formControlName="action" class="form-control">
             <option value="">Select Action</option>
-            <option value="3">Approve</option>
+            <option value="2" *ngIf="currentUsername === 'SE-01'">Verify (Send to AE)</option>
+            <option value="3" *ngIf="currentUsername === 'AE-01' || currentUsername === 'CO-01'">Approve</option>
             <option value="-2">Reject</option>
             <option value="4">Send Back</option>
           </select>
         </div>
         <div class="form-group">
           <label>Remark:</label>
-          <textarea formControlName="remark" class="form-control" rows="3" 
-                    placeholder="Enter verification remark..."></textarea>
+          <textarea formControlName="remark" class="form-control" rows="3"
+            placeholder="Enter verification remark..."></textarea>
         </div>
         <div class="form-actions">
-          <button type="button" class="btn-primary" 
-                  (click)="performVerificationAction(selectedRecord.slipSrNo, verificationForm.get('action')?.value, verificationForm.get('remark')?.value)"
-                  [disabled]="!verificationForm.get('action')?.value">
+          <button type="button" class="btn-primary"
+            (click)="performVerificationAction(selectedRecord.slipSrNo, verificationForm.get('action')?.value, verificationForm.get('remark')?.value)"
+            [disabled]="!verificationForm.get('action')?.value">
             <i class="fas fa-check"></i> Apply Action
           </button>
         </div>
