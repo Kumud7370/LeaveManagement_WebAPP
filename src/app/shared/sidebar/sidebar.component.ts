@@ -93,6 +93,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     };
     return roles[roleId] || 'Unknown';
   }
+  
   ngOnInit() {
     if (this.isBrowser) {
       this.checkScreenSize()
@@ -102,7 +103,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.sidebarService.sidebarState$.subscribe((state) => {
         this.isExpanded = state
       }),
-    )
+    );
 
     this.subscriptions.push(
       this.router.events.subscribe((event) => {
@@ -111,17 +112,33 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.updateExpandedStates()
         }
       }),
-    )
+    );
+
     const storedUsername = localStorage.getItem('username');
     const storedRole = localStorage.getItem('role');
+
     if (storedUsername) {
       this.userProfile.name = storedUsername;
     }
+
     if (storedRole) {
       this.userProfile.role = this.getRoleName(storedRole);
     }
-    this.activeRoute = this.router.url
-    this.updateExpandedStates()
+
+    this.activeRoute = this.router.url;
+
+    // 🌟 Hide modules based on username
+    if (storedUsername === 'SE-01' || storedUsername === 'AE-01') {
+      this.menuItems = this.navItems.filter(item => item.label !== 'Billing Report');
+    } else if (storedUsername === 'CO-01') {
+      this.menuItems = this.navItems.filter(item => item.label !== 'Verification');
+    } else if (storedUsername?.toLowerCase() === 'admin') {
+      this.menuItems = this.navItems.filter(item => item.label !== 'Billing Report' && item.label !== 'Verification');
+    } else {
+      this.menuItems = this.navItems;
+    }
+
+    this.updateExpandedStates();
   }
 
   ngOnDestroy() {
