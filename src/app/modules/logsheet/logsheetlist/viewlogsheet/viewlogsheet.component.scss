@@ -62,29 +62,69 @@ $transition-speed: 0.3s;
         }
       }
 
-      .close-btn {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 8px;
-        padding: 0.75rem 1.5rem;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all $transition-speed;
+      .header-actions {
         display: flex;
+        gap: 0.75rem;
         align-items: center;
-        gap: 0.5rem;
-        font-weight: 500;
 
-        &:hover {
-          background: rgba(255, 255, 255, 0.25);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        .action-btn {
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(10px);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 8px;
+          padding: 0.5rem 1rem;
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: all $transition-speed;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-weight: 500;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+
+          &.print-btn:hover {
+            background: rgba($info-color, 0.3);
+          }
+
+          &.pdf-btn:hover {
+            background: rgba($danger-color, 0.3);
+          }
         }
 
-        &:active {
-          transform: translateY(0);
+        .close-btn {
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(10px);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 8px;
+          padding: 0.75rem 1.5rem;
+          font-size: 0.9rem;
+          cursor: pointer;
+          transition: all $transition-speed;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-weight: 500;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
         }
       }
     }
@@ -122,164 +162,109 @@ $transition-speed: 0.3s;
       }
     }
 
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-
-      .info-card {
-        background: $card-background;
-        border: 2px solid $border-color;
-        border-radius: $border-radius;
-        padding: 1.5rem;
-        transition: all $transition-speed;
-        position: relative;
-        overflow: hidden;
-
-        &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 4px;
-          height: 100%;
-          background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
-        }
-
-        &:hover {
-          transform: translateY(-4px);
-          box-shadow: $shadow-md;
-          border-color: rgba($primary-color, 0.3);
-        }
-
-        .info-label {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: $text-muted;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 0.5rem;
-        }
-
-        .info-value {
-          font-size: 1.125rem;
-          font-weight: 600;
-          color: $text-color;
-          word-break: break-word;
-
-          &.highlight {
-            color: $primary-color;
-            font-weight: 700;
-            font-size: 1.25rem;
-          }
-        }
-      }
-    }
-
-    .closure-section {
-      background: $card-background;
-      border: 2px solid $border-color;
-      border-radius: $border-radius;
-      padding: 2rem;
+    // PDF-style table formatting (matches PDF exactly)
+    .pdf-table-container {
+      margin-bottom: 1.5rem;
+      border-radius: 8px;
+      overflow: hidden;
       box-shadow: $shadow-sm;
 
-      .section-title {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: $primary-color;
+      &.transaction-table-section {
         margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid rgba($primary-color, 0.1);
-
-        i {
-          color: $secondary-color;
-        }
       }
 
-      .closure-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
+      .pdf-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        font-family: 'Arial', sans-serif;
+        font-size: 10px;
 
-        .closure-item {
-          display: flex;
-          align-items: flex-start;
-          gap: 1rem;
-          padding: 1.25rem;
-          background: rgba($background-color, 0.5);
-          border-radius: 8px;
-          border-left: 4px solid $info-color;
-          transition: all $transition-speed;
+        // Main information table cells
+        .label-cell {
+          padding: 8px 12px;
+          border: 1px solid #000;
+          background-color: #f8f9fa;
+          font-weight: bold;
+          text-align: left;
+          vertical-align: middle;
+          width: 18.5%;
+          white-space: nowrap;
+        }
 
-          &:hover {
-            background: rgba($info-color, 0.05);
-            transform: translateX(4px);
-          }
+        .value-cell {
+          padding: 8px 12px;
+          border: 1px solid #000;
+          text-align: left;
+          vertical-align: middle;
+          width: 25.9%;
+        }
 
-          &.full-width {
-            grid-column: 1 / -1;
-          }
+        .merged-cell {
+          border: 1px solid #000;
+          background-color: #f8f9fa;
+          width: 10.7%;
+          vertical-align: middle;
+        }
 
-          .closure-label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 600;
-            color: $text-color;
-            min-width: 200px;
-            font-size: 0.95rem;
+        .value-cell-full {
+          padding: 8px 12px;
+          border: 1px solid #000;
+          text-align: left;
+          vertical-align: middle;
+          width: 73.8%;
+        }
 
-            i {
-              color: $info-color;
-              width: 16px;
+        // Transaction table specific styling
+        &.transaction-table {
+          .transaction-header {
+            padding: 8px 12px;
+            border: 1px solid #000;
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            width: 16.67%; // Adjusted for 6 columns
+            font-size: 10px;
+
+            // Special styling for Trip Details column
+            &.trip-details-header {
+              background-color: #f0f0f0;
+              vertical-align: middle;
+              text-align: center;
+              font-weight: bold;
             }
           }
 
-          .closure-value {
-            font-weight: 500;
-            color: $text-muted;
-            flex: 1;
+          .transaction-cell {
+            padding: 8px 12px;
+            border: 1px solid #000;
+            text-align: center;
+            vertical-align: middle;
+            width: 16.67%; // Adjusted for 6 columns
+            font-size: 10px;
+            font-family: 'Courier New', monospace;
+          }
+        }
 
-            &.remarks {
-              font-style: italic;
-              line-height: 1.6;
-            }
+        // Status styling
+        .status-text {
+          font-weight: bold;
+          
+          &.status-open {
+            color: $warning-color;
+          }
+
+          &.status-closed {
+            color: $success-color;
+          }
+
+          &.status-cancelled {
+            color: $danger-color;
           }
         }
       }
     }
-  }
-}
-
-// Status badges
-.status-badge {
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-
-  &.status-open {
-    background-color: rgba($success-color, 0.1);
-    color: $success-color;
-    border: 2px solid rgba($success-color, 0.3);
-  }
-
-  &.status-closed {
-    background-color: rgba($info-color, 0.1);
-    color: $info-color;
-    border: 2px solid rgba($info-color, 0.3);
-  }
-
-  &.status-cancelled {
-    background-color: rgba($danger-color, 0.1);
-    color: $danger-color;
-    border: 2px solid rgba($danger-color, 0.3);
   }
 }
 
@@ -296,20 +281,20 @@ $transition-speed: 0.3s;
     .card-body {
       padding: 1rem;
 
-      .info-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
+      .pdf-table-container {
+        overflow-x: auto;
 
-      .closure-section {
-        padding: 1rem;
+        .pdf-table {
+          min-width: 700px; // Increased for 6 columns
+          font-size: 9px;
 
-        .closure-grid .closure-item {
-          flex-direction: column;
-          gap: 0.5rem;
-
-          .closure-label {
-            min-width: auto;
+          .label-cell,
+          .value-cell,
+          .value-cell-full,
+          .transaction-header,
+          .transaction-cell {
+            padding: 6px 8px;
+            font-size: 9px;
           }
         }
       }
@@ -321,28 +306,72 @@ $transition-speed: 0.3s;
     gap: 1rem;
     text-align: center;
 
-    .close-btn {
+    .header-actions {
       width: 100%;
       justify-content: center;
+      flex-wrap: wrap;
+
+      .action-btn,
+      .close-btn {
+        flex: 1;
+        min-width: 80px;
+        justify-content: center;
+      }
     }
   }
 }
 
-// Print styles
+// Print styles (ensures PDF-like appearance when printing)
 @media print {
   .logsheet-container {
     background: white;
     padding: 0;
+    min-height: auto;
   }
 
   .logsheet-card {
     box-shadow: none;
     margin: 0;
     max-height: none;
+    border-radius: 0;
   }
 
-  .close-btn {
+  .header-actions {
     display: none !important;
+  }
+
+  .card-body {
+    padding: 20px !important;
+  }
+
+  .title-section {
+    background: white !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .pdf-table-container {
+    box-shadow: none !important;
+    margin-bottom: 15px !important;
+  }
+
+  .pdf-table {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    page-break-inside: avoid;
+
+    .label-cell,
+    .transaction-header {
+      background-color: #f0f0f0 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .merged-cell {
+      background-color: #f8f9fa !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
   }
 }
 

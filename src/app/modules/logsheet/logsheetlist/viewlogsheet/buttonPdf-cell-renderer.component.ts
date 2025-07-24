@@ -1,10 +1,11 @@
 import { Component } from "@angular/core"
 import { CommonModule } from "@angular/common"
-import { ICellRendererAngularComp } from "ag-grid-angular"
-import { ICellRendererParams } from "ag-grid-community"
+import type { ICellRendererAngularComp } from "ag-grid-angular"
+import type { ICellRendererParams } from "ag-grid-community"
 import jsPDF from "jspdf"
 import moment from "moment"
-import autoTable from 'jspdf-autotable';
+import autoTable from "jspdf-autotable"
+
 @Component({
   selector: "app-btn-pdf-cell-renderer",
   template: `

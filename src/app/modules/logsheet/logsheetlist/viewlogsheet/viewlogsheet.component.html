@@ -7,10 +7,20 @@
           <i class="fas fa-file-alt"></i>
           <span>Logsheet Details</span>
         </div>
-        <button type="button" class="close-btn" (click)="Close()">
-          <i class="fas fa-times"></i>
-          Close
-        </button>
+        <div class="header-actions">
+          <button type="button" class="action-btn print-btn" (click)="printLogsheet()">
+            <i class="fas fa-print"></i>
+            Print
+          </button>
+          <button type="button" class="action-btn pdf-btn" (click)="downloadPDF()">
+            <i class="fas fa-file-pdf"></i>
+            PDF
+          </button>
+          <button type="button" class="close-btn" (click)="Close()">
+            <i class="fas fa-times"></i>
+            Close
+          </button>
+        </div>
       </div>
     </div>
 
@@ -22,107 +32,96 @@
         <h3 class="sub-title">VEHICLE LOGSHEET</h3>
       </div>
 
-      <!-- Primary Information Grid -->
-      <div class="info-grid">
-        <div class="info-card">
-          <div class="info-label">Date & Time</div>
-          <div class="info-value">{{ lstFilterData.CreatedOn || 'Not Available' }}</div>
-        </div>
-        
-        <div class="info-card">
-          <div class="info-label">Ward Name</div>
-          <div class="info-value">{{ lstFilterData.Ward || 'Not Available' }}</div>
-        </div>
-        
-        <div class="info-card">
-          <div class="info-label">Logsheet Number</div>
-          <div class="info-value highlight">{{ lstFilterData.LogsheetNumber || 'Not Available' }}</div>
-        </div>
-        
-        <div class="info-card">
-          <div class="info-label">Route Number</div>
-          <div class="info-value">{{ lstFilterData.RouteNumber || 'Not Available' }}</div>
-        </div>
-        
-        <div class="info-card">
-          <div class="info-label">Type of Waste</div>
-          <div class="info-value">{{ lstFilterData.TypeOfWaste || 'Not Available' }}</div>
-        </div>
-        
-        <div class="info-card">
-          <div class="info-label">Vehicle Number</div>
-          <div class="info-value highlight">{{ lstFilterData.VehicleNumber || 'Not Available' }}</div>
-        </div>
-        
-        <div class="info-card">
-          <div class="info-label">Driver's Name</div>
-          <div class="info-value">{{ lstFilterData.DriverName || 'Not Available' }}</div>
-        </div>
-        
-        <div class="info-card">
-          <div class="info-label">Status</div>
-          <div class="info-value">
-            <span class="status-badge" 
-                  [ngClass]="{
-                    'status-open': lstFilterData.IsClosed === 0,
-                    'status-closed': lstFilterData.IsClosed === 1,
-                    'status-cancelled': lstFilterData.IsClosed === 2
-                  }">
-              {{ lstFilterData.IsClosed === 0 ? 'Open' : lstFilterData.IsClosed === 2 ? 'Cancelled' : 'Closed' }}
-            </span>
-          </div>
-        </div>
+      <!-- Primary Information Table (matching PDF format exactly) -->
+      <div class="pdf-table-container">
+        <table class="pdf-table">
+          <tbody>
+            <tr>
+              <td class="label-cell">Date & Time :</td>
+              <td class="value-cell">{{ lstFilterData.CreatedOn || 'N/A' }}</td>
+              <td class="merged-cell" rowspan="4"></td>
+              <td class="label-cell">Name of Ward :</td>
+              <td class="value-cell">{{ lstFilterData.Ward || 'N/A' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">Logsheet Number :</td>
+              <td class="value-cell">{{ lstFilterData.LogsheetNumber || 'N/A' }}</td>
+              <td class="label-cell">Route Number :</td>
+              <td class="value-cell">{{ lstFilterData.RouteNumber || 'N/A' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">Type Of Waste :</td>
+              <td class="value-cell">{{ lstFilterData.TypeOfWaste || 'N/A' }}</td>
+              <td class="label-cell">Vehicle Number :</td>
+              <td class="value-cell">{{ lstFilterData.VehicleNumber || 'N/A' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">Driver's Name :</td>
+              <td class="value-cell">{{ lstFilterData.DriverName || 'N/A' }}</td>
+              <td class="label-cell">Status :</td>
+              <td class="value-cell">
+                <span class="status-text" [ngClass]="{
+                  'status-open': lstFilterData.IsClosed === 0,
+                  'status-closed': lstFilterData.IsClosed === 1,
+                  'status-cancelled': lstFilterData.IsClosed === 2
+                }">
+                  {{ lstFilterData.IsClosed === 0 ? 'Open' : lstFilterData.IsClosed === 2 ? 'Cancelled' : 'Closed' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <!-- Closure Information Section -->
-      <div class="closure-section">
-        <h4 class="section-title">
-          <i class="fas fa-clipboard-check"></i>
-          Closure Information
-        </h4>
-        
-        <div class="closure-grid">
-          <div class="closure-item">
-            <div class="closure-label">
-              <i class="fas fa-calendar-alt"></i>
-              Logsheet Closed Date & Time
-            </div>
-            <div class="closure-value">
-              {{ lstFilterData.ClosedOn || 'Not Closed Yet' }}
-            </div>
-          </div>
-          
-          <div class="closure-item">
-            <div class="closure-label">
-              <i class="fas fa-industry"></i>
-              Waste Processing Plant
-            </div>
-            <div class="closure-value">
-              {{ lstFilterData.ClosedDestination || 'Not Specified' }}
-            </div>
-          </div>
-          
-          <div class="closure-item">
-            <div class="closure-label">
-              <i class="fas fa-signature"></i>
-              Signature & Stamp
-            </div>
-            <div class="closure-value">
-              {{ lstFilterData.ClosedBy || 'Pending' }}
-            </div>
-          </div>
-          
-          <div class="closure-item full-width">
-            <div class="closure-label">
-              <i class="fas fa-comment-alt"></i>
-              Remarks
-            </div>
-            <div class="closure-value remarks">
-              {{ lstFilterData.Remark || 'No remarks available' }}
-            </div>
-          </div>
-        </div>
-      </div>     
+
+      <div class="pdf-table-container transaction-table-section">
+        <table class="pdf-table transaction-table">
+          <thead>
+            <tr>
+              <th class="transaction-header trip-details-header " rowspan="2">Trip Details</th>
+              <th class="transaction-header">In Time of Transact</th>
+              <th class="transaction-header">Out Time of Transact</th>
+              <th class="transaction-header">Gross Weight</th>
+              <th class="transaction-header">Unladen Weight</th>
+              <th class="transaction-header">Actual Net Weight</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="transaction-cell" rowspan="2">Trip Details</td>
+              <td class="transaction-cell">{{ getInTimeOfTransact() }}</td>
+              <td class="transaction-cell">{{ getOutTimeOfTransact() }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData.Gross_Weight) }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData.Unladen_Weight) }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData.Act_Net_Weight) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>  
+      
+      <!-- Closure Information Table (matching PDF format exactly) -->
+      <div class="pdf-table-container">
+        <table class="pdf-table">
+          <tbody>
+            <tr>
+              <td class="label-cell">Logsheet Closed Date & Time :</td>
+              <td class="value-cell-full">{{ lstFilterData.ClosedOn || 'N/A' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">Waste Processing Plant:</td>
+              <td class="value-cell-full">{{ lstFilterData.ClosedDestination || 'N/A' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">Signature & Stamp :</td>
+              <td class="value-cell-full">{{ lstFilterData.ClosedBy || 'N/A' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">Remark :</td>
+              <td class="value-cell-full">{{ lstFilterData.Remark || 'N/A' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

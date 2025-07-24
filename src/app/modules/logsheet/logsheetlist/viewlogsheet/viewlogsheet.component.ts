@@ -3,63 +3,276 @@ import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { FormBuilder } from '@angular/forms'
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog'
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+import moment from "moment"
 
 @Component({
-    selector: 'app-viewlogsheet',
-    templateUrl: './viewlogsheet.component.html',
-    styleUrls: ['./viewlogsheet.component.scss'],
-    standalone: true,
-    imports: [
-        CommonModule,
-    ],
+  selector: "app-viewlogsheet",
+  templateUrl: "./viewlogsheet.component.html",
+  styleUrls: ["./viewlogsheet.component.scss"],
+  standalone: true,
+  imports: [CommonModule],
 })
 export class ViewlogsheetComponent {
-    filterText: any = ''
-    lstSearchResults: any = []
-    lstReportData: any = []
-    lstFilterData: any
-    ttlQuantity: any
+  filterText: any = ""
+  lstSearchResults: any = []
+  lstReportData: any = []
+  lstFilterData: any
+  ttlQuantity: any
 
-    constructor(
-        public router: Router,
-        public fb: FormBuilder,
-        public dialogRef: MatDialogRef<ViewlogsheetComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: any,
-    ) {
-        // Normalize data keys to handle case sensitivity issues
-        this.lstFilterData = this.normalizeData(data);
-        console.log('Dialog data received:', data);
-        console.log('Normalized data:', this.lstFilterData);
-    }
 
-    // This function normalizes the data keys to ensure consistent casing
-    normalizeData(data: any): any {
-        if (!data) return {};
-        
-        // Create a standardized object with expected property names
-        return {
-            LogsheetNumber: data.logsheetNumber || data.LogsheetNumber || '',
-            VehicleNumber: data.vehicleNumber || data.VehicleNumber || '',
-            Ward: data.ward || data.Ward || '',
-            RouteNumber: data.routeNumber || data.RouteNumber || '',
-            TypeOfWaste: data.typeOfWaste || data.TypeOfWaste || '',
-            DriverName: data.driverName || data.DriverName || '',
-            CreatedOn: data.createdOn || data.CreatedOn || '',
-            CreatedBy: data.createdBy || data.CreatedBy || '',
-            ClosedBy: data.closedBy || data.ClosedBy || null,
-            ClosedDestination: data.closedDestination || data.ClosedDestination || null,
-            ClosedOn: data.closedOn || data.ClosedOn || null,
-            IsClosed: data.isClosed !== undefined ? data.isClosed : (data.IsClosed !== undefined ? data.IsClosed : 0),
-            Remark: data.remark || data.Remark || ''
-        };
-    }
+  constructor(
+    public router: Router,
+    public fb: FormBuilder,
+    public dialogRef: MatDialogRef<ViewlogsheetComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {
+    this.data = data
+    // Normalize data keys to handle case sensitivity issues
+    this.lstFilterData = this.normalizeData(data)
+    console.log("View Dialog - Original data received:", data)
+    console.log("View Dialog - Normalized data:", this.lstFilterData)
+  }
 
-    Close() {
-        this.dialogRef.close()
+  // This function normalizes the data keys to ensure consistent casing
+  normalizeData(data: any): any {
+    if (!data) return {}
+    // Create a standardized object with expected property names
+    return {
+      LogsheetNumber: data.logsheetNumber || data.LogsheetNumber || "",
+      VehicleNumber: data.vehicleNumber || data.VehicleNumber || "",
+      Ward: data.ward || data.Ward || "",
+      RouteNumber: data.routeNumber || data.RouteNumber || "",
+      TypeOfWaste: data.typeOfWaste || data.TypeOfWaste || "",
+      DriverName: data.driverName || data.DriverName || "",
+      CreatedOn: data.createdOn || data.CreatedOn || "",
+      CreatedBy: data.createdBy || data.CreatedBy || "",
+      ClosedBy: data.closedBy || data.ClosedBy || null,
+      ClosedDestination: data.closedDestination || data.ClosedDestination || null,
+      ClosedOn: data.closedOn || data.ClosedOn || null,
+      IsClosed: data.isClosed !== undefined ? data.isClosed : data.IsClosed !== undefined ? data.IsClosed : 0,
+      Remark: data.remark || data.Remark || "",
+      // Transaction fields
+      Trans_Date: data.trans_Date || data.Trans_Date || "",
+      Trans_Time: data.trans_Time || data.Trans_Time || "",
+      Trans_Date_UL: data.trans_Date_UL || data.Trans_Date_UL || "",
+      Trans_Time_UL: data.trans_Time_UL || data.Trans_Time_UL || "",
+      Gross_Weight: data.gross_Weight || data.Gross_Weight || "",
+      Unladen_Weight: data.unladen_Weight || data.Unladen_Weight || "",
+      Act_Net_Weight: data.act_Net_Weight || data.Act_Net_Weight || "",
     }
+  }
 
-    getApprovedOnList(logsheet: any): string {
-        console.log(logsheet)
-        return logsheet.TicketList?.map((i: any) => i.ApprovedOn).join(',') || ''
+  // Get formatted In Time of Transact
+  getInTimeOfTransact(): string {
+    if (this.lstFilterData.Trans_Date && this.lstFilterData.Trans_Time) {
+      return `${this.lstFilterData.Trans_Date} ${this.lstFilterData.Trans_Time}`
     }
+    return "N/A"
+  }
+
+  // Get formatted Out Time of Transact
+  getOutTimeOfTransact(): string {
+    if (this.lstFilterData.Trans_Date_UL && this.lstFilterData.Trans_Time_UL) {
+      return `${this.lstFilterData.Trans_Date_UL} ${this.lstFilterData.Trans_Time_UL}`
+    }
+    return "N/A"
+  }
+
+  // Format weight values
+  formatWeight(weight: string): string {
+    if (!weight || weight === "N/A" || weight === "") {
+      return "N/A"
+    }
+    // If it's already formatted with 'kg', return as is
+    if (typeof weight === "string" && weight.includes("kg")) {
+      return weight
+    }
+    // Otherwise, add 'kg' suffix
+    return `${weight} kg`
+  }
+
+  // Print functionality
+  printLogsheet(): void {
+    window.print()
+  }
+
+  // UPDATED: Enhanced PDF generation matching the HTML structure exactly
+  downloadPDF(): void {
+    const doc = new jsPDF("landscape")
+    const fileName = `Logsheet_${this.lstFilterData.LogsheetNumber || "Unknown"}_${moment().format("DDMMYYYY_HHmmss")}`
+
+    // SWM MIS Header
+    autoTable(doc, {
+      body: [
+        [{ content: "SWM MIS", colSpan: 6, styles: { halign: "center", fontSize: 14, fontStyle: "bold" } }],
+        [{ content: "VEHICLE LOGSHEET", colSpan: 6, styles: { halign: "center", fontSize: 12, fontStyle: "bold" } }],
+      ],
+      theme: "grid",
+      styles: {
+        lineWidth: 0.3,
+        textColor: 0,
+        fontSize: 12,
+        halign: "center",
+        lineColor: [0, 0, 0],
+      },
+      margin: { top: 10 },
+    })
+
+    // Section 1: Main information table
+    autoTable(doc, {
+      body: [
+        [
+          { content: "Date & Time :", styles: { fontStyle: "bold" } },
+          this.lstFilterData.CreatedOn || "N/A",
+          { content: "", rowSpan: 4 }, // merged vertical cell
+          { content: "Name of Ward :", styles: { fontStyle: "bold" } },
+          this.lstFilterData.Ward || "N/A",
+        ],
+        [
+          { content: "Logsheet Number :", styles: { fontStyle: "bold" } },
+          this.lstFilterData.LogsheetNumber || "N/A",
+          { content: "Route Number :", styles: { fontStyle: "bold" } },
+          this.lstFilterData.RouteNumber || "N/A",
+        ],
+        [
+          { content: "Type Of Waste :", styles: { fontStyle: "bold" } },
+          this.lstFilterData.TypeOfWaste || "N/A",
+          { content: "Vehicle Number :", styles: { fontStyle: "bold" } },
+          this.lstFilterData.VehicleNumber || "N/A",
+        ],
+        [
+          { content: "Driver's Name :", styles: { fontStyle: "bold" } },
+          this.lstFilterData.DriverName || "N/A",
+          { content: "Status :", styles: { fontStyle: "bold" } },
+          this.lstFilterData.IsClosed === 0 ? "Open" : this.lstFilterData.IsClosed === 2 ? "Cancelled" : "Closed",
+        ],
+      ],
+      theme: "grid",
+      startY: doc.lastAutoTable.finalY + 2,
+      styles: {
+        fontSize: 10,
+        textColor: 0,
+        lineWidth: 0.3,
+        lineColor: [0, 0, 0],
+      },
+      columnStyles: {
+        0: { cellWidth: 50 },
+        1: { cellWidth: 70 },
+        2: { cellWidth: 29 },
+        3: { cellWidth: 50 },
+        4: { cellWidth: 70 },
+      },
+    })
+
+    // UPDATED: Transaction Details Table - matching HTML structure exactly
+    autoTable(doc, {
+      head: [
+        [
+          {
+            content: "Trip Details",
+            rowSpan: 2,
+            styles: {
+              fontStyle: "bold",
+              halign: "center",
+              valign: "middle",
+              fillColor: [240, 240, 240],
+            },
+          },
+          { content: "In Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Out Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Gross Weight", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Unladen Weight", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Actual Net Weight", styles: { fontStyle: "bold", halign: "center" } },
+        ],
+      ],
+      body: [
+        [
+          {
+            content: "Trip Details",
+            rowSpan: 2,
+            styles: {
+              fontStyle: "bold",
+              halign: "center",
+              valign: "middle",
+              fillColor: [248, 249, 250],
+            },
+          },
+          this.getInTimeOfTransact(),
+          this.getOutTimeOfTransact(),
+          this.formatWeight(this.lstFilterData.Gross_Weight),
+          this.formatWeight(this.lstFilterData.Unladen_Weight),
+          this.formatWeight(this.lstFilterData.Act_Net_Weight),
+        ],
+      ],
+      theme: "grid",
+      startY: doc.lastAutoTable.finalY + 5,
+      styles: {
+        fontSize: 10,
+        textColor: 0,
+        lineWidth: 0.3,
+        lineColor: [0, 0, 0],
+        halign: "center",
+      },
+      headStyles: {
+        fillColor: [240, 240, 240],
+        textColor: 0,
+        fontStyle: "bold",
+      },
+      columnStyles: {
+        0: { cellWidth: 44.83 }, // Trip Details column
+        1: { cellWidth: 44.83 }, // In Time of Transact
+        2: { cellWidth: 44.83 }, // Out Time of Transact
+        3: { cellWidth: 44.83 }, // Gross Weight
+        4: { cellWidth: 44.83 }, // Unladen Weight
+        5: { cellWidth: 44.83 }, // Actual Net Weight
+      },
+    })
+
+    // Section 3: Closure information table
+    autoTable(doc, {
+      body: [
+        [
+          { content: "Logsheet Closed Date & Time :", styles: { fontStyle: "bold" } },
+          this.lstFilterData.ClosedOn || "N/A",
+        ],
+        [
+          { content: "Waste Processing Plant:", styles: { fontStyle: "bold" } },
+          this.lstFilterData.ClosedDestination || "N/A",
+        ],
+        [{ content: "Signature & Stamp :", styles: { fontStyle: "bold" } }, this.lstFilterData.ClosedBy || "N/A"],
+        [{ content: "Remark :", styles: { fontStyle: "bold" } }, this.lstFilterData.Remark || "N/A"],
+      ],
+      theme: "grid",
+      styles: {
+        fontSize: 10,
+        textColor: 0,
+        lineWidth: 0.3,
+        lineColor: [0, 0, 0],
+      },
+      columnStyles: {
+        0: { cellWidth: 70 },
+        1: { cellWidth: 199 },
+      },
+      startY: doc.lastAutoTable.finalY + 5,
+    })
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    doc.setFontSize(8)
+    doc.text("1 of 1", pageWidth / 2, pageHeight - 8, { align: "center" })
+
+    doc.save(`${fileName}.pdf`)
+  }
+
+  Close() {
+    this.dialogRef.close()
+  }
+
+  getApprovedOnList(logsheet: any): string {
+    console.log(logsheet)
+    return logsheet.TicketList?.map((i: any) => i.ApprovedOnList).join(",") || ""
+  }
 }

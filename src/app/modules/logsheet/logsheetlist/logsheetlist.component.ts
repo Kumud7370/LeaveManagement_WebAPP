@@ -10,7 +10,6 @@ import { MatDialog, MatDialogModule } from "@angular/material/dialog"
 import Swal from "sweetalert2"
 import moment from "moment"
 import * as XLSX from "xlsx"
-
 import { BtnLogsheetViewCellRenderer } from "src/app/modules/logsheet/logsheetlist/viewlogsheet/buttonLogsheetView-cell-renderer.component"
 import { ViewlogsheetComponent } from "src/app/modules/logsheet/logsheetlist/viewlogsheet/viewlogsheet.component"
 import { HttpClientModule, HttpClient } from '@angular/common/http'
@@ -32,6 +31,14 @@ interface LogsheetData {
   ClosedDestination: string | null
   ClosedOn: string | null
   Remark?: string
+  // NEW: Transaction fields
+  Trans_Date?: string
+  Trans_Time?: string
+  Trans_Date_UL?: string
+  Trans_Time_UL?: string
+  Gross_Weight?: string
+  Unladen_Weight?: string
+  Act_Net_Weight?: string
   // API response fields (lowercase)
   logsheetID?: number
   isClosed?: number
@@ -48,6 +55,14 @@ interface LogsheetData {
   closedOn?: string | null
   fromdate?: string
   todate?: string
+  // NEW: Transaction fields (lowercase)
+  trans_Date?: string
+  trans_Time?: string
+  trans_Date_UL?: string
+  trans_Time_UL?: string
+  gross_Weight?: string
+  unladen_Weight?: string
+  act_Net_Weight?: string
 }
 
 interface WardData {
@@ -80,8 +95,8 @@ interface LogsheetResponse {
     MatDialogModule,
     BtnLogsheetViewCellRenderer,
     BtnPdfCellRenderer,
-    ViewlogsheetComponent,
     HttpClientModule,
+    // REMOVED: ViewlogsheetComponent - it's opened as dialog, not imported
   ],
 })
 export class LogsheetlistComponent implements OnInit {
@@ -91,7 +106,6 @@ export class LogsheetlistComponent implements OnInit {
   // Offcanvas state
   isFiltersOpen = false
   activeFilter = 9
-
   filterText = ""
   lstSearchResults: LogsheetData[] = []
   lstReportData: LogsheetData[] = []
@@ -105,7 +119,6 @@ export class LogsheetlistComponent implements OnInit {
   context: any
   gridApi!: GridApi
   defaultColDef: ColDef = {}
-
   public rowSelection: "single" | "multiple" = "multiple"
   components: any
   ttlQUantity = 0
@@ -128,7 +141,6 @@ export class LogsheetlistComponent implements OnInit {
   ) {
     this.uRole = Number(sessionStorage.getItem("Role")) || 0
     this.userType = Number(sessionStorage.getItem("UserType")) || 0
-
     this.components = {
       btnLogsheetViewCellRenderer: BtnLogsheetViewCellRenderer,
       btnPdfCellRenderer: BtnPdfCellRenderer,
@@ -143,7 +155,6 @@ export class LogsheetlistComponent implements OnInit {
       todate: [tDt, Validators.required],
       ward: [""],
     })
-
     this.getAGGridReady()
     this.fetchLogsheetData()
   }
@@ -153,7 +164,6 @@ export class LogsheetlistComponent implements OnInit {
       return
     }
     const url = `${environment.apiUrl}/Logsheet/getLogsheetReport`
-
     // Format dates in YYYY-MM-DD
     const formatDate = (date: any): string => {
       if (!date) return ""
@@ -170,7 +180,6 @@ export class LogsheetlistComponent implements OnInit {
     }
 
     console.log("Sending payload:", payload)
-
     this.http.post<LogsheetResponse>(url, payload).subscribe({
       next: (response) => {
         if (response && response.data) {
@@ -191,15 +200,20 @@ export class LogsheetlistComponent implements OnInit {
             ClosedBy: item.closedBy || item.ClosedBy,
             ClosedDestination: item.closedDestination || item.ClosedDestination,
             ClosedOn: item.closedOn || item.ClosedOn,
+            // NEW: Map transaction fields
+            Trans_Date: item.trans_Date || item.Trans_Date,
+            Trans_Time: item.trans_Time || item.Trans_Time,
+            Trans_Date_UL: item.trans_Date_UL || item.Trans_Date_UL,
+            Trans_Time_UL: item.trans_Time_UL || item.Trans_Time_UL,
+            Gross_Weight: item.gross_Weight || item.Gross_Weight,
+            Unladen_Weight: item.unladen_Weight || item.Unladen_Weight,
+            Act_Net_Weight: item.act_Net_Weight || item.Act_Net_Weight,
           }))
-
           // IMPORTANT: Set both arrays to ensure filtering works correctly
           this.lstSearchResults = [...normalizedData] // Master copy for filtering
           this.lstReportData = [...normalizedData] // Display copy
-
           // Reset active filter to "All" when new data is loaded
           this.activeFilter = 9
-
           console.log("Data loaded successfully:", this.lstSearchResults.length, "records")
         } else {
           this.lstReportData = []
@@ -241,11 +255,8 @@ export class LogsheetlistComponent implements OnInit {
       this.Form.markAllAsTouched()
       return
     }
-
     this.closeFilters() // Close filters panel after submission
-
     console.log("Form submitted with values:", this.Form.value)
-
     // Fetch new data based on form values
     this.fetchLogsheetData()
   }
@@ -253,7 +264,6 @@ export class LogsheetlistComponent implements OnInit {
   resetFilters() {
     const yDt = moment().subtract(5, "day").format("YYYY-MM-DD")
     const tDt = moment().subtract(0, "day").format("YYYY-MM-DD")
-
     this.Form.patchValue({
       fromdate: yDt,
       todate: tDt,
@@ -349,7 +359,6 @@ export class LogsheetlistComponent implements OnInit {
             justifyContent: "center",
             fontWeight: "bold",
           }
-
           if (params.value === 0) {
             return { ...baseStyle, color: "#f59e0b" }
           } else if (params.value === 1) {
@@ -452,7 +461,6 @@ export class LogsheetlistComponent implements OnInit {
         },
       },
     ]
-
     this.context = { componentParent: this }
     this.defaultColDef = {
       sortable: true,
@@ -475,9 +483,7 @@ export class LogsheetlistComponent implements OnInit {
 
   FilterData(id: number) {
     this.activeFilter = id
-
     console.log("Filtering data with id:", id, "Available records:", this.lstSearchResults.length)
-
     if (id === 9) {
       // Show all data
       this.lstReportData = [...this.lstSearchResults]
@@ -487,7 +493,6 @@ export class LogsheetlistComponent implements OnInit {
       this.lstReportData = this.lstSearchResults.filter((f: LogsheetData) => f.IsClosed === id)
       console.log("Filtered records for status", id, ":", this.lstReportData.length)
     }
-
     // Force grid to refresh
     if (this.gridApi) {
       this.gridApi.setGridOption("rowData", this.lstReportData)
@@ -502,7 +507,6 @@ export class LogsheetlistComponent implements OnInit {
       data: data,
       disableClose: false,
     })
-
     dialogRef.afterClosed().subscribe((result) => {
       console.log("Dialog closed", result)
     })
@@ -525,8 +529,13 @@ export class LogsheetlistComponent implements OnInit {
       "Closed By": v.ClosedBy,
       "Closed Destination": v.ClosedDestination,
       "Closed On": v.ClosedOn,
+      // NEW: Include transaction data in Excel export
+      "In Time of Transact": v.Trans_Date && v.Trans_Time ? `${v.Trans_Date} ${v.Trans_Time}` : "N/A",
+      "Out Time of Transact": v.Trans_Date_UL && v.Trans_Time_UL ? `${v.Trans_Date_UL} ${v.Trans_Time_UL}` : "N/A",
+      "Gross Weight": v.Gross_Weight || "N/A",
+      "Unladen Weight": v.Unladen_Weight || "N/A",
+      "Actual Net Weight": v.Act_Net_Weight || "N/A",
     }))
-
     const fileName = "LogsheetReport_" + moment(new Date()).format("DDMMYYYY") + ".xlsx"
     const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.lstExelData)
     const wb: XLSX.WorkBook = XLSX.utils.book_new()
@@ -538,7 +547,6 @@ export class LogsheetlistComponent implements OnInit {
 function dateComparator(date1: string, date2: string): number {
   var date1Number = _monthToNum(date1)
   var date2Number = _monthToNum(date2)
-
   if (date1Number === null && date2Number === null) {
     return 0
   }
@@ -548,7 +556,6 @@ function dateComparator(date1: string, date2: string): number {
   if (date2Number === null) {
     return 1
   }
-
   return date1Number - date2Number
 }
 
@@ -567,11 +574,8 @@ function _monthToNum(date: string): number | null {
 
 function headerHeightGetter(): number {
   var columnHeaderTexts = document.querySelectorAll(".ag-header-cell-text")
-
   var columnHeaderTextsArray: HTMLElement[] = []
-
   columnHeaderTexts.forEach((node) => columnHeaderTextsArray.push(node as HTMLElement))
-
   var clientHeights = columnHeaderTextsArray.map((headerText: HTMLElement) => headerText.clientHeight)
   var tallestHeaderTextHeight = Math.max(...clientHeights)
   return tallestHeaderTextHeight
