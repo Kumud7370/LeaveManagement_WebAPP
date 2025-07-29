@@ -65,23 +65,29 @@ export class SearchReportComponent implements OnInit {
     selectNallah: "",
   }
 
-  columnDefs = [
-    { headerName: "Slip No", field: "slipSrNo", sortable: true, filter: true },
-    { headerName: "Date", field: "trans_Date", sortable: true, filter: true },
-    { headerName: "Time", field: "trans_Time", sortable: true, filter: true },
-    { headerName: "Agency", field: "agency_Name", sortable: true, filter: true },
-    { headerName: "Vehicle No", field: "vehicle_No", sortable: true, filter: true },
-    { headerName: "Type of Waste", field: "type_of_Garbage", sortable: true, filter: true },
-    { headerName: "Gross Weight", field: "gross_Weight", sortable: true, filter: true },
-    { headerName: "Net Weight", field: "net_Weight", sortable: true, filter: true },
-    {
-      headerName: "Actions",
-      cellRenderer: this.actionCellRenderer,
-      colId: "actions",
-      sortable: false,
-      filter: false,
-      width: 120,
-    },
+  columnDefs = [{ headerName: "Location", field: "deliveryLocation", sortable: true, filter: true },
+  { headerName: "Slip No", field: "slipSrNo", sortable: true, filter: true },
+  { headerName: "Transaction Date", field: "trans_Date", sortable: true, filter: true },
+  { headerName: "Transaction Time", field: "trans_Time", sortable: true, filter: true },
+  { headerName: "Agency", field: "agency_Name", sortable: true, filter: true },
+  { headerName: "Vehicle No", field: "vehicle_No", sortable: true, filter: true },
+  { headerName: "Vehicle Type", field: "vehicleType", sortable: true, filter: true },
+  { headerName: "Ward", field: "ward", sortable: true, filter: true },
+  { headerName: "Route No.", field: "route", sortable: true, filter: true },
+  { headerName: "Type of Waste", field: "type_of_Garbage", sortable: true, filter: true },
+  { headerName: "Gross Weight", field: "gross_Weight", sortable: true, filter: true },
+  { headerName: "Trans Date UL", field: "trans_Date_UL", sortable: true, filter: true },
+  { headerName: "Trans Time UL", field: "trans_Time_UL", sortable: true, filter: true },
+  { headerName: "Unladen Weight", field: "unladen_Weight", sortable: true, filter: true },
+  { headerName: "Actual Net Weight", field: "act_Net_Weight", sortable: true, filter: true },
+  {
+    headerName: "Actions",
+    cellRenderer: this.actionCellRenderer,
+    colId: "actions",
+    sortable: false,
+    filter: false,
+    width: 120,
+  },
   ]
 
   defaultColDef = {
