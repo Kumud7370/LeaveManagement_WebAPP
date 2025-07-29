@@ -23,7 +23,7 @@
         </div>
       </div>
     </div>
-
+    
     <!-- Main Content -->
     <div class="card-body">
       <!-- Title Section -->
@@ -31,7 +31,7 @@
         <h2 class="main-title">SWM MIS</h2>
         <h3 class="sub-title">VEHICLE LOGSHEET</h3>
       </div>
-
+      
       <!-- Primary Information Table (matching PDF format exactly) -->
       <div class="pdf-table-container">
         <table class="pdf-table">
@@ -73,12 +73,12 @@
         </table>
       </div>
 
-
-      <div class="pdf-table-container transaction-table-section">
+      <!-- Trip Details Table - CONDITIONAL: Only show when status is 1 (Closed) -->
+      <div *ngIf="isLogsheetClosed()" class="pdf-table-container transaction-table-section">
         <table class="pdf-table transaction-table">
           <thead>
             <tr>
-              <th class="transaction-header trip-details-header " rowspan="2">Trip Details</th>
+              <th class="transaction-header trip-details-header" rowspan="2">Trip Details</th>
               <th class="transaction-header">In Time of Transact</th>
               <th class="transaction-header">Out Time of Transact</th>
               <th class="transaction-header">Gross Weight</th>
@@ -97,8 +97,30 @@
             </tr>
           </tbody>
         </table>
-      </div>  
-      
+      </div>
+
+      <!-- Message when Trip Details are not available -->
+      <div *ngIf="!isLogsheetClosed()" class="trip-details-message">
+        <div class="info-card">
+          <div class="info-icon">
+            <i class="fas fa-info-circle"></i>
+          </div>
+          <div class="info-content">
+            <h4>Trip Details Not Available</h4>
+            <p>Trip details are only available for closed logsheets (Status: Closed).</p>
+            <p class="current-status">
+              Current Status: 
+              <span class="status-badge" [ngClass]="{
+                'badge-open': lstFilterData.IsClosed === 0,
+                'badge-cancelled': lstFilterData.IsClosed === 2
+              }">
+                {{ lstFilterData.IsClosed === 0 ? 'Open' : 'Cancelled' }}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Closure Information Table (matching PDF format exactly) -->
       <div class="pdf-table-container">
         <table class="pdf-table">

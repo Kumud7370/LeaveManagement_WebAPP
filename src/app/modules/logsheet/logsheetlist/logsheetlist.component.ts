@@ -499,7 +499,7 @@ export class LogsheetlistComponent implements OnInit {
     }
   }
 
-  // Method to open ViewLogsheet dialog directly
+  // UPDATED: Method to open ViewLogsheet dialog with transaction data
   viewLogsheet(data: LogsheetData) {
     const dialogRef = this.dialog.open(ViewlogsheetComponent, {
       width: "80%",
@@ -541,6 +541,102 @@ export class LogsheetlistComponent implements OnInit {
     const wb: XLSX.WorkBook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
     XLSX.writeFile(wb, fileName)
+  }
+
+  // UPDATED: Method to fetch transaction details and then open dialog
+  viewLogsheetDetails(data: LogsheetData) {
+    console.log("View method called with data:", data)
+    const logsheetNumber = data.LogsheetNumber
+    const url = `${environment.apiUrl}/Report/GetTransactDetails/${logsheetNumber}`
+
+    // Show loading indicator
+    Swal.fire({
+      title: "Loading...",
+      text: "Fetching transaction details",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading()
+      },
+    })
+
+    this.http.get<any>(url).subscribe({
+      next: (res) => {
+        Swal.close() // Close loading indicator
+
+        if (res && res.data && res.data.length > 0) {
+          // Merge original data with transaction details
+          const mergedData = {
+            ...data, // original row data
+            ...res.data[0], // transaction details from API
+            // Ensure transaction fields are properly mapped
+            Trans_Date: res.data[0].trans_Date || res.data[0].Trans_Date,
+            Trans_Time: res.data[0].trans_Time || res.data[0].Trans_Time,
+            Trans_Date_UL: res.data[0].trans_Date_UL || res.data[0].Trans_Date_UL,
+            Trans_Time_UL: res.data[0].trans_Time_UL || res.data[0].Trans_Time_UL,
+            Gross_Weight: res.data[0].gross_Weight || res.data[0].Gross_Weight,
+            Unladen_Weight: res.data[0].unladen_Weight || res.data[0].Unladen_Weight,
+            Act_Net_Weight: res.data[0].act_Net_Weight || res.data[0].Act_Net_Weight,
+          }
+
+          console.log("Merged data with transaction details:", mergedData)
+
+          // Open dialog with merged data
+          const dialogRef = this.dialog.open(ViewlogsheetComponent, {
+            width: "90%",
+            maxWidth: "1200px",
+            height: "90%",
+            data: mergedData, // Pass merged data instead of original data
+            disableClose: false,
+            panelClass: "custom-dialog-container",
+          })
+
+          dialogRef.afterClosed().subscribe((result) => {
+            console.log("Dialog closed", result)
+          })
+        } else {
+          // No transaction data found, open dialog with original data
+          console.log("No transaction data found, opening with original data")
+          const dialogRef = this.dialog.open(ViewlogsheetComponent, {
+            width: "90%",
+            maxWidth: "1200px",
+            height: "90%",
+            data: data,
+            disableClose: false,
+            panelClass: "custom-dialog-container",
+          })
+
+          dialogRef.afterClosed().subscribe((result) => {
+            console.log("Dialog closed", result)
+          })
+        }
+      },
+      error: (err) => {
+        Swal.close() // Close loading indicator
+        console.error("Error fetching transaction data:", err)
+
+        // Show error and open dialog with original data
+        Swal.fire({
+          title: "Warning",
+          text: "Could not fetch transaction details. Showing basic logsheet information.",
+          icon: "warning",
+          timer: 3000,
+        })
+
+        // Open dialog with original data even if API fails
+        const dialogRef = this.dialog.open(ViewlogsheetComponent, {
+          width: "90%",
+          maxWidth: "1200px",
+          height: "90%",
+          data: data,
+          disableClose: false,
+          panelClass: "custom-dialog-container",
+        })
+
+        dialogRef.afterClosed().subscribe((result) => {
+          console.log("Dialog closed", result)
+        })
+      },
+    })
   }
 }
 

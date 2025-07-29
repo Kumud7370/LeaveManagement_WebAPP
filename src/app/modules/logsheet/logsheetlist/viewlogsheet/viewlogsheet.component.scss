@@ -162,6 +162,85 @@ $transition-speed: 0.3s;
       }
     }
 
+    // Trip Details Message Section
+    .trip-details-message {
+      margin-bottom: 1.5rem;
+
+      .info-card {
+        background: linear-gradient(135deg, rgba($info-color, 0.05) 0%, rgba($info-color, 0.1) 100%);
+        border: 2px solid rgba($info-color, 0.2);
+        border-radius: $border-radius;
+        padding: 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        box-shadow: $shadow-sm;
+
+        .info-icon {
+          flex-shrink: 0;
+          width: 48px;
+          height: 48px;
+          background: rgba($info-color, 0.15);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: $info-color;
+          font-size: 1.25rem;
+        }
+
+        .info-content {
+          flex: 1;
+
+          h4 {
+            margin: 0 0 0.5rem 0;
+            color: $info-color;
+            font-size: 1.1rem;
+            font-weight: 600;
+          }
+
+          p {
+            margin: 0 0 0.5rem 0;
+            color: $text-color;
+            font-size: 0.95rem;
+            line-height: 1.5;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            &.current-status {
+              font-weight: 500;
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+            }
+          }
+
+          .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+
+            &.badge-open {
+              background: rgba($warning-color, 0.15);
+              color: $warning-color;
+              border: 1px solid rgba($warning-color, 0.3);
+            }
+
+            &.badge-cancelled {
+              background: rgba($danger-color, 0.15);
+              color: $danger-color;
+              border: 1px solid rgba($danger-color, 0.3);
+            }
+          }
+        }
+      }
+    }
+
     // PDF-style table formatting (matches PDF exactly)
     .pdf-table-container {
       margin-bottom: 1.5rem;
@@ -250,7 +329,7 @@ $transition-speed: 0.3s;
         // Status styling
         .status-text {
           font-weight: bold;
-          
+
           &.status-open {
             color: $warning-color;
           }
@@ -280,6 +359,17 @@ $transition-speed: 0.3s;
 
     .card-body {
       padding: 1rem;
+
+      .trip-details-message {
+        .info-card {
+          flex-direction: column;
+          text-align: center;
+
+          .info-icon {
+            align-self: center;
+          }
+        }
+      }
 
       .pdf-table-container {
         overflow-x: auto;
@@ -348,6 +438,10 @@ $transition-speed: 0.3s;
     background: white !important;
     border: none !important;
     box-shadow: none !important;
+  }
+
+  .trip-details-message {
+    display: none !important; // Hide message when printing
   }
 
   .pdf-table-container {

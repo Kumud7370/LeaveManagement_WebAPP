@@ -10,7 +10,7 @@ import { ViewlogsheetComponent } from "src/app/modules/logsheet/logsheetlist/vie
   template: `
     <div class="cell-button-container">
       <button 
-        class="btn-view" 
+        class="btn-view"
         (click)="onClick()"
         title="View Logsheet Details"
       >
@@ -83,19 +83,8 @@ export class BtnLogsheetViewCellRenderer implements ICellRendererAngularComp {
   }
 
   onClick(): void {
-    // Open the ViewLogsheet component as a dialog
-    const dialogRef = this.dialog.open(ViewlogsheetComponent, {
-      width: "90%",
-      maxWidth: "1200px",
-      height: "90%",
-      data: this.params.data,
-      disableClose: false,
-      panelClass: "custom-dialog-container",
-    })
-
-    // Subscribe to dialog close event if needed
-    dialogRef.afterClosed().subscribe((result) => {
-      console.log("Dialog closed", result)
-    })
+    console.log("View button clicked", this.params.data)
+    // Call the updated method that fetches transaction details first
+    this.params.context.componentParent.viewLogsheetDetails(this.params.data)
   }
 }

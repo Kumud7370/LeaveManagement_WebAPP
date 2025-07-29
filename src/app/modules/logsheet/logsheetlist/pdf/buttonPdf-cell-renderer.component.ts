@@ -5,6 +5,7 @@ import { ICellRendererParams } from "ag-grid-community"
 import jsPDF from "jspdf"
 import moment from "moment"
 import autoTable from 'jspdf-autotable';
+
 @Component({
   selector: "app-btn-pdf-cell-renderer",
   template: `
@@ -89,6 +90,11 @@ export class BtnPdfCellRenderer implements ICellRendererAngularComp {
     this.downloadPDF()
   }
 
+  // Check if logsheet is closed (status = 1) - same as ViewlogsheetComponent
+  private isLogsheetClosed(): boolean {
+    return this.normalizedData.IsClosed === 1
+  }
+
   // EXACT COPY from ViewlogsheetComponent - normalize data keys to handle case sensitivity
   private normalizeData(data: any): any {
     if (!data) return {}
@@ -147,10 +153,12 @@ export class BtnPdfCellRenderer implements ICellRendererAngularComp {
     return `${weight} kg`
   }
 
-  // EXACT COPY from ViewlogsheetComponent downloadPDF method - renamed to match
+  // UPDATED: Enhanced PDF generation with conditional Trip Details table
   downloadPDF(): void {
     const doc = new jsPDF("landscape")
     const fileName = `Logsheet_${this.normalizedData.LogsheetNumber || "Unknown"}_${moment().format("DDMMYYYY_HHmmss")}`
+
+    console.log("PDF Generation - Status:", this.normalizedData.IsClosed, "Is Closed:", this.isLogsheetClosed())
 
     // SWM MIS Header
     autoTable(doc, {
@@ -215,69 +223,112 @@ export class BtnPdfCellRenderer implements ICellRendererAngularComp {
       },
     })
 
-    // UPDATED: Transaction Details Table - matching HTML structure exactly
-    autoTable(doc, {
-      head: [
-        [
-          {
-            content: "Trip Details",
-            rowSpan: 2,
-            styles: {
-              fontStyle: "bold",
-              halign: "center",
-              valign: "middle",
-              fillColor: [240, 240, 240],
+    // CONDITIONAL: Transaction Details Table - only show if status is 1 (Closed)
+    if (this.isLogsheetClosed()) {
+      console.log("Adding Trip Details table to PDF - Status is Closed")
+      autoTable(doc, {
+        head: [
+          [
+            {
+              content: "Trip Details",
+              rowSpan: 2,
+              styles: {
+                fontStyle: "bold",
+                halign: "center",
+                valign: "middle",
+                fillColor: [240, 240, 240],
+              },
             },
-          },
-          { content: "In Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Out Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Gross Weight", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Unladen Weight", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Actual Net Weight", styles: { fontStyle: "bold", halign: "center" } },
+            { content: "In Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
+            { content: "Out Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
+            { content: "Gross Weight", styles: { fontStyle: "bold", halign: "center" } },
+            { content: "Unladen Weight", styles: { fontStyle: "bold", halign: "center" } },
+            { content: "Actual Net Weight", styles: { fontStyle: "bold", halign: "center" } },
+          ],
         ],
-      ],
-      body: [
-        [
-          {
-            content: "Trip Details",
-            rowSpan: 2,
-            styles: {
-              fontStyle: "bold",
-              halign: "center",
-              valign: "middle",
-              fillColor: [248, 249, 250],
+        body: [
+          [
+            {
+              content: "Trip Details",
+              rowSpan: 2,
+              styles: {
+                fontStyle: "bold",
+                halign: "center",
+                valign: "middle",
+                fillColor: [248, 249, 250],
+              },
             },
-          },
-          this.getInTimeOfTransact(),
-          this.getOutTimeOfTransact(),
-          this.formatWeight(this.normalizedData.Gross_Weight),
-          this.formatWeight(this.normalizedData.Unladen_Weight),
-          this.formatWeight(this.normalizedData.Act_Net_Weight),
+            this.getInTimeOfTransact(),
+            this.getOutTimeOfTransact(),
+            this.formatWeight(this.normalizedData.Gross_Weight),
+            this.formatWeight(this.normalizedData.Unladen_Weight),
+            this.formatWeight(this.normalizedData.Act_Net_Weight),
+          ],
         ],
-      ],
-      theme: "grid",
-      startY: doc.lastAutoTable.finalY + 5,
-      styles: {
-        fontSize: 10,
-        textColor: 0,
-        lineWidth: 0.3,
-        lineColor: [0, 0, 0],
-        halign: "center",
-      },
-      headStyles: {
-        fillColor: [240, 240, 240],
-        textColor: 0,
-        fontStyle: "bold",
-      },
-      columnStyles: {
-        0: { cellWidth: 44.83 }, // Trip Details column
-        1: { cellWidth: 44.83 }, // In Time of Transact
-        2: { cellWidth: 44.83 }, // Out Time of Transact
-        3: { cellWidth: 44.83 }, // Gross Weight
-        4: { cellWidth: 44.83 }, // Unladen Weight
-        5: { cellWidth: 44.83 }, // Actual Net Weight
-      },
-    })
+        theme: "grid",
+        startY: doc.lastAutoTable.finalY + 5,
+        styles: {
+          fontSize: 10,
+          textColor: 0,
+          lineWidth: 0.3,
+          lineColor: [0, 0, 0],
+          halign: "center",
+        },
+        headStyles: {
+          fillColor: [240, 240, 240],
+          textColor: 0,
+          fontStyle: "bold",
+        },
+        columnStyles: {
+          0: { cellWidth: 44.83 }, // Trip Details column
+          1: { cellWidth: 44.83 }, // In Time of Transact
+          2: { cellWidth: 44.83 }, // Out Time of Transact
+          3: { cellWidth: 44.83 }, // Gross Weight
+          4: { cellWidth: 44.83 }, // Unladen Weight
+          5: { cellWidth: 44.83 }, // Actual Net Weight
+        },
+      })
+    } else {
+      console.log("Skipping Trip Details table - Status is not Closed:", this.normalizedData.IsClosed)
+
+      // Add a note in the PDF explaining why Trip Details are not included
+      autoTable(doc, {
+        body: [
+          [
+            {
+              content: "Trip Details are only available for closed logsheets.",
+              colSpan: 6,
+              styles: {
+                halign: "center",
+                fontSize: 11,
+                fontStyle: "italic",
+                textColor: [100, 100, 100],
+                fillColor: [248, 249, 250],
+              },
+            },
+          ],
+          [
+            {
+              content: `Current Status: ${this.normalizedData.IsClosed === 0 ? "Open" : this.normalizedData.IsClosed === 2 ? "Cancelled" : "Unknown"}`,
+              colSpan: 6,
+              styles: {
+                halign: "center",
+                fontSize: 10,
+                fontStyle: "bold",
+                textColor: this.normalizedData.IsClosed === 0 ? [245, 158, 11] : [239, 68, 68], // Orange for Open, Red for Cancelled
+                fillColor: [248, 249, 250],
+              },
+            },
+          ],
+        ],
+        theme: "grid",
+        startY: doc.lastAutoTable.finalY + 5,
+        styles: {
+          lineWidth: 0.3,
+          lineColor: [200, 200, 200],
+        },
+      })
+    }
 
     // Section 3: Closure information table
     autoTable(doc, {
@@ -313,6 +364,9 @@ export class BtnPdfCellRenderer implements ICellRendererAngularComp {
     doc.setFontSize(8)
     doc.text("1 of 1", pageWidth / 2, pageHeight - 8, { align: "center" })
 
+    // Save the PDF
     doc.save(`${fileName}.pdf`)
+
+    console.log(`PDF generated: ${fileName}.pdf`)
   }
 }

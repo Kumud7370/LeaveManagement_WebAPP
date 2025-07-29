@@ -2,10 +2,11 @@ import { Component, Inject } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { FormBuilder } from '@angular/forms'
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog'
+import { MatDialogRef } from '@angular/material/dialog'
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import moment from "moment"
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
   selector: "app-viewlogsheet",
@@ -20,7 +21,6 @@ export class ViewlogsheetComponent {
   lstReportData: any = []
   lstFilterData: any
   ttlQuantity: any
-
 
   constructor(
     public router: Router,
@@ -53,36 +53,89 @@ export class ViewlogsheetComponent {
       ClosedOn: data.closedOn || data.ClosedOn || null,
       IsClosed: data.isClosed !== undefined ? data.isClosed : data.IsClosed !== undefined ? data.IsClosed : 0,
       Remark: data.remark || data.Remark || "",
-      // Transaction fields
+      // Transaction fields - UPDATED to handle both cases
       Trans_Date: data.trans_Date || data.Trans_Date || "",
       Trans_Time: data.trans_Time || data.Trans_Time || "",
       Trans_Date_UL: data.trans_Date_UL || data.Trans_Date_UL || "",
-      Trans_Time_UL: data.trans_Time_UL || data.Trans_Time_UL || "",
+      Trans_Time_UL: data.Trans_Time_UL || data.Trans_Time_UL || "",
       Gross_Weight: data.gross_Weight || data.Gross_Weight || "",
       Unladen_Weight: data.unladen_Weight || data.Unladen_Weight || "",
       Act_Net_Weight: data.act_Net_Weight || data.Act_Net_Weight || "",
     }
   }
 
-  // Get formatted In Time of Transact
+  // Check if logsheet is closed (status = 1) - for UI display only
+  isLogsheetClosed(): boolean {
+    return this.lstFilterData.IsClosed === 1
+  }
+
+  // Get formatted In Time of Transact - for UI display
   getInTimeOfTransact(): string {
+    const date = this.lstFilterData.Trans_Date
+    const time = this.lstFilterData.Trans_Time
+
+    console.log("Getting In Time - Date:", date, "Time:", time)
+
+    if (date && time) {
+      return `${date} ${time}`
+    }
+    return "N/A"
+  }
+
+  // Get formatted Out Time of Transact - for UI display
+  getOutTimeOfTransact(): string {
+    const date = this.lstFilterData.Trans_Date_UL
+    const time = this.lstFilterData.Trans_Time_UL
+
+    console.log("Getting Out Time - Date:", date, "Time:", time)
+
+    if (date && time) {
+      return `${date} ${time}`
+    }
+    return "N/A"
+  }
+
+  // Format weight values - for UI display
+  formatWeight(weight: string): string {
+    console.log("Formatting weight:", weight)
+
+    if (!weight || weight === "N/A" || weight === "" || weight === null || weight === undefined) {
+      return "N/A"
+    }
+    // If it's already formatted with 'kg', return as is
+    if (typeof weight === "string" && weight.includes("kg")) {
+      return weight
+    }
+    // Otherwise, add 'kg' suffix
+    return `${weight} kg`
+  }
+
+  // UPDATED: PDF-specific methods that always show Trip Details but with N/A for non-closed logsheets
+  private getPdfInTimeOfTransact(): string {
+    if (this.lstFilterData.IsClosed !== 1) {
+      return "N/A"
+    }
     if (this.lstFilterData.Trans_Date && this.lstFilterData.Trans_Time) {
       return `${this.lstFilterData.Trans_Date} ${this.lstFilterData.Trans_Time}`
     }
     return "N/A"
   }
 
-  // Get formatted Out Time of Transact
-  getOutTimeOfTransact(): string {
+  private getPdfOutTimeOfTransact(): string {
+    if (this.lstFilterData.IsClosed !== 1) {
+      return "N/A"
+    }
     if (this.lstFilterData.Trans_Date_UL && this.lstFilterData.Trans_Time_UL) {
       return `${this.lstFilterData.Trans_Date_UL} ${this.lstFilterData.Trans_Time_UL}`
     }
     return "N/A"
   }
 
-  // Format weight values
-  formatWeight(weight: string): string {
-    if (!weight || weight === "N/A" || weight === "") {
+  private formatPdfWeight(weight: string): string {
+    if (this.lstFilterData.IsClosed !== 1) {
+      return "N/A"
+    }
+    if (!weight || weight === "N/A" || weight === "" || weight === null || weight === undefined) {
       return "N/A"
     }
     // If it's already formatted with 'kg', return as is
@@ -98,7 +151,7 @@ export class ViewlogsheetComponent {
     window.print()
   }
 
-  // UPDATED: Enhanced PDF generation matching the HTML structure exactly
+  // UPDATED: PDF generation - ALWAYS includes Trip Details table, but shows N/A for non-closed logsheets
   downloadPDF(): void {
     const doc = new jsPDF("landscape")
     const fileName = `Logsheet_${this.lstFilterData.LogsheetNumber || "Unknown"}_${moment().format("DDMMYYYY_HHmmss")}`
@@ -166,7 +219,7 @@ export class ViewlogsheetComponent {
       },
     })
 
-    // UPDATED: Transaction Details Table - matching HTML structure exactly
+    // UPDATED: Trip Details Table - ALWAYS show in PDF, but display N/A for non-closed logsheets
     autoTable(doc, {
       head: [
         [
@@ -199,11 +252,11 @@ export class ViewlogsheetComponent {
               fillColor: [248, 249, 250],
             },
           },
-          this.getInTimeOfTransact(),
-          this.getOutTimeOfTransact(),
-          this.formatWeight(this.lstFilterData.Gross_Weight),
-          this.formatWeight(this.lstFilterData.Unladen_Weight),
-          this.formatWeight(this.lstFilterData.Act_Net_Weight),
+          this.getPdfInTimeOfTransact(), // Will return N/A if not closed
+          this.getPdfOutTimeOfTransact(), // Will return N/A if not closed
+          this.formatPdfWeight(this.lstFilterData.Gross_Weight), // Will return N/A if not closed
+          this.formatPdfWeight(this.lstFilterData.Unladen_Weight), // Will return N/A if not closed
+          this.formatPdfWeight(this.lstFilterData.Act_Net_Weight), // Will return N/A if not closed
         ],
       ],
       theme: "grid",
@@ -263,7 +316,6 @@ export class ViewlogsheetComponent {
     const pageWidth = doc.internal.pageSize.getWidth()
     doc.setFontSize(8)
     doc.text("1 of 1", pageWidth / 2, pageHeight - 8, { align: "center" })
-
     doc.save(`${fileName}.pdf`)
   }
 
