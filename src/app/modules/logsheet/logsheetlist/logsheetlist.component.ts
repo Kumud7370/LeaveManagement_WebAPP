@@ -10,10 +10,12 @@ import { MatDialog, MatDialogModule } from "@angular/material/dialog"
 import Swal from "sweetalert2"
 import moment from "moment"
 import * as XLSX from "xlsx"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 import { BtnLogsheetViewCellRenderer } from "src/app/modules/logsheet/logsheetlist/viewlogsheet/buttonLogsheetView-cell-renderer.component"
 import { ViewlogsheetComponent } from "src/app/modules/logsheet/logsheetlist/viewlogsheet/viewlogsheet.component"
-import { HttpClientModule, HttpClient } from '@angular/common/http'
-import { environment } from 'src/environments/environment'
+import { HttpClientModule, HttpClient } from "@angular/common/http"
+import { environment } from "src/environments/environment"
 import { BtnPdfCellRenderer } from "src/app/modules/logsheet/logsheetlist/pdf/buttonPdf-cell-renderer.component"
 
 interface LogsheetData {
@@ -96,7 +98,6 @@ interface LogsheetResponse {
     BtnLogsheetViewCellRenderer,
     BtnPdfCellRenderer,
     HttpClientModule,
-    // REMOVED: ViewlogsheetComponent - it's opened as dialog, not imported
   ],
 })
 export class LogsheetlistComponent implements OnInit {
@@ -226,6 +227,314 @@ export class LogsheetlistComponent implements OnInit {
         this.lstSearchResults = []
       },
     })
+  }
+
+  // NEW: Method to fetch transaction details and generate PDF (same as View button logic)
+  downloadLogsheetPDF(data: LogsheetData) {
+    console.log("PDF download method called with data:", data)
+    const logsheetNumber = data.LogsheetNumber
+    const url = `${environment.apiUrl}/Report/GetTransactDetails/${logsheetNumber}`
+
+    // Show loading indicator
+    Swal.fire({
+      title: "Generating PDF...",
+      text: "Fetching transaction details",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading()
+      },
+    })
+
+    this.http.get<any>(url).subscribe({
+      next: (res) => {
+        Swal.close() // Close loading indicator
+        let mergedData: LogsheetData
+
+        if (res && res.data && res.data.length > 0) {
+          // Merge original data with transaction details
+          mergedData = {
+            ...data, // original row data
+            ...res.data[0], // transaction details from API
+            // Ensure transaction fields are properly mapped
+            Trans_Date: res.data[0].trans_Date || res.data[0].Trans_Date,
+            Trans_Time: res.data[0].trans_Time || res.data[0].Trans_Time,
+            Trans_Date_UL: res.data[0].trans_Date_UL || res.data[0].Trans_Date_UL,
+            Trans_Time_UL: res.data[0].trans_Time_UL || res.data[0].Trans_Time_UL,
+            Gross_Weight: res.data[0].gross_Weight || res.data[0].Gross_Weight,
+            Unladen_Weight: res.data[0].unladen_Weight || res.data[0].Unladen_Weight,
+            Act_Net_Weight: res.data[0].act_Net_Weight || res.data[0].Act_Net_Weight,
+          }
+          console.log("Merged data with transaction details for PDF:", mergedData)
+        } else {
+          // No transaction data found, use original data
+          console.log("No transaction data found, using original data for PDF")
+          mergedData = data
+        }
+
+        // Generate PDF with the merged data
+        this.generatePDFWithData(mergedData)
+      },
+      error: (err) => {
+        Swal.close() // Close loading indicator
+        console.error("Error fetching transaction data for PDF:", err)
+        // Show error and generate PDF with original data
+        Swal.fire({
+          title: "Warning",
+          text: "Could not fetch transaction details. Generating PDF with available data.",
+          icon: "warning",
+          timer: 3000,
+        })
+        // Generate PDF with original data even if API fails
+        this.generatePDFWithData(data)
+      },
+    })
+  }
+
+  // NEW: Method to generate PDF with complete data (extracted from ViewlogsheetComponent)
+  private generatePDFWithData(data: LogsheetData) {
+    // Normalize data exactly like ViewlogsheetComponent does
+    const normalizedData = this.normalizeDataForPDF(data)
+
+    const doc = new jsPDF("landscape")
+    const fileName = `Logsheet_${normalizedData.LogsheetNumber || "Unknown"}_${moment().format("DDMMYYYY_HHmmss")}`
+
+    console.log(
+      "PDF Generation - Status:",
+      normalizedData.IsClosed,
+      "Is Closed:",
+      this.isLogsheetClosedForPDF(normalizedData),
+    )
+
+    // SWM MIS Header
+    autoTable(doc, {
+      body: [
+        [{ content: "SWM MIS", colSpan: 6, styles: { halign: "center", fontSize: 14, fontStyle: "bold" } }],
+        [{ content: "VEHICLE LOGSHEET", colSpan: 6, styles: { halign: "center", fontSize: 12, fontStyle: "bold" } }],
+      ],
+      theme: "grid",
+      styles: {
+        lineWidth: 0.3,
+        textColor: 0,
+        fontSize: 12,
+        halign: "center",
+        lineColor: [0, 0, 0],
+      },
+      margin: { top: 10 },
+    })
+
+    // Section 1: Main information table
+    autoTable(doc, {
+      body: [
+        [
+          { content: "Date & Time :", styles: { fontStyle: "bold" } },
+          normalizedData.CreatedOn || "N/A",
+          { content: "", rowSpan: 4 }, // merged vertical cell
+          { content: "Name of Ward :", styles: { fontStyle: "bold" } },
+          normalizedData.Ward || "N/A",
+        ],
+        [
+          { content: "Logsheet Number :", styles: { fontStyle: "bold" } },
+          normalizedData.LogsheetNumber || "N/A",
+          { content: "Route Number :", styles: { fontStyle: "bold" } },
+          normalizedData.RouteNumber || "N/A",
+        ],
+        [
+          { content: "Type Of Waste :", styles: { fontStyle: "bold" } },
+          normalizedData.TypeOfWaste || "N/A",
+          { content: "Vehicle Number :", styles: { fontStyle: "bold" } },
+          normalizedData.VehicleNumber || "N/A",
+        ],
+        [
+          { content: "Driver's Name :", styles: { fontStyle: "bold" } },
+          normalizedData.DriverName || "N/A",
+          { content: "Status :", styles: { fontStyle: "bold" } },
+          normalizedData.IsClosed === 0 ? "Open" : normalizedData.IsClosed === 2 ? "Cancelled" : "Closed",
+        ],
+      ],
+      theme: "grid",
+      startY: doc.lastAutoTable.finalY + 2,
+      styles: {
+        fontSize: 10,
+        textColor: 0,
+        lineWidth: 0.3,
+        lineColor: [0, 0, 0],
+      },
+      columnStyles: {
+        0: { cellWidth: 50 },
+        1: { cellWidth: 70 },
+        2: { cellWidth: 29 },
+        3: { cellWidth: 50 },
+        4: { cellWidth: 70 },
+      },
+    })
+
+    // UPDATED: Trip Details Table - ALWAYS show in PDF, but display N/A for non-closed logsheets (same as ViewlogsheetComponent)
+    autoTable(doc, {
+      head: [
+        [
+          {
+            content: "Trip Details",
+            rowSpan: 2,
+            styles: {
+              fontStyle: "bold",
+              halign: "center",
+              valign: "middle",
+              fillColor: [240, 240, 240],
+            },
+          },
+          { content: "In Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Out Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Gross Weight", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Unladen Weight", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Actual Net Weight", styles: { fontStyle: "bold", halign: "center" } },
+        ],
+      ],
+      body: [
+        [
+          {
+            content: "Trip Details",
+            rowSpan: 2,
+            styles: {
+              fontStyle: "bold",
+              halign: "center",
+              valign: "middle",
+              fillColor: [248, 249, 250],
+            },
+          },
+          this.getPdfInTimeOfTransactForPDF(normalizedData), // Will return N/A if not closed
+          this.getPdfOutTimeOfTransactForPDF(normalizedData), // Will return N/A if not closed
+          this.formatPdfWeightForPDF(normalizedData.Gross_Weight, normalizedData), // Will return N/A if not closed
+          this.formatPdfWeightForPDF(normalizedData.Unladen_Weight, normalizedData), // Will return N/A if not closed
+          this.formatPdfWeightForPDF(normalizedData.Act_Net_Weight, normalizedData), // Will return N/A if not closed
+        ],
+      ],
+      theme: "grid",
+      startY: doc.lastAutoTable.finalY + 5,
+      styles: {
+        fontSize: 10,
+        textColor: 0,
+        lineWidth: 0.3,
+        lineColor: [0, 0, 0],
+        halign: "center",
+      },
+      headStyles: {
+        fillColor: [240, 240, 240],
+        textColor: 0,
+        fontStyle: "bold",
+      },
+      columnStyles: {
+        0: { cellWidth: 44.83 }, // Trip Details column
+        1: { cellWidth: 44.83 }, // In Time of Transact
+        2: { cellWidth: 44.83 }, // Out Time of Transact
+        3: { cellWidth: 44.83 }, // Gross Weight
+        4: { cellWidth: 44.83 }, // Unladen Weight
+        5: { cellWidth: 44.83 }, // Actual Net Weight
+      },
+    })
+
+    // Section 3: Closure information table
+    autoTable(doc, {
+      body: [
+        [{ content: "Logsheet Closed Date & Time :", styles: { fontStyle: "bold" } }, normalizedData.ClosedOn || "N/A"],
+        [
+          { content: "Waste Processing Plant:", styles: { fontStyle: "bold" } },
+          normalizedData.ClosedDestination || "N/A",
+        ],
+        [{ content: "Signature & Stamp :", styles: { fontStyle: "bold" } }, normalizedData.ClosedBy || "N/A"],
+        [{ content: "Remark :", styles: { fontStyle: "bold" } }, normalizedData.Remark || "N/A"],
+      ],
+      theme: "grid",
+      styles: {
+        fontSize: 10,
+        textColor: 0,
+        lineWidth: 0.3,
+        lineColor: [0, 0, 0],
+      },
+      columnStyles: {
+        0: { cellWidth: 70 },
+        1: { cellWidth: 199 },
+      },
+      startY: doc.lastAutoTable.finalY + 5,
+    })
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    doc.setFontSize(8)
+    doc.text("1 of 1", pageWidth / 2, pageHeight - 8, { align: "center" })
+
+    // Save the PDF
+    doc.save(`${fileName}.pdf`)
+    console.log(`PDF generated: ${fileName}.pdf`)
+  }
+
+  // Helper methods for PDF generation (copied from ViewlogsheetComponent)
+  private normalizeDataForPDF(data: any): any {
+    if (!data) return {}
+    // Create a standardized object with expected property names
+    return {
+      LogsheetNumber: data.logsheetNumber || data.LogsheetNumber || "",
+      VehicleNumber: data.vehicleNumber || data.VehicleNumber || "",
+      Ward: data.ward || data.Ward || "",
+      RouteNumber: data.routeNumber || data.RouteNumber || "",
+      TypeOfWaste: data.typeOfWaste || data.TypeOfWaste || "",
+      DriverName: data.driverName || data.DriverName || "",
+      CreatedOn: data.createdOn || data.CreatedOn || "",
+      CreatedBy: data.createdBy || data.CreatedBy || "",
+      ClosedBy: data.closedBy || data.ClosedBy || null,
+      ClosedDestination: data.closedDestination || data.ClosedDestination || null,
+      ClosedOn: data.closedOn || data.ClosedOn || null,
+      IsClosed: data.isClosed !== undefined ? data.isClosed : data.IsClosed !== undefined ? data.IsClosed : 0,
+      Remark: data.remark || data.Remark || "",
+      // Transaction fields
+      Trans_Date: data.trans_Date || data.Trans_Date || "",
+      Trans_Time: data.trans_Time || data.Trans_Time || "",
+      Trans_Date_UL: data.trans_Date_UL || data.Trans_Date_UL || "",
+      Trans_Time_UL: data.trans_Time_UL || data.Trans_Time_UL || "",
+      Gross_Weight: data.gross_Weight || data.Gross_Weight || "",
+      Unladen_Weight: data.unladen_Weight || data.Unladen_Weight || "",
+      Act_Net_Weight: data.act_Net_Weight || data.Act_Net_Weight || "",
+    }
+  }
+
+  private isLogsheetClosedForPDF(data: any): boolean {
+    return data.IsClosed === 1
+  }
+
+  // UPDATED: PDF-specific methods that match ViewlogsheetComponent exactly
+  private getPdfInTimeOfTransactForPDF(data: any): string {
+    if (data.IsClosed !== 1) {
+      return "N/A"
+    }
+    if (data.Trans_Date && data.Trans_Time) {
+      return `${data.Trans_Date} ${data.Trans_Time}`
+    }
+    return "N/A"
+  }
+
+  private getPdfOutTimeOfTransactForPDF(data: any): string {
+    if (data.IsClosed !== 1) {
+      return "N/A"
+    }
+    if (data.Trans_Date_UL && data.Trans_Time_UL) {
+      return `${data.Trans_Date_UL} ${data.Trans_Time_UL}`
+    }
+    return "N/A"
+  }
+
+  private formatPdfWeightForPDF(weight: string | number, data: any): string {
+    if (data.IsClosed !== 1) {
+      return "N/A"
+    }
+    if (!weight || weight === "N/A" || weight === "" || weight === null || weight === undefined) {
+      return "N/A"
+    }
+    // If it's already formatted with 'kg', return as is
+    if (typeof weight === "string" && weight.includes("kg")) {
+      return weight
+    }
+    // Otherwise, add 'kg' suffix
+    return `${weight} kg`
   }
 
   // Offcanvas methods
@@ -562,7 +871,6 @@ export class LogsheetlistComponent implements OnInit {
     this.http.get<any>(url).subscribe({
       next: (res) => {
         Swal.close() // Close loading indicator
-
         if (res && res.data && res.data.length > 0) {
           // Merge original data with transaction details
           const mergedData = {
@@ -577,9 +885,7 @@ export class LogsheetlistComponent implements OnInit {
             Unladen_Weight: res.data[0].unladen_Weight || res.data[0].Unladen_Weight,
             Act_Net_Weight: res.data[0].act_Net_Weight || res.data[0].Act_Net_Weight,
           }
-
           console.log("Merged data with transaction details:", mergedData)
-
           // Open dialog with merged data
           const dialogRef = this.dialog.open(ViewlogsheetComponent, {
             width: "90%",
@@ -589,7 +895,6 @@ export class LogsheetlistComponent implements OnInit {
             disableClose: false,
             panelClass: "custom-dialog-container",
           })
-
           dialogRef.afterClosed().subscribe((result) => {
             console.log("Dialog closed", result)
           })
@@ -604,7 +909,6 @@ export class LogsheetlistComponent implements OnInit {
             disableClose: false,
             panelClass: "custom-dialog-container",
           })
-
           dialogRef.afterClosed().subscribe((result) => {
             console.log("Dialog closed", result)
           })
@@ -613,7 +917,6 @@ export class LogsheetlistComponent implements OnInit {
       error: (err) => {
         Swal.close() // Close loading indicator
         console.error("Error fetching transaction data:", err)
-
         // Show error and open dialog with original data
         Swal.fire({
           title: "Warning",
@@ -621,7 +924,6 @@ export class LogsheetlistComponent implements OnInit {
           icon: "warning",
           timer: 3000,
         })
-
         // Open dialog with original data even if API fails
         const dialogRef = this.dialog.open(ViewlogsheetComponent, {
           width: "90%",
@@ -631,7 +933,6 @@ export class LogsheetlistComponent implements OnInit {
           disableClose: false,
           panelClass: "custom-dialog-container",
         })
-
         dialogRef.afterClosed().subscribe((result) => {
           console.log("Dialog closed", result)
         })
