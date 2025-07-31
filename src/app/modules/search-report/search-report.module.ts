@@ -1,65 +1,27 @@
-// import { NgModule } from "@angular/core"
-// import { CommonModule } from "@angular/common"
-// import { FormsModule, ReactiveFormsModule } from "@angular/forms"
-// import { RouterModule } from "@angular/router"
-
-// import { SearchReportComponent } from "./search-report.component"
-// import { BtnCellRenderer } from "./renderers/button-cell-renderer.component"
-// import { BtnLinkCellRenderer } from "./renderers/buttonLink-cell-renderer.component"
-// import { BtnViewCellRenderer } from "./renderers/buttonView-cell-renderer.component"
-// import { BtnMoreCellRenderer } from "./renderers/buttonMore-cell-renderer.component"
-// import { CheckBoxCellRenderer } from "./renderers/checkbox-cell-renderer.component"
-
-// @NgModule({
-//   declarations: [BtnCellRenderer, BtnLinkCellRenderer, BtnViewCellRenderer, BtnMoreCellRenderer, CheckBoxCellRenderer],
-//   imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, SearchReportComponent],
-//   exports: [
-//     SearchReportComponent,
-//     BtnCellRenderer,
-//     BtnLinkCellRenderer,
-//     BtnViewCellRenderer,
-//     BtnMoreCellRenderer,
-//     CheckBoxCellRenderer,
-//   ],
-// })
-// export class SearchReportModule {}
 import { NgModule } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule, ReactiveFormsModule } from "@angular/forms"
 import { RouterModule } from "@angular/router"
-
 import { SearchReportComponent } from "./search-report.component"
-import { BtnCellRenderer } from "./renderers/button-cell-renderer.component"
-import { BtnLinkCellRenderer } from "./renderers/buttonLink-cell-renderer.component"
-import { BtnViewCellRenderer } from "./renderers/buttonView-cell-renderer.component"
-import { BtnMoreCellRenderer } from "./renderers/buttonMore-cell-renderer.component"
-import { CheckBoxCellRenderer } from "./renderers/checkbox-cell-renderer.component"
+import { BtnSearchViewCellRenderer } from "./viewSearch/buttonSearchView-cell-renderer.component"
+import { BtnSearchPdfCellRenderer } from "./viewSearch/buttonSearchPdf-cell-renderer.component"
+import { ViewSearchReportComponent } from "./viewSearch/viewsearchreport.component"
+import { MatDialogModule } from "@angular/material/dialog"
 
 @NgModule({
-  
   declarations: [],
   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-
+    MatDialogModule,
     // ✅ Import all standalone components
     SearchReportComponent,
-    BtnCellRenderer,
-    BtnLinkCellRenderer,
-    BtnViewCellRenderer,
-    BtnMoreCellRenderer,
-    CheckBoxCellRenderer,
+    BtnSearchViewCellRenderer,
+    BtnSearchPdfCellRenderer,
+    ViewSearchReportComponent,
   ],
-  exports: [
-    SearchReportComponent,
-    BtnCellRenderer,
-    BtnLinkCellRenderer,
-    BtnViewCellRenderer,
-    BtnMoreCellRenderer,
-    CheckBoxCellRenderer,
-  ],
+  exports: [SearchReportComponent, BtnSearchViewCellRenderer, BtnSearchPdfCellRenderer, ViewSearchReportComponent],
 })
-export class SearchReportModule {}
-
+export class SearchReportModule { }

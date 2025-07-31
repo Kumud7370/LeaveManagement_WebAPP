@@ -1,0 +1,108 @@
+<div class="search-report-container">
+  <div class="search-report-card">
+    <!-- Header Section -->
+    <div class="card-header">
+      <div class="header-content">
+        <div class="header-title">
+          <i class="fas fa-file-alt"></i>
+          <span>Search Report Details</span>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="action-btn print-btn" (click)="printSearchReport()">
+            <i class="fas fa-print"></i>
+            Print
+          </button>
+          <button type="button" class="action-btn pdf-btn" (click)="downloadPDF()">
+            <i class="fas fa-file-pdf"></i>
+            PDF
+          </button>
+          <button type="button" class="close-btn" (click)="Close()">
+            <i class="fas fa-times"></i>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+        
+    <!-- Main Content -->
+    <div class="card-body">
+      <!-- Title Section -->
+      <div class="title-section">
+        <h2 class="main-title">SWM MIS</h2>
+        <h3 class="sub-title">WEIGHING TICKET</h3>
+      </div>
+  
+      <!-- WEIGHING TICKET Label -->
+      <div class="weighing-ticket-label">
+        <h4>WEIGHING TICKET</h4>
+      </div>
+        
+      <!-- Search Report Information Table with Images (single unified structure) -->
+      <div class="pdf-table-container">
+        <table class="pdf-table">
+          <tbody>
+            <tr>
+              <td class="label-cell">TICKET NO :</td>
+              <td class="value-cell">{{ searchData.slipSrNo || 'N/A' }}</td>
+              <td class="label-cell">LOGSHEET NO :</td>
+              <td class="value-cell">{{ searchData.slipSrNo || 'N/A' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">VEHICLE NO :</td>
+              <td class="value-cell">{{ searchData.vehicle_No || 'N/A' }}</td>
+              <td class="label-cell">VEHICLE TYPE :</td>
+              <td class="value-cell">{{ searchData.vehicleType || 'N/A' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">CONTRACTOR :</td>
+              <td class="value-cell">{{ searchData.agency_Name || 'N/A' }}</td>
+              <td class="label-cell">ITEM NAME :</td>
+              <td class="value-cell">{{ searchData.type_of_Garbage || 'N/A' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">WARD :</td>
+              <td class="value-cell">{{ searchData.ward || 'N/A' }}</td>
+              <td class="label-cell">LOCATION :</td>
+              <td class="value-cell">{{ searchData.deliveryLocation || 'N/A' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">GROSS WEIGHT :</td>
+              <td class="value-cell">{{ formatWeight(searchData.gross_Weight) }}</td>
+              <td class="label-cell">DATE/TIME IN :</td>
+              <td class="value-cell">{{ searchData.trans_Date || 'N/A' }} {{ searchData.trans_Time || '' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">TARE WEIGHT :</td>
+              <td class="value-cell">{{ formatWeight(searchData.unladen_Weight) }}</td>
+              <td class="label-cell">DATE/TIME OUT :</td>
+              <td class="value-cell">{{ searchData.trans_Date_UL || 'N/A' }} {{ searchData.trans_Time_UL || '' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">NET WEIGHT :</td>
+              <td class="value-cell">{{ formatWeight(searchData.act_Net_Weight) }}</td>
+              <td class="label-cell"></td>
+              <td class="value-cell"></td>
+            </tr>
+            <tr>
+              <td class="label-cell">REMARK :</td>
+              <td class="value-cell-full" colspan="3">{{ searchData.remark || 'N/A' }}</td>
+            </tr>
+            <!-- Images row immediately below REMARK with no gap -->
+            <tr class="images-row">
+              <td class="image-cell" colspan="2">
+                <div class="image-placeholder">
+                  <span>Vehicle Entering (Tare Weight)</span>
+                </div>
+              </td>
+              <td class="image-cell" colspan="2">
+                <div class="image-placeholder">
+                  <span>Vehicle Exiting (Gross Weight)</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

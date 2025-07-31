@@ -7,8 +7,12 @@
         <h1>Search Report</h1>
       </div>
       <div class="header-actions">
-        <button class="btn-filters" (click)="toggleFilters()" [class.active]="isFiltersOpen"
-          aria-label="Toggle Filters">
+        <button 
+          class="btn-filters"
+          (click)="toggleFilters()"
+          [class.active]="isFiltersOpen"
+          aria-label="Toggle Filters"
+        >
           <i class="fas fa-filter"></i>
           <span>Filters</span>
         </button>
@@ -22,26 +26,26 @@
   <!-- Loading Indicator -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="spinner"></div>
-    <div class="loading-text">Generating Report...</div>
+    <div class="loading-text">Loading search data...</div>
   </div>
 
   <!-- Report Content -->
-  <div class="report-content" *ngIf="activeTab === 'search'">
+  <div class="report-content" *ngIf="!isLoading">
     <!-- Report Header -->
     <div class="report-title-section">
-      <h2>Search Results</h2>
+      <h2>Search Report: {{ getSelectedPeriod() }}</h2>
     </div>
 
-    <!-- Table View with AG Grid -->
+    <!-- Grid Container -->
     <div class="table-view">
       <div class="results-container">
         <div class="results-header">
-          <h2>Search Report Data</h2>
+          <h2>Search Results</h2>
           <div class="report-actions">
-            <button class="btn-export" (click)="exportToExcel()" [disabled]="!reportData || reportData.length === 0">
-              <i class="fas fa-file-excel"></i> Export to Excel
+            <button class="btn-export" (click)="exportToExcel()" [disabled]="reportData.length === 0">
+              <i class="fas fa-file-excel"></i> Export
             </button>
-            <button class="btn-print" (click)="printReport()">
+            <button class="btn-print" (click)="printReport()" [disabled]="reportData.length === 0">
               <i class="fas fa-print"></i> Print
             </button>
           </div>
@@ -49,16 +53,49 @@
 
         <!-- AG Grid Component -->
         <div class="grid-container">
-          <ag-grid-angular style="width: 100%; height: 500px;" class="ag-theme-alpine" [rowData]="reportData"
-            [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="10"
-            [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading">
+          <div class="grid-controls">
+            <div class="grid-controls-left">
+              <span class="grid-info">
+                Showing {{ reportData.length }} records
+              </span>
+            </div>
+            <div class="grid-controls-right">
+              <button class="btn-grid-control" (click)="autoSizeAllColumns()" title="Auto-size columns" [disabled]="isLoading">
+                <i class="fas fa-expand-arrows-alt"></i> Auto Size
+              </button>
+              <button class="btn-grid-control" (click)="sizeColumnsToFit()" title="Fit to width" [disabled]="isLoading">
+                <i class="fas fa-compress-arrows-alt"></i> Fixed Width
+              </button>
+            </div>
+          </div>
+
+          <ag-grid-angular 
+            #agGrid 
+            style="width: 100%; height: 500px;" 
+            class="ag-theme-alpine"
+            [rowData]="reportData" 
+            [columnDefs]="columnDefs"
+            [defaultColDef]="defaultColDef" 
+            [pagination]="true" 
+            [paginationPageSize]="20"
+            [paginationPageSizeSelector]="[10, 20, 50, 100]" 
+            [loading]="isLoading" 
+            [suppressColumnVirtualisation]="true"
+            [suppressRowVirtualisation]="false" 
+            [animateRows]="false"
+            [enableCellTextSelection]="true" 
+            [rowBuffer]="10"
+            [suppressLoadingOverlay]="false" 
+            [suppressNoRowsOverlay]="false" 
+            [context]="context"
+            (gridReady)="onGridReady($event)">
           </ag-grid-angular>
         </div>
 
         <!-- Summary Container -->
         <div class="summary-container">
           <h3>Summary</h3>
-          <div class="summary-grid" *ngIf="reportData && reportData.length > 0; else noDataSummary">
+          <div class="summary-grid" *ngIf="reportData.length > 0; else noDataSummary">
             <div class="summary-item">
               <div class="summary-label">Total Vehicles</div>
               <div class="summary-value">{{ totalNoOfVehicles }}</div>
@@ -72,25 +109,32 @@
               <div class="summary-value">{{ totalOutVehicles }}</div>
             </div>
             <div class="summary-item">
-              <div class="summary-label">Gross Weight</div>
-              <div class="summary-value">{{ totalGrossWeightInKG | number:'1.2-2' }} KG <span
-                  class="unit-conversion">({{
-                  totalGrossWeightInTon | number:'1.2-2' }} Tons)</span></div>
+              <div class="summary-label">Total Gross Weight</div>
+              <div class="summary-value">{{ totalGrossWeightInKG | number:'1.2-2' }} KG
+                <span class="unit-conversion">({{ totalGrossWeightInTon | number:'1.2-2' }} Tons)</span>
+              </div>
             </div>
             <div class="summary-item">
-              <div class="summary-label">Unladen Weight</div>
-              <div class="summary-value">{{ totalUnladenWeightInKg | number:'1.2-2' }} KG <span
-                  class="unit-conversion">({{
-                  totalUnladenWeightInTon | number:'1.2-2' }} Tons)</span></div>
+              <div class="summary-label">Total Net Weight</div>
+              <div class="summary-value">{{ totalActualNetWeightInKG | number:'1.2-2' }} KG
+                <span class="unit-conversion">({{ totalActualNetWeightInTon | number:'1.2-2' }} Tons)</span>
+              </div>
             </div>
             <div class="summary-item">
-              <div class="summary-label">Net Weight</div>
-              <div class="summary-value">{{ totalActualNetWeightInKG | number:'1.2-2' }} KG <span
-                  class="unit-conversion">({{ totalActualNetWeightInTon | number:'1.2-2' }} Tons)</span></div>
+              <div class="summary-label">Total Unladen Weight</div>
+              <div class="summary-value">{{ totalUnladenWeightInKg | number:'1.2-2' }} KG
+                <span class="unit-conversion">({{ totalUnladenWeightInTon | number:'1.2-2' }} Tons)</span>
+              </div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Selected Period</div>
+              <div class="summary-value">{{ getSelectedPeriod() }}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Report Type</div>
+              <div class="summary-value">{{ getReportTypeText() }}</div>
             </div>
           </div>
-
-          <!-- Template for when no data is available -->
           <ng-template #noDataSummary>
             <div class="no-data-message">
               <i class="fas fa-info-circle"></i>
@@ -98,9 +142,9 @@
               <span *ngIf="!isLoading">No data available for the selected criteria.</span>
             </div>
           </ng-template>
-
-          <div class="summary-note" *ngIf="reportData && reportData.length > 0">
-            <i class="fas fa-info-circle"></i> Note: Cancelled slips are excluded from calculations
+          <div class="summary-note" *ngIf="reportData.length > 0">
+            <i class="fas fa-info-circle"></i> 
+            Use Filters to adjust search criteria and generate reports for different periods
           </div>
         </div>
       </div>
@@ -109,7 +153,7 @@
     <!-- No Data Message -->
     <div class="no-data-message" *ngIf="reportData.length === 0 && !isLoading">
       <i class="fas fa-exclamation-circle"></i>
-      <p>No data available for the selected criteria.</p>
+      <p>No search results found for the selected criteria.</p>
       <button class="btn-primary" (click)="toggleFilters()">Change Filters</button>
     </div>
   </div>
@@ -126,303 +170,57 @@
     <div class="offcanvas-body">
       <div class="filters-content">
         <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
-          <!-- Basic Search Criteria -->
-          <div class="filter-card">
-            <div class="card-header">
-              <h2>Basic Search Criteria</h2>
-            </div>
-            <div class="card-body">
-              <div class="form-group">
-                <label for="weighBridge">Weigh Bridge</label>
-                <div class="select-wrapper">
-                  <select formControlName="WeighBridge" id="WeighBridge" class="form-control">
-                    <option value="">-- Select --</option>
-                    <option *ngFor="let bridge of WeighBridgeData" [value]="bridge.id">
-                      {{ bridge.WeighBridge }}
-                    </option>
-                  </select>
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="fromdate">From Date</label>
-                <div class="input-wrapper">
-                  <input type="date" formControlName="FromDate" class="form-control" required />
-                  <i class="fas fa-calendar-alt"></i>
-                </div>
-                <div *ngIf="reportForm.get('FromDate')?.invalid && reportForm.get('FromDate')?.touched"
-                  class="error-message">
-                  From date is required
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="todate">To Date</label>
-                <div class="input-wrapper">
-                  <input type="date" formControlName="todate" class="form-control" required />
-                  <i class="fas fa-calendar-alt"></i>
-                </div>
-                <div *ngIf="reportForm.get('todate')?.invalid && reportForm.get('todate')?.touched"
-                  class="error-message">
-                  To date is required
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="reportType">Report Type</label>
-                <div class="select-wrapper">
-                  <select formControlName="reportType" class="form-control">
-                    <option value="">-- Select --</option>
-                    <option *ngFor="let type of reportTypeList" [value]="type.id">{{ type.value }}</option>
-                  </select>
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <button type="submit" class="btn-primary" [disabled]="isLoading" (click)="onSubmit()">
-                  <i class="fas fa-search"></i>
-                  <span *ngIf="!isLoading">Search</span>
-                  <span *ngIf="isLoading">Searching...</span>
-                </button>
-                <button type="button" class="btn-secondary" (click)="resetForm()" [disabled]="isLoading">
-                  <i class="fas fa-undo"></i> Reset
-                </button>
-              </div>
+          <div class="form-group">
+            <label for="weighBridge">Weigh Bridge</label>
+            <div class="select-wrapper">
+              <select id="weighBridge" formControlName="WeighBridge" class="form-control">
+                <option *ngFor="let wb of WeighBridgeData" [value]="wb.id">{{ wb.WeighBridge }}</option>
+              </select>
+              <i class="fas fa-chevron-down"></i>
             </div>
           </div>
 
-          <!-- Advanced Search Options -->
-          <div class="advanced-search-toggle" (click)="toggleAdvancedSearch()">
-            <i class="fas" [class.fa-chevron-down]="!isAdvancedSearch" [class.fa-chevron-up]="isAdvancedSearch"></i>
-            Advanced Search Options
+          <div class="form-group">
+            <label for="fromDate">From Date</label>
+            <div class="input-wrapper">
+              <input type="date" id="fromDate" formControlName="FromDate" class="form-control">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div *ngIf="reportForm.get('FromDate')?.invalid && reportForm.get('FromDate')?.touched" class="error-message">
+              From date is required
+            </div>
           </div>
 
-          <div class="filter-card" *ngIf="isAdvancedSearch">
-            <div class="card-header">
-              <h2>Advanced Filters</h2>
+          <div class="form-group">
+            <label for="toDate">To Date</label>
+            <div class="input-wrapper">
+              <input type="date" id="toDate" formControlName="todate" class="form-control">
+              <i class="fas fa-calendar-alt"></i>
             </div>
-            <div class="card-body">
-              <!-- Gross Weight Filter -->
-              <div class="filter-section">
-                <div class="filter-header">
-                  <div class="checkbox-wrapper">
-                    <input type="checkbox" id="grossWeightFilter" [(ngModel)]="GrossWeightInKAactive"
-                      [ngModelOptions]="{standalone: true}" (change)="isGrossWeightInKGChange($event)">
-                    <label for="grossWeightFilter">Gross Weight (KG)</label>
-                  </div>
-                </div>
-                <div class="filter-body" *ngIf="GrossWeightInKAactive">
-                  <div class="form-group">
-                    <label for="grossWeightFrom">From</label>
-                    <input type="number" id="grossWeightFrom" [(ngModel)]="formData.Gross_Weight_From"
-                      [ngModelOptions]="{standalone: true}" class="form-control">
-                  </div>
-                  <div class="form-group">
-                    <label for="grossWeightTo">To</label>
-                    <input type="number" id="grossWeightTo" [(ngModel)]="formData.Gross_Weight_To"
-                      [ngModelOptions]="{standalone: true}" class="form-control">
-                  </div>
-                </div>
-              </div>
-
-              <!-- Agency Filter -->
-              <div class="filter-section">
-                <div class="filter-header">
-                  <div class="checkbox-wrapper">
-                    <input type="checkbox" id="agencyFilter" [(ngModel)]="AgencynameIsAactive"
-                      [ngModelOptions]="{standalone: true}" (change)="isAgencynameChange($event)">
-                    <label for="agencyFilter">Agency Name</label>
-                  </div>
-                </div>
-                <div class="filter-body" *ngIf="AgencynameIsAactive">
-                  <div class="form-group">
-                    <div class="select-wrapper">
-                      <select (change)="getAgencyname($event)" class="form-control">
-                        <option value="" selected disabled>Select</option>
-                        <option *ngFor="let a of AgencyData" [value]="a.FirmName">
-                          {{ a.FirmName }}
-                        </option>
-                      </select>
-                      <i class="fas fa-chevron-down"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Vehicle Number Filter -->
-              <div class="filter-section">
-                <div class="filter-header">
-                  <div class="checkbox-wrapper">
-                    <input type="checkbox" id="vehicleFilter" [(ngModel)]="vehicleNumberIsAactive"
-                      [ngModelOptions]="{standalone: true}" (change)="isvehicleNumberChange($event)">
-                    <label for="vehicleFilter">Vehicle Number</label>
-                  </div>
-                </div>
-                <div class="filter-body" *ngIf="vehicleNumberIsAactive">
-                  <div class="form-group">
-                    <div class="select-wrapper">
-                      <select (change)="getvehicleNumber($event)" class="form-control">
-                        <option value="" selected disabled>Select</option>
-                        <option *ngFor="let v of VehcleData" [value]="v.Veh_Num">
-                          {{ v.Veh_Num }}
-                        </option>
-                      </select>
-                      <i class="fas fa-chevron-down"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Shift Filter -->
-              <div class="filter-section">
-                <div class="filter-header">
-                  <div class="checkbox-wrapper">
-                    <input type="checkbox" id="shiftFilter" [(ngModel)]="ShiftIsAactive"
-                      [ngModelOptions]="{standalone: true}" [disabled]="HourlyIsAactive"
-                      (change)="isShiftChange($event)">
-                    <label for="shiftFilter">Shift</label>
-                  </div>
-                </div>
-                <div class="filter-body" *ngIf="ShiftIsAactive">
-                  <div class="shift-options">
-                    <div class="shift-option">
-                      <input type="checkbox" id="shift1" [(ngModel)]="ShiftIsAactive1"
-                        [ngModelOptions]="{standalone: true}" (change)="isShift1Change($event)">
-                      <label for="shift1">Shift I</label>
-                    </div>
-                    <div class="shift-option">
-                      <input type="checkbox" id="shift2" [(ngModel)]="ShiftIsAactive2"
-                        [ngModelOptions]="{standalone: true}" (change)="isShift2Change($event)">
-                      <label for="shift2">Shift II</label>
-                    </div>
-                    <div class="shift-option">
-                      <input type="checkbox" id="shift3" [(ngModel)]="ShiftIsAactive3"
-                        [ngModelOptions]="{standalone: true}" (change)="isShift3Change($event)">
-                      <label for="shift3">Shift III</label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Hourly Filter -->
-              <div class="filter-section">
-                <div class="filter-header">
-                  <div class="checkbox-wrapper">
-                    <input type="checkbox" id="hourlyFilter" [(ngModel)]="HourlyIsAactive"
-                      [ngModelOptions]="{standalone: true}" [disabled]="ShiftIsAactive"
-                      (change)="isHourlyChange($event)">
-                    <label for="hourlyFilter">Hourly</label>
-                  </div>
-                </div>
-                <div class="filter-body" *ngIf="HourlyIsAactive">
-                  <div class="hourly-options">
-                    <div class="hourly-option">
-                      <div class="checkbox-wrapper">
-                        <input type="checkbox" id="morningHourly" [(ngModel)]="morningHourlyIsAactive"
-                          [ngModelOptions]="{standalone: true}" (change)="morningHourlyIsAactiveChange($event)">
-                        <label for="morningHourly">Morning</label>
-                      </div>
-                      <div class="form-group" *ngIf="morningHourlyIsAactive">
-                        <div class="select-wrapper">
-                          <select (change)="getMorningHour($event)" class="form-control">
-                            <option value="" selected disabled>Select Time</option>
-                            <option *ngFor="let mh of morningHourDDL" [value]="mh">
-                              {{ mh }}
-                            </option>
-                          </select>
-                          <i class="fas fa-chevron-down"></i>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="hourly-option">
-                      <div class="checkbox-wrapper">
-                        <input type="checkbox" id="afternoonHourly" [(ngModel)]="afternoonHourlyIsAactive"
-                          [ngModelOptions]="{standalone: true}" (change)="afternoonHourlyIsAactiveChange($event)">
-                        <label for="afternoonHourly">Afternoon</label>
-                      </div>
-                      <div class="form-group" *ngIf="afternoonHourlyIsAactive">
-                        <div class="select-wrapper">
-                          <select (change)="getafternoonHour($event)" class="form-control">
-                            <option value="" selected disabled>Select Time</option>
-                            <option *ngFor="let ah of afternoonHourDDL" [value]="ah">
-                              {{ ah }}
-                            </option>
-                          </select>
-                          <i class="fas fa-chevron-down"></i>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="hourly-option">
-                      <div class="checkbox-wrapper">
-                        <input type="checkbox" id="nightHourly" [(ngModel)]="nightHourlyIsAactive"
-                          [ngModelOptions]="{standalone: true}" (change)="nightHourlyIsAactiveChange($event)">
-                        <label for="nightHourly">Night</label>
-                      </div>
-                      <div class="form-group" *ngIf="nightHourlyIsAactive">
-                        <div class="select-wrapper">
-                          <select (change)="getnightHour($event)" class="form-control">
-                            <option value="" selected disabled>Select Time</option>
-                            <option *ngFor="let nh of nightHourDDL" [value]="nh">
-                              {{ nh }}
-                            </option>
-                          </select>
-                          <i class="fas fa-chevron-down"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Type of Garbage Filter -->
-              <div class="filter-section">
-                <div class="filter-header">
-                  <div class="checkbox-wrapper">
-                    <input type="checkbox" id="garbageFilter" [(ngModel)]="TypeOfGarbageIsAactive"
-                      [ngModelOptions]="{standalone: true}" (change)="isTypeOfGarbageChange($event)">
-                    <label for="garbageFilter">Type of Garbage</label>
-                  </div>
-                </div>
-                <div class="filter-body" *ngIf="TypeOfGarbageIsAactive">
-                  <div class="form-group">
-                    <div class="select-wrapper">
-                      <select (change)="getTypeOfGarbage($event)" class="form-control">
-                        <option value="" selected disabled>Select</option>
-                        <option *ngFor="let g of GarbageData" [value]="g.GarbageType">
-                          {{ g.GarbageType }}
-                        </option>
-                      </select>
-                      <i class="fas fa-chevron-down"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Ward Filter -->
-              <div class="filter-section">
-                <div class="filter-header">
-                  <div class="checkbox-wrapper">
-                    <input type="checkbox" id="wardFilter" [(ngModel)]="WardIsAactive"
-                      [ngModelOptions]="{standalone: true}" (change)="isWardChange($event)">
-                    <label for="wardFilter">Ward</label>
-                  </div>
-                </div>
-                <div class="filter-body" *ngIf="WardIsAactive">
-                  <div class="form-group">
-                    <div class="select-wrapper">
-                      <select (change)="getWard($event)" class="form-control">
-                        <option value="" selected disabled>Select</option>
-                        <option *ngFor="let w of WardData" [value]="w.WardName">
-                          {{ w.WardName }}
-                        </option>
-                      </select>
-                      <i class="fas fa-chevron-down"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div *ngIf="reportForm.get('todate')?.invalid && reportForm.get('todate')?.touched" class="error-message">
+              To date is required
             </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reportType">Report Type</label>
+            <div class="select-wrapper">
+              <select id="reportType" formControlName="reportType" class="form-control">
+                <option *ngFor="let rt of reportTypeList" [value]="rt.id">{{ rt.value }}</option>
+              </select>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="reportForm.invalid || isLoading">
+              <i class="fas fa-search"></i>
+              <span *ngIf="!isLoading">Search</span>
+              <span *ngIf="isLoading">Searching...</span>
+            </button>
+            <button type="button" class="btn-secondary" (click)="resetForm()" [disabled]="isLoading">
+              <i class="fas fa-undo"></i> Reset
+            </button>
           </div>
         </form>
       </div>

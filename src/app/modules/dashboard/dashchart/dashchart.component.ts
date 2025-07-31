@@ -6,8 +6,8 @@ import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss'],
+  templateUrl: '../dashboard.component.html',
+  styleUrls: ['../dashboard.component.scss'],
   standalone: true,
   imports: [CommonModule, NgChartsModule]
 })
@@ -62,7 +62,7 @@ export class DashboardComponent implements OnInit {
     }
   };
 
-  constructor(private dbCallingService: DbCallingService) {}
+  constructor(private dbCallingService: DbCallingService) { }
 
   ngOnInit(): void {
     this.loadChartData();

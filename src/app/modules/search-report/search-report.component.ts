@@ -1,21 +1,35 @@
-import { Component, type OnInit } from "@angular/core"
+import { Component, OnInit, ViewChild, ChangeDetectorRef } from "@angular/core"
 import { CommonModule } from "@angular/common"
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from "@angular/forms"
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from "@angular/forms"
 import { Router, RouterModule } from "@angular/router"
-import { AgGridModule } from 'ag-grid-angular';
-import { DbCallingService } from "src/app/core/services/db-calling.service";
-import * as XLSX from 'xlsx';
-import { ViewChild } from '@angular/core';
-import { AgGridAngular } from 'ag-grid-angular';
-import { Validators } from '@angular/forms';
+import { AgGridModule, AgGridAngular } from "ag-grid-angular"
+import { MatDialog, MatDialogModule } from "@angular/material/dialog"
+import { DbCallingService } from "src/app/core/services/db-calling.service"
+import * as XLSX from "xlsx"
+import { BtnSearchViewCellRenderer } from "./viewSearch/buttonSearchView-cell-renderer.component"
+import { BtnSearchPdfCellRenderer } from "./viewSearch/buttonSearchPdf-cell-renderer.component"
+import { ViewSearchReportComponent } from "./viewSearch/viewsearchreport.component"
+
 @Component({
   selector: "app-search-report",
   templateUrl: "./search-report.component.html",
   styleUrls: ["./search-report.component.scss"],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, AgGridModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+    AgGridModule,
+    MatDialogModule,
+    BtnSearchViewCellRenderer,
+    BtnSearchPdfCellRenderer,
+    ViewSearchReportComponent,
+  ],
 })
 export class SearchReportComponent implements OnInit {
+  @ViewChild("agGrid") agGrid!: AgGridAngular
+
   // Form models
   reportForm!: FormGroup
   reportData: any[] = []
@@ -65,35 +79,74 @@ export class SearchReportComponent implements OnInit {
     selectNallah: "",
   }
 
-  columnDefs = [{ headerName: "Location", field: "deliveryLocation", sortable: true, filter: true },
-  { headerName: "Slip No", field: "slipSrNo", sortable: true, filter: true },
-  { headerName: "Transaction Date", field: "trans_Date", sortable: true, filter: true },
-  { headerName: "Transaction Time", field: "trans_Time", sortable: true, filter: true },
-  { headerName: "Agency", field: "agency_Name", sortable: true, filter: true },
-  { headerName: "Vehicle No", field: "vehicle_No", sortable: true, filter: true },
-  { headerName: "Vehicle Type", field: "vehicleType", sortable: true, filter: true },
-  { headerName: "Ward", field: "ward", sortable: true, filter: true },
-  { headerName: "Route No.", field: "route", sortable: true, filter: true },
-  { headerName: "Type of Waste", field: "type_of_Garbage", sortable: true, filter: true },
-  { headerName: "Gross Weight", field: "gross_Weight", sortable: true, filter: true },
-  { headerName: "Trans Date UL", field: "trans_Date_UL", sortable: true, filter: true },
-  { headerName: "Trans Time UL", field: "trans_Time_UL", sortable: true, filter: true },
-  { headerName: "Unladen Weight", field: "unladen_Weight", sortable: true, filter: true },
-  { headerName: "Actual Net Weight", field: "act_Net_Weight", sortable: true, filter: true },
-  {
-    headerName: "Actions",
-    cellRenderer: this.actionCellRenderer,
-    colId: "actions",
-    sortable: false,
-    filter: false,
-    width: 120,
-  },
+  // Updated columnDefs with View and PDF buttons
+  columnDefs = [
+    {
+      headerName: "View",
+      field: "slipSrNo",
+      cellRenderer: BtnSearchViewCellRenderer,
+      width: 90,
+      minWidth: 90,
+      maxWidth: 90,
+      flex: 0,
+      sortable: false,
+      filter: false,
+      resizable: false,
+      suppressMovable: true,
+      cellStyle: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "0",
+      },
+    },
+    {
+      headerName: "PDF",
+      field: "slipSrNo",
+      cellRenderer: BtnSearchPdfCellRenderer,
+      width: 90,
+      minWidth: 90,
+      maxWidth: 90,
+      flex: 0,
+      sortable: false,
+      filter: false,
+      resizable: false,
+      suppressMovable: true,
+      cellStyle: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "0",
+      },
+    },
+    { headerName: "Location", field: "deliveryLocation", sortable: true, filter: true, resizable: true },
+    { headerName: "Slip No", field: "slipSrNo", sortable: true, filter: true, resizable: true },
+    { headerName: "Transaction Date", field: "trans_Date", sortable: true, filter: true, resizable: true },
+    { headerName: "Transaction Time", field: "trans_Time", sortable: true, filter: true, resizable: true },
+    { headerName: "Agency", field: "agency_Name", sortable: true, filter: true, resizable: true },
+    { headerName: "Vehicle No", field: "vehicle_No", sortable: true, filter: true, resizable: true },
+    { headerName: "Vehicle Type", field: "vehicleType", sortable: true, filter: true, resizable: true },
+    { headerName: "Ward", field: "ward", sortable: true, filter: true, resizable: true },
+    { headerName: "Route No.", field: "route", sortable: true, filter: true, resizable: true },
+    { headerName: "Type of Waste", field: "type_of_Garbage", sortable: true, filter: true, resizable: true },
+    { headerName: "Gross Weight", field: "gross_Weight", sortable: true, filter: true, resizable: true },
+    { headerName: "Trans Date UL", field: "trans_Date_UL", sortable: true, filter: true, resizable: true },
+    { headerName: "Trans Time UL", field: "trans_Time_UL", sortable: true, filter: true, resizable: true },
+    { headerName: "Unladen Weight", field: "unladen_Weight", sortable: true, filter: true, resizable: true },
+    { headerName: "Actual Net Weight", field: "act_Net_Weight", sortable: true, filter: true, resizable: true },
   ]
 
   defaultColDef = {
     resizable: true,
     flex: 1,
+    minWidth: 100,
+    sortable: true,
+    filter: true,
   }
+
+  // Context for AG Grid
+  context: any
+  gridApi: any
 
   weightFormatter(params: any) {
     if (params.value != null) {
@@ -102,26 +155,15 @@ export class SearchReportComponent implements OnInit {
     return ""
   }
 
-  actionCellRenderer(params: any) {
-    return `
-      <button class="btn-view" title="View">
-        <i class="fas fa-eye"></i>
-      </button>
-      <button class="btn-image" title="Image">
-        <i class="fas fa-image"></i>
-      </button>
-    `
-  }
-
   WeighBridgeData = [
     { id: "ALLWB", WeighBridge: "All" },
     { id: "WBK1", WeighBridge: "Kanjur" },
-    { id: "D", WeighBridge: "Deonar" }
+    { id: "D", WeighBridge: "Deonar" },
   ]
 
   reportTypeList = [
     { id: 1, value: "In" },
-    { id: 0, value: "Out" }
+    { id: 0, value: "Out" },
   ]
 
   AgencyData = [
@@ -137,18 +179,13 @@ export class SearchReportComponent implements OnInit {
   WardData = [{ WardName: "Ward A" }, { WardName: "Ward B" }, { WardName: "Ward C" }]
 
   uniqueWorkcode = ["WC001", "WC002", "WC003"]
-
   uniqueZone = ["North", "South", "East", "West"]
-
   morningHourDDL = ["7 AM-7:59:59 AM", "8 AM-8:59:59 AM", "9 AM-9:59:59 AM", "10 AM-10:59:59 AM", "11 AM-11:59:59 AM"]
-
   afternoonHourDDL = ["12 PM-12:59:59 PM", "1 PM-1:59:59 PM", "2 PM-2:59:59 PM", "3 PM-3:59:59 PM", "4 PM-4:59:59 PM"]
-
   nightHourDDL = ["6 PM-6:59:59 PM", "7 PM-7:59:59 PM", "8 PM-8:59:59 PM", "9 PM-9:59:59 PM", "10 PM-10:59:59 PM"]
 
   // Results (mock data)
   lstReportData: any[] = []
-
   reportmodel: {
     WeighBridge: string
     reportType: number | null
@@ -156,12 +193,12 @@ export class SearchReportComponent implements OnInit {
     todate: string
     selectNallah: string
   } = {
-      WeighBridge: "",
-      reportType: null,
-      FromDate: "",
-      todate: "",
-      selectNallah: "",
-    }
+    WeighBridge: "",
+    reportType: null,
+    FromDate: "",
+    todate: "",
+    selectNallah: "",
+  }
 
   // Summary statistics
   totalNoOfVehicles = 0
@@ -178,20 +215,25 @@ export class SearchReportComponent implements OnInit {
     public router: Router,
     private fb: FormBuilder,
     private dbService: DbCallingService,
-  ) { }
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit() {
     this.initForm()
-    // Load initial data automatically with current date
+    // Load initial data automatically with current month
     this.loadInitialData()
+    // Set context for AG Grid
+    this.context = { componentParent: this }
   }
 
-  // NEW METHOD: Load initial data automatically
+  // NEW METHOD: Load initial data automatically with current month
   loadInitialData() {
     const today = new Date()
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
     const basicPayload = {
       WeighBridge: "ALLWB",
-      FromDate: this.formatDate(today),
+      FromDate: this.formatDate(firstDayOfMonth),
       todate: this.formatDate(today),
       reportType: 1,
     }
@@ -207,12 +249,14 @@ export class SearchReportComponent implements OnInit {
           this.reportData = []
           this.resetSummaryStatistics()
         }
+        this.cdr.detectChanges()
       },
       (error) => {
         console.error("API Error:", error)
         this.isLoading = false
         this.reportData = []
         this.resetSummaryStatistics()
+        this.cdr.detectChanges()
       },
     )
   }
@@ -228,7 +272,6 @@ export class SearchReportComponent implements OnInit {
     const today = new Date()
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
     this.reportForm = this.fb.group({
-      //WeighBridge: [""],
       WeighBridge: ["ALLWB", Validators.required],
       FromDate: [this.formatDate(firstDay)],
       todate: [this.formatDate(today)],
@@ -244,12 +287,113 @@ export class SearchReportComponent implements OnInit {
     this.activeTab = tab
   }
 
-  toggleFilters() {
+  // Toggle filters offcanvas
+  toggleFilters(): void {
     this.isFiltersOpen = !this.isFiltersOpen
   }
 
-  closeFilters() {
+  // Close filters offcanvas
+  closeFilters(): void {
     this.isFiltersOpen = false
+  }
+
+  // Get selected period text for display
+  getSelectedPeriod(): string {
+    const formValues = this.reportForm.value
+    if (formValues.FromDate && formValues.todate) {
+      const fromDate = new Date(formValues.FromDate)
+      const toDate = new Date(formValues.todate)
+
+      if (fromDate.getMonth() === toDate.getMonth() && fromDate.getFullYear() === toDate.getFullYear()) {
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ]
+        const monthName = monthNames[fromDate.getMonth()]
+        return `${monthName} ${fromDate.getFullYear()}`
+      } else {
+        return `${formValues.FromDate} to ${formValues.todate}`
+      }
+    }
+    return "Current Period"
+  }
+
+  // Get report type text for display
+  getReportTypeText(): string {
+    const reportType = this.reportForm.get("reportType")?.value
+    const reportTypeObj = this.reportTypeList.find((rt) => rt.id === reportType)
+    return reportTypeObj ? reportTypeObj.value : "All"
+  }
+
+  // NEW METHODS: View and PDF functionality for Search Report
+  viewSearchReportDetails(data: any) {
+    console.log("View Search Report method called with data:", data)
+
+    const dialogRef = this.dialog.open(ViewSearchReportComponent, {
+      width: "90%",
+      maxWidth: "1200px",
+      height: "90%",
+      data: data,
+      disableClose: false,
+      panelClass: "custom-dialog-container",
+    })
+
+    dialogRef.afterClosed().subscribe((result) => {
+      console.log("Search Report Dialog closed", result)
+    })
+  }
+
+  downloadSearchReportPDF(data: any) {
+    console.log("Download Search Report PDF method called with data:", data)
+
+    // Create and open the view component to generate PDF
+    const dialogRef = this.dialog.open(ViewSearchReportComponent, {
+      width: "90%",
+      maxWidth: "1200px",
+      height: "90%",
+      data: data,
+      disableClose: false,
+      panelClass: "custom-dialog-container",
+    })
+
+    // Automatically trigger PDF download after dialog opens
+    dialogRef.afterOpened().subscribe(() => {
+      setTimeout(() => {
+        const componentInstance = dialogRef.componentInstance
+        componentInstance.downloadPDF()
+        dialogRef.close()
+      }, 500)
+    })
+  }
+
+  // Grid methods
+  onGridReady(params: any): void {
+    this.gridApi = params.api
+    console.log("Grid is ready")
+  }
+
+  // Auto Size and Fixed Width buttons functionality
+  autoSizeAllColumns(): void {
+    if (this.gridApi) {
+      const allColumnIds = this.gridApi.getColumns()?.map((column: any) => column.getId()) || []
+      this.gridApi.autoSizeColumns(allColumnIds, false)
+    }
+  }
+
+  sizeColumnsToFit(): void {
+    if (this.gridApi) {
+      this.gridApi.sizeColumnsToFit()
+    }
   }
 
   // Form event handlers
@@ -442,6 +586,9 @@ export class SearchReportComponent implements OnInit {
       return
     }
 
+    // Close filters
+    this.closeFilters()
+
     // Create payload with explicit value extraction
     const basicPayload = {
       WeighBridge: this.reportForm.get("WeighBridge")?.value || "",
@@ -463,12 +610,14 @@ export class SearchReportComponent implements OnInit {
           this.resetSummaryStatistics()
         }
         this.activeTab = "search"
+        this.cdr.detectChanges()
       },
       (error) => {
         console.error("API Error:", error)
         this.isLoading = false
         this.reportData = []
         this.resetSummaryStatistics()
+        this.cdr.detectChanges()
       },
     )
   }
@@ -495,7 +644,6 @@ export class SearchReportComponent implements OnInit {
     this.totalInVehicles = dataToCalculate.filter(
       (item) => item.trans_Type === "I" || item.reportType === 1 || item.type === "In",
     ).length
-
     this.totalOutVehicles = dataToCalculate.filter(
       (item) => item.trans_Type === "O" || item.reportType === 0 || item.type === "Out",
     ).length
@@ -505,7 +653,6 @@ export class SearchReportComponent implements OnInit {
       const weight = Number(item.gross_Weight || item.Gross_Weight || 0)
       return sum + weight
     }, 0)
-
     this.totalGrossWeightInKG = Number.parseFloat(grossWeightTotal.toFixed(2))
     this.totalGrossWeightInTon = Number.parseFloat((this.totalGrossWeightInKG / 1000).toFixed(2))
 
@@ -514,7 +661,6 @@ export class SearchReportComponent implements OnInit {
       const weight = Number(item.net_Weight || item.Act_Net_Weight || 0)
       return sum + weight
     }, 0)
-
     this.totalActualNetWeightInKG = Number.parseFloat(netWeightTotal.toFixed(2))
     this.totalActualNetWeightInTon = Number.parseFloat((this.totalActualNetWeightInKG / 1000).toFixed(2))
 
@@ -523,7 +669,6 @@ export class SearchReportComponent implements OnInit {
       const weight = Number(item.unladen_Weight || item.Unladen_Weight || 0)
       return sum + weight
     }, 0)
-
     this.totalUnladenWeightInKg = Number.parseFloat(unladenWeightTotal.toFixed(2))
     this.totalUnladenWeightInTon = Number.parseFloat((this.totalUnladenWeightInKg / 1000).toFixed(2))
   }
@@ -546,8 +691,6 @@ export class SearchReportComponent implements OnInit {
     this.router.navigateByUrl("/dashboard")
   }
 
-  @ViewChild(AgGridAngular) agGrid!: AgGridAngular
-
   exportToExcel() {
     if (!this.reportData || this.reportData.length === 0) {
       alert("There is no data to export")
@@ -568,14 +711,21 @@ export class SearchReportComponent implements OnInit {
 
     // Column mapping from API fields to UI headers
     const columnMapping: { [key: string]: string } = {
+      deliveryLocation: "Location",
       slipSrNo: "Slip No",
-      trans_Date: "Date",
-      trans_Time: "Time",
+      trans_Date: "Transaction Date",
+      trans_Time: "Transaction Time",
       agency_Name: "Agency",
       vehicle_No: "Vehicle No",
+      vehicleType: "Vehicle Type",
+      ward: "Ward",
+      route: "Route No.",
       type_of_Garbage: "Type of Waste",
       gross_Weight: "Gross Weight",
-      net_Weight: "Net Weight",
+      trans_Date_UL: "Trans Date UL",
+      trans_Time_UL: "Trans Time UL",
+      unladen_Weight: "Unladen Weight",
+      act_Net_Weight: "Actual Net Weight",
     }
 
     // Convert to UI-based headers
@@ -589,7 +739,6 @@ export class SearchReportComponent implements OnInit {
 
     // Create worksheet without header
     const worksheet = XLSX.utils.json_to_sheet(transformedData)
-
     // Prepend UI-based header row at A1
     const headerRow = Object.values(columnMapping)
     XLSX.utils.sheet_add_aoa(worksheet, [headerRow], { origin: "A1" })
@@ -602,26 +751,15 @@ export class SearchReportComponent implements OnInit {
     })
     worksheet["!cols"] = colWidths
 
-    // Optional: Bold header styling (note: requires `xlsx-style` or pro version)
-    headerRow.forEach((_, colIndex) => {
-      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex })
-      if (worksheet[cellAddress]) {
-        worksheet[cellAddress].s = {
-          font: { bold: true },
-        }
-      }
-    })
-
     // Create and save workbook
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "report.xlsx")
-    XLSX.writeFile(workbook, "report.xlsx")
+    XLSX.utils.book_append_sheet(workbook, worksheet, "SearchReport.xlsx")
+    XLSX.writeFile(workbook, "SearchReport.xlsx")
   }
 
   resetForm() {
     const today = new Date()
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
-
     this.reportForm.reset({
       WeighBridge: "",
       FromDate: this.formatDate(firstDay),
