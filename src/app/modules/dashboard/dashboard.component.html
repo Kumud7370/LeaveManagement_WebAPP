@@ -1,61 +1,131 @@
-<div class="dashboard-container">
-  <div class="dashboard-card">
-    <h4 class="dashboard-card-title">Graphical Representation - Ward Wise</h4>
-
-    <nav class="dashboard-tabs">
-      <a class="dashboard-tab active" [routerLink]="[]">Graph</a>
-    </nav>
-
-    <div class="dashboard-tab-content">
-      <div class="dashboard-tab-pane active">
-        <app-wardwisegraph></app-wardwisegraph>
+<div class="swm-dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="header-title">
+        <i class="fas fa-chart-bar"></i>
+        <h1>SWM Dashboard</h1>
+      </div>
+      <div class="header-date">
+        <span class="date-label">Refuse Report:</span>
+        <span class="date-value">31-07-2025</span>
       </div>
     </div>
   </div>
 
-  <div class="dashboard-card">
-    <h4 class="dashboard-card-title">Graphical Representation - Month Wise</h4>
+  <!-- Loading Indicator -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading dashboard data...</div>
+  </div>
 
-    <nav class="dashboard-tabs">
-      <a
-        class="dashboard-tab"
-        [class.active]="activeMonthTab === 'weight'"
-        (click)="setActiveMonthTab('weight')"
-      >
-        Net Weight Graph
-      </a>
-      <a
-        class="dashboard-tab"
-        [class.active]="activeMonthTab === 'vehicle'"
-        (click)="setActiveMonthTab('vehicle')"
-      >
-        Vehicle Count Graph
-      </a>
-    </nav>
-
-    <div class="dashboard-tab-content">
-      <div class="dashboard-tab-pane" [class.active]="activeMonthTab === 'weight'">
-        <canvas
-          baseChart
-          [datasets]="barChartData"
-          [labels]="barChartLabels"
-          [options]="barChartOptions"
-          [legend]="barChartLegend"
-          [type]="'bar'"
-        >
-        </canvas>
+  <!-- Dashboard Content -->
+  <div class="dashboard-content" *ngIf="!isLoading">
+    
+    <!-- Location Cards Section -->
+    <div class="location-cards-section">
+      <div class="location-card kanjur-card">
+        <div class="card-header">
+          <h3>Kanjur</h3>
+          <i class="fas fa-truck"></i>
+        </div>
+        <div class="card-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{ kanjurData.vehicles }}</div>
+            <div class="stat-label">Vehicles</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ kanjurData.netWeight }}</div>
+            <div class="stat-label">Net Weight (MT)</div>
+          </div>
+        </div>
       </div>
-      <div class="dashboard-tab-pane" [class.active]="activeMonthTab === 'vehicle'">
-        <canvas
-          baseChart
-          [datasets]="barChartDataMinor"
-          [labels]="mbarChartLabelsMinor"
-          [options]="barChartOptions"
-          [legend]="barChartLegend"
-          [type]="'bar'"
-        >
-        </canvas>
+
+      <div class="location-card deonar-card">
+        <div class="card-header">
+          <h3>Deonar</h3>
+          <i class="fas fa-truck"></i>
+        </div>
+        <div class="card-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{ deonarData.vehicles }}</div>
+            <div class="stat-label">Vehicles</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ deonarData.netWeight }}</div>
+            <div class="stat-label">Net Weight (MT)</div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Vehicle Count Comparison</h3>
+        </div>
+        <div class="chart-container">
+          <apx-chart
+            [series]="vehicleChartOptions.series"
+            [chart]="vehicleChartOptions.chart"
+            [labels]="vehicleChartOptions.labels"
+            [colors]="vehicleChartOptions.colors"
+            [legend]="vehicleChartOptions.legend"
+            [plotOptions]="vehicleChartOptions.plotOptions"
+            [dataLabels]="vehicleChartOptions.dataLabels"
+            [responsive]="vehicleChartOptions.responsive">
+          </apx-chart>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Net Weight Distribution</h3>
+        </div>
+        <div class="chart-container">
+          <apx-chart
+            [series]="weightChartOptions.series"
+            [chart]="weightChartOptions.chart"
+            [xaxis]="weightChartOptions.xaxis"
+            [colors]="weightChartOptions.colors"
+            [plotOptions]="weightChartOptions.plotOptions"
+            [dataLabels]="weightChartOptions.dataLabels"
+            [grid]="weightChartOptions.grid">
+          </apx-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Summary Section -->
+    <div class="summary-section">
+      <div class="summary-card">
+        <div class="summary-header">
+          <h3>Total Summary</h3>
+          <i class="fas fa-calculator"></i>
+        </div>
+        <div class="summary-stats">
+          <div class="summary-item total-vehicles">
+            <div class="summary-icon">
+              <i class="fas fa-truck"></i>
+            </div>
+            <div class="summary-content">
+              <div class="summary-value">{{ totalData.vehicles }}</div>
+              <div class="summary-label">Total Vehicles</div>
+            </div>
+          </div>
+          <div class="summary-item total-weight">
+            <div class="summary-icon">
+              <i class="fas fa-weight-hanging"></i>
+            </div>
+            <div class="summary-content">
+              <div class="summary-value">{{ totalData.netWeight }}</div>
+              <div class="summary-label">Total Net Weight (MT)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>

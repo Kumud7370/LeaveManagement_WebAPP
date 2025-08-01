@@ -1,97 +1,205 @@
-import { Component, OnInit } from '@angular/core';
-import { ChartConfiguration, ChartDataset } from 'chart.js';
-import { NgChartsModule } from 'ng2-charts';
-import { DbCallingService } from 'src/app/core/services/db-calling.service';
-import { CommonModule } from '@angular/common';
-import { WardwiseGraphComponent } from 'src/app/modules/dashboard/wardwisegraph/wardwisegraph.component';
-import { RouterModule } from '@angular/router';
+import { Component, type OnInit } from "@angular/core"
+import { CommonModule } from "@angular/common"
+import { NgApexchartsModule } from "ng-apexcharts"
+import type {
+  ApexAxisChartSeries,
+  ApexChart,
+  ApexXAxis,
+  ApexDataLabels,
+  ApexPlotOptions,
+  ApexLegend,
+  ApexGrid,
+  ApexResponsive,
+} from "ng-apexcharts"
+
+export type ChartOptions = {
+  series: ApexAxisChartSeries
+  chart: ApexChart
+  xaxis: ApexXAxis
+  dataLabels: ApexDataLabels
+  plotOptions: ApexPlotOptions
+  colors: string[]
+  grid: ApexGrid
+}
+
+export type PieChartOptions = {
+  series: number[]
+  chart: ApexChart
+  labels: string[]
+  colors: string[]
+  legend: ApexLegend
+  plotOptions: ApexPlotOptions
+  dataLabels: ApexDataLabels
+  responsive: ApexResponsive[]
+}
+
 @Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss'],
+  selector: "app-dashboard",
+  templateUrl: "./dashboard.component.html",
+  styleUrls: ["./dashboard.component.scss"],
   standalone: true,
-  imports: [CommonModule, NgChartsModule, WardwiseGraphComponent, RouterModule]
+  imports: [CommonModule, NgApexchartsModule],
 })
 export class DashboardComponent implements OnInit {
-  isLoading = true;
-  hasError = false;
+  isLoading = true
 
-  // Active tab on the month-wise graph section
-  activeMonthTab: 'weight' | 'vehicle' = 'weight';
+  // Data from requirements
+  kanjurData = {
+    vehicles: 831,
+    netWeight: 6140.29,
+  }
 
-  // Net Weight graph data
-  public barChartData: ChartDataset<'bar'>[] = [
-    {
-      data: [],
-      label: 'Net Weight (MT)',
-      backgroundColor: 'rgba(75, 192, 192, 0.7)',
-      borderColor: 'rgb(75, 192, 192)',
-      borderWidth: 1
-    }
-  ];
-  public barChartLabels: string[] = [];
+  deonarData = {
+    vehicles: 229,
+    netWeight: 1624.82,
+  }
 
-  // Vehicle Count graph data
-  public barChartDataMinor: ChartDataset<'bar'>[] = [
-    {
-      data: [],
-      label: 'Vehicle Count',
-      backgroundColor: 'rgba(153, 102, 255, 0.7)',
-      borderColor: 'rgb(153, 102, 255)',
-      borderWidth: 1
-    }
-  ];
-  public mbarChartLabelsMinor: string[] = [];
+  totalData = {
+    vehicles: 1060,
+    netWeight: 7765.11,
+  }
 
-  public barChartOptions: ChartConfiguration['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: { grid: { display: false } },
-      y: { beginAtZero: true }
+  // Chart colors matching search-report theme
+  private primaryColor = "#1a2a6c"
+  private secondaryColor = "#b21f1f"
+  private accentColor = "#00ffcc"
+  private successColor = "#10b981"
+
+  // Vehicle Count Pie Chart Options
+  public vehicleChartOptions: PieChartOptions = {
+    series: [831, 229],
+    chart: {
+      type: "donut",
+      height: 350,
+      fontFamily: "Raleway, sans-serif",
     },
-    plugins: {
-      legend: { display: true, position: 'top' },
-      tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.7)', padding: 10 }
-    }
-  };
+    labels: ["Kanjur", "Deonar"],
+    colors: [this.primaryColor, this.secondaryColor],
+    legend: {
+      position: "bottom",
+      fontSize: "14px",
+      fontWeight: 500,
+      markers: {
+        width: 12,
+        height: 12,
+        radius: 6,
+      },
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: "60%",
+          labels: {
+            show: true,
+            total: {
+              show: true,
+              label: "Total Vehicles",
+              fontSize: "16px",
+              fontWeight: 600,
+              color: this.primaryColor,
+              formatter: () => "1060",
+            },
+          },
+        },
+      },
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: (val: number) => {
+        return Math.round(val) + "%"
+      },
+      style: {
+        fontSize: "14px",
+        fontWeight: "bold",
+        colors: ["#fff"],
+      },
+    },
+    responsive: [
+      {
+        breakpoint: 768,
+        options: {
+          chart: {
+            height: 300,
+          },
+          legend: {
+            position: "bottom",
+          },
+        },
+      },
+    ],
+  }
 
-  public barChartLegend = true;
+  // Net Weight Bar Chart Options
+  public weightChartOptions: ChartOptions = {
+    series: [
+      {
+        name: "Net Weight (MT)",
+        data: [6140.29, 1624.82],
+      },
+    ],
+    chart: {
+      type: "bar",
+      height: 350,
+      fontFamily: "Raleway, sans-serif",
+      toolbar: {
+        show: false,
+      },
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: "60%",
+        borderRadius: 8,
+        dataLabels: {
+          position: "top",
+        },
+      },
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: (val: number) => {
+        return val.toFixed(2) + " MT"
+      },
+      offsetY: -20,
+      style: {
+        fontSize: "12px",
+        fontWeight: "bold",
+        colors: [this.primaryColor],
+      },
+    },
+    xaxis: {
+      categories: ["Kanjur", "Deonar"],
+      labels: {
+        style: {
+          fontSize: "14px",
+          fontWeight: 500,
+          colors: [this.primaryColor, this.primaryColor],
+        },
+      },
+    },
+    colors: [this.successColor],
+    grid: {
+      borderColor: "#e5e7eb",
+      strokeDashArray: 3,
+      xaxis: {
+        lines: {
+          show: false,
+        },
+      },
+      yaxis: {
+        lines: {
+          show: true,
+        },
+      },
+    },
+  }
 
-  constructor(private dbCallingService: DbCallingService) { }
+  constructor() {}
 
   ngOnInit(): void {
-    this.loadChartData();
-  }
-
-  loadChartData(): void {
-    this.dbCallingService.getDashboardGraphData().subscribe(
-      (res) => {
-        const data = res.Data;
-        if (data && data.length > 0) {
-          this.barChartLabels = data.map((item: any) => item.MonthYear);
-          this.barChartData[0].data = data.map((item: any) => item.TotalActNetWeight);
-
-          this.mbarChartLabelsMinor = data.map((item: any) => item.MonthYear);
-          this.barChartDataMinor[0].data = data.map((item: any) => item.VehicleCount);
-        }
-        this.isLoading = false;
-      },
-      (error) => {
-        console.error('Error loading chart data', error);
-        this.isLoading = false;
-        this.hasError = true;
-      }
-    );
-  }
-
-  retryLoadData(): void {
-    this.isLoading = true;
-    this.hasError = false;
-    this.loadChartData();
-  }
-
-  setActiveMonthTab(tab: 'weight' | 'vehicle'): void {
-    this.activeMonthTab = tab;
+    // Simulate loading
+    setTimeout(() => {
+      this.isLoading = false
+    }, 1000)
   }
 }

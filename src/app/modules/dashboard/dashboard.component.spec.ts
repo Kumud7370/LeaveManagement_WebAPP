@@ -1,29 +1,15 @@
 import { type ComponentFixture, TestBed } from "@angular/core/testing"
-import { RouterTestingModule } from "@angular/router/testing"
-import { HttpClientTestingModule } from "@angular/common/http/testing"
 import { DashboardComponent } from "./dashboard.component"
-import { DbCallingService } from "src/app/core/services/db-calling.service"
-import { of } from "rxjs"
-import { NO_ERRORS_SCHEMA } from "@angular/core"
+import { NgApexchartsModule } from "ng-apexcharts"
 
 describe("DashboardComponent", () => {
   let component: DashboardComponent
   let fixture: ComponentFixture<DashboardComponent>
-  let dbCallingServiceSpy: jasmine.SpyObj<DbCallingService>
 
   beforeEach(async () => {
-    const spy = jasmine.createSpyObj("DbCallingService", ["getDashboardGraphData", "getDashboardGraphWardwiseData"])
-
     await TestBed.configureTestingModule({
-      imports: [RouterTestingModule, HttpClientTestingModule],
-      declarations: [DashboardComponent],
-      providers: [{ provide: DbCallingService, useValue: spy }],
-      schemas: [NO_ERRORS_SCHEMA],
+      imports: [DashboardComponent, NgApexchartsModule],
     }).compileComponents()
-
-    dbCallingServiceSpy = TestBed.inject(DbCallingService) as jasmine.SpyObj<DbCallingService>
-    dbCallingServiceSpy.getDashboardGraphData.and.returnValue(of({ Data: [] }))
-    dbCallingServiceSpy.getDashboardGraphWardwiseData.and.returnValue(of({ WBWidgetTable: [] }))
 
     fixture = TestBed.createComponent(DashboardComponent)
     component = fixture.componentInstance
@@ -34,16 +20,29 @@ describe("DashboardComponent", () => {
     expect(component).toBeTruthy()
   })
 
-  it("should set active tab", () => {
-    component.setActiveMonthTab("vehicle")
-    expect(component.activeMonthTab).toBe("vehicle")
+  it("should have correct data values", () => {
+    expect(component.kanjurData.vehicles).toBe(831)
+    expect(component.kanjurData.netWeight).toBe(6140.29)
+    expect(component.deonarData.vehicles).toBe(229)
+    expect(component.deonarData.netWeight).toBe(1624.82)
+    expect(component.totalData.vehicles).toBe(1060)
+    expect(component.totalData.netWeight).toBe(7765.11)
   })
 
-  it("should call getDashboardGraphData on init", () => {
-    expect(dbCallingServiceSpy.getDashboardGraphData).toHaveBeenCalled()
+  it("should initialize chart options", () => {
+    expect(component.vehicleChartOptions).toBeDefined()
+    expect(component.weightChartOptions).toBeDefined()
+    expect(component.vehicleChartOptions.series).toEqual([831, 229])
+    expect(component.weightChartOptions.series[0].data).toEqual([6140.29, 1624.82])
   })
 
-  it("should call getDashboardGraphWardwiseData on init", () => {
-    expect(dbCallingServiceSpy.getDashboardGraphWardwiseData).toHaveBeenCalled()
+  it("should set loading to false after initialization", (done) => {
+    component.ngOnInit()
+    expect(component.isLoading).toBe(true)
+
+    setTimeout(() => {
+      expect(component.isLoading).toBe(false)
+      done()
+    }, 1100)
   })
 })
