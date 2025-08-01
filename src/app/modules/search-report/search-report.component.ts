@@ -193,12 +193,12 @@ export class SearchReportComponent implements OnInit {
     todate: string
     selectNallah: string
   } = {
-    WeighBridge: "",
-    reportType: null,
-    FromDate: "",
-    todate: "",
-    selectNallah: "",
-  }
+      WeighBridge: "",
+      reportType: null,
+      FromDate: "",
+      todate: "",
+      selectNallah: "",
+    }
 
   // Summary statistics
   totalNoOfVehicles = 0
@@ -217,7 +217,7 @@ export class SearchReportComponent implements OnInit {
     private dbService: DbCallingService,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.initForm()
@@ -229,11 +229,15 @@ export class SearchReportComponent implements OnInit {
 
   // NEW METHOD: Load initial data automatically with current month
   loadInitialData() {
-    const today = new Date()
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    const today = new Date();
+    const fromDate = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+
+    // Set value to the form control
+    this.reportForm.get('FromDate')?.setValue(this.formatDate(fromDate));
+
     const basicPayload = {
       WeighBridge: "ALLWB",
-      FromDate: this.formatDate(firstDayOfMonth),
+      FromDate: this.formatDate(fromDate),
       todate: this.formatDate(today),
       reportType: 1,
     }
