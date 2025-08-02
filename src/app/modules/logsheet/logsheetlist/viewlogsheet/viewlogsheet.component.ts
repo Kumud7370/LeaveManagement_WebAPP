@@ -7,6 +7,8 @@ import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import moment from "moment"
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { GState } from "jspdf" // Import GState for type reference
+import { CellHookData } from "jspdf-autotable" // Import types for 
 
 @Component({
   selector: "app-viewlogsheet",
@@ -28,7 +30,7 @@ export class ViewlogsheetComponent {
     public dialogRef: MatDialogRef<ViewlogsheetComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    this.data = data
+    
     // Normalize data keys to handle case sensitivity issues
     this.lstFilterData = this.normalizeData(data)
     console.log("View Dialog - Original data received:", data)
@@ -57,7 +59,7 @@ export class ViewlogsheetComponent {
       Trans_Date: data.trans_Date || data.Trans_Date || "",
       Trans_Time: data.trans_Time || data.Trans_Time || "",
       Trans_Date_UL: data.trans_Date_UL || data.Trans_Date_UL || "",
-      Trans_Time_UL: data.Trans_Time_UL || data.Trans_Time_UL || "",
+      Trans_Time_UL: data.trans_Time_UL || data.Trans_Time_UL || "",
       Gross_Weight: data.gross_Weight || data.Gross_Weight || "",
       Unladen_Weight: data.unladen_Weight || data.Unladen_Weight || "",
       Act_Net_Weight: data.act_Net_Weight || data.Act_Net_Weight || "",
@@ -73,9 +75,7 @@ export class ViewlogsheetComponent {
   getInTimeOfTransact(): string {
     const date = this.lstFilterData.Trans_Date
     const time = this.lstFilterData.Trans_Time
-
     console.log("Getting In Time - Date:", date, "Time:", time)
-
     if (date && time) {
       return `${date} ${time}`
     }
@@ -86,9 +86,7 @@ export class ViewlogsheetComponent {
   getOutTimeOfTransact(): string {
     const date = this.lstFilterData.Trans_Date_UL
     const time = this.lstFilterData.Trans_Time_UL
-
     console.log("Getting Out Time - Date:", date, "Time:", time)
-
     if (date && time) {
       return `${date} ${time}`
     }
@@ -98,7 +96,6 @@ export class ViewlogsheetComponent {
   // Format weight values - for UI display
   formatWeight(weight: string): string {
     console.log("Formatting weight:", weight)
-
     if (!weight || weight === "N/A" || weight === "" || weight === null || weight === undefined) {
       return "N/A"
     }
@@ -146,35 +143,79 @@ export class ViewlogsheetComponent {
     return `${weight} kg`
   }
 
+  // Helper to get base64 image from assets
+  private getBase64ImageFromAssets(path: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      img.src = path
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext("2d")
+        if (ctx) {
+          ctx.drawImage(img, 0, 0)
+          const dataURL = canvas.toDataURL("image/png")
+          resolve(dataURL)
+        } else {
+          reject("Canvas context not found")
+        }
+      }
+      img.onerror = (err) => reject(err)
+    })
+  }
+
   // Print functionality
   printLogsheet(): void {
     window.print()
   }
 
   // UPDATED: PDF generation - ALWAYS includes Trip Details table, but shows N/A for non-closed logsheets
-  downloadPDF(): void {
+  async downloadPDF(): Promise<void> {
     const doc = new jsPDF("landscape")
     const fileName = `Logsheet_${this.lstFilterData.LogsheetNumber || "Unknown"}_${moment().format("DDMMYYYY_HHmmss")}`
+    const logoBase64 = await this.getBase64ImageFromAssets("assets/images/mcgmlogo.png")
 
-    // SWM MIS Header
+    // Header table with logo and text
     autoTable(doc, {
+      // Use autoTable as a function
       body: [
-        [{ content: "SWM MIS", colSpan: 6, styles: { halign: "center", fontSize: 14, fontStyle: "bold" } }],
-        [{ content: "VEHICLE LOGSHEET", colSpan: 6, styles: { halign: "center", fontSize: 12, fontStyle: "bold" } }],
+        [
+          { content: "", rowSpan: 3, styles: { cellWidth: 30, minCellHeight: 30, fillColor: [255, 255, 255] } }, // Placeholder for logo
+          {
+            content: "MUNICIPAL CORPORATION OF GREATER MUMBAI",
+            colSpan: 5,
+            styles: { halign: "center", fontSize: 14, fontStyle: "bold" },
+          },
+        ],
+        [
+          {
+            content: "SOLID WASTE MANAGEMENT",
+            colSpan: 5,
+            styles: { halign: "center", fontSize: 12, fontStyle: "bold" },
+          },
+        ],
+        [{ content: "VEHICLE LOGSHEET", colSpan: 5, styles: { halign: "center", fontSize: 10, fontStyle: "bold" } }],
       ],
       theme: "grid",
       styles: {
-        lineWidth: 0.3,
+        lineWidth: 0.1,
         textColor: 0,
-        fontSize: 12,
-        halign: "center",
         lineColor: [0, 0, 0],
       },
-      margin: { top: 10 },
+      margin: { top: 10, left: 15, right: 15 }, // Consistent margins
+      didDrawCell: (hookData: CellHookData) => {
+        // Explicitly type hookData
+        if (hookData.row.index === 0 && hookData.column.index === 0 && logoBase64) {
+          doc.addImage(logoBase64, "PNG", hookData.cell.x + 2, hookData.cell.y + 2, 25, 25) // Adjust position and size within cell
+        }
+      },
     })
 
     // Section 1: Main information table
     autoTable(doc, {
+      // Use autoTable as a function
       body: [
         [
           { content: "Date & Time :", styles: { fontStyle: "bold" } },
@@ -221,6 +262,7 @@ export class ViewlogsheetComponent {
 
     // UPDATED: Trip Details Table - ALWAYS show in PDF, but display N/A for non-closed logsheets
     autoTable(doc, {
+      // Use autoTable as a function
       head: [
         [
           {
@@ -285,6 +327,7 @@ export class ViewlogsheetComponent {
 
     // Section 3: Closure information table
     autoTable(doc, {
+      // Use autoTable as a function
       body: [
         [
           { content: "Logsheet Closed Date & Time :", styles: { fontStyle: "bold" } },
@@ -311,11 +354,21 @@ export class ViewlogsheetComponent {
       startY: doc.lastAutoTable.finalY + 5,
     })
 
+    // Add watermark after all content
+    doc.setGState(new GState({ opacity: 0.1 })) // Set opacity to 10% for a slightly darker watermark
+    const watermarkWidth = 150 // Larger size for landscape
+    const watermarkHeight = 150 // Larger size for landscape
+    const centerX = (doc.internal.pageSize.getWidth() - watermarkWidth) / 2
+    const centerY = (doc.internal.pageSize.getHeight() - watermarkHeight) / 2
+    doc.addImage(logoBase64, "PNG", centerX, centerY, watermarkWidth, watermarkHeight)
+    doc.setGState(new GState({ opacity: 1 })) // Reset opacity
+
     // Footer
     const pageHeight = doc.internal.pageSize.getHeight()
     const pageWidth = doc.internal.pageSize.getWidth()
     doc.setFontSize(8)
     doc.text("1 of 1", pageWidth / 2, pageHeight - 8, { align: "center" })
+
     doc.save(`${fileName}.pdf`)
   }
 

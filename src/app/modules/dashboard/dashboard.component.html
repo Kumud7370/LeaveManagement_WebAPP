@@ -40,7 +40,6 @@
           </div>
         </div>
       </div>
-
       <div class="location-card deonar-card">
         <div class="card-header">
           <h3>Deonar</h3>
@@ -78,21 +77,99 @@
           </apx-chart>
         </div>
       </div>
-
+      
+      <!-- Ward Report Chart (Replacing Net Weight Distribution) -->
       <div class="chart-card">
         <div class="chart-header">
-          <h3>Net Weight Distribution</h3>
+          <h3>Ward-wise Report</h3>
+          <div class="chart-controls">
+            <button class="btn-chart-control" (click)="refreshWardData()" [disabled]="isLoadingWardData">
+              <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingWardData"></i>
+              Refresh
+            </button>
+          </div>
         </div>
         <div class="chart-container">
+          <div *ngIf="isLoadingWardData" class="chart-loading">
+            <div class="chart-spinner"></div>
+            <span>Loading ward data...</span>
+          </div>
           <apx-chart
-            [series]="weightChartOptions.series"
-            [chart]="weightChartOptions.chart"
-            [xaxis]="weightChartOptions.xaxis"
-            [colors]="weightChartOptions.colors"
-            [plotOptions]="weightChartOptions.plotOptions"
-            [dataLabels]="weightChartOptions.dataLabels"
-            [grid]="weightChartOptions.grid">
+            *ngIf="!isLoadingWardData"
+            [series]="wardChartOptions.series"
+            [chart]="wardChartOptions.chart"
+            [xaxis]="wardChartOptions.xaxis"
+            [yaxis]="wardChartOptions.yaxis!"
+            [colors]="wardChartOptions.colors"
+            [plotOptions]="wardChartOptions.plotOptions"
+            [dataLabels]="wardChartOptions.dataLabels"
+            [grid]="wardChartOptions.grid"
+            [legend]="wardChartOptions.legend!">
           </apx-chart>
+        </div>
+      </div>
+    </div>
+
+    <!-- News & Announcements Section -->
+    <div class="news-section">
+      <div class="news-header">
+        <h3>
+          <i class="fas fa-newspaper"></i>
+          Latest News & Announcements
+        </h3>
+        <div class="news-controls">
+          <button 
+            class="btn-news-filter" 
+            [class.active]="selectedYear === 'all'"
+            (click)="filterNewsByYear('all')">
+            All Years
+          </button>
+          <button 
+            *ngFor="let year of availableYears" 
+            class="btn-news-filter"
+            [class.active]="selectedYear === year"
+            (click)="filterNewsByYear(year)">
+            {{ year }}
+          </button>
+        </div>
+      </div>
+      
+      <div class="news-content">
+        <div class="news-grid">
+          <div 
+            *ngFor="let newsItem of filteredNews; let i = index" 
+            class="news-card"
+            [class.expanded]="expandedNewsItems.has(i)">
+            <div class="news-card-header">
+              <div class="news-date">
+                <i class="fas fa-calendar-alt"></i>
+                {{ newsItem.date }}
+              </div>
+              <div class="news-year-badge">{{ newsItem.year }}</div>
+            </div>
+            <h4 class="news-title">{{ newsItem.title }}</h4>
+            <div class="news-content-text">
+              <p [innerHTML]="getNewsContent(newsItem, i)"></p>
+            </div>
+            <div class="news-actions">
+              <button 
+                class="btn-read-more" 
+                (click)="toggleNewsExpansion(i)"
+                *ngIf="newsItem.content.length > 150">
+                <i class="fas" [class.fa-chevron-down]="!expandedNewsItems.has(i)" 
+                   [class.fa-chevron-up]="expandedNewsItems.has(i)"></i>
+                {{ expandedNewsItems.has(i) ? 'Read Less' : 'Read More' }}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Load More Button -->
+        <div class="news-load-more" *ngIf="filteredNews.length < allNews.length">
+          <button class="btn-load-more" (click)="loadMoreNews()">
+            <i class="fas fa-plus-circle"></i>
+            Load More News
+          </button>
         </div>
       </div>
     </div>
@@ -123,9 +200,26 @@
               <div class="summary-label">Total Net Weight (MT)</div>
             </div>
           </div>
+          <div class="summary-item ward-summary">
+            <div class="summary-icon">
+              <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="summary-content">
+              <div class="summary-value">{{ wardSummary.totalWards }}</div>
+              <div class="summary-label">Active Wards</div>
+            </div>
+          </div>
+          <div class="summary-item top-ward">
+            <div class="summary-icon">
+              <i class="fas fa-trophy"></i>
+            </div>
+            <div class="summary-content">
+              <div class="summary-value">{{ wardSummary.topWard || 'N/A' }}</div>
+              <div class="summary-label">Top Performing Ward</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-
   </div>
 </div>

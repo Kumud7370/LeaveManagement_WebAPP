@@ -31,9 +31,7 @@ describe("DashboardComponent", () => {
 
   it("should initialize chart options", () => {
     expect(component.vehicleChartOptions).toBeDefined()
-    expect(component.weightChartOptions).toBeDefined()
     expect(component.vehicleChartOptions.series).toEqual([831, 229])
-    expect(component.weightChartOptions.series[0].data).toEqual([6140.29, 1624.82])
   })
 
   it("should set loading to false after initialization", (done) => {
