@@ -1,5 +1,5 @@
-<div class="sidebar" [class.expanded]="isExpanded" [class.mobile]="isMobile"
-  [class.collapsed]="!isExpanded && !isMobile">
+<div class="sidebar" (mouseenter)="onSidebarPointerEnter()" (mouseleave)="onSidebarPointerLeave()"
+  [class.expanded]="isExpanded" [class.mobile]="isMobile" [class.collapsed]="!isExpanded && !isMobile">
   <!-- Logo Section -->
   <div class="sidebar-header">
     <div class="logo-container">
@@ -42,7 +42,7 @@
   <nav class="sidebar-nav">
     <ul class="nav-list">
       <li *ngFor="let item of menuItems; trackBy: trackByRoute" class="nav-item">
-        <!-- Parent Menu Item -->        
+        <!-- Parent Menu Item -->
         <a *ngIf="!item.children" (click)="navigateTo(item.route!)" class="nav-link"
           [class.active]="isActive(item.route!)" [matTooltip]="!isExpanded ? item.label : null"
           matTooltipPosition="right">
@@ -61,7 +61,7 @@
             [class.rotated]="item.expanded"></i>
         </a>
 
-        <!-- Submenu Items --> 
+        <!-- Submenu Items -->
         <ul *ngIf="item.children && (isExpanded || item.expanded)" class="submenu"
           [@expandCollapse]="item.expanded ? 'expanded' : 'collapsed'">
           <li *ngFor="let child of item.children" class="submenu-item">

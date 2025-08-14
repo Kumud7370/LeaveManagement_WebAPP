@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { NewsItem } from '../../../app/modules/dashboard/dashboard.component';
 
 @Injectable({
   providedIn: 'root'
@@ -304,5 +305,14 @@ export class DbCallingService {
       }),
     )
   }
+  getImportantUpdates(payload: any): Observable<NewsItem[]> {
+    return this.http.post<NewsItem[]>(`${this.apiUrl}/Dashboard/InsertImportantUpdate`, payload).pipe(
+      catchError((error) => {
+        console.error("Error fetching important updates", error);
+        return of([] as NewsItem[]);
+      }),
+    );
+  }
+
 }
 

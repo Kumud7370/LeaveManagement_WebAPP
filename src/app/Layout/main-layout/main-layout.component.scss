@@ -44,16 +44,16 @@
   color: #1a2a6c;
   cursor: pointer;
   transition: background-color 0.2s;
-  
+
   &:hover {
     background: #e5e7eb;
   }
-  
+
   &:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(0, 255, 204, 0.4);
   }
-  
+
   i {
     font-size: 1rem;
   }
@@ -64,7 +64,7 @@
   align-items: center;
   color: #6b7280;
   font-size: 1rem;
-  
+
   .separator {
     margin: 0 0.5rem;
     font-size: 0.75rem;
@@ -92,26 +92,26 @@
   font-size: 0.875rem;
   font-weight: 500;
   box-shadow: 0 2px 8px rgba(26, 42, 108, 0.2);
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(26, 42, 108, 0.3);
     background: linear-gradient(135deg, #2a3a7c 0%, #c22f2f 100%);
   }
-  
+
   &:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(0, 255, 204, 0.3);
   }
-  
+
   &:active {
     transform: translateY(0);
   }
-  
+
   i {
     font-size: 1rem;
   }
-  
+
   .btn-text {
     font-weight: 600;
     letter-spacing: 0.5px;
@@ -120,7 +120,7 @@
 
 .search-box {
   position: relative;
-  
+
   i {
     position: absolute;
     left: 12px;
@@ -129,7 +129,7 @@
     color: #9ca3af;
     font-size: 0.875rem;
   }
-  
+
   input {
     width: 240px;
     height: 38px;
@@ -139,14 +139,14 @@
     background: #f9fafb;
     font-size: 0.875rem;
     transition: all 0.2s;
-    
+
     &:focus {
       outline: none;
       border-color: #00ffcc;
       background: white;
       box-shadow: 0 0 0 3px rgba(0, 255, 204, 0.1);
     }
-    
+
     &::placeholder {
       color: #9ca3af;
     }
@@ -172,21 +172,21 @@
   color: #1a2a6c;
   cursor: pointer;
   transition: all 0.2s;
-  
+
   &:hover {
     background: #e5e7eb;
     color: #b21f1f;
   }
-  
+
   &:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(0, 255, 204, 0.4);
   }
-  
+
   i {
     font-size: 1rem;
   }
-  
+
   .notification-badge {
     position: absolute;
     top: -4px;
@@ -208,20 +208,21 @@
 .main-content {
   flex: 1;
   overflow-y: auto;
-  padding: 1.5rem;
-  
+  // padding: 1.5rem;
+  padding: 0 1.5rem 1.5rem;
+
   &::-webkit-scrollbar {
     width: 8px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: transparent;
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background: #d1d5db;
     border-radius: 4px;
-    
+
     &:hover {
       background: #9ca3af;
     }
@@ -238,7 +239,7 @@
   top: 0;
   left: 0;
   height: 100vh;
-  
+
   .offcanvas-header-custom {
     background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%);
     color: white;
@@ -247,7 +248,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    
+
     .offcanvas-title-custom {
       font-size: 1.25rem;
       font-weight: 700;
@@ -255,7 +256,7 @@
       display: flex;
       align-items: center;
     }
-    
+
     .custom-close-btn {
       background: rgba(255, 255, 255, 0.2);
       border: 1px solid rgba(255, 255, 255, 0.3);
@@ -268,41 +269,41 @@
       justify-content: center;
       transition: all 0.2s;
       cursor: pointer;
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.3);
         transform: scale(1.1);
       }
-      
+
       i {
         font-size: 0.875rem;
       }
     }
   }
-  
+
   .offcanvas-body-custom {
     padding: 0;
     background: #f8f9fa;
     height: calc(100vh - 80px);
     overflow-y: auto;
-    
+
     &::-webkit-scrollbar {
       width: 6px;
     }
-    
+
     &::-webkit-scrollbar-track {
       background: transparent;
     }
-    
+
     &::-webkit-scrollbar-thumb {
       background: #d1d5db;
       border-radius: 3px;
-      
+
       &:hover {
         background: #9ca3af;
       }
     }
-    
+
     .filter-section {
       background: white;
       margin-bottom: 1rem;
@@ -310,11 +311,11 @@
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       margin: 1rem;
-      
+
       &:first-child {
         margin-top: 1.5rem;
       }
-      
+
       .filter-section-title {
         background: linear-gradient(135deg, rgba(26, 42, 108, 0.05) 0%, rgba(178, 31, 31, 0.05) 100%);
         padding: 1rem 1.5rem;
@@ -328,17 +329,17 @@
         display: flex;
         align-items: center;
       }
-      
+
       .filter-group {
         padding: 1.5rem;
-        
+
         .form-group {
           margin-bottom: 1rem;
-          
+
           &:last-child {
             margin-bottom: 0;
           }
-          
+
           label {
             display: block;
             margin-bottom: 0.5rem;
@@ -346,7 +347,7 @@
             font-size: 0.875rem;
             color: #374151;
           }
-          
+
           .form-control {
             width: 100%;
             padding: 0.75rem 1rem;
@@ -355,19 +356,19 @@
             background: #f9fafb;
             font-size: 0.875rem;
             transition: all 0.2s;
-            
+
             &:focus {
               outline: none;
               border-color: #00ffcc;
               background: white;
               box-shadow: 0 0 0 3px rgba(0, 255, 204, 0.1);
             }
-            
+
             &:hover:not(:focus) {
               border-color: #d1d5db;
             }
           }
-          
+
           select.form-control {
             appearance: none;
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
@@ -379,7 +380,7 @@
         }
       }
     }
-    
+
     .filter-actions {
       padding: 1.5rem;
       background: white;
@@ -389,7 +390,7 @@
       margin-top: auto;
       position: sticky;
       bottom: 0;
-      
+
       .btn {
         flex: 1;
         padding: 0.75rem 1rem;
@@ -404,25 +405,25 @@
         gap: 0.5rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        
+
         &.btn-secondary {
           background: #f3f4f6;
           color: #374151;
           border: 2px solid #e5e7eb;
-          
+
           &:hover {
             background: #e5e7eb;
             border-color: #d1d5db;
             transform: translateY(-1px);
           }
         }
-        
+
         &.btn-primary {
           background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%);
           color: white;
           border: none;
           box-shadow: 0 2px 8px rgba(26, 42, 108, 0.2);
-          
+
           &:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(26, 42, 108, 0.3);
@@ -444,7 +445,7 @@
   z-index: 1050;
   opacity: 0;
   transition: opacity 0.3s ease;
-  
+
   &.show {
     opacity: 1;
   }
@@ -454,36 +455,36 @@
   .search-box {
     display: none;
   }
-  
+
   .breadcrumb {
     display: none;
   }
-  
+
   .offcanvas-toggle-btn {
     .btn-text {
       display: none;
     }
-    
+
     padding: 0.5rem;
     min-width: 38px;
   }
-  
+
   .custom-offcanvas {
     width: 300px !important;
-    
+
     .offcanvas-body-custom {
       .filter-section {
         margin: 0.5rem;
-        
+
         .filter-group {
           padding: 1rem;
         }
       }
-      
+
       .filter-actions {
         padding: 1rem;
         flex-direction: column;
-        
+
         .btn {
           width: 100%;
         }
@@ -496,7 +497,7 @@
   .header-right {
     gap: 0.5rem;
   }
-  
+
   .custom-offcanvas {
     width: 280px !important;
   }

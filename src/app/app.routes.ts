@@ -20,6 +20,12 @@ export const routes: Routes = [
         loadComponent: () => import("./modules/dashboard/dashboard.component").then((m) => m.DashboardComponent),
         data: { breadcrumb: "Dashboard" },
       },
+      //{ path: "", redirectTo: "dashboard2", pathMatch: "full" },
+      {
+        path: "dashboard2",
+        loadComponent: () => import("./modules/dashboard2/dashboard.component").then((m) => m.Dashboard2Component),
+        data: { breadcrumb: "Dashboard2" },
+      },
       {
         path: "search-report",
         loadComponent: () =>

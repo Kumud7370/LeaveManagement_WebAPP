@@ -11,10 +11,12 @@ import Swal from "sweetalert2"
 import moment from "moment"
 import * as XLSX from "xlsx"
 import jsPDF from "jspdf"
-import autoTable from "jspdf-autotable"
+import autoTable from "jspdf-autotable" // Import autoTable as a function
+import { GState } from "jspdf" // Import GState for type reference
+import { CellHookData } from "jspdf-autotable" // Import types for autotable hooks
 import { BtnLogsheetViewCellRenderer } from "src/app/modules/logsheet/logsheetlist/viewlogsheet/buttonLogsheetView-cell-renderer.component"
 import { ViewlogsheetComponent } from "src/app/modules/logsheet/logsheetlist/viewlogsheet/viewlogsheet.component"
-import { HttpClientModule, HttpClient } from "@angular/common/http"
+import { HttpClientModule, HttpClient } from "@angular/common/http" // Changed to regular import
 import { environment } from "src/environments/environment"
 import { BtnPdfCellRenderer } from "src/app/modules/logsheet/logsheetlist/pdf/buttonPdf-cell-renderer.component"
 
@@ -103,7 +105,6 @@ interface LogsheetResponse {
 export class LogsheetlistComponent implements OnInit {
   @ViewChild("agGrid", { static: false }) agGrid!: AgGridAngular
   @ViewChild("excelexporttable") excelexporttable!: ElementRef
-
   // Offcanvas state
   isFiltersOpen = false
   activeFilter = 9
@@ -138,7 +139,7 @@ export class LogsheetlistComponent implements OnInit {
     private router: Router,
     private fb: FormBuilder,
     private dialog: MatDialog,
-    private http: HttpClient,
+    private http: HttpClient, // Changed to regular import
   ) {
     this.uRole = Number(sessionStorage.getItem("Role")) || 0
     this.userType = Number(sessionStorage.getItem("UserType")) || 0
@@ -171,7 +172,6 @@ export class LogsheetlistComponent implements OnInit {
       const d = new Date(date)
       return moment(d).format("YYYY-MM-DD")
     }
-
     const payload: LogsheetSearchParams = {
       FromDate: formatDate(this.Form.value.fromdate),
       ToDate: formatDate(this.Form.value.todate),
@@ -179,7 +179,6 @@ export class LogsheetlistComponent implements OnInit {
       LogsheetID: null,
       UserId: Number(sessionStorage.getItem("UserID")) || null,
     }
-
     console.log("Sending payload:", payload)
     this.http.post<LogsheetResponse>(url, payload).subscribe({
       next: (response) => {
@@ -229,12 +228,34 @@ export class LogsheetlistComponent implements OnInit {
     })
   }
 
+  // Helper to get base64 image from assets
+  private getBase64ImageFromAssets(path: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      img.src = path
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext("2d")
+        if (ctx) {
+          ctx.drawImage(img, 0, 0)
+          const dataURL = canvas.toDataURL("image/png")
+          resolve(dataURL)
+        } else {
+          reject("Canvas context not found")
+        }
+      }
+      img.onerror = (err) => reject(err)
+    })
+  }
+
   // NEW: Method to fetch transaction details and generate PDF (same as View button logic)
   downloadLogsheetPDF(data: LogsheetData) {
     console.log("PDF download method called with data:", data)
     const logsheetNumber = data.LogsheetNumber
     const url = `${environment.apiUrl}/Report/GetTransactDetails/${logsheetNumber}`
-
     // Show loading indicator
     Swal.fire({
       title: "Generating PDF...",
@@ -244,12 +265,11 @@ export class LogsheetlistComponent implements OnInit {
         Swal.showLoading()
       },
     })
-
     this.http.get<any>(url).subscribe({
-      next: (res) => {
+      next: async (res) => {
+        // Made async to await getBase64ImageFromAssets
         Swal.close() // Close loading indicator
         let mergedData: LogsheetData
-
         if (res && res.data && res.data.length > 0) {
           // Merge original data with transaction details
           mergedData = {
@@ -270,14 +290,14 @@ export class LogsheetlistComponent implements OnInit {
           console.log("No transaction data found, using original data for PDF")
           mergedData = data
         }
-
         // Generate PDF with the merged data
-        this.generatePDFWithData(mergedData)
+        await this.generatePDFWithData(mergedData)
       },
-      error: (err) => {
+      error: async (err) => {
+        // Made async to await getBase64ImageFromAssets
         Swal.close() // Close loading indicator
         console.error("Error fetching transaction data for PDF:", err)
-        // Show error and generate PDF with original data
+        // Show error and generate PDF with available data
         Swal.fire({
           title: "Warning",
           text: "Could not fetch transaction details. Generating PDF with available data.",
@@ -285,45 +305,58 @@ export class LogsheetlistComponent implements OnInit {
           timer: 3000,
         })
         // Generate PDF with original data even if API fails
-        this.generatePDFWithData(data)
+        await this.generatePDFWithData(data)
       },
     })
   }
 
   // NEW: Method to generate PDF with complete data (extracted from ViewlogsheetComponent)
-  private generatePDFWithData(data: LogsheetData) {
+  async generatePDFWithData(data: LogsheetData) {
     // Normalize data exactly like ViewlogsheetComponent does
     const normalizedData = this.normalizeDataForPDF(data)
-
     const doc = new jsPDF("landscape")
     const fileName = `Logsheet_${normalizedData.LogsheetNumber || "Unknown"}_${moment().format("DDMMYYYY_HHmmss")}`
+    const logoBase64 = await this.getBase64ImageFromAssets("assets/images/mcgmlogo.png")
 
-    console.log(
-      "PDF Generation - Status:",
-      normalizedData.IsClosed,
-      "Is Closed:",
-      this.isLogsheetClosedForPDF(normalizedData),
-    )
-
-    // SWM MIS Header
+    // Header table with logo and text
     autoTable(doc, {
+      // Use autoTable as a function
       body: [
-        [{ content: "SWM MIS", colSpan: 6, styles: { halign: "center", fontSize: 14, fontStyle: "bold" } }],
-        [{ content: "VEHICLE LOGSHEET", colSpan: 6, styles: { halign: "center", fontSize: 12, fontStyle: "bold" } }],
+        [
+          { content: "", rowSpan: 3, styles: { cellWidth: 30, minCellHeight: 30, fillColor: [255, 255, 255] } }, // Placeholder for logo
+          {
+            content: "MUNICIPAL CORPORATION OF GREATER MUMBAI",
+            colSpan: 5,
+            styles: { halign: "center", fontSize: 14, fontStyle: "bold" },
+          },
+        ],
+        [
+          {
+            content: "SOLID WASTE MANAGEMENT",
+            colSpan: 5,
+            styles: { halign: "center", fontSize: 12, fontStyle: "bold" },
+          },
+        ],
+        [{ content: "VEHICLE LOGSHEET", colSpan: 5, styles: { halign: "center", fontSize: 10, fontStyle: "bold" } }],
       ],
       theme: "grid",
       styles: {
-        lineWidth: 0.3,
+        lineWidth: 0.1,
         textColor: 0,
-        fontSize: 12,
-        halign: "center",
         lineColor: [0, 0, 0],
       },
-      margin: { top: 10 },
+      margin: { top: 10, left: 15, right: 15 }, // Consistent margins
+      didDrawCell: (hookData: CellHookData) => {
+        // Explicitly type hookData
+        if (hookData.row.index === 0 && hookData.column.index === 0 && logoBase64) {
+          doc.addImage(logoBase64, "PNG", hookData.cell.x + 2, hookData.cell.y + 2, 25, 25) // Adjust position and size within cell
+        }
+      },
     })
 
     // Section 1: Main information table
     autoTable(doc, {
+      // Use autoTable as a function
       body: [
         [
           { content: "Date & Time :", styles: { fontStyle: "bold" } },
@@ -370,6 +403,7 @@ export class LogsheetlistComponent implements OnInit {
 
     // UPDATED: Trip Details Table - ALWAYS show in PDF, but display N/A for non-closed logsheets (same as ViewlogsheetComponent)
     autoTable(doc, {
+      // Use autoTable as a function
       head: [
         [
           {
@@ -434,6 +468,7 @@ export class LogsheetlistComponent implements OnInit {
 
     // Section 3: Closure information table
     autoTable(doc, {
+      // Use autoTable as a function
       body: [
         [{ content: "Logsheet Closed Date & Time :", styles: { fontStyle: "bold" } }, normalizedData.ClosedOn || "N/A"],
         [
@@ -457,13 +492,21 @@ export class LogsheetlistComponent implements OnInit {
       startY: doc.lastAutoTable.finalY + 5,
     })
 
+    // Add watermark after all content
+    doc.setGState(new GState({ opacity: 0.1 })) // Set opacity to 10% for a slightly darker watermark
+    const watermarkWidth = 150 // Larger size for landscape
+    const watermarkHeight = 150 // Larger size for landscape
+    const centerX = (doc.internal.pageSize.getWidth() - watermarkWidth) / 2
+    const centerY = (doc.internal.pageSize.getHeight() - watermarkHeight) / 2
+    doc.addImage(logoBase64, "PNG", centerX, centerY, watermarkWidth, watermarkHeight)
+    doc.setGState(new GState({ opacity: 1 })) // Reset opacity
+
     // Footer
     const pageHeight = doc.internal.pageSize.getHeight()
     const pageWidth = doc.internal.pageSize.getWidth()
     doc.setFontSize(8)
     doc.text("1 of 1", pageWidth / 2, pageHeight - 8, { align: "center" })
 
-    // Save the PDF
     doc.save(`${fileName}.pdf`)
     console.log(`PDF generated: ${fileName}.pdf`)
   }
@@ -578,6 +621,10 @@ export class LogsheetlistComponent implements OnInit {
       todate: tDt,
       ward: "",
     })
+
+    // Reset results and summary
+    this.lstReportData = []
+    this.lstSearchResults = []
   }
 
   QuantityValuechange(val: any): void {
@@ -822,6 +869,7 @@ export class LogsheetlistComponent implements OnInit {
   }
 
   lstExelData: any[] = []
+
   download() {
     this.lstExelData = []
     this.lstExelData = this.lstReportData.map((v: LogsheetData, i: number) => ({
@@ -857,7 +905,6 @@ export class LogsheetlistComponent implements OnInit {
     console.log("View method called with data:", data)
     const logsheetNumber = data.LogsheetNumber
     const url = `${environment.apiUrl}/Report/GetTransactDetails/${logsheetNumber}`
-
     // Show loading indicator
     Swal.fire({
       title: "Loading...",
@@ -867,7 +914,6 @@ export class LogsheetlistComponent implements OnInit {
         Swal.showLoading()
       },
     })
-
     this.http.get<any>(url).subscribe({
       next: (res) => {
         Swal.close() // Close loading indicator
