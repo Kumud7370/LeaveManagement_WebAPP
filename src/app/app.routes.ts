@@ -8,13 +8,13 @@ export const routes: Routes = [
     path: "login",
     loadComponent: () => import("./modules/login/login.component").then((m) => m.LoginComponent),
   },
+  { path: "", redirectTo: "login", pathMatch: "full" },
   {
     path: "",
     component: MainLayoutComponent,
     canActivate: [AuthGuard],
     canActivateChild: [AuthGuard],
-    children: [
-      { path: "", redirectTo: "dashboard", pathMatch: "full" },
+    children: [    
       {
         path: "dashboard",
         loadComponent: () => import("./modules/dashboard/dashboard.component").then((m) => m.DashboardComponent),
@@ -76,6 +76,13 @@ export const routes: Routes = [
         path: "verifications",
         loadComponent: () => import("./modules/verifications/verification.component").then((m) => m.VerificationComponent),
         data: { breadcrumb: "Verification" },
+      },
+
+      {
+        path: "vehiclelist",
+        loadComponent: () =>
+          import("./modules/vehicle-master/vehicle-master.component").then((m) => m.VehicleMasterComponent),
+        data: { breadcrumb: "Vehicle List" },
       },
     ],
   },

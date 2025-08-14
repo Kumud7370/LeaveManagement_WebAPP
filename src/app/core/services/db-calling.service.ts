@@ -290,5 +290,19 @@ export class DbCallingService {
       }),
     )
   }
+
+
+  getVehiclemasterData(data:any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Master/getvehicle`, data).pipe(
+      catchError((error) => {
+        console.error("Error while fetching vehicle list", error)
+        return of({
+          data: [],
+          status: 500,
+          msg: "Error while fetching vehicle list",
+        })
+      }),
+    )
+  }
 }
 
