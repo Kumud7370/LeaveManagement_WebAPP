@@ -21,7 +21,7 @@
 
   <!-- Dashboard Content -->
   <div class="dashboard-content" *ngIf="!isLoading">
-    
+
     <!-- Location Cards Section -->
     <div class="location-cards-section">
       <div class="location-card kanjur-card">
@@ -65,20 +65,15 @@
           <h3>Vehicle Count Comparison</h3>
         </div>
         <div class="chart-container">
-          <apx-chart
-            [series]="vehicleChartOptions.series"
-            [chart]="vehicleChartOptions.chart"
-            [labels]="vehicleChartOptions.labels"
-            [colors]="vehicleChartOptions.colors"
-            [legend]="vehicleChartOptions.legend"
-            [plotOptions]="vehicleChartOptions.plotOptions"
-            [dataLabels]="vehicleChartOptions.dataLabels"
-            [responsive]="vehicleChartOptions.responsive">
+          <apx-chart [series]="vehicleChartOptions.series" [chart]="vehicleChartOptions.chart"
+            [labels]="vehicleChartOptions.labels" [colors]="vehicleChartOptions.colors"
+            [legend]="vehicleChartOptions.legend" [plotOptions]="vehicleChartOptions.plotOptions"
+            [dataLabels]="vehicleChartOptions.dataLabels" [responsive]="vehicleChartOptions.responsive">
           </apx-chart>
         </div>
       </div>
-      
-      <!-- Ward Report Chart (Replacing Net Weight Distribution) -->
+
+      <!-- Ward Report Chart -->
       <div class="chart-card">
         <div class="chart-header">
           <h3>Ward-wise Report</h3>
@@ -94,82 +89,97 @@
             <div class="chart-spinner"></div>
             <span>Loading ward data...</span>
           </div>
-          <apx-chart
-            *ngIf="!isLoadingWardData"
-            [series]="wardChartOptions.series"
-            [chart]="wardChartOptions.chart"
-            [xaxis]="wardChartOptions.xaxis"
-            [yaxis]="wardChartOptions.yaxis!"
-            [colors]="wardChartOptions.colors"
-            [plotOptions]="wardChartOptions.plotOptions"
-            [dataLabels]="wardChartOptions.dataLabels"
-            [grid]="wardChartOptions.grid"
+          <div *ngIf="!isLoadingWardData && wardData.length === 0" class="chart-no-data">
+            <i class="fas fa-chart-bar"></i>
+            <span>No ward data available</span>
+          </div>
+          <apx-chart *ngIf="!isLoadingWardData && wardData.length > 0" [series]="wardChartOptions.series"
+            [chart]="wardChartOptions.chart" [xaxis]="wardChartOptions.xaxis" [yaxis]="wardChartOptions.yaxis!"
+            [colors]="wardChartOptions.colors" [plotOptions]="wardChartOptions.plotOptions"
+            [dataLabels]="wardChartOptions.dataLabels" [grid]="wardChartOptions.grid"
             [legend]="wardChartOptions.legend!">
           </apx-chart>
         </div>
       </div>
     </div>
 
-    <!-- News & Announcements Section -->
+    <!-- Important Updates & News Section -->
     <div class="news-section">
       <div class="news-header">
         <h3>
-          <i class="fas fa-newspaper"></i>
-          Latest News & Announcements
+          <i class="fas fa-bell"></i>
+          Important Updates & News
         </h3>
-        <div class="news-controls">
-          <button 
-            class="btn-news-filter" 
-            [class.active]="selectedYear === 'all'"
-            (click)="filterNewsByYear('all')">
-            All Years
-          </button>
-          <button 
-            *ngFor="let year of availableYears" 
-            class="btn-news-filter"
-            [class.active]="selectedYear === year"
-            (click)="filterNewsByYear(year)">
-            {{ year }}
-          </button>
-        </div>
-      </div>
-      
-      <div class="news-content">
-        <div class="news-grid">
-          <div 
-            *ngFor="let newsItem of filteredNews; let i = index" 
-            class="news-card"
-            [class.expanded]="expandedNewsItems.has(i)">
-            <div class="news-card-header">
-              <div class="news-date">
-                <i class="fas fa-calendar-alt"></i>
-                {{ newsItem.date }}
-              </div>
-              <div class="news-year-badge">{{ newsItem.year }}</div>
-            </div>
-            <h4 class="news-title">{{ newsItem.title }}</h4>
-            <div class="news-content-text">
-              <p [innerHTML]="getNewsContent(newsItem, i)"></p>
-            </div>
-            <div class="news-actions">
-              <button 
-                class="btn-read-more" 
-                (click)="toggleNewsExpansion(i)"
-                *ngIf="newsItem.content.length > 150">
-                <i class="fas" [class.fa-chevron-down]="!expandedNewsItems.has(i)" 
-                   [class.fa-chevron-up]="expandedNewsItems.has(i)"></i>
-                {{ expandedNewsItems.has(i) ? 'Read Less' : 'Read More' }}
-              </button>
-            </div>
+        <div class="news-search-controls">
+          <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search updates..." [(ngModel)]="searchQuery"
+              (input)="onSearchChange()" />
+            <i class="fas fa-search search-icon"></i>
+          </div>
+          <div class="year-filter">
+            <select class="year-select" [(ngModel)]="selectedYear" (change)="onYearChange()">
+              <option value="">All Years</option>
+              <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+            </select>
           </div>
         </div>
-        
-        <!-- Load More Button -->
-        <div class="news-load-more" *ngIf="filteredNews.length < allNews.length">
-          <button class="btn-load-more" (click)="loadMoreNews()">
-            <i class="fas fa-plus-circle"></i>
-            Load More News
-          </button>
+      </div>
+
+      <div class="news-content">
+        <!-- Loading State -->
+        <div *ngIf="isLoadingNews" class="news-loading">
+          <div class="news-spinner"></div>
+          <span>Loading updates...</span>
+        </div>
+
+        <!-- No Data State -->
+        <div *ngIf="!isLoadingNews && filteredNews.length === 0" class="news-no-data">
+          <i class="fas fa-newspaper"></i>
+          <span>No updates found</span>
+        </div>
+
+        <!-- News Cards -->
+        <div class="news-display-cards" *ngIf="!isLoadingNews && filteredNews.length > 0">
+          <div class="news-preview-grid">
+            <div *ngFor="let newsItem of filteredNews; let i = index" class="news-preview-card"
+              (click)="openNewsDetail(newsItem)">
+              <div class="news-preview-header">
+                <div class="news-category" [class]="'category-' + newsItem.category.toLowerCase()">
+                  {{ newsItem.category }}
+                </div>
+                <div class="news-date">{{ formatNewsDate(newsItem.date) }}</div>
+              </div>
+              <h4 class="news-preview-title">{{ newsItem.title }}</h4>
+              <p class="news-preview-excerpt">{{ getNewsExcerpt(newsItem.content, 80) }}</p>
+              <div class="news-preview-footer">
+                <span class="read-time">
+                  <i class="fas fa-clock"></i>
+                  {{ getReadTime(newsItem.content) }} min read
+                </span>
+                <span class="news-priority" [class]="'priority-' + newsItem.priority.toLowerCase()">
+                  {{ newsItem.priority }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="news-pagination" *ngIf="totalPages > 1">
+            <button class="btn-pagination" [disabled]="currentPage === 1" (click)="goToPreviousPage()">
+              <i class="fas fa-chevron-left"></i>
+              Previous
+            </button>
+
+            <div class="pagination-info">
+              <span>Page {{ currentPage }} of {{ totalPages }}</span>
+              <span class="total-items">({{ totalItems }} items)</span>
+            </div>
+
+            <button class="btn-pagination" [disabled]="currentPage === totalPages" (click)="goToNextPage()">
+              Next
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,9 @@
-import { Component, type OnInit } from "@angular/core"
+import { Component, OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
+import { FormsModule } from "@angular/forms"
 import { NgApexchartsModule } from "ng-apexcharts"
+import { DbCallingService } from "src/app/core/services/db-calling.service"
+
 import type {
   ApexAxisChartSeries,
   ApexChart,
@@ -17,12 +20,12 @@ export type ChartOptions = {
   series: ApexAxisChartSeries
   chart: ApexChart
   xaxis: ApexXAxis
-  yaxis: ApexYAxis | ApexYAxis[] // Remove optional to ensure it's always defined
+  yaxis: ApexYAxis | ApexYAxis[]
   dataLabels: ApexDataLabels
   plotOptions: ApexPlotOptions
   colors: string[]
   grid: ApexGrid
-  legend: ApexLegend // Remove optional to ensure it's always defined
+  legend: ApexLegend
 }
 
 export type PieChartOptions = {
@@ -36,11 +39,30 @@ export type PieChartOptions = {
   responsive: ApexResponsive[]
 }
 
-interface NewsItem {
+export interface NewsItem {
+  id: number
+  type: string
+  priority: string
   date: string
-  year: string
+  year: number
+  category: string
   title: string
   content: string
+  timeAgo: string
+  createdAt: string
+  monthYear: string
+  siteLocation: string
+  eventDate: string
+  notification: string
+  description?: string
+  isActive?: boolean
+}
+
+interface WardData {
+  wardName: string
+  vehicleCount: number
+  totalNetWeight: number
+  transactionDate: string
 }
 
 @Component({
@@ -48,11 +70,12 @@ interface NewsItem {
   templateUrl: "./dashboard.component.html",
   styleUrls: ["./dashboard.component.scss"],
   standalone: true,
-  imports: [CommonModule, NgApexchartsModule],
+  imports: [CommonModule, NgApexchartsModule, FormsModule],
 })
 export class DashboardComponent implements OnInit {
   isLoading = true
   isLoadingWardData = false
+  isLoadingNews = false
 
   // Data from requirements
   kanjurData = {
@@ -72,8 +95,8 @@ export class DashboardComponent implements OnInit {
 
   // Ward summary data
   wardSummary = {
-    totalWards: 12,
-    topWard: "Ward A",
+    totalWards: 0,
+    topWard: "",
   }
 
   // Chart colors matching search-report theme
@@ -84,68 +107,19 @@ export class DashboardComponent implements OnInit {
   private infoColor = "#3b82f6"
   private warningColor = "#f59e0b"
 
-  // Mock ward data for chart
-  wardData = [
-    { wardName: "Ward A", vehicles: 145, weight: 1250.5 },
-    { wardName: "Ward B", vehicles: 132, weight: 1180.3 },
-    { wardName: "Ward C", vehicles: 98, weight: 890.2 },
-    { wardName: "Ward D", vehicles: 87, weight: 765.8 },
-    { wardName: "Ward E", vehicles: 76, weight: 680.4 },
-    { wardName: "Ward F", vehicles: 65, weight: 590.1 },
-  ]
-
-  // News data
-  allNews: NewsItem[] = [
-    {
-      date: "August 2, 2025",
-      year: "2025",
-      title: "Tech Giants Unite to Build Next-Gen AI Platform",
-      content:
-        "In a collaborative push, global technology firms have come together to launch a decentralized AI development platform. This open system supports multilingual neural engines and offers customizable LLMs for enterprise and research-grade usage. Early beta access has attracted over 50,000 developers.",
-    },
-    {
-      date: "May 3, 2025",
-      year: "2025",
-      title: "DevMind IDE Revolutionizes AI-Assisted Coding",
-      content:
-        "A new AI-first Integrated Development Environment (IDE) named DevMind is making waves in the developer world. It provides intelligent code suggestions, auto-documentation, and built-in debugging powered by generative AI. Adoption is rising fast among backend and full-stack teams.",
-    },
-    {
-      date: "February 16, 2025",
-      year: "2025",
-      title: "Global Hackathon Breaks Records with 300K+ Participants",
-      content:
-        "The 2025 Global Hackathon broke all participation records, uniting engineers across 120 countries under the theme 'Code for Earth.' Winning entries included energy-aware compilers and decentralized public healthcare apps for underserved regions.",
-    },
-    {
-      date: "October 22, 2024",
-      year: "2024",
-      title: "React 19 Brings Built-in AI Coding Assistant",
-      content:
-        "React 19 introduces a native AI assistant to help developers optimize their components, improve accessibility, and debug complex state flows. The assistant integrates seamlessly with popular IDEs and cloud build tools.",
-    },
-    {
-      date: "July 20, 2024",
-      year: "2024",
-      title: "Cross-Cloud Kubernetes Platform Reshapes DevOps",
-      content:
-        "A new cross-cloud orchestration layer for Kubernetes is now allowing real-time workload shifting across AWS, Azure, and GCP. This is expected to minimize downtime and reduce infrastructure costs for hybrid-cloud environments.",
-    },
-    {
-      date: "March 28, 2024",
-      year: "2024",
-      title: "SpaceX Begins Beta for Mars Data Protocols",
-      content:
-        "In preparation for interplanetary communication, SpaceX has deployed early versions of Martian data protocols that manage 20-minute transmission delays and signal loss. Initial use will be telemetry for deep-space rovers.",
-    },
-  ]
+  // Dynamic ward data from API
+  wardData: WardData[] = []
 
   // News management
+  allNews: NewsItem[] = []
   filteredNews: NewsItem[] = []
-  availableYears: string[] = []
-  selectedYear = "all"
-  expandedNewsItems = new Set<number>()
-  newsDisplayLimit = 6
+  availableYears: number[] = []
+  selectedYear = ""
+  searchQuery = ""
+  currentPage = 1
+  pageSize = 6
+  totalItems = 0
+  totalPages = 0
 
   // Vehicle Count Pie Chart Options
   public vehicleChartOptions: PieChartOptions = {
@@ -216,11 +190,11 @@ export class DashboardComponent implements OnInit {
     series: [
       {
         name: "Vehicles",
-        data: this.wardData.map((w) => w.vehicles),
+        data: [],
       },
       {
         name: "Weight (MT)",
-        data: this.wardData.map((w) => w.weight),
+        data: [],
       },
     ],
     chart: {
@@ -267,12 +241,12 @@ export class DashboardComponent implements OnInit {
       },
     },
     xaxis: {
-      categories: this.wardData.map((w) => w.wardName),
+      categories: [],
       labels: {
         style: {
           fontSize: "12px",
           fontWeight: 500,
-          colors: Array(this.wardData.length).fill(this.primaryColor),
+          colors: [],
         },
         rotate: -45,
       },
@@ -338,11 +312,12 @@ export class DashboardComponent implements OnInit {
     },
   }
 
-  constructor() {}
+  constructor(private dbCallingService: DbCallingService) { }
 
   ngOnInit(): void {
-    // Initialize news
-    this.initializeNews()
+    // Load initial data
+    this.loadWardData()
+    this.loadNewsData()
 
     // Simulate loading
     setTimeout(() => {
@@ -350,85 +325,350 @@ export class DashboardComponent implements OnInit {
     }, 1000)
   }
 
-  initializeNews(): void {
+  loadWardData(): void {
+    this.isLoadingWardData = true
+    const currentDate = new Date()
+    const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`
+
+    const payload = {
+      WeighBridge: "",
+      FromDate: `${currentMonth}-01`,
+      ToDate: "",
+      FullDate: "",
+      WardName: "",
+      Act_Shift: "",
+      TransactionDate: `${currentMonth}-01`,
+    }
+
+    console.log("Loading ward data with payload:", payload)
+
+    this.dbCallingService.getWardwiseReport(payload).subscribe({
+      next: (response) => {
+        console.log("Ward API Response:", response)
+        if (
+          response &&
+          (response.serviceResponse === 1 || response.ServiceResponse === "Successful") &&
+          response.wardData?.length
+        ) {
+          this.wardData = response.wardData
+          this.processWardDataForChart()
+          this.calculateWardSummary()
+        } else {
+          console.log("No ward data found")
+          this.resetWardData()
+        }
+        this.isLoadingWardData = false
+      },
+      error: (error) => {
+        console.error("Ward API Error:", error)
+        this.resetWardData()
+        this.isLoadingWardData = false
+      },
+    })
+  }
+
+  processWardDataForChart(): void {
+    if (!this.wardData || this.wardData.length === 0) {
+      this.resetWardData()
+      return
+    }
+
+    // Group data by ward name and sum up vehicles and weight
+    const wardMap = new Map<string, { vehicles: number; weight: number }>()
+
+    this.wardData.forEach((item) => {
+      const wardName = item.wardName || "Unknown"
+      const vehicles = item.vehicleCount || 0
+      const weight = item.totalNetWeight || 0
+
+      if (wardMap.has(wardName)) {
+        const existing = wardMap.get(wardName)!
+        existing.vehicles += vehicles
+        existing.weight += weight
+      } else {
+        wardMap.set(wardName, { vehicles, weight })
+      }
+    })
+
+    // Convert to arrays for chart
+    const wardNames: string[] = []
+    const vehicleData: number[] = []
+    const weightData: number[] = []
+
+    wardMap.forEach((data, wardName) => {
+      wardNames.push(wardName)
+      vehicleData.push(data.vehicles)
+      weightData.push(Number(data.weight.toFixed(1)))
+    })
+
+    // Update chart options
+    this.wardChartOptions = {
+      ...this.wardChartOptions,
+      series: [
+        {
+          name: "Vehicles",
+          data: vehicleData,
+        },
+        {
+          name: "Weight (MT)",
+          data: weightData,
+        },
+      ],
+      xaxis: {
+        ...this.wardChartOptions.xaxis,
+        categories: wardNames,
+        labels: {
+          ...this.wardChartOptions.xaxis.labels,
+          style: {
+            ...this.wardChartOptions.xaxis.labels?.style,
+            colors: Array(wardNames.length).fill(this.primaryColor),
+          },
+        },
+      },
+    }
+
+    console.log("Ward chart updated with data:", { wardNames, vehicleData, weightData })
+  }
+
+  calculateWardSummary(): void {
+    if (!this.wardData || this.wardData.length === 0) {
+      this.wardSummary = { totalWards: 0, topWard: "" }
+      return
+    }
+
+    // Get unique ward names
+    const uniqueWards = new Set(this.wardData.map(item => item.wardName))
+    this.wardSummary.totalWards = uniqueWards.size
+
+    // Find top ward by weight
+    const wardTotals = new Map<string, number>()
+    this.wardData.forEach((item) => {
+      const wardName = item.wardName || "Unknown"
+      const weight = item.totalNetWeight || 0
+      wardTotals.set(wardName, (wardTotals.get(wardName) || 0) + weight)
+    })
+
+    let maxWeight = 0
+    let topWard = ""
+    wardTotals.forEach((weight, wardName) => {
+      if (weight > maxWeight) {
+        maxWeight = weight
+        topWard = wardName
+      }
+    })
+
+    this.wardSummary.topWard = topWard
+    console.log("Ward summary calculated:", this.wardSummary)
+  }
+
+  resetWardData(): void {
+    this.wardData = []
+    this.wardSummary = { totalWards: 0, topWard: "" }
+    this.wardChartOptions = {
+      ...this.wardChartOptions,
+      series: [
+        { name: "Vehicles", data: [] },
+        { name: "Weight (MT)", data: [] },
+      ],
+      xaxis: {
+        ...this.wardChartOptions.xaxis,
+        categories: [],
+      },
+    }
+  }
+
+  refreshWardData(): void {
+    this.loadWardData()
+  }
+
+  loadNewsData(): void {
+    this.isLoadingNews = true
+
+    // Create payload for news API
+    const payload = {
+      Type: "News",
+      Priority: "",
+      Date: new Date(),
+      Year: new Date().getFullYear(),
+      Category: "",
+      Title: "",
+      Content: "",
+      TimeAgo: "",
+      CreatedAt: new Date(),
+      MonthYear: "",
+      SiteLocation: "",
+      EventDate: "",
+      Notification: "",
+      PageNumber: this.currentPage,
+      PageSize: this.pageSize,
+    }
+
+    console.log("Loading news data with payload:", payload)
+
+    // this.dbCallingService.getImportantUpdates(payload).subscribe({
+    //   next: (response) => {
+    //     console.log("News API Response:", response)
+    //     if (response && response.length > 0) {
+    //       this.allNews = response
+    //       this.processNewsData()
+    //     } else {
+    //       console.log("No news data found")
+    //       this.resetNewsData()
+    //     }
+    //     this.isLoadingNews = false
+    //   },
+    //   error: (error) => {
+    //     console.error("News API Error:", error)
+    //     this.resetNewsData()
+    //     this.isLoadingNews = false
+    //   },
+    // })
+
+    // this.dbCallingService.getImportantUpdates(payload).subscribe({
+    //   next: (response: NewsItem[]) => {
+    //     console.log("News API Response:", response)
+
+    //     if (response && response.length > 0) {
+    //       this.allNews = response
+    //        this.filteredNews=[...this.allNews]
+    //     } else {
+    //       console.log("No news data found")
+    //       this.resetNewsData()
+    //     }
+    //     this.isLoadingNews = false
+    //   },
+    //   error: (error: any) => {
+    //     console.error("News API Error:", error)
+    //     this.resetNewsData()
+    //     this.isLoadingNews = false
+    //   },
+    // })
+    this.dbCallingService.getImportantUpdates(payload).subscribe({
+      next: (response: any) => {
+        console.log("News API Response:", response)
+        const newsItems = response?.data || []
+        if (newsItems.length > 0) {
+          this.allNews = newsItems
+          this.filteredNews = [...this.allNews]
+          this.processNewsData()
+        } else {
+          console.log("No news data found")
+          this.resetNewsData()
+        }
+        this.isLoadingNews = false
+      },
+      error: (error: any) => {
+        console.error("News API Error:", error)
+        this.resetNewsData()
+        this.isLoadingNews = false
+      },
+    })
+
+  }
+
+  processNewsData(): void {
     // Get available years
     this.availableYears = Array.from(new Set(this.allNews.map((news) => news.year)))
       .sort()
       .reverse()
 
-    // Initialize filtered news
-    this.filterNewsByYear("all")
+    // Apply filters and pagination
+    this.applyFiltersAndPagination()
   }
 
-  filterNewsByYear(year: string): void {
-    this.selectedYear = year
-    this.expandedNewsItems.clear()
+  applyFiltersAndPagination(): void {
+    let filtered = [...this.allNews]
 
-    if (year === "all") {
-      this.filteredNews = this.allNews.slice(0, this.newsDisplayLimit)
-    } else {
-      const yearNews = this.allNews.filter((news) => news.year === year)
-      this.filteredNews = yearNews.slice(0, this.newsDisplayLimit)
+    // Apply year filter
+    if (this.selectedYear) {
+      filtered = filtered.filter((news) => news.year.toString() === this.selectedYear)
+    }
+
+    // Apply search filter
+    if (this.searchQuery.trim()) {
+      const query = this.searchQuery.toLowerCase().trim()
+      filtered = filtered.filter(
+        (news) =>
+          news.title.toLowerCase().includes(query) ||
+          news.content.toLowerCase().includes(query) ||
+          news.category.toLowerCase().includes(query)
+      )
+    }
+
+    // Calculate pagination
+    this.totalItems = filtered.length
+    this.totalPages = Math.ceil(this.totalItems / this.pageSize)
+
+    // Apply pagination
+    const startIndex = (this.currentPage - 1) * this.pageSize
+    const endIndex = startIndex + this.pageSize
+    this.filteredNews = filtered.slice(startIndex, endIndex)
+
+    console.log("Filtered news:", {
+      total: this.totalItems,
+      pages: this.totalPages,
+      currentPage: this.currentPage,
+      filtered: this.filteredNews.length,
+    })
+  }
+
+  resetNewsData(): void {
+    this.allNews = []
+    this.filteredNews = []
+    this.availableYears = []
+    this.totalItems = 0
+    this.totalPages = 0
+    this.currentPage = 1
+  }
+
+  onSearchChange(): void {
+    this.currentPage = 1 // Reset to first page when searching
+    this.applyFiltersAndPagination()
+  }
+
+  onYearChange(): void {
+    this.currentPage = 1 // Reset to first page when changing year
+    this.applyFiltersAndPagination()
+  }
+
+  goToPreviousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--
+      this.applyFiltersAndPagination()
     }
   }
 
-  toggleNewsExpansion(index: number): void {
-    if (this.expandedNewsItems.has(index)) {
-      this.expandedNewsItems.delete(index)
-    } else {
-      this.expandedNewsItems.add(index)
+  goToNextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++
+      this.applyFiltersAndPagination()
     }
   }
 
-  getNewsContent(newsItem: NewsItem, index: number): string {
-    const isExpanded = this.expandedNewsItems.has(index)
-    if (isExpanded || newsItem.content.length <= 150) {
-      return newsItem.content
-    }
-    return newsItem.content.substring(0, 150) + "..."
+  getNewsExcerpt(content: string, maxLength: number): string {
+    if (content.length <= maxLength) return content
+    return content.substring(0, maxLength) + "..."
   }
 
-  loadMoreNews(): void {
-    const currentLength = this.filteredNews.length
-    const sourceNews =
-      this.selectedYear === "all" ? this.allNews : this.allNews.filter((news) => news.year === this.selectedYear)
-
-    const nextBatch = sourceNews.slice(currentLength, currentLength + 6)
-    this.filteredNews = [...this.filteredNews, ...nextBatch]
+  getReadTime(content: string): number {
+    const wordsPerMinute = 200
+    const wordCount = content.split(" ").length
+    return Math.ceil(wordCount / wordsPerMinute)
   }
 
-  refreshWardData(): void {
-    this.isLoadingWardData = true
+  formatNewsDate(dateStr: string): string {
+    if (!dateStr) return ""
+    const date = new Date(dateStr)
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  }
 
-    // Simulate API call
-    setTimeout(() => {
-      // Update ward data with new values (simulated)
-      this.wardData = this.wardData.map((ward) => ({
-        ...ward,
-        vehicles: ward.vehicles + Math.floor(Math.random() * 10) - 5,
-        weight: ward.weight + Math.random() * 100 - 50,
-      }))
-
-      // Update chart
-      this.wardChartOptions = {
-        ...this.wardChartOptions,
-        series: [
-          {
-            name: "Vehicles",
-            data: this.wardData.map((w) => Math.max(0, w.vehicles)),
-          },
-          {
-            name: "Weight (MT)",
-            data: this.wardData.map((w) => Math.max(0, Number(w.weight.toFixed(1)))),
-          },
-        ],
-      }
-
-      // Update ward summary
-      const topWardByWeight = this.wardData.reduce((prev, current) => (prev.weight > current.weight ? prev : current))
-      this.wardSummary.topWard = topWardByWeight.wardName
-
-      this.isLoadingWardData = false
-    }, 2000)
+  openNewsDetail(newsItem: NewsItem): void {
+    // Implement modal or navigation to detailed view
+    console.log("Opening news detail:", newsItem)
+    // You can implement a modal here or navigate to a detailed page
   }
 }

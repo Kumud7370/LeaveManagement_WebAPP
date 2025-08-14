@@ -49,6 +49,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   isExpanded = true
   isMobile = false
   activeRoute = ""
+  manualOpened = false
 
   userProfile: UserProfile = {
     name: "Rajesh Jadhav",
@@ -60,6 +61,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   navItems: NavItem[] = [
     { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
+    { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
     { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
     //{ label: "Export to Excel", route: "/export", icon: "fas fa-file-excel" },
     { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
@@ -79,7 +81,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   ]
 
   menuItems = this.navItems
-
+  private autoExpandedByHover = false
   private subscriptions: Subscription[] = [];
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
@@ -93,7 +95,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     };
     return roles[roleId] || 'Unknown';
   }
-  
+
   ngOnInit() {
     if (this.isBrowser) {
       this.checkScreenSize()
@@ -145,12 +147,28 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach((sub) => sub.unsubscribe())
   }
 
-  @HostListener("window:resize")
-  onResize() {
-    if (this.isBrowser) {
-      this.checkScreenSize()
+  // @HostListener("window:resize")
+  // onResize() {
+  //   if (this.isBrowser) {
+  //     this.checkScreenSize()
+  //   }
+  // }
+  @HostListener("window:scroll", [])
+  onScroll() {
+    // only auto-expand on scroll if user hasn't manually opened it
+    if (!this.manualOpened && !this.isExpanded && this.isSidebarInView()) {
+      this.sidebarService.expand();
+      this.autoExpandedByHover = true; // so leaving/collapse logic can be consistent
     }
   }
+
+  private isSidebarInView(): boolean {
+    const sidebarEl = document.querySelector('.sidebar');
+    if (!sidebarEl) return false;
+    const rect = sidebarEl.getBoundingClientRect();
+    return rect.top < window.innerHeight && rect.bottom >= 0;
+  }
+
   private checkScreenSize() {
     if (this.isBrowser && typeof window !== "undefined") {
       this.isMobile = window.innerWidth < 768
@@ -173,8 +191,35 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
 
+  // toggleSidebar() {
+  //   this.manualToggle = true;
+  //   this.sidebarService.toggle()
+  // }
   toggleSidebar() {
-    this.sidebarService.toggle()
+    if (this.isExpanded) {
+      // user is closing (after toggle it will be closed) => allow hover auto-open again
+      this.manualOpened = false
+      this.autoExpandedByHover = false
+    } else {
+      // user is opening (after toggle it will be open) => disable hover auto-open
+      this.manualOpened = true
+      this.autoExpandedByHover = false
+    }
+    this.sidebarService.toggle();
+  }
+  onSidebarPointerEnter() {
+    if (this.isMobile) return; // ignore mobile
+    if (!this.isExpanded && !this.manualOpened) {
+      this.autoExpandedByHover = true;
+      this.sidebarService.expand();
+    }
+  }
+  onSidebarPointerLeave() {
+    if (this.isMobile) return;
+    if (this.autoExpandedByHover && this.isExpanded) {
+      this.sidebarService.collapse();
+      this.autoExpandedByHover = false;
+    }
   }
 
   toggleSubmenu(item: NavItem) {
