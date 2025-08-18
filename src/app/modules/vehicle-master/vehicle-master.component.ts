@@ -1,686 +1,465 @@
-import { Component, ElementRef, ViewChild, OnInit } from "@angular/core"
+import { Component, ElementRef, ViewChild, OnInit, ChangeDetectorRef } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { ReactiveFormsModule, FormsModule } from "@angular/forms"
 import { AgGridModule } from "ag-grid-angular"
 import { AgGridAngular } from "ag-grid-angular"
 import { Router } from "@angular/router"
-import { FormBuilder, FormGroup, Validators } from "@angular/forms"
+import { FormBuilder, FormGroup, Validators, AbstractControl } from "@angular/forms"
 import { GridApi, ColDef, GridReadyEvent } from "ag-grid-community"
 import { MatDialog, MatDialogModule } from "@angular/material/dialog"
 import Swal from "sweetalert2"
 import moment from "moment"
 import * as XLSX from "xlsx"
-import jsPDF from "jspdf"
-import autoTable from "jspdf-autotable"
-import { BtnLogsheetViewCellRenderer } from "src/app/modules/logsheet/logsheetlist/viewlogsheet/buttonLogsheetView-cell-renderer.component"
-import { ViewlogsheetComponent } from "src/app/modules/logsheet/logsheetlist/viewlogsheet/viewlogsheet.component"
 import { HttpClientModule, HttpClient } from "@angular/common/http"
 import { environment } from "src/environments/environment"
-import { BtnPdfCellRenderer } from "src/app/modules/logsheet/logsheetlist/pdf/buttonPdf-cell-renderer.component"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
-interface LogsheetData {
-  id: number
-  IsClosed: number
-  LogsheetNumber: string
-  VehicleNumber: string
-  Ward: string
-  RouteNumber: string
-  TypeOfWaste: string
-  DriverName: string
-  CreatedOn: string
-  CreatedBy: string
-  ClosedBy: string | null
-  ClosedDestination: string | null
-  ClosedOn: string | null
-  Remark?: string
-  // NEW: Transaction fields
-  Trans_Date?: string
-  Trans_Time?: string
-  Trans_Date_UL?: string
-  Trans_Time_UL?: string
-  Gross_Weight?: string
-  Unladen_Weight?: string
-  Act_Net_Weight?: string
-  // API response fields (lowercase)
-  logsheetID?: number
-  isClosed?: number
-  logsheetNumber?: string
-  vehicleNumber?: string
+
+interface VehicleData {
+  vehicleID: number
+  vehicleNumber: string
+  vehicleType: string
+  agencyNo: number
+  agencyName?: string
+  grossWeight?: number
+  tareWeight: number
   ward?: string
-  routeNumber?: string
-  typeOfWaste?: string
-  driverName?: string
+  locationName?: string
+  isVehicleActive: number
+  remark?: string
+  createdby?: string
   createdOn?: string
-  createdBy?: string
-  closedBy?: string | null
-  closedDestination?: string | null
-  closedOn?: string | null
-  fromdate?: string
-  todate?: string
-  // NEW: Transaction fields (lowercase)
-  trans_Date?: string
-  trans_Time?: string
-  trans_Date_UL?: string
-  trans_Time_UL?: string
-  gross_Weight?: string
-  unladen_Weight?: string
-  act_Net_Weight?: string
+  updatedby?: string
+  updatedOn?: string
+  siteName?: string
+  isPrivate?: number
+  date_of_Reg?: string
+  makeofVeh?: string
+  maxCapacity?: number
+  tareWt_last_change?: string
+  tareWt_last_added?: string
+  reserved?: string
 }
 
-interface WardData {
-  WardName: string
+interface VehicleTypeData {
+  VehicleTypeID: number
+  VehicleType: string
+  IsActive?: number
+  LocationName?: string
 }
 
-interface LogsheetSearchParams {
-  LogsheetID?: number | null
-  Ward: string
-  FromDate: string
-  ToDate: string
+interface MatchVehicleData {
+  Vehicle_NO: string
+  Agency: string
+}
+
+interface VehicleSearchParams {
   UserId?: number | null
+  SiteName?: string | null
+  VehicleType?: string | null
 }
 
-interface LogsheetResponse {
-  msg: string
-  data: LogsheetData[]
+interface AddVehicleRequest {
+  VehicleNumber: string
+  VehicleType: number | string
+  AgencyNo: number
+  GrossWeight?: number
+  TareWeight?: number
+  Ward?: string
+  LocationName?: string
+  IsActive: number
+  Remark?: string
+  CreatedBy: number
 }
+
+interface VehicleResponse {
+  msg: string
+  status: string
+  data: VehicleData[]
+}
+
+interface VehicleTypeResponse {
+  msg: string
+  status: string
+  data: VehicleTypeData[]
+}
+
 @Component({
-  selector: 'app-vehicle-master',
-  imports: [CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-    AgGridModule,
-    MatDialogModule,
-    BtnLogsheetViewCellRenderer,
-    BtnPdfCellRenderer,
-    HttpClientModule,],
-  templateUrl: './vehicle-master.component.html',
-  styleUrl: './vehicle-master.component.scss'
+  selector: "app-vehicle-master",
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, AgGridModule, MatDialogModule, HttpClientModule],
+  templateUrl: "./vehicle-master.component.html",
+  styleUrl: "./vehicle-master.component.scss",
 })
 export class VehicleMasterComponent implements OnInit {
   @ViewChild("agGrid", { static: false }) agGrid!: AgGridAngular
   @ViewChild("excelexporttable") excelexporttable!: ElementRef
 
-  // Offcanvas state
-  isFiltersOpen = false
+  // Modal state
+  isAddModalOpen = false
+  isSubmitting = false
+
+  // Entry mode toggles
+  isManualVehicleEntry = true
+  isManualVehicleTypeEntry = false // Changed to false to show dropdown by default
+
+  // Filter state
   activeFilter = 9
   filterText = ""
-  lstSearchResults: any[] = []
-  lstReportData: any[] = []
-  lstFilterData: any[] = []
-  resultData: any
-  Form!: FormGroup
-  lstZone: any[] = []
-  wardList: WardData[] = []
-  lstFilteredWard: WardData[] = []
+
+  // Data arrays
+  lstSearchResults: VehicleData[] = []
+  lstReportData: VehicleData[] = []
+  vehicleList: VehicleData[] = []
+  vehicleTypesList: VehicleTypeData[] = []
+  matchVehiclesList: MatchVehicleData[] = []
+
+  // Forms
+  addVehicleForm!: FormGroup
+
+  // Grid configuration
   columnDefs: ColDef[] = []
   context: any
   gridApi!: GridApi
   defaultColDef: ColDef = {}
   public rowSelection: "single" | "multiple" = "multiple"
   components: any
-  ttlQUantity = 0
-  ttlSubQUantity = 0
-  ttlRemQantity = 0
-  tDate = ""
-  eDate = ""
+
+  // User info
   uRole = 0
   userType = 0
+  userId = 0
 
-  get f() {
-    return this.Form.controls
-  }
-  vehicleList: any[] = []
   constructor(
     private router: Router,
     private fb: FormBuilder,
     private dialog: MatDialog,
-    private http: HttpClient, private dbcallingService: DbCallingService,
+    private http: HttpClient,
+    private dbcallingService: DbCallingService,
+    private cdr: ChangeDetectorRef,
   ) {
     this.uRole = Number(sessionStorage.getItem("Role")) || 0
     this.userType = Number(sessionStorage.getItem("UserType")) || 0
-    this.components = {
-      btnLogsheetViewCellRenderer: BtnLogsheetViewCellRenderer,
-      btnPdfCellRenderer: BtnPdfCellRenderer,
-    }
+    this.userId = Number(sessionStorage.getItem("UserID")) || 0
+    this.components = {}
   }
 
   ngOnInit() {
-    const yDt = moment().subtract(5, "day").format("YYYY-MM-DD")
-    const tDt = moment().subtract(0, "day").format("YYYY-MM-DD")
-    this.Form = this.fb.group({
-      fromdate: [yDt, Validators.required],
-      todate: [tDt, Validators.required],
-      ward: [""],
-    })
-
-    //  this.fetchLogsheetData()
-
-    let obj = {
-      UserId: Number(sessionStorage.getItem("UserID")),
-    }
-    this.dbcallingService.getVehiclemasterData(obj).subscribe((res: any) => {
-      console.log("Vehicle data fetched successfully:", res)
-      if (res && res.data) {
-        this.vehicleList = res.data;
-        this.lstReportData=res.data;
-        this.lstSearchResults=res.data;
-        console.log("Vehicle data fetched successfully:", res.data)
-        this.getAGGridReady();
-      } else {
-        this.vehicleList = []
-
-      }
-    }, (error) => {
-      console.error("Error fetching vehicles:", error)
-      this.vehicleList = []
-
-    })
-
-
+    this.initializeAddVehicleForm()
+    this.loadInitialData()
   }
 
+  // TrackBy function for better performance
+  trackByVehicleType(index: number, item: VehicleTypeData): number {
+    return item.VehicleTypeID
+  }
 
-  fetchLogsheetData() {
-    if (!this.Form.valid) {
-      return
+  initializeAddVehicleForm() {
+    this.addVehicleForm = this.fb.group({
+      vehicleNumber: ["", Validators.required],
+      vehicleType: [""],
+      vehicleTypeManual: [""],
+      agencyNo: ["", [Validators.required, Validators.min(1)]],
+      grossWeight: [""],
+      tareWeight: [""],
+      ward: [""],
+      locationName: [""],
+      isActive: [1, Validators.required],
+      remark: [""],
+    })
+
+    // Set up dynamic validators
+    this.updateVehicleNumberValidators()
+    this.updateVehicleTypeValidators()
+  }
+
+  updateVehicleNumberValidators() {
+    const vehicleNumberControl = this.addVehicleForm.get("vehicleNumber")
+    if (vehicleNumberControl) {
+      if (this.isManualVehicleEntry) {
+        vehicleNumberControl.setValidators([
+          Validators.required,
+          Validators.pattern(/^[A-Z]{2}[0-9]{2}[A-Z]{1,2}[0-9]{4}$/),
+        ])
+      } else {
+        vehicleNumberControl.setValidators([Validators.required])
+      }
+      vehicleNumberControl.updateValueAndValidity()
     }
-    const url = `${environment.apiUrl}/Logsheet/getLogsheetReport`
-    // Format dates in YYYY-MM-DD
-    const formatDate = (date: any): string => {
-      if (!date) return ""
-      const d = new Date(date)
-      return moment(d).format("YYYY-MM-DD")
+  }
+
+  updateVehicleTypeValidators() {
+    const vehicleTypeControl = this.addVehicleForm.get("vehicleType")
+    const vehicleTypeManualControl = this.addVehicleForm.get("vehicleTypeManual")
+
+    if (this.isManualVehicleTypeEntry) {
+      vehicleTypeControl?.clearValidators()
+      vehicleTypeManualControl?.setValidators([Validators.required])
+    } else {
+      vehicleTypeManualControl?.clearValidators()
+      vehicleTypeControl?.setValidators([Validators.required])
     }
 
-    const payload: LogsheetSearchParams = {
-      FromDate: formatDate(this.Form.value.fromdate),
-      ToDate: formatDate(this.Form.value.todate),
-      Ward: this.Form.value.ward || "",
-      LogsheetID: null,
-      UserId: Number(sessionStorage.getItem("UserID")) || null,
+    vehicleTypeControl?.updateValueAndValidity()
+    vehicleTypeManualControl?.updateValueAndValidity()
+  }
+
+  toggleVehicleEntryMode(isManual: boolean) {
+    this.isManualVehicleEntry = isManual
+    this.addVehicleForm.get("vehicleNumber")?.setValue("")
+    this.updateVehicleNumberValidators()
+  }
+
+  toggleVehicleTypeEntryMode(isManual: boolean) {
+    this.isManualVehicleTypeEntry = isManual
+    this.addVehicleForm.get("vehicleType")?.setValue("")
+    this.addVehicleForm.get("vehicleTypeManual")?.setValue("")
+    this.updateVehicleTypeValidators()
+
+    // Force change detection
+    this.cdr.detectChanges()
+  }
+
+  getVehicleTypeControl(): AbstractControl | null {
+    return this.isManualVehicleTypeEntry
+      ? this.addVehicleForm.get("vehicleTypeManual")
+      : this.addVehicleForm.get("vehicleType")
+  }
+
+  loadInitialData() {
+    // Load vehicle types first, then other data
+    this.loadVehicleTypes().then(() => {
+      this.loadVehicleData()
+      this.loadMatchVehicles()
+    })
+  }
+
+  loadVehicleData() {
+    const searchParams: VehicleSearchParams = {
+      UserId: this.userId,
+      SiteName: null,
+      VehicleType: null,
     }
 
-    console.log("Sending payload:", payload)
-    this.http.post<LogsheetResponse>(url, payload).subscribe({
-      next: (response) => {
-        if (response && response.data) {
-          // Normalize the data to ensure consistent property names
-          const normalizedData = response.data.map((item) => ({
-            ...item,
-            // Map API response fields to component expected fields
-            id: item.logsheetID || item.id,
-            IsClosed: item.isClosed !== undefined ? item.isClosed : item.IsClosed,
-            LogsheetNumber: item.logsheetNumber || item.LogsheetNumber,
-            VehicleNumber: item.vehicleNumber || item.VehicleNumber,
-            Ward: item.ward || item.Ward,
-            RouteNumber: item.routeNumber || item.RouteNumber,
-            TypeOfWaste: item.typeOfWaste || item.TypeOfWaste,
-            DriverName: item.driverName || item.DriverName,
-            CreatedOn: item.createdOn || item.CreatedOn,
-            CreatedBy: item.createdBy || item.CreatedBy,
-            ClosedBy: item.closedBy || item.ClosedBy,
-            ClosedDestination: item.closedDestination || item.ClosedDestination,
-            ClosedOn: item.closedOn || item.ClosedOn,
-            // NEW: Map transaction fields
-            Trans_Date: item.trans_Date || item.Trans_Date,
-            Trans_Time: item.trans_Time || item.Trans_Time,
-            Trans_Date_UL: item.trans_Date_UL || item.Trans_Date_UL,
-            Trans_Time_UL: item.trans_Time_UL || item.Trans_Time_UL,
-            Gross_Weight: item.gross_Weight || item.Gross_Weight,
-            Unladen_Weight: item.unladen_Weight || item.Unladen_Weight,
-            Act_Net_Weight: item.act_Net_Weight || item.Act_Net_Weight,
-          }))
-          // IMPORTANT: Set both arrays to ensure filtering works correctly
-          this.lstSearchResults = [...normalizedData] // Master copy for filtering
-          this.lstReportData = [...normalizedData] // Display copy
-          // Reset active filter to "All" when new data is loaded
-          this.activeFilter = 9
-          console.log("Data loaded successfully:", this.lstSearchResults.length, "records")
+    this.dbcallingService.getVehiclemasterData(searchParams).subscribe({
+      next: (res: VehicleResponse) => {
+        console.log("Vehicle data fetched successfully:", res)
+        if (res && res.data) {
+          this.vehicleList = res.data
+          this.lstReportData = [...res.data]
+          this.lstSearchResults = [...res.data]
+          this.getAGGridReady()
+
+          // Update grid if it's already initialized
+          if (this.gridApi) {
+            this.gridApi.setGridOption("rowData", this.lstReportData)
+          }
         } else {
+          this.vehicleList = []
           this.lstReportData = []
           this.lstSearchResults = []
         }
       },
       error: (error) => {
-        console.error("Error fetching Logsheet data:", error)
+        console.error("Error fetching vehicles:", error)
+        this.vehicleList = []
         this.lstReportData = []
         this.lstSearchResults = []
-      },
-    })
-  }
-
-  // NEW: Method to fetch transaction details and generate PDF (same as View button logic)
-  downloadLogsheetPDF(data: LogsheetData) {
-    console.log("PDF download method called with data:", data)
-    const logsheetNumber = data.LogsheetNumber
-    const url = `${environment.apiUrl}/Report/GetTransactDetails/${logsheetNumber}`
-
-    // Show loading indicator
-    Swal.fire({
-      title: "Generating PDF...",
-      text: "Fetching transaction details",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading()
-      },
-    })
-
-    this.http.get<any>(url).subscribe({
-      next: (res) => {
-        Swal.close() // Close loading indicator
-        let mergedData: LogsheetData
-
-        if (res && res.data && res.data.length > 0) {
-          // Merge original data with transaction details
-          mergedData = {
-            ...data, // original row data
-            ...res.data[0], // transaction details from API
-            // Ensure transaction fields are properly mapped
-            Trans_Date: res.data[0].trans_Date || res.data[0].Trans_Date,
-            Trans_Time: res.data[0].trans_Time || res.data[0].Trans_Time,
-            Trans_Date_UL: res.data[0].trans_Date_UL || res.data[0].Trans_Date_UL,
-            Trans_Time_UL: res.data[0].trans_Time_UL || res.data[0].Trans_Time_UL,
-            Gross_Weight: res.data[0].gross_Weight || res.data[0].Gross_Weight,
-            Unladen_Weight: res.data[0].unladen_Weight || res.data[0].Unladen_Weight,
-            Act_Net_Weight: res.data[0].act_Net_Weight || res.data[0].Act_Net_Weight,
-          }
-          console.log("Merged data with transaction details for PDF:", mergedData)
-        } else {
-          // No transaction data found, use original data
-          console.log("No transaction data found, using original data for PDF")
-          mergedData = data
-        }
-
-        // Generate PDF with the merged data
-        this.generatePDFWithData(mergedData)
-      },
-      error: (err) => {
-        Swal.close() // Close loading indicator
-        console.error("Error fetching transaction data for PDF:", err)
-        // Show error and generate PDF with original data
         Swal.fire({
-          title: "Warning",
-          text: "Could not fetch transaction details. Generating PDF with available data.",
-          icon: "warning",
-          timer: 3000,
+          title: "Error",
+          text: "Failed to load vehicle data",
+          icon: "error",
         })
-        // Generate PDF with original data even if API fails
-        this.generatePDFWithData(data)
       },
     })
   }
 
-  // NEW: Method to generate PDF with complete data (extracted from ViewlogsheetComponent)
-  private generatePDFWithData(data: LogsheetData) {
-    // Normalize data exactly like ViewlogsheetComponent does
-    const normalizedData = this.normalizeDataForPDF(data)
+  loadVehicleTypes(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const searchParams: VehicleSearchParams = {
+        UserId: this.userId,
+      }
 
-    const doc = new jsPDF("landscape")
-    const fileName = `Logsheet_${normalizedData.LogsheetNumber || "Unknown"}_${moment().format("DDMMYYYY_HHmmss")}`
+      console.log("Loading vehicle types with params:", searchParams)
 
-    console.log(
-      "PDF Generation - Status:",
-      normalizedData.IsClosed,
-      "Is Closed:",
-      this.isLogsheetClosedForPDF(normalizedData),
-    )
+      this.http.post<VehicleTypeResponse>(`${environment.apiUrl}/Master/getvehicletypes`, searchParams).subscribe({
+        next: (res) => {
+          console.log("Vehicle types API response:", res)
 
-    // SWM MIS Header
-    autoTable(doc, {
-      body: [
-        [{ content: "SWM MIS", colSpan: 6, styles: { halign: "center", fontSize: 14, fontStyle: "bold" } }],
-        [{ content: "VEHICLE LOGSHEET", colSpan: 6, styles: { halign: "center", fontSize: 12, fontStyle: "bold" } }],
-      ],
-      theme: "grid",
-      styles: {
-        lineWidth: 0.3,
-        textColor: 0,
-        fontSize: 12,
-        halign: "center",
-        lineColor: [0, 0, 0],
-      },
-      margin: { top: 10 },
+          if (res && res.data && Array.isArray(res.data)) {
+            this.vehicleTypesList = res.data.filter((type) => type.IsActive === 1 || type.IsActive === undefined)
+            console.log("Vehicle types loaded successfully:", this.vehicleTypesList.length, "items")
+            console.log("Vehicle types data:", this.vehicleTypesList)
+
+            // Force change detection to update the UI
+            this.cdr.detectChanges()
+            resolve()
+          } else {
+            console.warn("No vehicle types data received or invalid format:", res)
+            this.vehicleTypesList = []
+            resolve()
+          }
+        },
+        error: (error) => {
+          console.error("Error fetching vehicle types:", error)
+          this.vehicleTypesList = []
+
+          // Add some mock data for testing
+          this.vehicleTypesList = [
+            { VehicleTypeID: 1, VehicleType: "MINI COMPACTOR", IsActive: 1 },
+            { VehicleTypeID: 2, VehicleType: "COMPACTOR", IsActive: 1 },
+            { VehicleTypeID: 3, VehicleType: "TIPPER", IsActive: 1 },
+            { VehicleTypeID: 4, VehicleType: "DUMPER", IsActive: 1 },
+            { VehicleTypeID: 5, VehicleType: "TRUCK", IsActive: 1 },
+          ]
+
+          console.log("Using mock vehicle types data:", this.vehicleTypesList)
+          this.cdr.detectChanges()
+
+          Swal.fire({
+            title: "Warning",
+            text: "Failed to load vehicle types from server. Using default types.",
+            icon: "warning",
+          })
+          resolve()
+        },
+      })
     })
+  }
 
-    // Section 1: Main information table
-    autoTable(doc, {
-      body: [
-        [
-          { content: "Date & Time :", styles: { fontStyle: "bold" } },
-          normalizedData.CreatedOn || "N/A",
-          { content: "", rowSpan: 4 }, // merged vertical cell
-          { content: "Name of Ward :", styles: { fontStyle: "bold" } },
-          normalizedData.Ward || "N/A",
-        ],
-        [
-          { content: "Logsheet Number :", styles: { fontStyle: "bold" } },
-          normalizedData.LogsheetNumber || "N/A",
-          { content: "Route Number :", styles: { fontStyle: "bold" } },
-          normalizedData.RouteNumber || "N/A",
-        ],
-        [
-          { content: "Type Of Waste :", styles: { fontStyle: "bold" } },
-          normalizedData.TypeOfWaste || "N/A",
-          { content: "Vehicle Number :", styles: { fontStyle: "bold" } },
-          normalizedData.VehicleNumber || "N/A",
-        ],
-        [
-          { content: "Driver's Name :", styles: { fontStyle: "bold" } },
-          normalizedData.DriverName || "N/A",
-          { content: "Status :", styles: { fontStyle: "bold" } },
-          normalizedData.IsClosed === 0 ? "Open" : normalizedData.IsClosed === 2 ? "Cancelled" : "Closed",
-        ],
-      ],
-      theme: "grid",
-      startY: doc.lastAutoTable.finalY + 2,
-      styles: {
-        fontSize: 10,
-        textColor: 0,
-        lineWidth: 0.3,
-        lineColor: [0, 0, 0],
+  loadMatchVehicles() {
+    this.http.get<any>(`${environment.apiUrl}/Master/getmatchvehicles`).subscribe({
+      next: (res) => {
+        if (res && res.data) {
+          this.matchVehiclesList = res.data
+        }
       },
-      columnStyles: {
-        0: { cellWidth: 50 },
-        1: { cellWidth: 70 },
-        2: { cellWidth: 29 },
-        3: { cellWidth: 50 },
-        4: { cellWidth: 70 },
+      error: (error) => {
+        console.error("Error fetching match vehicles:", error)
+        // Mock data for demonstration
+        this.matchVehiclesList = [
+          { Vehicle_NO: "MH01AB1234", Agency: "Agency 1" },
+          { Vehicle_NO: "MH01CD5678", Agency: "Agency 2" },
+          { Vehicle_NO: "MH01EF9012", Agency: "Agency 3" },
+        ]
       },
     })
+  }
 
-    // UPDATED: Trip Details Table - ALWAYS show in PDF, but display N/A for non-closed logsheets (same as ViewlogsheetComponent)
-    autoTable(doc, {
-      head: [
-        [
-          {
-            content: "Trip Details",
-            rowSpan: 2,
-            styles: {
-              fontStyle: "bold",
-              halign: "center",
-              valign: "middle",
-              fillColor: [240, 240, 240],
-            },
-          },
-          { content: "In Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Out Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Gross Weight", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Unladen Weight", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Actual Net Weight", styles: { fontStyle: "bold", halign: "center" } },
-        ],
-      ],
-      body: [
-        [
-          {
-            content: "Trip Details",
-            rowSpan: 2,
-            styles: {
-              fontStyle: "bold",
-              halign: "center",
-              valign: "middle",
-              fillColor: [248, 249, 250],
-            },
-          },
-          this.getPdfInTimeOfTransactForPDF(normalizedData), // Will return N/A if not closed
-          this.getPdfOutTimeOfTransactForPDF(normalizedData), // Will return N/A if not closed
-          this.formatPdfWeightForPDF(normalizedData.Gross_Weight, normalizedData), // Will return N/A if not closed
-          this.formatPdfWeightForPDF(normalizedData.Unladen_Weight, normalizedData), // Will return N/A if not closed
-          this.formatPdfWeightForPDF(normalizedData.Act_Net_Weight, normalizedData), // Will return N/A if not closed
-        ],
-      ],
-      theme: "grid",
-      startY: doc.lastAutoTable.finalY + 5,
-      styles: {
-        fontSize: 10,
-        textColor: 0,
-        lineWidth: 0.3,
-        lineColor: [0, 0, 0],
-        halign: "center",
-      },
-      headStyles: {
-        fillColor: [240, 240, 240],
-        textColor: 0,
-        fontStyle: "bold",
-      },
-      columnStyles: {
-        0: { cellWidth: 44.83 }, // Trip Details column
-        1: { cellWidth: 44.83 }, // In Time of Transact
-        2: { cellWidth: 44.83 }, // Out Time of Transact
-        3: { cellWidth: 44.83 }, // Gross Weight
-        4: { cellWidth: 44.83 }, // Unladen Weight
-        5: { cellWidth: 44.83 }, // Actual Net Weight
-      },
+  // Modal methods
+  openAddVehicleModal() {
+    this.isAddModalOpen = true
+    this.resetAddForm()
+  }
+
+  closeAddModal() {
+    this.isAddModalOpen = false
+    this.resetAddForm()
+  }
+
+  resetAddForm() {
+    this.addVehicleForm.reset({
+      vehicleNumber: "",
+      vehicleType: "",
+      vehicleTypeManual: "",
+      agencyNo: "",
+      grossWeight: "",
+      tareWeight: "",
+      ward: "",
+      locationName: "",
+      isActive: 1,
+      remark: "",
     })
-
-    // Section 3: Closure information table
-    autoTable(doc, {
-      body: [
-        [{ content: "Logsheet Closed Date & Time :", styles: { fontStyle: "bold" } }, normalizedData.ClosedOn || "N/A"],
-        [
-          { content: "Waste Processing Plant:", styles: { fontStyle: "bold" } },
-          normalizedData.ClosedDestination || "N/A",
-        ],
-        [{ content: "Signature & Stamp :", styles: { fontStyle: "bold" } }, normalizedData.ClosedBy || "N/A"],
-        [{ content: "Remark :", styles: { fontStyle: "bold" } }, normalizedData.Remark || "N/A"],
-      ],
-      theme: "grid",
-      styles: {
-        fontSize: 10,
-        textColor: 0,
-        lineWidth: 0.3,
-        lineColor: [0, 0, 0],
-      },
-      columnStyles: {
-        0: { cellWidth: 70 },
-        1: { cellWidth: 199 },
-      },
-      startY: doc.lastAutoTable.finalY + 5,
-    })
-
-    // Footer
-    const pageHeight = doc.internal.pageSize.getHeight()
-    const pageWidth = doc.internal.pageSize.getWidth()
-    doc.setFontSize(8)
-    doc.text("1 of 1", pageWidth / 2, pageHeight - 8, { align: "center" })
-
-    // Save the PDF
-    doc.save(`${fileName}.pdf`)
-    console.log(`PDF generated: ${fileName}.pdf`)
+    this.isSubmitting = false
+    this.isManualVehicleEntry = true
+    this.isManualVehicleTypeEntry = false // Default to dropdown mode
+    this.updateVehicleNumberValidators()
+    this.updateVehicleTypeValidators()
+    this.cdr.detectChanges()
   }
 
-  // Helper methods for PDF generation (copied from ViewlogsheetComponent)
-  private normalizeDataForPDF(data: any): any {
-    if (!data) return {}
-    // Create a standardized object with expected property names
-    return {
-      LogsheetNumber: data.logsheetNumber || data.LogsheetNumber || "",
-      VehicleNumber: data.vehicleNumber || data.VehicleNumber || "",
-      Ward: data.ward || data.Ward || "",
-      RouteNumber: data.routeNumber || data.RouteNumber || "",
-      TypeOfWaste: data.typeOfWaste || data.TypeOfWaste || "",
-      DriverName: data.driverName || data.DriverName || "",
-      CreatedOn: data.createdOn || data.CreatedOn || "",
-      CreatedBy: data.createdBy || data.CreatedBy || "",
-      ClosedBy: data.closedBy || data.ClosedBy || null,
-      ClosedDestination: data.closedDestination || data.ClosedDestination || null,
-      ClosedOn: data.closedOn || data.ClosedOn || null,
-      IsClosed: data.isClosed !== undefined ? data.isClosed : data.IsClosed !== undefined ? data.IsClosed : 0,
-      Remark: data.remark || data.Remark || "",
-      // Transaction fields
-      Trans_Date: data.trans_Date || data.Trans_Date || "",
-      Trans_Time: data.trans_Time || data.Trans_Time || "",
-      Trans_Date_UL: data.trans_Date_UL || data.Trans_Date_UL || "",
-      Trans_Time_UL: data.trans_Time_UL || data.Trans_Time_UL || "",
-      Gross_Weight: data.gross_Weight || data.Gross_Weight || "",
-      Unladen_Weight: data.unladen_Weight || data.Unladen_Weight || "",
-      Act_Net_Weight: data.act_Net_Weight || data.Act_Net_Weight || "",
-    }
-  }
-
-  private isLogsheetClosedForPDF(data: any): boolean {
-    return data.IsClosed === 1
-  }
-
-  // UPDATED: PDF-specific methods that match ViewlogsheetComponent exactly
-  private getPdfInTimeOfTransactForPDF(data: any): string {
-    if (data.IsClosed !== 1) {
-      return "N/A"
-    }
-    if (data.Trans_Date && data.Trans_Time) {
-      return `${data.Trans_Date} ${data.Trans_Time}`
-    }
-    return "N/A"
-  }
-
-  private getPdfOutTimeOfTransactForPDF(data: any): string {
-    if (data.IsClosed !== 1) {
-      return "N/A"
-    }
-    if (data.Trans_Date_UL && data.Trans_Time_UL) {
-      return `${data.Trans_Date_UL} ${data.Trans_Time_UL}`
-    }
-    return "N/A"
-  }
-
-  private formatPdfWeightForPDF(weight: string | number, data: any): string {
-    if (data.IsClosed !== 1) {
-      return "N/A"
-    }
-    if (!weight || weight === "N/A" || weight === "" || weight === null || weight === undefined) {
-      return "N/A"
-    }
-    // If it's already formatted with 'kg', return as is
-    if (typeof weight === "string" && weight.includes("kg")) {
-      return weight
-    }
-    // Otherwise, add 'kg' suffix
-    return `${weight} kg`
-  }
-
-  // Offcanvas methods
-  toggleFilters() {
-    this.isFiltersOpen = !this.isFiltersOpen
-  }
-
-  closeFilters() {
-    this.isFiltersOpen = false
-  }
-
-  // Get status count for summary cards - use lstSearchResults for accurate counts
-  getStatusCount(status: number): number {
-    return this.lstSearchResults.filter((item: LogsheetData) => item.IsClosed === status).length
-  }
-
-  CreateReqHandler() {
-    this.router.navigate(["/cdwaste/generatelogsheet"])
-  }
-
-  Back() {
-    this.router.navigate(["/dashboard"])
-  }
-
-  onSubmit() {
-    if (!this.Form.valid) {
-      this.Form.markAllAsTouched()
+  onAddVehicleSubmit() {
+    if (this.addVehicleForm.invalid) {
+      this.addVehicleForm.markAllAsTouched()
       return
     }
-    this.closeFilters() // Close filters panel after submission
-    console.log("Form submitted with values:", this.Form.value)
-    // Fetch new data based on form values
-    this.fetchLogsheetData()
-  }
 
-  resetFilters() {
-    const yDt = moment().subtract(5, "day").format("YYYY-MM-DD")
-    const tDt = moment().subtract(0, "day").format("YYYY-MM-DD")
-    this.Form.patchValue({
-      fromdate: yDt,
-      todate: tDt,
-      ward: "",
+    this.isSubmitting = true
+    const formValue = this.addVehicleForm.value
+
+    // Determine vehicle type value
+    let vehicleTypeValue: number | string
+    if (this.isManualVehicleTypeEntry) {
+      vehicleTypeValue = formValue.vehicleTypeManual?.toUpperCase() || ""
+    } else {
+      vehicleTypeValue = Number.parseInt(formValue.vehicleType)
+    }
+
+    const addVehicleRequest: AddVehicleRequest = {
+      VehicleNumber: formValue.vehicleNumber.toUpperCase(),
+      VehicleType: vehicleTypeValue,
+      AgencyNo: Number.parseInt(formValue.agencyNo),
+      GrossWeight: formValue.grossWeight ? Number.parseFloat(formValue.grossWeight) : undefined,
+      TareWeight: formValue.tareWeight ? Number.parseFloat(formValue.tareWeight) : undefined,
+      Ward: formValue.ward || undefined,
+      LocationName: formValue.locationName || undefined,
+      IsActive: Number.parseInt(formValue.isActive),
+      Remark: formValue.remark || undefined,
+      CreatedBy: this.userId,
+    }
+
+    console.log("Submitting vehicle data:", addVehicleRequest)
+
+    this.http.post<any>(`${environment.apiUrl}/Master/addvehicle`, addVehicleRequest).subscribe({
+      next: (response) => {
+        console.log("Vehicle added successfully:", response)
+        this.isSubmitting = false
+
+        if (response && response.status === "success") {
+          Swal.fire({
+            title: "Success!",
+            text: "Vehicle added successfully",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+          })
+
+          this.closeAddModal()
+          // Automatically refresh the data to show the new vehicle
+          this.loadVehicleData()
+        } else {
+          Swal.fire({
+            title: "Error",
+            text: response?.msg || "Failed to add vehicle",
+            icon: "error",
+          })
+        }
+      },
+      error: (error) => {
+        console.error("Error adding vehicle:", error)
+        this.isSubmitting = false
+
+        let errorMessage = "Failed to add vehicle. Please try again."
+        if (error.error && error.error.msg) {
+          errorMessage = error.error.msg
+        } else if (error.message) {
+          errorMessage = error.message
+        }
+
+        Swal.fire({
+          title: "Error",
+          text: errorMessage,
+          icon: "error",
+        })
+      },
     })
   }
 
-  QuantityValuechange(val: any): void {
-    const ttl = this.ttlRemQantity
-    const qua = Number(val.target.value)
-    if (qua > ttl) {
-      this.Form.patchValue({
-        quantity: "5",
-      })
-      Swal.fire({
-        text: "Quantity exceed!",
-        icon: "warning",
-      })
-    } else if (qua < 5) {
-      this.Form.patchValue({
-        quantity: "5",
-      })
-      Swal.fire({
-        text: "Quantity should be greater than or equal to 5!",
-        icon: "warning",
-      })
-    }
-  }
-
-  OnGridReady(params: GridReadyEvent) {
-    this.gridApi = params.api
-    this.gridApi.sizeColumnsToFit()
-  }
-
-  headerHeightSetter(params: any) {
-    var padding = 20
-    var height = headerHeightGetter() + padding
-    if (this.gridApi) {
-      this.gridApi.setGridOption("headerHeight", height)
-      this.gridApi.resetRowHeights()
-    }
-  }
-
+  // Grid methods
   getAGGridReady() {
     this.columnDefs = [
-      // {
-      //   headerName: "View",
-      //   field: "id",
-      //   cellRenderer: BtnLogsheetViewCellRenderer,
-      //   width: 90,
-      //   minWidth: 90,
-      //   maxWidth: 90,
-      //   flex: 0,
-      //   sortable: false,
-      //   filter: false,
-      //   resizable: false,
-      //   suppressMovable: true,
-      //   cellStyle: {
-      //     display: "flex",
-      //     alignItems: "center",
-      //     justifyContent: "center",
-      //     padding: "0",
-      //   },
-      // },
-      // {
-      //   headerName: "PDF",
-      //   field: "id",
-      //   cellRenderer: BtnPdfCellRenderer,
-      //   width: 90,
-      //   minWidth: 90,
-      //   maxWidth: 90,
-      //   flex: 0,
-      //   sortable: false,
-      //   filter: false,
-      //   resizable: false,
-      //   suppressMovable: true,
-      //   cellStyle: {
-      //     display: "flex",
-      //     alignItems: "center",
-      //     justifyContent: "center",
-      //     padding: "0",
-      //   },
-      // },
       {
         headerName: "Status",
         field: "isVehicleActive",
-        valueFormatter: (params) =>
-          Number(params.value) === 0 ? "No" : "Yes",
+        valueFormatter: (params) => (Number(params.value) === 0 ? "Inactive" : "Active"),
         cellStyle: (params: any) => {
           const baseStyle = {
             display: "flex",
@@ -692,22 +471,16 @@ export class VehicleMasterComponent implements OnInit {
             return { ...baseStyle, color: "#f59e0b" }
           } else if (params.value === 1) {
             return { ...baseStyle, color: "#10b981" }
-          } else if (params.value === 2) {
-            return { ...baseStyle, color: "#ef4444" }
           }
           return { ...baseStyle, color: "#6b7280", fontWeight: "normal" }
         },
-      
         minWidth: 100,
-       
         flex: 0,
       },
       {
         headerName: "Vehicle Number",
         field: "vehicleNumber",
-       
         minWidth: 150,
-       
         flex: 0,
         cellStyle: {
           display: "flex",
@@ -718,9 +491,7 @@ export class VehicleMasterComponent implements OnInit {
       {
         headerName: "Vehicle Type",
         field: "vehicleType",
-       
         minWidth: 140,
-     
         flex: 0,
         cellStyle: {
           display: "flex",
@@ -728,25 +499,10 @@ export class VehicleMasterComponent implements OnInit {
           paddingLeft: "12px",
         },
       },
-      // {
-      //   headerName: "Ward",
-      //   field: "Ward",
-      //   width: 100,
-      //   minWidth: 100,
-      //   maxWidth: 100,
-      //   flex: 0,
-      //   cellStyle: {
-      //     display: "flex",
-      //     alignItems: "center",
-      //     paddingLeft: "12px",
-      //   },
-      // },
       {
         headerName: "Agency Number",
         field: "agencyNo",
-      
         minWidth: 130,
-        
         flex: 0,
         cellStyle: {
           display: "flex",
@@ -764,10 +520,47 @@ export class VehicleMasterComponent implements OnInit {
           alignItems: "center",
           paddingLeft: "12px",
         },
+        valueFormatter: (params) => params.value || "N/A",
       },
       {
-        headerName: "VehicleId",
-        field: "vehicleID",
+        headerName: "Gross Weight (kg)",
+        field: "grossWeight",
+        minWidth: 140,
+        flex: 0,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
+        valueFormatter: (params) => (params.value ? `${params.value} kg` : "N/A"),
+      },
+      {
+        headerName: "Tare Weight (kg)",
+        field: "tareWeight",
+        minWidth: 140,
+        flex: 0,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
+        valueFormatter: (params) => (params.value ? `${params.value} kg` : "N/A"),
+      },
+      {
+        headerName: "Ward",
+        field: "ward",
+        minWidth: 100,
+        flex: 0,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
+        valueFormatter: (params) => params.value || "N/A",
+      },
+      {
+        headerName: "Location",
+        field: "locationName",
         minWidth: 140,
         flex: 1,
         cellStyle: {
@@ -775,22 +568,22 @@ export class VehicleMasterComponent implements OnInit {
           alignItems: "center",
           paddingLeft: "12px",
         },
+        valueFormatter: (params) => params.value || "N/A",
+      },
+      {
+        headerName: "Vehicle ID",
+        field: "vehicleID",
+        minWidth: 100,
+        flex: 0,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
         hide: true, // Hide this column by default
       },
-      // {
-      //   headerName: "Created On",
-      //   field: "CreatedOn",
-      //   width: 160,
-      //   minWidth: 160,
-      //   maxWidth: 160,
-      //   flex: 0,
-      //   cellStyle: {
-      //     display: "flex",
-      //     alignItems: "center",
-      //     paddingLeft: "12px",
-      //   },
-      // },
     ]
+
     this.context = { componentParent: this }
     this.defaultColDef = {
       sortable: true,
@@ -804,6 +597,20 @@ export class VehicleMasterComponent implements OnInit {
     }
   }
 
+  OnGridReady(params: GridReadyEvent) {
+    this.gridApi = params.api
+    this.gridApi.sizeColumnsToFit()
+  }
+
+  headerHeightSetter(params: any) {
+    var padding = 20
+    var height = headerHeightGetter() + padding
+    if (this.gridApi) {
+      this.gridApi.setGridOption("headerHeight", height)
+      this.gridApi.resetRowHeights()
+    }
+  }
+
   onFilterTextBoxChanged() {
     if (this.gridApi) {
       const filterValue = (document.getElementById("filter-text-box") as HTMLInputElement)?.value || ""
@@ -814,180 +621,57 @@ export class VehicleMasterComponent implements OnInit {
   FilterData(id: number) {
     this.activeFilter = id
     console.log("Filtering data with id:", id, "Available records:", this.lstSearchResults.length)
+
     if (id === 9) {
       // Show all data
       this.lstReportData = [...this.lstSearchResults]
       console.log("Showing all records:", this.lstReportData.length)
     } else {
       // Filter by status
-      this.lstReportData = this.lstSearchResults.filter((f: any) => f.isVehicleActive === id)
+      this.lstReportData = this.lstSearchResults.filter((f: VehicleData) => f.isVehicleActive === id)
       console.log("Filtered records for status", id, ":", this.lstReportData.length)
     }
+
     // Force grid to refresh
     if (this.gridApi) {
       this.gridApi.setGridOption("rowData", this.lstReportData)
     }
   }
 
-  // UPDATED: Method to open ViewLogsheet dialog with transaction data
-  viewLogsheet(data: LogsheetData) {
-    const dialogRef = this.dialog.open(ViewlogsheetComponent, {
-      width: "80%",
-      maxWidth: "1200px",
-      data: data,
-      disableClose: false,
-    })
-    dialogRef.afterClosed().subscribe((result) => {
-      console.log("Dialog closed", result)
-    })
+  // Get status count for summary cards
+  getStatusCount(status: number): number {
+    return this.lstSearchResults.filter((item: VehicleData) => item.isVehicleActive === status).length
   }
 
-  lstExelData: any[] = []
+  // Navigation methods
+  Back() {
+    this.router.navigate(["/dashboard"])
+  }
+
+  // Export method
   download() {
-    this.lstExelData = []
-    this.lstExelData = this.lstReportData.map((v: LogsheetData, i: number) => ({
+    const excelData = this.lstReportData.map((v: VehicleData, i: number) => ({
       "Sr No": i + 1,
-      Status: v.IsClosed === 0 ? "Open" : Number(v.IsClosed) === 2 ? "Cancelled" : "Closed",
-      "Logsheet Number": v.LogsheetNumber,
-      "Vehicle Number": v.VehicleNumber,
-      Ward: v.Ward,
-      "Route Number": v.RouteNumber,
-      "Type Of Waste": v.TypeOfWaste,
-      "Driver Name": v.DriverName,
-      "Created By": v.CreatedBy,
-      "Created On": v.CreatedOn,
-      "Closed By": v.ClosedBy,
-      "Closed Destination": v.ClosedDestination,
-      "Closed On": v.ClosedOn,
-      // NEW: Include transaction data in Excel export
-      "In Time of Transact": v.Trans_Date && v.Trans_Time ? `${v.Trans_Date} ${v.Trans_Time}` : "N/A",
-      "Out Time of Transact": v.Trans_Date_UL && v.Trans_Time_UL ? `${v.Trans_Date_UL} ${v.Trans_Time_UL}` : "N/A",
-      "Gross Weight": v.Gross_Weight || "N/A",
-      "Unladen Weight": v.Unladen_Weight || "N/A",
-      "Actual Net Weight": v.Act_Net_Weight || "N/A",
+      Status: v.isVehicleActive === 0 ? "Inactive" : "Active",
+      "Vehicle Number": v.vehicleNumber,
+      "Vehicle Type": v.vehicleType,
+      "Agency Number": v.agencyNo,
+      "Agency Name": v.agencyName || "N/A",
+      "Gross Weight": v.grossWeight ? `${v.grossWeight} kg` : "N/A",
+      "Tare Weight": v.tareWeight ? `${v.tareWeight} kg` : "N/A",
+      Ward: v.ward || "N/A",
+      Location: v.locationName || "N/A",
+      Remark: v.remark || "N/A",
+      "Created On": v.createdOn || "N/A",
+      "Created By": v.createdby || "N/A",
     }))
-    const fileName = "LogsheetReport_" + moment(new Date()).format("DDMMYYYY") + ".xlsx"
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.lstExelData)
+
+    const fileName = "VehicleMaster_" + moment(new Date()).format("DDMMYYYY") + ".xlsx"
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(excelData)
     const wb: XLSX.WorkBook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
     XLSX.writeFile(wb, fileName)
   }
-
-  // UPDATED: Method to fetch transaction details and then open dialog
-  viewLogsheetDetails(data: LogsheetData) {
-    console.log("View method called with data:", data)
-    const logsheetNumber = data.LogsheetNumber
-    const url = `${environment.apiUrl}/Report/GetTransactDetails/${logsheetNumber}`
-
-    // Show loading indicator
-    Swal.fire({
-      title: "Loading...",
-      text: "Fetching transaction details",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading()
-      },
-    })
-
-    this.http.get<any>(url).subscribe({
-      next: (res) => {
-        Swal.close() // Close loading indicator
-        if (res && res.data && res.data.length > 0) {
-          // Merge original data with transaction details
-          const mergedData = {
-            ...data, // original row data
-            ...res.data[0], // transaction details from API
-            // Ensure transaction fields are properly mapped
-            Trans_Date: res.data[0].trans_Date || res.data[0].Trans_Date,
-            Trans_Time: res.data[0].trans_Time || res.data[0].Trans_Time,
-            Trans_Date_UL: res.data[0].trans_Date_UL || res.data[0].Trans_Date_UL,
-            Trans_Time_UL: res.data[0].trans_Time_UL || res.data[0].Trans_Time_UL,
-            Gross_Weight: res.data[0].gross_Weight || res.data[0].Gross_Weight,
-            Unladen_Weight: res.data[0].unladen_Weight || res.data[0].Unladen_Weight,
-            Act_Net_Weight: res.data[0].act_Net_Weight || res.data[0].Act_Net_Weight,
-          }
-          console.log("Merged data with transaction details:", mergedData)
-          // Open dialog with merged data
-          const dialogRef = this.dialog.open(ViewlogsheetComponent, {
-            width: "90%",
-            maxWidth: "1200px",
-            height: "90%",
-            data: mergedData, // Pass merged data instead of original data
-            disableClose: false,
-            panelClass: "custom-dialog-container",
-          })
-          dialogRef.afterClosed().subscribe((result) => {
-            console.log("Dialog closed", result)
-          })
-        } else {
-          // No transaction data found, open dialog with original data
-          console.log("No transaction data found, opening with original data")
-          const dialogRef = this.dialog.open(ViewlogsheetComponent, {
-            width: "90%",
-            maxWidth: "1200px",
-            height: "90%",
-            data: data,
-            disableClose: false,
-            panelClass: "custom-dialog-container",
-          })
-          dialogRef.afterClosed().subscribe((result) => {
-            console.log("Dialog closed", result)
-          })
-        }
-      },
-      error: (err) => {
-        Swal.close() // Close loading indicator
-        console.error("Error fetching transaction data:", err)
-        // Show error and open dialog with original data
-        Swal.fire({
-          title: "Warning",
-          text: "Could not fetch transaction details. Showing basic logsheet information.",
-          icon: "warning",
-          timer: 3000,
-        })
-        // Open dialog with original data even if API fails
-        const dialogRef = this.dialog.open(ViewlogsheetComponent, {
-          width: "90%",
-          maxWidth: "1200px",
-          height: "90%",
-          data: data,
-          disableClose: false,
-          panelClass: "custom-dialog-container",
-        })
-        dialogRef.afterClosed().subscribe((result) => {
-          console.log("Dialog closed", result)
-        })
-      },
-    })
-  }
-}
-
-function dateComparator(date1: string, date2: string): number {
-  var date1Number = _monthToNum(date1)
-  var date2Number = _monthToNum(date2)
-  if (date1Number === null && date2Number === null) {
-    return 0
-  }
-  if (date1Number === null) {
-    return -1
-  }
-  if (date2Number === null) {
-    return 1
-  }
-  return date1Number - date2Number
-}
-
-// HELPER FOR DATE COMPARISON
-function _monthToNum(date: string): number | null {
-  if (date === undefined || date === null || date.length !== 10) {
-    return null
-  }
-  var yearNumber = date.substring(6, 10)
-  var monthNumber = date.substring(3, 5)
-  var dayNumber = date.substring(0, 2)
-  var result = Number(yearNumber) * 10000 + Number(monthNumber) * 100 + Number(dayNumber)
-  // 29/08/2004 => 20040829
-  return result
 }
 
 function headerHeightGetter(): number {
@@ -998,4 +682,3 @@ function headerHeightGetter(): number {
   var tallestHeaderTextHeight = Math.max(...clientHeights)
   return tallestHeaderTextHeight
 }
-

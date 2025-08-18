@@ -451,9 +451,9 @@ $transition-speed: 0.2s;
       .nav-indicator {
         position: absolute;
         left: 0;
-        top: 50%;
+        // top: 25%;
         transform: translateY(-50%) scaleY(0);
-        width: 4px;
+        width: 5px;
         height: 24px;
         background: linear-gradient(135deg, #3b82f6, #9333ea);
         border-radius: 0 2px 2px 0;
