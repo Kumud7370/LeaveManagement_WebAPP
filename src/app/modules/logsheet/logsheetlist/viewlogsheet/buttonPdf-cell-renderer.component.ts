@@ -101,6 +101,7 @@ export class BtnPdfCellRenderer implements ICellRendererAngularComp {
       RouteNumber: data.routeNumber || data.RouteNumber || "",
       TypeOfWaste: data.typeOfWaste || data.TypeOfWaste || "",
       DriverName: data.driverName || data.DriverName || "",
+      CleanerName: data.cleanerName || data.CleanerName || "",
       CreatedOn: data.createdOn || data.CreatedOn || "",
       CreatedBy: data.createdBy || data.CreatedBy || "",
       ClosedBy: data.closedBy || data.ClosedBy || null,

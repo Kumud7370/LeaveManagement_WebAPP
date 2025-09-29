@@ -90,6 +90,13 @@ export const routes: Routes = [
           import("./modules/vehicle-master/vehicle-master.component").then((m) => m.VehicleMasterComponent),
         data: { breadcrumb: "Vehicle List" },
       },
+
+      {
+        path: "agencylist",
+        loadComponent: () =>
+          import("./modules/agency-master/agency-master.component").then((m) => m.AgencyMasterComponent),
+        data: { breadcrumb: "Agency List" },
+      },
     ],
   },
   { path: "**", redirectTo: "" },

@@ -40,8 +40,8 @@
                 <div class="select-wrapper">
                   <select formControlName="vehicleno" id="vehicleno" class="form-control">
                     <option value="">Select Vehicle</option>
-                    <option *ngFor="let vehicle of vehiclesFilteredList" [value]="vehicle.veh_Num">
-                      {{ vehicle.veh_Num }}
+                    <option *ngFor="let vehicle of vehiclesFilteredList" [value]="vehicle.vehicleNumber">
+                      {{ vehicle.vehicleNumber }}
                     </option>
                   </select>
                   <i class="fas fa-chevron-down select-icon"></i>
@@ -65,6 +65,39 @@
               <div *ngIf="f['drivername'].touched && f['drivername'].invalid" class="error-message">
                 <i class="fas fa-exclamation-circle"></i>
                 <span *ngIf="f['drivername'].errors?.['required']">Driver Name is required.</span>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="drivername">Cleaner Name <span class="required">*</span></label>
+              <div class="input-field-container">
+                <div class="input-wrapper">
+                  <input formControlName="cleanername" id="cleanername" type="text" class="form-control"
+                    placeholder="Enter driver name" />
+                  <i class="fas fa-user input-icon"></i>
+                </div>
+              </div>
+              <div *ngIf="f['cleanername'].touched && f['cleanername'].invalid" class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <span *ngIf="f['cleanername'].errors?.['required']">Cleaner Name is required.</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="vehicleno">Dumping Site<span class="required">*</span></label>
+              <div class="input-field-container">
+                <div class="select-wrapper">
+                  <select formControlName="dumpingsite" id="dumpingsite" class="form-control">
+                    <option value="">Select Dumping Site</option>
+                    <option *ngFor="let l of dumpingSiteLocations" [value]="l.siteName">
+                      {{ l.siteDescription }}
+                    </option>
+                  </select>
+                  <i class="fas fa-chevron-down select-icon"></i>
+                </div>
+              </div>
+              <div *ngIf="f['dumpingsite'].touched && f['dumpingsite'].invalid" class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <span *ngIf="f['dumpingsite'].errors?.['required']">Dumping site is required.</span>
               </div>
             </div>
           </div>
@@ -117,8 +150,8 @@
                 <div class="select-wrapper">
                   <select formControlName="typeofwaste" id="typeofwaste" class="form-control">
                     <option value="">Select Waste Type</option>
-                    <option *ngFor="let waste of wasteTypeList" [value]="waste.wasteType || waste.WasteType">
-                      {{ waste.wasteType || waste.WasteType }}
+                    <option *ngFor="let waste of wasteTypeList" [value]="waste.wasteType || waste.wasteType">
+                      {{ waste.wasteType || waste.wasteType }}
                     </option>
                   </select>
                   <i class="fas fa-chevron-down select-icon"></i>

@@ -66,6 +66,15 @@ export class DbCallingService {
     );
   }
 
+  GetWBTripSummary(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/dashboard/getwbtripsummary`, data).pipe(
+      catchError(error => {
+        console.error('Error fetching dashboard data', error);
+        return of({ VehicleData: [] }); // fallback to empty array on error
+      })
+    );
+  }
+
   getVehicles(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/vehicles/list`, data).pipe(
       catchError(error => {
@@ -74,9 +83,16 @@ export class DbCallingService {
       })
     );
   }
-
-  getWards(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/wards/list`).pipe(
+  getVehicleTypes(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Master/getvehicletypes`, data).pipe(
+      catchError(error => {
+        console.error('Error fetching vehicle data', error);
+        return of({ VehicleData: [] }); // fallback to empty array on error
+      })
+    );
+  }
+  getWards(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Master/getAllWards`, data).pipe(
       catchError(error => {
         console.error('Error fetching ward data', error);
         return of({ WardData: [] });
@@ -102,6 +118,30 @@ export class DbCallingService {
     );
   }
 
+  GetAgencies(obj: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Master/GetAgencies`, obj).pipe(
+      catchError(error => {
+        console.error('Error generating logsheet', error);
+        return of(null);
+      })
+    );
+  }
+  GetSiteLocations(obj: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Master/GetSiteLocations`, obj).pipe(
+      catchError(error => {
+        console.error('Error generating logsheet', error);
+        return of(null);
+      })
+    );
+  }
+  GetDumpingSiteLocations(obj: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/logsheet/GetDumpingSiteLocations`, obj).pipe(
+      catchError(error => {
+        console.error('Error generating logsheet', error);
+        return of(null);
+      })
+    );
+  }
   generateLogsheet(obj: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/logsheet/generate`, obj).pipe(
       catchError(error => {
@@ -110,7 +150,14 @@ export class DbCallingService {
       })
     );
   }
-
+  GetLogsheetReport(obj: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/logsheet/getLogsheetReport`, obj).pipe(
+      catchError(error => {
+        console.error('Error generating logsheet', error);
+        return of(null);
+      })
+    );
+  }
   loginUser(data: { username: string; password: string, deviceId: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/User/userWebLogin`, data).pipe(
       catchError(error => {
@@ -293,7 +340,7 @@ export class DbCallingService {
   }
 
 
-  getVehiclemasterData(data:any): Observable<any> {
+  getVehiclemasterData(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/Master/getvehicle`, data).pipe(
       catchError((error) => {
         console.error("Error while fetching vehicle list", error)
@@ -314,5 +361,31 @@ export class DbCallingService {
     );
   }
 
+  GetTripDetails(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Report/GetTripDetails`, payload).pipe(
+      catchError((error) => {
+        console.error("Error fetching TripDetail", error);
+        return of(null);
+      }),
+    );
+  }
+
+  AddAgency(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Master/addAgency`, payload).pipe(
+      catchError((error) => {
+        console.error("Error fetching TripDetail", error);
+        return of(null);
+      }),
+    );
+  }
+
+  addVehicle(vehicle: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Master/addvehicle`, vehicle).pipe(
+      catchError((error) => {
+        console.error("Error fetching TripDetail", error);
+        return of(null);
+      }),
+    );
+  }
 }
 

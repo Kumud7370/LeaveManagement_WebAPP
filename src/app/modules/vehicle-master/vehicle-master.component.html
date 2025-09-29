@@ -22,19 +22,52 @@
   <div class="add-vehicle-modal-overlay" [class.show]="isAddModalOpen" (click)="closeAddModal()"></div>
   <div class="add-vehicle-modal" [class.show]="isAddModalOpen">
     <div class="modal-header">
-      <h5 class="modal-title">Add New Vehicle</h5>
+      <h5 class="modal-title">{{modalTitle}}</h5>
       <button class="btn-close" (click)="closeAddModal()" aria-label="Close Modal">
         <i class="fas fa-times"></i>
       </button>
     </div>
     <div class="modal-body">
-      <form [formGroup]="addVehicleForm" (ngSubmit)="onAddVehicleSubmit()">
+      <form [formGroup]="addVehicleForm" (ngSubmit)="onAddVehicleSubmit()">       
+        <div class="form-row">
+          <div class="form-group">
+            <label for="siteName">Location Name</label>
+            <div class="input-wrapper">
+              <select formControlName="siteName" id="siteName" class="form-control">
+                <option value="">Select Site Name</option>
+                <option *ngFor="let l of siteLocations" [value]="l.siteName">
+                  {{ l.siteDescription }}
+                </option>
+              </select>
+            </div>
+            <div *ngIf="addVehicleForm.get('siteName')?.touched && addVehicleForm.get('siteName')?.invalid"
+            class="error-message">
+            <div *ngIf="addVehicleForm.get('siteName')?.errors?.['required']">Agency Name is required</div>            
+          </div>
+          </div>
+          <div class="form-group">
+            <label for="ward">Ward</label>
+            <div class="input-wrapper">
+              <select formControlName="ward" id="ward" class="form-control">
+                <option value="">Select Ward</option>
+                <option *ngFor="let l of wardList" [value]="l.wardName">
+                  {{ l.wardName }}
+                </option>
+              </select>
+            </div>
+            <div *ngIf="addVehicleForm.get('ward')?.touched && addVehicleForm.get('ward')?.invalid"
+            class="error-message">
+            <div *ngIf="addVehicleForm.get('ward')?.errors?.['required']">Agency Name is required</div>            
+          </div>
+          </div>       
+        </div>
+       
         <div class="form-row">
           <div class="form-group">
             <label for="vehicleNumber">Vehicle Number *</label>
             <div class="vehicle-number-container">
               <!-- Toggle between manual entry and dropdown -->
-              <div class="input-toggle">
+              <!-- <div class="input-toggle">
                 <button type="button" class="toggle-btn" 
                         [class.active]="isManualVehicleEntry" 
                         (click)="toggleVehicleEntryMode(true)">
@@ -44,19 +77,19 @@
                         [class.active]="!isManualVehicleEntry" 
                         (click)="toggleVehicleEntryMode(false)">
                   Select from List
-                </button>
-              </div>
-              
+                </button> 
+              </div> -->
+
               <!-- Manual Entry -->
               <div *ngIf="isManualVehicleEntry" class="input-wrapper">
-                <input type="text" id="vehicleNumber" formControlName="vehicleNumber" 
-                       class="form-control" placeholder="Enter Vehicle Number (e.g., MH01AB1234)" 
-                       maxlength="20" style="text-transform: uppercase;">
+                <input type="text" id="vehicleNumber" formControlName="vehicleNumber" class="form-control"
+                  placeholder="Enter Vehicle Number (e.g., MH01AB1234)" maxlength="20"
+                  style="text-transform: uppercase;">
                 <i class="fas fa-truck"></i>
               </div>
-              
+
               <!-- Dropdown Selection -->
-              <div *ngIf="!isManualVehicleEntry" class="select-wrapper">
+              <!-- <div *ngIf="!isManualVehicleEntry" class="select-wrapper">
                 <select id="vehicleNumberSelect" formControlName="vehicleNumber" class="form-control">
                   <option value="">Select Vehicle Number</option>
                   <option *ngFor="let vehicle of matchVehiclesList" [value]="vehicle.Vehicle_NO">
@@ -64,11 +97,13 @@
                   </option>
                 </select>
                 <i class="fas fa-chevron-down"></i>
-              </div>
+              </div> -->
             </div>
-            <div *ngIf="addVehicleForm.get('vehicleNumber')?.touched && addVehicleForm.get('vehicleNumber')?.invalid" class="error-message">
+            <div *ngIf="addVehicleForm.get('vehicleNumber')?.touched && addVehicleForm.get('vehicleNumber')?.invalid"
+              class="error-message">
               <div *ngIf="addVehicleForm.get('vehicleNumber')?.errors?.['required']">Vehicle Number is required</div>
-              <div *ngIf="addVehicleForm.get('vehicleNumber')?.errors?.['pattern'] && isManualVehicleEntry">Please enter a valid vehicle number format</div>
+              <div *ngIf="addVehicleForm.get('vehicleNumber')?.errors?.['pattern'] && isManualVehicleEntry">Please enter
+                a valid vehicle number format</div>
             </div>
           </div>
 
@@ -76,7 +111,7 @@
             <label for="vehicleType">Vehicle Type *</label>
             <div class="vehicle-type-container">
               <!-- Toggle between manual entry and dropdown -->
-              <div class="input-toggle">
+              <!-- <div class="input-toggle">
                 <button type="button" class="toggle-btn" 
                         [class.active]="isManualVehicleTypeEntry" 
                         (click)="toggleVehicleTypeEntryMode(true)">
@@ -87,35 +122,34 @@
                         (click)="toggleVehicleTypeEntryMode(false)">
                   Select from List
                 </button>
-              </div>
-              
+              </div> -->
+
               <!-- Manual Entry -->
-              <div *ngIf="isManualVehicleTypeEntry" class="input-wrapper">
+              <!-- <div *ngIf="isManualVehicleTypeEntry" class="input-wrapper">
                 <input type="text" id="vehicleTypeManual" formControlName="vehicleTypeManual" 
                        class="form-control" placeholder="Enter Vehicle Type (e.g., MINI COMPACTOR)" 
                        maxlength="100" style="text-transform: uppercase;">
                 <i class="fas fa-cogs"></i>
-              </div>
-              
+              </div> -->
+
               <!-- Dropdown Selection -->
               <div *ngIf="!isManualVehicleTypeEntry" class="select-wrapper">
                 <select id="vehicleType" formControlName="vehicleType" class="form-control">
                   <option value="">Select Vehicle Type</option>
-                  <option *ngFor="let type of vehicleTypesList; trackBy: trackByVehicleType" 
-                          [value]="type.VehicleTypeID">
-                    {{type.VehicleType}}
+                  <option *ngFor="let type of vehicleTypesList" [value]="type.vehicleType">
+                    {{type.vehicleType}}
                   </option>
                 </select>
                 <i class="fas fa-chevron-down"></i>
               </div>
-              
+
               <!-- Debug info (remove in production) -->
-              <div *ngIf="!isManualVehicleTypeEntry && vehicleTypesList.length === 0" class="debug-info">
+              <!-- <div *ngIf="!isManualVehicleTypeEntry && vehicleTypesList.length === 0" class="debug-info">
                 <small style="color: #666;">Loading vehicle types...</small>
               </div>
               <div *ngIf="!isManualVehicleTypeEntry && vehicleTypesList.length > 0" class="debug-info">
                 <small style="color: #666;">{{vehicleTypesList.length}} vehicle types available</small>
-              </div>
+              </div> -->
             </div>
             <div *ngIf="getVehicleTypeControl()?.touched && getVehicleTypeControl()?.invalid" class="error-message">
               <div *ngIf="getVehicleTypeControl()?.errors?.['required']">Vehicle Type is required</div>
@@ -125,58 +159,20 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="agencyNo">Agency Number *</label>
+            <label for="agencyNo">Agency Name *</label>
             <div class="input-wrapper">
-              <input type="number" id="agencyNo" formControlName="agencyNo" class="form-control" 
-                     placeholder="Enter Agency Number" min="1">
-              <i class="fas fa-building"></i>
+              <select formControlName="agencyNo" id="agencyNo" class="form-control">
+                <option value="">Select Agency Name</option>
+                <option *ngFor="let l of agencyList" [value]="l.agencyNo">
+                  {{ l.agencyName }}
+                </option>
+              </select>
             </div>
-            <div *ngIf="addVehicleForm.get('agencyNo')?.touched && addVehicleForm.get('agencyNo')?.invalid" class="error-message">
-              <div *ngIf="addVehicleForm.get('agencyNo')?.errors?.['required']">Agency Number is required</div>
-              <div *ngIf="addVehicleForm.get('agencyNo')?.errors?.['min']">Agency Number must be greater than 0</div>
+            <div *ngIf="addVehicleForm.get('agencyNo')?.touched && addVehicleForm.get('agencyNo')?.invalid"
+              class="error-message">
+              <div *ngIf="addVehicleForm.get('agencyNo')?.errors?.['required']">Agency Name is required</div>            
             </div>
           </div>
-
-          <div class="form-group">
-            <label for="grossWeight">Gross Weight (kg)</label>
-            <div class="input-wrapper">
-              <input type="number" id="grossWeight" formControlName="grossWeight" class="form-control" 
-                     placeholder="Enter Gross Weight" step="0.01" min="0">
-              <i class="fas fa-weight"></i>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="tareWeight">Tare Weight (kg)</label>
-            <div class="input-wrapper">
-              <input type="number" id="tareWeight" formControlName="tareWeight" class="form-control" 
-                     placeholder="Enter Tare Weight" step="0.01" min="0">
-              <i class="fas fa-weight-hanging"></i>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="ward">Ward</label>
-            <div class="input-wrapper">
-              <input type="text" id="ward" formControlName="ward" class="form-control" 
-                     placeholder="Enter Ward" maxlength="100">
-              <i class="fas fa-map-marker-alt"></i>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="locationName">Location Name</label>
-            <div class="input-wrapper">
-              <input type="text" id="locationName" formControlName="locationName" class="form-control" 
-                     placeholder="Enter Location Name" maxlength="200">
-              <i class="fas fa-location-arrow"></i>
-            </div>
-          </div>
-
           <div class="form-group">
             <label for="isActive">Status *</label>
             <div class="select-wrapper">
@@ -187,13 +183,41 @@
               <i class="fas fa-chevron-down"></i>
             </div>
           </div>
+          <div class="form-group">
+            <label for="grossWeight">Gross Weight (kg) (as per RC book)</label>
+            <div class="input-wrapper">
+              <input type="number" id="grossWeight" formControlName="grossWeight" class="form-control"
+                placeholder="Enter Gross Weight" step="0.01" min="0">
+              <i class="fas fa-weight"></i>
+            </div>
+            <div *ngIf="addVehicleForm.get('grossWeight')?.touched && addVehicleForm.get('grossWeight')?.invalid"
+              class="error-message">
+              <div *ngIf="addVehicleForm.get('grossWeight')?.errors?.['required']">Gross Weight is required</div>            
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="tareWeight">Tare Weight (kg) (as per RC book)</label>
+            <div class="input-wrapper">
+              <input type="number" id="tareWeight" formControlName="tareWeight" class="form-control"
+                placeholder="Enter Tare Weight" step="0.01" min="0">
+              <i class="fas fa-weight-hanging"></i>
+            </div>
+            <div *ngIf="addVehicleForm.get('tareWeight')?.touched && addVehicleForm.get('tareWeight')?.invalid"
+              class="error-message">
+              <div *ngIf="addVehicleForm.get('tareWeight')?.errors?.['required']">Tare Weight is required</div>            
+            </div>
+          </div>  
         </div>
 
+        <div class="form-row">
+                 
+        </div>
         <div class="form-group">
           <label for="remark">Remark</label>
           <div class="input-wrapper">
-            <textarea id="remark" formControlName="remark" class="form-control" 
-                      placeholder="Enter Remark" rows="3" maxlength="500"></textarea>
+            <textarea id="remark" formControlName="remark" class="form-control" placeholder="Enter Remark" rows="3"
+              maxlength="500"></textarea>
             <i class="fas fa-comment"></i>
           </div>
         </div>
@@ -253,10 +277,10 @@
       <div class="grid-container">
         <ag-grid-angular #agGrid style="width: 100%; height: 500px;" id="myGrid" class="ag-theme-alpine"
           [columnDefs]="columnDefs" [rowData]="lstReportData" [animateRows]="true" [pagination]="true"
-          [context]="context"
-          [enableCellTextSelection]="true" [suppressRowClickSelection]="true" [rowSelection]="rowSelection"
-          [defaultColDef]="defaultColDef" [components]="components" (gridReady)="OnGridReady($event)"
-          (firstDataRendered)="headerHeightSetter($event)" (columnResized)="headerHeightSetter($event)">
+          [context]="context" [enableCellTextSelection]="true" [suppressRowClickSelection]="true"
+          [rowSelection]="rowSelection" [defaultColDef]="defaultColDef" [components]="components"
+          (gridReady)="OnGridReady($event)" (firstDataRendered)="headerHeightSetter($event)"
+          (columnResized)="headerHeightSetter($event)">
         </ag-grid-angular>
       </div>
     </div>

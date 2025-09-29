@@ -61,7 +61,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   navItems: NavItem[] = [
     { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-    { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
+    // { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
     { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
     //{ label: "Export to Excel", route: "/export", icon: "fas fa-file-excel" },
     { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
@@ -79,6 +79,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     { label: "Billing Report", route: "/billing-report", icon: "fas fa-file-invoice-dollar" },
     { label: "Verification", route: "/verifications", icon: "fas fa-check-circle" },
     { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
+    { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
   ]
 
   menuItems = this.navItems
@@ -119,6 +120,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     const storedUsername = localStorage.getItem('username');
     const storedRole = localStorage.getItem('role');
+    const uRoleName = sessionStorage.getItem('RoleName');
 
     if (storedUsername) {
       this.userProfile.name = storedUsername;
@@ -131,12 +133,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.activeRoute = this.router.url;
 
     // 🌟 Hide modules based on username
-    if (storedUsername === 'SE-01' || storedUsername === 'AE-01') {
-      this.menuItems = this.navItems.filter(item => item.label !== 'Billing Report');
-    } else if (storedUsername === 'CO-01') {
-      this.menuItems = this.navItems.filter(item => item.label !== 'Verification');
-    } else if (storedUsername?.toLowerCase() === 'admin') {
-      this.menuItems = this.navItems.filter(item => item.label !== 'Billing Report' && item.label !== 'Verification');
+    if (uRoleName === 'SE' || uRoleName === 'AE') {
+      this.menuItems = this.navItems.filter(item => item.label !== 'Billing Report' && item.label !== 'Vehicles' && item.label !== 'Agency' && item.label !== 'Dashboard Overview');
+    } else if (uRoleName === 'CO') {
+      this.menuItems = this.navItems.filter(item => item.label !== 'Verification' && item.label !== 'Vehicles' && item.label !== 'Agency' && item.label !== 'Dashboard Overview');
+    } else if (uRoleName?.toLowerCase() === 'admin' || uRoleName?.toLowerCase() === 'generator') {
+      this.menuItems = this.navItems.filter(item => item.label !== 'Billing Report' && item.label !== 'Verification' && item.label !== 'Dashboard Overview');
     } else {
       this.menuItems = this.navItems;
     }

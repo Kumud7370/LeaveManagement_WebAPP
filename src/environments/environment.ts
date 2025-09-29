@@ -1,4 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5287/api'
+ apiUrl: 'https://swm.mcgm.gov.in/swmmsiwebapi/api'
+//  apiUrl: 'http://localhost:5287/swmmsiwebapi/api'
 };

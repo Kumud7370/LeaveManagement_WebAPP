@@ -14,74 +14,9 @@ import { HttpClientModule, HttpClient } from "@angular/common/http"
 import { environment } from "src/environments/environment"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
 
-interface VehicleData {
-  vehicleID: number
-  vehicleNumber: string
-  vehicleType: string
-  agencyNo: number
-  agencyName?: string
-  grossWeight?: number
-  tareWeight: number
-  ward?: string
-  locationName?: string
-  isVehicleActive: number
-  remark?: string
-  createdby?: string
-  createdOn?: string
-  updatedby?: string
-  updatedOn?: string
-  siteName?: string
-  isPrivate?: number
-  date_of_Reg?: string
-  makeofVeh?: string
-  maxCapacity?: number
-  tareWt_last_change?: string
-  tareWt_last_added?: string
-  reserved?: string
-}
 
-interface VehicleTypeData {
-  VehicleTypeID: number
-  VehicleType: string
-  IsActive?: number
-  LocationName?: string
-}
 
-interface MatchVehicleData {
-  Vehicle_NO: string
-  Agency: string
-}
 
-interface VehicleSearchParams {
-  UserId?: number | null
-  SiteName?: string | null
-  VehicleType?: string | null
-}
-
-interface AddVehicleRequest {
-  VehicleNumber: string
-  VehicleType: number | string
-  AgencyNo: number
-  GrossWeight?: number
-  TareWeight?: number
-  Ward?: string
-  LocationName?: string
-  IsActive: number
-  Remark?: string
-  CreatedBy: number
-}
-
-interface VehicleResponse {
-  msg: string
-  status: string
-  data: VehicleData[]
-}
-
-interface VehicleTypeResponse {
-  msg: string
-  status: string
-  data: VehicleTypeData[]
-}
 
 @Component({
   selector: "app-vehicle-master",
@@ -106,12 +41,15 @@ export class VehicleMasterComponent implements OnInit {
   filterText = ""
 
   // Data arrays
-  lstSearchResults: VehicleData[] = []
-  lstReportData: VehicleData[] = []
-  vehicleList: VehicleData[] = []
-  vehicleTypesList: VehicleTypeData[] = []
-  matchVehiclesList: MatchVehicleData[] = []
+  lstSearchResults: any[] = []
+  lstReportData: any[] = []
+  vehicleList: any[] = []
 
+  matchVehiclesList: any[] = []
+  siteLocations: any[] = []
+  vehicleTypesList: any[] = []
+  agencyList: any[] = []
+  wardList: any[] = []
   // Forms
   addVehicleForm!: FormGroup
 
@@ -127,7 +65,10 @@ export class VehicleMasterComponent implements OnInit {
   uRole = 0
   userType = 0
   userId = 0
-
+  userSiteName = "";
+  editMode = false;
+  selectedVehicleId: number | null = null;
+  modalTitle = 'Add New Vehicle';
   constructor(
     private router: Router,
     private fb: FormBuilder,
@@ -139,6 +80,7 @@ export class VehicleMasterComponent implements OnInit {
     this.uRole = Number(sessionStorage.getItem("Role")) || 0
     this.userType = Number(sessionStorage.getItem("UserType")) || 0
     this.userId = Number(sessionStorage.getItem("UserID")) || 0
+    this.userSiteName=String(sessionStorage.getItem("SiteName")) || "";
     this.components = {}
   }
 
@@ -148,20 +90,19 @@ export class VehicleMasterComponent implements OnInit {
   }
 
   // TrackBy function for better performance
-  trackByVehicleType(index: number, item: VehicleTypeData): number {
+  trackByVehicleType(index: number, item: any): number {
     return item.VehicleTypeID
   }
 
   initializeAddVehicleForm() {
     this.addVehicleForm = this.fb.group({
       vehicleNumber: ["", Validators.required],
-      vehicleType: [""],
-      vehicleTypeManual: [""],
-      agencyNo: ["", [Validators.required, Validators.min(1)]],
-      grossWeight: [""],
-      tareWeight: [""],
-      ward: [""],
-      locationName: [""],
+      vehicleType: ["", Validators.required],
+      agencyNo: ["", Validators.required],
+      grossWeight: ["", Validators.required],
+      tareWeight: ["", Validators.required],
+      ward: ["", Validators.required],
+      siteName: ["", Validators.required],
       isActive: [1, Validators.required],
       remark: [""],
     })
@@ -188,18 +129,18 @@ export class VehicleMasterComponent implements OnInit {
 
   updateVehicleTypeValidators() {
     const vehicleTypeControl = this.addVehicleForm.get("vehicleType")
-    const vehicleTypeManualControl = this.addVehicleForm.get("vehicleTypeManual")
+    // const vehicleTypeManualControl = this.addVehicleForm.get("vehicleTypeManual")
 
     if (this.isManualVehicleTypeEntry) {
       vehicleTypeControl?.clearValidators()
-      vehicleTypeManualControl?.setValidators([Validators.required])
+      // vehicleTypeManualControl?.setValidators([Validators.required])
     } else {
-      vehicleTypeManualControl?.clearValidators()
+      // vehicleTypeManualControl?.clearValidators()
       vehicleTypeControl?.setValidators([Validators.required])
     }
 
     vehicleTypeControl?.updateValueAndValidity()
-    vehicleTypeManualControl?.updateValueAndValidity()
+    // vehicleTypeManualControl?.updateValueAndValidity()
   }
 
   toggleVehicleEntryMode(isManual: boolean) {
@@ -211,7 +152,7 @@ export class VehicleMasterComponent implements OnInit {
   toggleVehicleTypeEntryMode(isManual: boolean) {
     this.isManualVehicleTypeEntry = isManual
     this.addVehicleForm.get("vehicleType")?.setValue("")
-    this.addVehicleForm.get("vehicleTypeManual")?.setValue("")
+    // this.addVehicleForm.get("vehicleTypeManual")?.setValue("")
     this.updateVehicleTypeValidators()
 
     // Force change detection
@@ -225,22 +166,59 @@ export class VehicleMasterComponent implements OnInit {
   }
 
   loadInitialData() {
+   let obj= { 
+      UserId: this.userId ,
+      SiteName:this.userSiteName ,
+    }
+    this.dbcallingService.GetSiteLocations(obj).subscribe({
+      next: (response: any) => {
+        if (response && response.data) {
+          this.siteLocations = response.data;
+
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading site locations:', error);
+      }
+    });
+    this.dbcallingService.GetAgencies(obj).subscribe({
+      next: (response: any) => {
+        if (response && response.data) {
+          this.agencyList = response.data;
+
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading site locations:', error);
+      }
+    });
+    this.dbcallingService.getWards(obj).subscribe({
+      next: (response: any) => {
+        if (response && response.data) {
+          this.wardList = response.data;
+
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading site locations:', error);
+      }
+    });
     // Load vehicle types first, then other data
     this.loadVehicleTypes().then(() => {
       this.loadVehicleData()
-      this.loadMatchVehicles()
+      //  this.loadMatchVehicles()
     })
   }
 
   loadVehicleData() {
-    const searchParams: VehicleSearchParams = {
+    const searchParams: any = {
       UserId: this.userId,
-      SiteName: null,
+      SiteName: this.userSiteName,
       VehicleType: null,
     }
 
     this.dbcallingService.getVehiclemasterData(searchParams).subscribe({
-      next: (res: VehicleResponse) => {
+      next: (res: any) => {
         console.log("Vehicle data fetched successfully:", res)
         if (res && res.data) {
           this.vehicleList = res.data
@@ -274,21 +252,20 @@ export class VehicleMasterComponent implements OnInit {
 
   loadVehicleTypes(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const searchParams: VehicleSearchParams = {
-        UserId: this.userId,
+      const searchParams = {
+        "VehicleID": null,
+        "VehicleNumber": null,
+        "UserId": String(sessionStorage.getItem("UserId")),
+        "Ward": null,
+        SiteName: String(sessionStorage.getItem("SiteName")),
       }
 
       console.log("Loading vehicle types with params:", searchParams)
-
-      this.http.post<VehicleTypeResponse>(`${environment.apiUrl}/Master/getvehicletypes`, searchParams).subscribe({
+      this.dbcallingService.getVehicleTypes(searchParams).subscribe({
         next: (res) => {
           console.log("Vehicle types API response:", res)
-
           if (res && res.data && Array.isArray(res.data)) {
-            this.vehicleTypesList = res.data.filter((type) => type.IsActive === 1 || type.IsActive === undefined)
-            console.log("Vehicle types loaded successfully:", this.vehicleTypesList.length, "items")
-            console.log("Vehicle types data:", this.vehicleTypesList)
-
+            this.vehicleTypesList = res.data;
             // Force change detection to update the UI
             this.cdr.detectChanges()
             resolve()
@@ -303,14 +280,7 @@ export class VehicleMasterComponent implements OnInit {
           this.vehicleTypesList = []
 
           // Add some mock data for testing
-          this.vehicleTypesList = [
-            { VehicleTypeID: 1, VehicleType: "MINI COMPACTOR", IsActive: 1 },
-            { VehicleTypeID: 2, VehicleType: "COMPACTOR", IsActive: 1 },
-            { VehicleTypeID: 3, VehicleType: "TIPPER", IsActive: 1 },
-            { VehicleTypeID: 4, VehicleType: "DUMPER", IsActive: 1 },
-            { VehicleTypeID: 5, VehicleType: "TRUCK", IsActive: 1 },
-          ]
-
+    
           console.log("Using mock vehicle types data:", this.vehicleTypesList)
           this.cdr.detectChanges()
 
@@ -325,34 +295,37 @@ export class VehicleMasterComponent implements OnInit {
     })
   }
 
-  loadMatchVehicles() {
-    this.http.get<any>(`${environment.apiUrl}/Master/getmatchvehicles`).subscribe({
-      next: (res) => {
-        if (res && res.data) {
-          this.matchVehiclesList = res.data
-        }
-      },
-      error: (error) => {
-        console.error("Error fetching match vehicles:", error)
-        // Mock data for demonstration
-        this.matchVehiclesList = [
-          { Vehicle_NO: "MH01AB1234", Agency: "Agency 1" },
-          { Vehicle_NO: "MH01CD5678", Agency: "Agency 2" },
-          { Vehicle_NO: "MH01EF9012", Agency: "Agency 3" },
-        ]
-      },
-    })
-  }
+  // loadMatchVehicles() {
+  //   this.http.get<any>(`${environment.apiUrl}/Master/getmatchvehicles`).subscribe({
+  //     next: (res) => {
+  //       if (res && res.data) {
+  //         this.matchVehiclesList = res.data
+  //       }
+  //     },
+  //     error: (error) => {
+  //       console.error("Error fetching match vehicles:", error)
+  //       // Mock data for demonstration
+  //       this.matchVehiclesList = [
+  //         { Vehicle_NO: "MH01AB1234", Agency: "Agency 1" },
+  //         { Vehicle_NO: "MH01CD5678", Agency: "Agency 2" },
+  //         { Vehicle_NO: "MH01EF9012", Agency: "Agency 3" },
+  //       ]
+  //     },
+  //   })
+  // }
 
   // Modal methods
   openAddVehicleModal() {
     this.isAddModalOpen = true
+    this.modalTitle = 'Add New Vehicle';
     this.resetAddForm()
   }
 
   closeAddModal() {
-    this.isAddModalOpen = false
-    this.resetAddForm()
+    this.isAddModalOpen = false;
+    this.resetAddForm();
+    this.editMode = false;
+    this.selectedVehicleId = null;
   }
 
   resetAddForm() {
@@ -364,7 +337,7 @@ export class VehicleMasterComponent implements OnInit {
       grossWeight: "",
       tareWeight: "",
       ward: "",
-      locationName: "",
+      siteName: "",
       isActive: 1,
       remark: "",
     })
@@ -376,89 +349,89 @@ export class VehicleMasterComponent implements OnInit {
     this.cdr.detectChanges()
   }
 
-  onAddVehicleSubmit() {
-    if (this.addVehicleForm.invalid) {
-      this.addVehicleForm.markAllAsTouched()
-      return
-    }
+  // onAddVehicleSubmit() {
+  //   if (this.addVehicleForm.invalid) {
+  //     this.addVehicleForm.markAllAsTouched()
+  //     return
+  //   }
 
-    this.isSubmitting = true
-    const formValue = this.addVehicleForm.value
+  //   this.isSubmitting = true
+  //   const formValue = this.addVehicleForm.value
 
-    // Determine vehicle type value
-    let vehicleTypeValue: number | string
-    if (this.isManualVehicleTypeEntry) {
-      vehicleTypeValue = formValue.vehicleTypeManual?.toUpperCase() || ""
-    } else {
-      vehicleTypeValue = Number.parseInt(formValue.vehicleType)
-    }
+  //   // Determine vehicle type value
+  //   // let vehicleTypeValue: number | string
+  //   // if (this.isManualVehicleTypeEntry) {
+  //   //   vehicleTypeValue = formValue.vehicleTypeManual?.toUpperCase() || ""
+  //   // } else {
+  //   //   vehicleTypeValue = 
+  //   // }
 
-    const addVehicleRequest: AddVehicleRequest = {
-      VehicleNumber: formValue.vehicleNumber.toUpperCase(),
-      VehicleType: vehicleTypeValue,
-      AgencyNo: Number.parseInt(formValue.agencyNo),
-      GrossWeight: formValue.grossWeight ? Number.parseFloat(formValue.grossWeight) : undefined,
-      TareWeight: formValue.tareWeight ? Number.parseFloat(formValue.tareWeight) : undefined,
-      Ward: formValue.ward || undefined,
-      LocationName: formValue.locationName || undefined,
-      IsActive: Number.parseInt(formValue.isActive),
-      Remark: formValue.remark || undefined,
-      CreatedBy: this.userId,
-    }
+  //   const addVehicleRequest: any = {
+  //     VehicleNumber: formValue.vehicleNumber.toUpperCase(),
+  //     VehicleType: formValue.vehicleType,
+  //     AgencyNo: Number(formValue.agencyNo),
+  //     GrossWeight: formValue.grossWeight ? Number.parseFloat(formValue.grossWeight) : null,
+  //     TareWeight: formValue.tareWeight ? Number.parseFloat(formValue.tareWeight) : null,
+  //     Ward: formValue.ward ,
+  //     LocationName: formValue.locationName ,
+  //     IsActive: Number(formValue.isActive),
+  //     Remark: formValue.remark || null,
+  //     CreatedBy: Number(sessionStorage.getItem("UserId")) ,
+  //   }
 
-    console.log("Submitting vehicle data:", addVehicleRequest)
+  //   console.log("Submitting vehicle data:", addVehicleRequest)
 
-    this.http.post<any>(`${environment.apiUrl}/Master/addvehicle`, addVehicleRequest).subscribe({
-      next: (response) => {
-        console.log("Vehicle added successfully:", response)
-        this.isSubmitting = false
+  //   this.http.post<any>(`${environment.apiUrl}/Master/addvehicle`, addVehicleRequest).subscribe({
+  //     next: (response) => {
+  //       console.log("Vehicle added successfully:", response)
+  //       this.isSubmitting = false
 
-        if (response && response.status === "success") {
-          Swal.fire({
-            title: "Success!",
-            text: "Vehicle added successfully",
-            icon: "success",
-            timer: 2000,
-            showConfirmButton: false,
-          })
+  //       if (response && response.status === "success") {
+  //         Swal.fire({
+  //           title: "Success!",
+  //           text: "Vehicle added successfully",
+  //           icon: "success",
+  //           timer: 2000,
+  //           showConfirmButton: false,
+  //         })
 
-          this.closeAddModal()
-          // Automatically refresh the data to show the new vehicle
-          this.loadVehicleData()
-        } else {
-          Swal.fire({
-            title: "Error",
-            text: response?.msg || "Failed to add vehicle",
-            icon: "error",
-          })
-        }
-      },
-      error: (error) => {
-        console.error("Error adding vehicle:", error)
-        this.isSubmitting = false
+  //         this.closeAddModal()
+  //         // Automatically refresh the data to show the new vehicle
+  //         this.loadVehicleData()
+  //       } else {
+  //         Swal.fire({
+  //           title: "Error",
+  //           text: response?.msg || "Failed to add vehicle",
+  //           icon: "error",
+  //         })
+  //       }
+  //     },
+  //     error: (error) => {
+  //       console.error("Error adding vehicle:", error)
+  //       this.isSubmitting = false
 
-        let errorMessage = "Failed to add vehicle. Please try again."
-        if (error.error && error.error.msg) {
-          errorMessage = error.error.msg
-        } else if (error.message) {
-          errorMessage = error.message
-        }
+  //       let errorMessage = "Failed to add vehicle. Please try again."
+  //       if (error.error && error.error.msg) {
+  //         errorMessage = error.error.msg
+  //       } else if (error.message) {
+  //         errorMessage = error.message
+  //       }
 
-        Swal.fire({
-          title: "Error",
-          text: errorMessage,
-          icon: "error",
-        })
-      },
-    })
-  }
+  //       Swal.fire({
+  //         title: "Error",
+  //         text: errorMessage,
+  //         icon: "error",
+  //       })
+  //     },
+  //   })
+  // }
 
   // Grid methods
   getAGGridReady() {
     this.columnDefs = [
       {
         headerName: "Status",
-        field: "isVehicleActive",
+        field: "isActive",
         valueFormatter: (params) => (Number(params.value) === 0 ? "Inactive" : "Active"),
         cellStyle: (params: any) => {
           const baseStyle = {
@@ -478,9 +451,33 @@ export class VehicleMasterComponent implements OnInit {
         flex: 0,
       },
       {
+        headerName: "Location",
+        field: "siteName",
+        minWidth: 100,
+        flex: 1,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
+        valueFormatter: (params) => params.value || "N/A",
+      },
+      {
+        headerName: "Ward",
+        field: "ward",
+        minWidth: 100,
+        flex: 0,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
+        valueFormatter: (params) => params.value || "N/A",
+      },
+      {
         headerName: "Vehicle Number",
         field: "vehicleNumber",
-        minWidth: 150,
+        minWidth: 120,
         flex: 0,
         cellStyle: {
           display: "flex",
@@ -491,7 +488,7 @@ export class VehicleMasterComponent implements OnInit {
       {
         headerName: "Vehicle Type",
         field: "vehicleType",
-        minWidth: 140,
+        minWidth: 100,
         flex: 0,
         cellStyle: {
           display: "flex",
@@ -509,6 +506,7 @@ export class VehicleMasterComponent implements OnInit {
           alignItems: "center",
           paddingLeft: "12px",
         },
+        hide: true, // Hide this column by default
       },
       {
         headerName: "Agency Name",
@@ -546,30 +544,8 @@ export class VehicleMasterComponent implements OnInit {
         },
         valueFormatter: (params) => (params.value ? `${params.value} kg` : "N/A"),
       },
-      {
-        headerName: "Ward",
-        field: "ward",
-        minWidth: 100,
-        flex: 0,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
-        valueFormatter: (params) => params.value || "N/A",
-      },
-      {
-        headerName: "Location",
-        field: "locationName",
-        minWidth: 140,
-        flex: 1,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
-        valueFormatter: (params) => params.value || "N/A",
-      },
+
+
       {
         headerName: "Vehicle ID",
         field: "vehicleID",
@@ -582,6 +558,25 @@ export class VehicleMasterComponent implements OnInit {
         },
         hide: true, // Hide this column by default
       },
+      {
+        headerName: "Actions",
+        minWidth: 120,
+        flex: 0,
+        cellRenderer: (params: any) => {
+          return `
+            <div class="cell-button-container">
+              <button class="btn-view" data-action="edit">
+                <i class="fa fa-edit"></i>
+                <span>Edit</span>
+              </button>
+            </div>`;
+        },
+        onCellClicked: (params: any) => {
+          if (params.event.target.dataset.action === "edit" || params.event.target.closest("button")?.dataset.action === "edit") {
+            this.openEditVehicleModal(params.data);
+          }
+        }
+      }
     ]
 
     this.context = { componentParent: this }
@@ -628,7 +623,7 @@ export class VehicleMasterComponent implements OnInit {
       console.log("Showing all records:", this.lstReportData.length)
     } else {
       // Filter by status
-      this.lstReportData = this.lstSearchResults.filter((f: VehicleData) => f.isVehicleActive === id)
+      this.lstReportData = this.lstSearchResults.filter((f: any) => f.isVehicleActive === id)
       console.log("Filtered records for status", id, ":", this.lstReportData.length)
     }
 
@@ -640,7 +635,7 @@ export class VehicleMasterComponent implements OnInit {
 
   // Get status count for summary cards
   getStatusCount(status: number): number {
-    return this.lstSearchResults.filter((item: VehicleData) => item.isVehicleActive === status).length
+    return this.lstSearchResults.filter((item: any) => item.isVehicleActive === status).length
   }
 
   // Navigation methods
@@ -650,7 +645,7 @@ export class VehicleMasterComponent implements OnInit {
 
   // Export method
   download() {
-    const excelData = this.lstReportData.map((v: VehicleData, i: number) => ({
+    const excelData = this.lstReportData.map((v: any, i: number) => ({
       "Sr No": i + 1,
       Status: v.isVehicleActive === 0 ? "Inactive" : "Active",
       "Vehicle Number": v.vehicleNumber,
@@ -660,7 +655,7 @@ export class VehicleMasterComponent implements OnInit {
       "Gross Weight": v.grossWeight ? `${v.grossWeight} kg` : "N/A",
       "Tare Weight": v.tareWeight ? `${v.tareWeight} kg` : "N/A",
       Ward: v.ward || "N/A",
-      Location: v.locationName || "N/A",
+      Location: v.siteName || "N/A",
       Remark: v.remark || "N/A",
       "Created On": v.createdOn || "N/A",
       "Created By": v.createdby || "N/A",
@@ -672,8 +667,89 @@ export class VehicleMasterComponent implements OnInit {
     XLSX.utils.book_append_sheet(wb, ws, "Sheet1")
     XLSX.writeFile(wb, fileName)
   }
-}
 
+
+  openEditVehicleModal(vehicle: any) {
+    this.isAddModalOpen = true;
+    this.editMode = true;
+    this.selectedVehicleId = vehicle.vehicleID;
+    this.modalTitle = `Update Vehicle  #${vehicle.vehicleNumber}`;
+    console.log("Editing vehicle:", vehicle);
+    this.addVehicleForm.patchValue({
+      vehicleNumber: vehicle.vehicleNumber,
+      vehicleType: vehicle.vehicleType,
+      agencyNo: String(vehicle.agencyNo),
+      grossWeight: vehicle.grossWeight,
+      tareWeight: vehicle.tareWeight,
+      ward: vehicle.ward,
+      siteName: vehicle.siteName,
+      isActive: vehicle.isActive,
+      remark: vehicle.remark,
+    });
+  }
+  onAddVehicleSubmit() {
+    if (this.addVehicleForm.invalid) {
+      this.addVehicleForm.markAllAsTouched();
+      return;
+    }
+
+    this.isSubmitting = true;
+    const formValue = this.addVehicleForm.value;
+
+    const vehicleRequest: any = {
+      VehicleID: this.selectedVehicleId,   // include for update
+      VehicleNumber: formValue.vehicleNumber.toUpperCase(),
+      VehicleType: formValue.vehicleType,
+      AgencyNo: Number(formValue.agencyNo),
+      GrossWeight: formValue.grossWeight ? Number(formValue.grossWeight) : null,
+      TareWeight: formValue.tareWeight ? Number(formValue.tareWeight) : null,
+      Ward: formValue.ward,
+      SiteName: formValue.siteName,
+      IsActive: Number(formValue.isActive),
+      Remark: formValue.remark || null,
+      CreatedBy: Number(sessionStorage.getItem("UserId")),
+    };
+
+    console.log("Submitting vehicle data:", vehicleRequest);
+
+    // Call service
+    this.dbcallingService.addVehicle(vehicleRequest).subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
+
+        if (response && response.status === "success") {
+          Swal.fire({
+            title: "Success!",
+            text: this.editMode ? "Vehicle updated successfully" : "Vehicle added successfully",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+
+          this.closeAddModal();
+          this.loadVehicleData();
+        } else {
+          Swal.fire({
+            title: "Error",
+            text: response?.msg || "Failed to save vehicle",
+            icon: "error",
+          });
+        }
+      },
+      error: (error) => {
+        console.error("Error saving vehicle:", error);
+        this.isSubmitting = false;
+
+        Swal.fire({
+          title: "Error",
+          text: error?.error?.msg || error.message || "Failed to save vehicle. Please try again.",
+          icon: "error",
+        });
+      },
+    });
+
+  }
+}
 function headerHeightGetter(): number {
   var columnHeaderTexts = document.querySelectorAll(".ag-header-cell-text")
   var columnHeaderTextsArray: HTMLElement[] = []

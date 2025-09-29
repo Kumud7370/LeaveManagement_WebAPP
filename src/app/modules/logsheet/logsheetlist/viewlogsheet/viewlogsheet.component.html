@@ -28,7 +28,8 @@
     <div class="card-body">
       <!-- Title Section -->
       <div class="title-section">
-        <h2 class="main-title">SWM MIS</h2>
+        <h2 class="main-title">MUNICIPAL CORPORATION OF GREATER MUMBAI</h2>
+        <h3 class="sub-title">  SOLID WASTE MANAGEMENT </h3>
         <h3 class="sub-title">VEHICLE LOGSHEET</h3>
       </div>
       
@@ -36,30 +37,43 @@
       <div class="pdf-table-container">
         <table class="pdf-table">
           <tbody>
-            <tr>
-              <td class="label-cell">Date & Time :</td>
-              <td class="value-cell">{{ lstFilterData.CreatedOn || 'N/A' }}</td>
-              <td class="merged-cell" rowspan="4"></td>
-              <td class="label-cell">Name of Ward :</td>
-              <td class="value-cell">{{ lstFilterData.Ward || 'N/A' }}</td>
-            </tr>
-            <tr>
+            <tr>           
               <td class="label-cell">Logsheet Number :</td>
               <td class="value-cell">{{ lstFilterData.LogsheetNumber || 'N/A' }}</td>
-              <td class="label-cell">Route Number :</td>
-              <td class="value-cell">{{ lstFilterData.RouteNumber || 'N/A' }}</td>
+              <td class="merged-cell" rowspan="6"></td>
+              <td class="label-cell">Date & Time :</td>
+              <td class="value-cell">{{ lstFilterData.CreatedOn || 'N/A' }}</td>
             </tr>
             <tr>
-              <td class="label-cell">Type Of Waste :</td>
-              <td class="value-cell">{{ lstFilterData.TypeOfWaste || 'N/A' }}</td>
               <td class="label-cell">Vehicle Number :</td>
               <td class="value-cell">{{ lstFilterData.VehicleNumber || 'N/A' }}</td>
+              <td class="label-cell">Name of Ward :</td>
+              <td class="value-cell">{{ lstFilterData.Ward || 'N/A' }}</td>             
             </tr>
             <tr>
               <td class="label-cell">Driver's Name :</td>
               <td class="value-cell">{{ lstFilterData.DriverName || 'N/A' }}</td>
+              <td class="label-cell">Type Of Waste :</td>
+              <td class="value-cell">{{ lstFilterData.TypeOfWaste || 'N/A' }}</td>
+              
+            </tr>
+            <tr>             
+              <td class="label-cell">Cleaner's Name :</td>
+              <td class="value-cell">{{ lstFilterData.CleanerName || 'N/A' }}</td>
+              <td class="label-cell">Route Number :</td>
+              <td class="value-cell">{{ lstFilterData.RouteNumber || 'N/A' }}</td>
+            </tr>
+             <tr>             
+              <td class="label-cell">Agency Name :</td>
+              <td class="value-cell">{{ lstFilterData.AgencyName || 'N/A' }}</td>
+              <td class="label-cell">Tare Weight (RC Book) :</td>
+              <td class="value-cell">{{ lstFilterData.RCBookTareWeight || 'N/A' }}</td>
+            </tr>
+            <tr>
+              <td class="label-cell">Created By :</td>
+              <td class="value-cell">{{ lstFilterData.CreatedBy || 'N/A' }}</td>
               <td class="label-cell">Status :</td>
-              <td class="value-cell">
+              <td class="value-cell">  
                 <span class="status-text" [ngClass]="{
                   'status-open': lstFilterData.IsClosed === 0,
                   'status-closed': lstFilterData.IsClosed === 1,
@@ -74,9 +88,13 @@
       </div>
 
       <!-- Trip Details Table - CONDITIONAL: Only show when status is 1 (Closed) -->
-      <div *ngIf="isLogsheetClosed()" class="pdf-table-container transaction-table-section">
+      <!-- <div *ngIf="isLogsheetClosed()" class="pdf-table-container transaction-table-section"> -->
+        <div  class="pdf-table-container transaction-table-section">
         <table class="pdf-table transaction-table">
           <thead>
+            <tr>
+              <th class="transaction-header">Trip Details at RTS </th>
+            </tr>
             <tr>
               <th class="transaction-header trip-details-header" rowspan="2">Trip Details</th>
               <th class="transaction-header">In Time of Transact</th>
@@ -89,18 +107,46 @@
           <tbody>
             <tr>
               <td class="transaction-cell" rowspan="2">Trip Details</td>
-              <td class="transaction-cell">{{ getInTimeOfTransact() }}</td>
-              <td class="transaction-cell">{{ getOutTimeOfTransact() }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData.Gross_Weight) }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData.Unladen_Weight) }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData.Act_Net_Weight) }}</td>
+                <td class="transaction-cell">{{ lstFilterData.RTSData.trans_Date +' '  +lstFilterData?.RTSData?.trans_Time }}</td>
+              <td class="transaction-cell">{{ lstFilterData.RTSData.trans_Date_UL +' '  +lstFilterData?.RTSData?.trans_Time_UL }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData.RTSData.gross_Weight) }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData.RTSData.unladen_Weight) }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData.RTSData.act_Net_Weight) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div  class="pdf-table-container transaction-table-section">
+        <table class="pdf-table transaction-table">
+          <thead>
+            <tr>
+              <th class="transaction-header">Trip Details at Dumping Ground</th>
+            </tr>
+            <tr>
+              <th class="transaction-header trip-details-header" rowspan="2">Trip Details</th>
+              <th class="transaction-header">In Time of Transact</th>
+              <th class="transaction-header">Out Time of Transact</th>
+              <th class="transaction-header">Gross Weight</th>
+              <th class="transaction-header">Unladen Weight</th>
+              <th class="transaction-header">Actual Net Weight</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="transaction-cell" rowspan="2">Trip Details</td>
+              <td class="transaction-cell">{{ lstFilterData.DumpingData.trans_Date +' '  +lstFilterData?.DumpingData?.trans_Time }}</td>
+              <td class="transaction-cell">{{ lstFilterData.DumpingData.trans_Date_UL +' '  +lstFilterData?.DumpingData?.trans_Time_UL }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData.DumpingData.gross_Weight) }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData.DumpingData.unladen_Weight) }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData.DumpingData.act_Net_Weight) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <!-- Message when Trip Details are not available -->
-      <div *ngIf="!isLogsheetClosed()" class="trip-details-message">
+      <!-- <div *ngIf="!isLogsheetClosed()" class="trip-details-message">
         <div class="info-card">
           <div class="info-icon">
             <i class="fas fa-info-circle"></i>
@@ -119,7 +165,7 @@
             </p>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- Closure Information Table (matching PDF format exactly) -->
       <div class="pdf-table-container">

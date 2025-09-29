@@ -30,7 +30,7 @@ export class ViewlogsheetComponent {
     public dialogRef: MatDialogRef<ViewlogsheetComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
-    
+
     // Normalize data keys to handle case sensitivity issues
     this.lstFilterData = this.normalizeData(data)
     console.log("View Dialog - Original data received:", data)
@@ -41,6 +41,7 @@ export class ViewlogsheetComponent {
   normalizeData(data: any): any {
     if (!data) return {}
     // Create a standardized object with expected property names
+    console.log("Normalizing data:", data)
     return {
       LogsheetNumber: data.logsheetNumber || data.LogsheetNumber || "",
       VehicleNumber: data.vehicleNumber || data.VehicleNumber || "",
@@ -48,6 +49,7 @@ export class ViewlogsheetComponent {
       RouteNumber: data.routeNumber || data.RouteNumber || "",
       TypeOfWaste: data.typeOfWaste || data.TypeOfWaste || "",
       DriverName: data.driverName || data.DriverName || "",
+      CleanerName: data.cleanerName || data.CleanerName || "",
       CreatedOn: data.createdOn || data.CreatedOn || "",
       CreatedBy: data.createdBy || data.CreatedBy || "",
       ClosedBy: data.closedBy || data.ClosedBy || null,
@@ -55,14 +57,11 @@ export class ViewlogsheetComponent {
       ClosedOn: data.closedOn || data.ClosedOn || null,
       IsClosed: data.isClosed !== undefined ? data.isClosed : data.IsClosed !== undefined ? data.IsClosed : 0,
       Remark: data.remark || data.Remark || "",
+      RCBookTareWeight: data.rcBookTareWeight || data.RCBookTareWeight || "",
+      AgencyName: data.agencyName || data.AgencyName || "",
       // Transaction fields - UPDATED to handle both cases
-      Trans_Date: data.trans_Date || data.Trans_Date || "",
-      Trans_Time: data.trans_Time || data.Trans_Time || "",
-      Trans_Date_UL: data.trans_Date_UL || data.Trans_Date_UL || "",
-      Trans_Time_UL: data.trans_Time_UL || data.Trans_Time_UL || "",
-      Gross_Weight: data.gross_Weight || data.Gross_Weight || "",
-      Unladen_Weight: data.unladen_Weight || data.Unladen_Weight || "",
-      Act_Net_Weight: data.act_Net_Weight || data.Act_Net_Weight || "",
+      RTSData: data.rtsData ,
+      DumpingData: data.dumpingData ,
     }
   }
 
@@ -75,7 +74,7 @@ export class ViewlogsheetComponent {
   getInTimeOfTransact(): string {
     const date = this.lstFilterData.Trans_Date
     const time = this.lstFilterData.Trans_Time
-    console.log("Getting In Time - Date:", date, "Time:", time)
+    // console.log("Getting In Time - Date:", date, "Time:", time)
     if (date && time) {
       return `${date} ${time}`
     }
@@ -86,7 +85,7 @@ export class ViewlogsheetComponent {
   getOutTimeOfTransact(): string {
     const date = this.lstFilterData.Trans_Date_UL
     const time = this.lstFilterData.Trans_Time_UL
-    console.log("Getting Out Time - Date:", date, "Time:", time)
+    // console.log("Getting Out Time - Date:", date, "Time:", time)
     if (date && time) {
       return `${date} ${time}`
     }
@@ -95,7 +94,7 @@ export class ViewlogsheetComponent {
 
   // Format weight values - for UI display
   formatWeight(weight: string): string {
-    console.log("Formatting weight:", weight)
+    //  console.log("Formatting weight:", weight)
     if (!weight || weight === "N/A" || weight === "" || weight === null || weight === undefined) {
       return "N/A"
     }

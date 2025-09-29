@@ -62,9 +62,12 @@ export class LoginComponent implements OnInit {
       next: (res: any) => {
         if (res && res.status === 'success') {
           // Login successful
-          localStorage.setItem('token', res.data.token); 
+          sessionStorage.setItem('UserId', res.data.userId);
+          sessionStorage.setItem('SiteName', res.data.locationName);
+             sessionStorage.setItem('RoleName', res.data.roleName);
+          localStorage.setItem('token', res.data.token);
           localStorage.setItem('username', username);
-           localStorage.setItem('role', res.data.role);
+          localStorage.setItem('role', res.data.role);
           this.router.navigate(['/app/dashboard']);
         } else {
           this.loginError = 'Invalid username or password';

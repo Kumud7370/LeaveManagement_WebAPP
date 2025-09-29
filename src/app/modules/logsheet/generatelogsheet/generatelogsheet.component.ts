@@ -14,6 +14,7 @@ import { forkJoin } from "rxjs"
 import { catchError } from "rxjs/operators"
 import { of } from "rxjs"
 import { environment } from "src/environments/environment"
+import { DbCallingService } from "src/app/core/services/db-calling.service"
 
 @Component({
     selector: "app-generatelogsheet",
@@ -28,6 +29,7 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
     wardList: any[] = []
     routesFilteredList: any[] = []
     wasteTypeList: any[] = []
+    dumpingSiteLocations: any[] = []
     Form!: FormGroup
     loading: boolean = false
     showSuccessMessage: boolean = false
@@ -41,8 +43,22 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
     constructor(
         private http: HttpClient,
         private router: Router,
-        private fb: FormBuilder,
-    ) { }
+        private fb: FormBuilder, private dbCallingService: DbCallingService
+    ) {
+
+        console.log(sessionStorage.getItem("UserId"), String(sessionStorage.getItem("SiteName")))
+        this.dbCallingService.GetDumpingSiteLocations({ UserId: Number(sessionStorage.getItem("UserId")) }).subscribe({
+            next: (response: any) => {
+                if (response && response.data) {
+                    this.dumpingSiteLocations = response.data;
+                    console.log('Site Locations loaded:', this.dumpingSiteLocations);
+                }
+            },
+            error: (error: any) => {
+                console.error('Error loading site locations:', error);
+            }
+        });
+    }
 
     ngOnInit() {
         this.Form = this.fb.group({
@@ -51,10 +67,10 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
             routeno: ["", Validators.required],
             typeofwaste: ["", Validators.required],
             drivername: ["", Validators.required],
-            starttime: [""],
-            endtime: [""],
-        })
+            cleanername: ["", Validators.required],
+            dumpingsite: ["", Validators.required],
 
+        })
         this.loadAllData()
     }
 
@@ -68,14 +84,13 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
         this.loading = true;
 
         const searchVehicleModel = {
-            veh_ID: null,
-            veh_Num: "",
-            agencyNo: null,
-            work_code: "",
-            maxVeh_ID: null,
-            userId: Number(sessionStorage.getItem("UserId")) || 1
+            VehicleID: null,
+            VehicleNumber: null,
+            Ward: null,
+            SiteName: String(sessionStorage.getItem("SiteName")) ? String(sessionStorage.getItem("SiteName")) : null,
+            UserId: Number(sessionStorage.getItem("UserId")) || 1
         };
-
+        console.log('Search Vehicle Model:', searchVehicleModel);
         // Ensure the API URL doesn't have double slashes
         const baseUrl = this.apiUrl.endsWith('/') ? this.apiUrl.slice(0, -1) : this.apiUrl;
 
@@ -92,17 +107,17 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
                     console.error('Vehicles API error:', error);
                     return of({ vehicleData: [] });
                 })),
-            wards: this.http.get<any>(`${baseUrl}/Logsheet/getAllWards`)
+            wards: this.http.post<any>(`${baseUrl}/Logsheet/getAllWards`, searchVehicleModel)
                 .pipe(catchError(error => {
                     console.error('Wards API error:', error);
                     return of({ data: [] });
                 })),
-            routes: this.http.get<any>(`${baseUrl}/Logsheet/getAllRoutes`)
+            routes: this.http.post<any>(`${baseUrl}/Logsheet/getAllRoutes`, searchVehicleModel)
                 .pipe(catchError(error => {
                     console.error('Routes API error:', error);
                     return of({ data: [] });
                 })),
-            wasteTypes: this.http.get<any>(`${baseUrl}/Logsheet/getWasteTypes`)
+            wasteTypes: this.http.post<any>(`${baseUrl}/Logsheet/getWasteTypes`, searchVehicleModel)
                 .pipe(catchError(error => {
                     console.error('Waste Types API error:', error);
                     console.error('Error details:', {
@@ -118,10 +133,10 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
                 console.log('API Results received:', results);
 
                 // Process vehicles data
-                if (results.vehicles?.vehicleData && Array.isArray(results.vehicles.vehicleData)) {
-                    this.vehiclesFilteredList = results.vehicles.vehicleData;
-                } else if (results.vehicles?.VehicleData && Array.isArray(results.vehicles.VehicleData)) {
-                    this.vehiclesFilteredList = results.vehicles.VehicleData;
+                if (results.vehicles?.data && Array.isArray(results.vehicles.data)) {
+                    this.vehiclesFilteredList = results.vehicles.data;
+                } else if (results.vehicles?.data && Array.isArray(results.vehicles.data)) {
+                    this.vehiclesFilteredList = results.vehicles.data;
                 } else {
                     this.vehiclesFilteredList = [];
                 }
@@ -145,10 +160,10 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
 
                 // Process waste types data - based on your controller, it should return ApiResponse<List<RouteWasteType>>                
                 if (
-                    results.wasteTypes?.data?.wasteTypeData &&
-                    Array.isArray(results.wasteTypes.data.wasteTypeData)
+                    results.wasteTypes?.data &&
+                    Array.isArray(results.wasteTypes.data)
                 ) {
-                    this.wasteTypeList = results.wasteTypes.data.wasteTypeData;
+                    this.wasteTypeList = results.wasteTypes.data;
                 } else {
                     this.wasteTypeList = [];
                 }
@@ -217,14 +232,14 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
             RouteNumber: this.Form.value.routeno,
             TypeOfWaste: this.Form.value.typeofwaste,
             DriverName: this.Form.value.drivername,
-            StartDateTime: this.Form.value.starttime,
-            EndDateTime: this.Form.value.endtime,
-            CreatedBy: sessionStorage.getItem("UserName"),
-            UserId: Number(sessionStorage.getItem("UserId"))
+            CleanerName: this.Form.value.cleanername,
+            DumpingLocation: this.Form.value.dumpingsite,
+            SiteName: String(sessionStorage.getItem("SiteName")),
+            CreatedBy: String(sessionStorage.getItem("UserId")),
+            LogsheetSessionId: String(sessionStorage.getItem("UserId")),
         }
-
+        console.log('Submitting logsheet with data:', object);
         const baseUrl = this.apiUrl.endsWith('/') ? this.apiUrl.slice(0, -1) : this.apiUrl;
-
         this.loading = true
         this.http.post<any>(`${baseUrl}/Logsheet/generateLogsheet`, object).subscribe({
             next: (response: any) => {

@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { NgApexchartsModule } from "ng-apexcharts"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
-
+import moment from "moment"
 import type {
   ApexAxisChartSeries,
   ApexChart,
@@ -311,15 +311,41 @@ export class DashboardComponent implements OnInit {
       },
     },
   }
+  swmSites: any[] = [];
+  rtsSites: any[] = [];
+  allSites: any[] = [];
+  constructor(private dbCallingService: DbCallingService) {
+   
+  }
 
-  constructor(private dbCallingService: DbCallingService) { }
 
   ngOnInit(): void {
     // Load initial data
-    this.loadWardData()
-    this.loadNewsData()
+  //  this.loadWardData()
+  //  this.loadNewsData()
 
     // Simulate loading
+
+     let obj = {
+      DateFrom: moment().format('YYYY-MM-DD'),
+      UserId: Number(sessionStorage.getItem("UserId"))
+    }
+    this.isLoadingWardData = true
+    this.dbCallingService.GetWBTripSummary(obj).subscribe({
+      next: (response) => {
+        if (response.isSuccess) {
+          this.swmSites = response.data.swmSites || [];
+          this.rtsSites = response.data.rtsSites || [];
+
+          this.allSites = [...this.swmSites, ...this.rtsSites]; // merge both lists
+        }
+        this.isLoadingWardData = false;
+      },
+      error: (error) => {
+        console.error("Error fetching site locations:", error);
+        this.isLoadingWardData = false;
+      }
+    })
     setTimeout(() => {
       this.isLoading = false
     }, 1000)
