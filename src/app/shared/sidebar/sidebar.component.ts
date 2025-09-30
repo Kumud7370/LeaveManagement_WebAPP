@@ -139,7 +139,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.menuItems = this.navItems.filter(item => item.label !== 'Verification' && item.label !== 'Vehicles' && item.label !== 'Agency' && item.label !== 'Dashboard Overview');
     } else if (uRoleName?.toLowerCase() === 'admin' || uRoleName?.toLowerCase() === 'generator') {
       this.menuItems = this.navItems.filter(item => item.label !== 'Billing Report' && item.label !== 'Verification' && item.label !== 'Dashboard Overview');
-    } else {
+    }
+    else if (uRoleName?.toLowerCase() === 'jo') {
+      let NavItem = [
+        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
+        { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
+      ]
+      this.menuItems = NavItem;
+    }
+    else {
       this.menuItems = this.navItems;
     }
 

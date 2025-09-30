@@ -21,6 +21,7 @@ import { environment } from "src/environments/environment"
 import { BtnPdfCellRenderer } from "src/app/modules/logsheet/logsheetlist/pdf/buttonPdf-cell-renderer.component"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
 import { A } from "node_modules/@angular/cdk/activedescendant-key-manager.d-Bjic5obv"
+import { RemarkFilterComponent } from "../../remarks/remarks.component"
 
 interface LogsheetData {
   id: number
@@ -133,12 +134,12 @@ export class LogsheetlistComponent implements OnInit {
   eDate = ""
   uRole = 0
   userType = 0
-userId=0;
-userSiteName="";
+  userId = 0;
+  userSiteName = "";
   get f() {
     return this.Form.controls
   }
-
+refreshFlag = false;
   constructor(
     private router: Router,
     private fb: FormBuilder,
@@ -147,8 +148,8 @@ userSiteName="";
   ) {
     this.uRole = Number(sessionStorage.getItem("Role")) || 0
     this.userType = Number(sessionStorage.getItem("UserType")) || 0
-      this.userId = Number(sessionStorage.getItem("UserID")) || 0
-    this.userSiteName=String(sessionStorage.getItem("SiteName")) || "";
+    this.userId = Number(sessionStorage.getItem("UserID")) || 0
+    this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
     this.components = {
       btnLogsheetViewCellRenderer: BtnLogsheetViewCellRenderer,
       btnPdfCellRenderer: BtnPdfCellRenderer,
@@ -211,39 +212,36 @@ userSiteName="";
         if (response && response.data) {
           // Normalize the data to ensure consistent property names
           const normalizedData = response.data.map((item: any) => ({
-            ...item,
             // Map API response fields to component expected fields
-            id: item.logsheetID || item.id,
-            IsClosed: item.isClosed !== undefined ? item.isClosed : item.IsClosed,
-            LogsheetNumber: item.logsheetNumber || item.LogsheetNumber,
-            VehicleNumber: item.vehicleNumber || item.VehicleNumber,
-            Ward: item.ward || item.Ward,
-            RouteNumber: item.routeNumber || item.RouteNumber,
-            TypeOfWaste: item.typeOfWaste || item.TypeOfWaste,
-            DriverName: item.driverName || item.DriverName,
-            CreatedOn: item.createdOn || item.CreatedOn,
-            CreatedBy: item.createdBy || item.CreatedBy,
-            ClosedBy: item.closedBy || item.ClosedBy,
-            ClosedDestination: item.closedDestination || item.ClosedDestination,
-            ClosedOn: item.closedOn || item.ClosedOn,
-            SiteName: item.siteName || item.SiteName,
-            CleanerName: item.cleanerName || item.CleanerName,
-            RCBookTareWeight: item.rcBookTareWeight || item.RCBookTareWeight,
-            // NEW: Map transaction fields
-            Trans_Date: item.trans_Date || item.Trans_Date,
-            Trans_Time: item.trans_Time || item.Trans_Time,
-            Trans_Date_UL: item.trans_Date_UL || item.Trans_Date_UL,
-            Trans_Time_UL: item.trans_Time_UL || item.Trans_Time_UL,
-            Gross_Weight: item.gross_Weight || item.Gross_Weight,
-            Unladen_Weight: item.unladen_Weight || item.Unladen_Weight,
-            Act_Net_Weight: item.act_Net_Weight || item.Act_Net_Weight,
+            id: item.logsheetID,
+            IsClosed: item.isClosed,
+            LogsheetNumber: item.logsheetNumber,
+            VehicleNumber: item.vehicleNumber,
+            Ward: item.ward,
+            RouteNumber: item.routeNumber,
+            TypeOfWaste: item.typeOfWaste,
+            DriverName: item.driverName,
+            CreatedOn: item.createdOn,
+            CreatedBy: item.createdBy,
+            ClosedBy: item.closedBy,
+            ClosedDestination: item.closedDestination,
+            ClosedOn: item.closedOn,
+            SiteName: item.siteName,
+            CleanerName: item.cleanerName,
+            RCBookTareWeight: item.rcBookTareWeight,
+            VerifyStatus: item.verifyStatus,
+            VerifiedBy: item.verifiedBy,
+            VerifiedOn: item.verifiedOn,
+            Remark: item.remark,
+            AgencyName: item.agencyName,
+
           }))
           // IMPORTANT: Set both arrays to ensure filtering works correctly
           this.lstSearchResults = [...normalizedData] // Master copy for filtering
           this.lstReportData = [...normalizedData] // Display copy
           // Reset active filter to "All" when new data is loaded
           this.activeFilter = 9
-          console.log("Data loaded successfully:", this.lstSearchResults.length, "records")
+          console.log("Data loaded successfully:", this.lstSearchResults)
         } else {
           this.lstReportData = []
           this.lstSearchResults = []
@@ -587,15 +585,32 @@ userSiteName="";
     // Section 3: Closure information table
     autoTable(doc, {
       // Use autoTable as a function
-      body: [
-        [{ content: "Logsheet Closed Date & Time :", styles: { fontStyle: "bold" } }, normalizedData.ClosedOn || "N/A"],
-        [
-          { content: "Waste Processing Plant:", styles: { fontStyle: "bold" } },
-          normalizedData.ClosedDestination || "N/A",
-        ],
-        [{ content: "Signature & Stamp :", styles: { fontStyle: "bold" } }, normalizedData.ClosedBy || "N/A"],
-        [{ content: "Remark :", styles: { fontStyle: "bold" } }, normalizedData.Remark || "N/A"],
-      ],
+      body: [       
+    [
+      { content: "Logsheet Closed Date & Time :", styles: { fontStyle: "bold" } },
+      { content: normalizedData.ClosedOn || "N/A", colSpan: 5 }
+    ],
+    [
+      { content: "Waste Processing Plant:", styles: { fontStyle: "bold" } },
+      { content: normalizedData.ClosedDestination || "N/A", colSpan: 5 }
+    ],
+    [
+      { content: "Signature & Stamp :", styles: { fontStyle: "bold" } },
+      { content: normalizedData.ClosedBy || "N/A", colSpan: 5 }
+    ],
+    [
+      { content: "Remark :", styles: { fontStyle: "bold" } },
+      { content: normalizedData.Remark || "N/A", colSpan: 5 }
+    ],
+    [
+      { content: "Verification :", styles: { fontStyle: "bold" } },
+      { content: normalizedData.VerifyStatus===1? "Veriried": "Pending" },
+      { content: "Verified By :", styles: { fontStyle: "bold" } },
+      { content: normalizedData.VerifiedBy || "N/A" },
+      { content: "Verified Date :", styles: { fontStyle: "bold" } },
+      { content: normalizedData.VerifiedOn || "N/A" }
+    ]
+  ],
       theme: "grid",
       styles: {
         fontSize: 10,
@@ -605,7 +620,7 @@ userSiteName="";
       },
       columnStyles: {
         0: { cellWidth: 70 },
-        1: { cellWidth: 199 },
+        1: { cellWidth: 70 },
       },
       startY: doc.lastAutoTable.finalY + 5,
     })
@@ -653,6 +668,9 @@ userSiteName="";
       DumpingData: data.dumpingData,
       AgencyName: data.agencyName || data.AgencyName || "",
       RCBookTareWeight: data.rcBookTareWeight || data.RCBookTareWeight || "",
+      VerifyStatus: data.verifyStatus || data.VerifyStatus,
+      VerifiedBy: data.verifiedBy || data.VerifiedBy,
+      VerifiedOn: data.verifiedOn || data.VerifiedOn,
       // Transaction fields
       // Trans_Date: data.trans_Date || data.Trans_Date || "",
       // Trans_Time: data.trans_Time || data.Trans_Time || "",
@@ -964,6 +982,48 @@ userSiteName="";
           paddingLeft: "12px",
         },
       },
+      {
+        headerName: "Verified By",
+        field: "VerifiedBy",
+        width: 160,
+        minWidth: 160,
+        maxWidth: 160,
+        flex: 0,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
+        hide: true
+      },
+      {
+        headerName: "Verified On",
+        field: "VerifiedOn",
+        width: 160,
+        minWidth: 160,
+        maxWidth: 160,
+        flex: 0,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
+        hide: true
+      },
+      {
+        headerName: "Verify Status",
+        field: "VerifyStatus",
+        width: 160,
+        minWidth: 160,
+        maxWidth: 160,
+        flex: 0,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
+        hide: true
+      },
     ]
     this.context = { componentParent: this }
     this.defaultColDef = {
@@ -1085,6 +1145,7 @@ userSiteName="";
           })
           dialogRef.afterClosed().subscribe((result) => {
             console.log("Dialog closed", result)
+             this.fetchLogsheetData();
           })
         } else {
           // No transaction data found, open dialog with original data
@@ -1099,6 +1160,7 @@ userSiteName="";
           })
           dialogRef.afterClosed().subscribe((result) => {
             console.log("Dialog closed", result)
+             this.fetchLogsheetData();
           })
         }
       },
@@ -1123,10 +1185,18 @@ userSiteName="";
         })
         dialogRef.afterClosed().subscribe((result) => {
           console.log("Dialog closed", result)
+           this.fetchLogsheetData();
         })
       },
     })
   }
+
+  getRowStyle = (params: any) => {
+if (params.data && params.data.status === 'Verified') {
+return { backgroundColor: '#d4edda' }; // light green
+}
+return null;
+};
 }
 
 function dateComparator(date1: string, date2: string): number {

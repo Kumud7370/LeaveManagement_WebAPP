@@ -387,5 +387,22 @@ export class DbCallingService {
       }),
     );
   }
+
+    GetPenaltyList(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Master/GetPenaltyList`, payload).pipe(
+      catchError((error) => {
+        console.error("Error fetching TripDetail", error);
+        return of(null);
+      }),
+    );
+  }
+   VerifyLogsheet(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Logsheet/VerifyLogsheet`, payload).pipe(
+      catchError((error) => {
+        console.error("Error fetching TripDetail", error);
+        return of(null);
+      }),
+    );
+  }
 }
 

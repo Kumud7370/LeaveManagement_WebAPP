@@ -167,9 +167,10 @@ export class VehicleMasterComponent implements OnInit {
 
   loadInitialData() {
    let obj= { 
-      UserId: this.userId ,
+      UserId: Number(this.userId) ,
       SiteName:this.userSiteName ,
     }
+    console.log("Loading initial data with params:", obj);
     this.dbcallingService.GetSiteLocations(obj).subscribe({
       next: (response: any) => {
         if (response && response.data) {
@@ -580,7 +581,7 @@ export class VehicleMasterComponent implements OnInit {
     ]
 
     this.context = { componentParent: this }
-    this.defaultColDef = {
+    this.defaultColDef = {     
       sortable: true,
       filter: true,
       resizable: true,
@@ -589,6 +590,8 @@ export class VehicleMasterComponent implements OnInit {
         display: "flex",
         alignItems: "center",
       },
+      wrapText: true,
+      wrapHeaderText: true,
     }
   }
 

@@ -35,7 +35,7 @@
               <label for="agencyName">Agency Name *</label>
               <div class="input-wrapper">
                 <input type="text" id="agencyName" formControlName="agencyName" class="form-control"
-                  placeholder="Enter Agency Name" maxlength="500" style="text-transform: uppercase;">
+                  placeholder="Enter Agency Name" maxlength="100" >
                 <i class="fas fa-building"></i>
               </div>
               <div *ngIf="agencyForm.get('agencyName')?.touched && agencyForm.get('agencyName')?.invalid" class="error-message">
@@ -141,10 +141,10 @@
             <button class="status-btn" [class.active]="activeFilter === 9" (click)="FilterData(9)">
               <i class="fas fa-list"></i> All
             </button>
-            <button class="status-btn open" [class.active]="activeFilter === 0" (click)="FilterData(0)">
+            <button class="status-btn open" [class.active]="activeFilter === 0" (click)="FilterData(false)">
               <i class="fas fa-times-circle"></i> Inactive
             </button>
-            <button class="status-btn closed" [class.active]="activeFilter === 1" (click)="FilterData(1)">
+            <button class="status-btn closed" [class.active]="activeFilter === 1" (click)="FilterData(true)">
               <i class="fas fa-check-circle"></i> Active
             </button>
           </div>

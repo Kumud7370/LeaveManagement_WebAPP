@@ -83,7 +83,7 @@
               <!-- Manual Entry -->
               <div *ngIf="isManualVehicleEntry" class="input-wrapper">
                 <input type="text" id="vehicleNumber" formControlName="vehicleNumber" class="form-control"
-                  placeholder="Enter Vehicle Number (e.g., MH01AB1234)" maxlength="20"
+                  placeholder="Enter Vehicle Number (e.g., MH01AB1234)" maxlength="10" minlength="9"
                   style="text-transform: uppercase;">
                 <i class="fas fa-truck"></i>
               </div>

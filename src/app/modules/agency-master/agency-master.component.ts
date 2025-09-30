@@ -87,7 +87,7 @@ export class AgencyMasterComponent {
       //  vehicleType: ['', Validators.required],
       agencyName: ['', [Validators.required, Validators.maxLength(500)]],
       isPaid: [false],
-      siteName: ['', Validators.required],
+      siteName: [this.userSiteName, Validators.required],
       isActive: [1, Validators.required]
     });
   }
@@ -227,7 +227,7 @@ export class AgencyMasterComponent {
   }
 
   // ---------- Filters / Export ----------
-  FilterData(status: number) {
+  FilterData(status: any) {
     this.activeFilter = status;
     if (status === 9) this.loadAgencies();
     else this.lstAgencyData = this.lstAgencyData.filter(a => a.isActive === status);

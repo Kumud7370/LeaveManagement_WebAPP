@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core'
+import { Component, EventEmitter, Inject, Output } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { Router } from '@angular/router'
 import { FormBuilder } from '@angular/forms'
@@ -9,39 +9,85 @@ import moment from "moment"
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { GState } from "jspdf" // Import GState for type reference
 import { CellHookData } from "jspdf-autotable" // Import types for 
+import { DbCallingService } from 'src/app/core/services/db-calling.service'
+import { AgGridAngular, AgGridModule } from 'ag-grid-angular'
+import { ButtonModule } from '@coreui/angular'
+import { GridReadyEvent } from 'ag-grid-community'
+import Swal from "sweetalert2"
 
 @Component({
   selector: "app-viewlogsheet",
   templateUrl: "./viewlogsheet.component.html",
   styleUrls: ["./viewlogsheet.component.scss"],
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AgGridModule, AgGridAngular, ButtonModule],
 })
 export class ViewlogsheetComponent {
+  @Output() refreshRequested = new EventEmitter<void>();
   filterText: any = ""
   lstSearchResults: any = []
   lstReportData: any = []
+  lstPenaltyData: any = []
   lstFilterData: any
   ttlQuantity: any
+  userId = 0
+  userSiteName = ""
+  private gridApi: any;
+  columnDefs: any[] = [
+    {
+      headerName: 'Select',
+      checkboxSelection: true,
+      headerCheckboxSelection: true,
+      width: 100,
+    },
+    { field: 'pId', headerName: 'ID', width: 90, hide: true },
+    { field: 'penaltyHeader', headerName: 'Header', flex: 1 },
+    { field: 'penaltyDescription', headerName: 'Description', flex: 2, hide: true },
 
+
+  ];
   constructor(
     public router: Router,
     public fb: FormBuilder,
     public dialogRef: MatDialogRef<ViewlogsheetComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    private masterService: DbCallingService
   ) {
-
+    this.userId = Number(sessionStorage.getItem("UserId")) || 0
+    this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
     // Normalize data keys to handle case sensitivity issues
     this.lstFilterData = this.normalizeData(data)
     console.log("View Dialog - Original data received:", data)
     console.log("View Dialog - Normalized data:", this.lstFilterData)
+    let obj = {
+      SiteName: this.userSiteName,
+      UserId: this.userId,
+    }
+    this.masterService.GetPenaltyList(obj).subscribe({
+      next: (response: any) => {
+        if (response && response.data) {
+          this.lstPenaltyData = response.data
+          console.log("Penalty List Data:", this.lstPenaltyData)
+          // this.ttlQuantity = this.lstReportData.reduce((sum: number, item: any) => sum + (item.Quantity || 0), 0)
+          // console.log("Total Quantity:", this.ttlQuantity)
+        } else {
+          this.lstPenaltyData = []
+          // this.ttlQuantity = 0
+        }
+      },
+      error: (error: any) => {
+        console.error("Error fetching Penalty List data:", error)
+        this.lstPenaltyData = []
+        // this.ttlQuantity = 0
+      }
+    });
   }
 
   // This function normalizes the data keys to ensure consistent casing
   normalizeData(data: any): any {
     if (!data) return {}
     // Create a standardized object with expected property names
-    console.log("Normalizing data:", data)
+   // console.log("Normalizing data:", data)
     return {
       LogsheetNumber: data.logsheetNumber || data.LogsheetNumber || "",
       VehicleNumber: data.vehicleNumber || data.VehicleNumber || "",
@@ -60,8 +106,11 @@ export class ViewlogsheetComponent {
       RCBookTareWeight: data.rcBookTareWeight || data.RCBookTareWeight || "",
       AgencyName: data.agencyName || data.AgencyName || "",
       // Transaction fields - UPDATED to handle both cases
-      RTSData: data.rtsData ,
-      DumpingData: data.dumpingData ,
+      RTSData: data.rtsData,
+      DumpingData: data.dumpingData,
+      VerifyStatus: data.verifyStatus || data.VerifyStatus,
+      VerifiedBy: data.verifiedBy || data.VerifiedBy,
+      VerifiedOn: data.verifiedOn || data.VerifiedOn,
     }
   }
 
@@ -373,10 +422,73 @@ export class ViewlogsheetComponent {
 
   Close() {
     this.dialogRef.close()
+
   }
 
   getApprovedOnList(logsheet: any): string {
     console.log(logsheet)
     return logsheet.TicketList?.map((i: any) => i.ApprovedOnList).join(",") || ""
   }
+
+
+  onGridReady(params: GridReadyEvent) {
+    this.gridApi = params.api;
+  }
+
+
+  onVerify() {
+    const selectedNodes = this.gridApi.getSelectedNodes();
+    const selectedData = selectedNodes.map((node: any) => node.data);
+    const penaltyHeaders = selectedData.map((d: any) => d.penaltyHeader).join(', ');
+    console.log('Selected Data:', selectedData);
+    let obj = {
+      VerifiedBy: this.userId,
+      LogsheetNumber: this.lstFilterData.LogsheetNumber,
+      VerificationRemark: penaltyHeaders,
+    }
+    console.log("Verification Object:", obj);
+    Swal.fire({
+      title: 'Confirm Verification',
+      text: `Do you want to verify these loghseet?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Verify',
+      cancelButtonText: 'Cancel',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.masterService.VerifyLogsheet(obj).subscribe({
+          next: (res) => {
+            if (res?.isSuccess) {
+              this.refreshRequested.emit();
+              Swal.fire({
+                title: "success",
+                text: "Verified Successfully",
+                icon: "success",
+              })
+              this.dialogRef.close();
+            } else {
+              Swal.fire({
+                title: "Error",
+                text: res?.msg || "Failed to verify logsheet",
+                icon: "error",
+              })
+            }
+
+          },
+          error: (err) => {
+            Swal.fire({
+              title: "Error",
+              text: "Failed to verify logsheet",
+              icon: "error",
+            })
+          },
+        });
+      }
+    });
+  }
+  // this.http.post('/api/verify-penalty', selectedData).subscribe({
+  //   next: (res) => console.log('API Response:', res),
+  //   error: (err) => console.error('Error:', err),
+  // });
 }
+
