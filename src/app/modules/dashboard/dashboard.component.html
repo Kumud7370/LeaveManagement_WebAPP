@@ -1,5 +1,5 @@
 <div class="swm-dashboard-container">
-  <!-- Header -->
+  <!-- Header  -->
   <div class="dashboard-header">
     <div class="header-content">
       <div class="header-title">
@@ -13,14 +13,14 @@
     </div>
   </div>
 
-  <!-- Loading Indicator -->
+  <!-- Loading Indicator  -->
   <div class="loading-overlay" *ngIf="isLoadingWardData">
     <div class="spinner"></div>
     <div class="loading-text">Loading dashboard data...</div>
   </div>
 
-  <!-- Dashboard Content -->
-  <div class="header-content" *ngIf="!isLoadingWardData">
+  <!-- Dashboard Content  -->
+  <div class="header-content dashboard-content" *ngIf="!isLoadingWardData">
     <div class="location-cards-section">
       <div class="location-card" *ngFor="let card of swmSites" [ngStyle]="{'--card-color': card.colorCode }">
         <div class="card-header">
