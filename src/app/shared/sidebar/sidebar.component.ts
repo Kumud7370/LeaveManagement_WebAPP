@@ -75,11 +75,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
       ],
     },
-    // { label: "Remarks & Correction", route: "/remarks", icon: "fas fa-clipboard-check" },
-    { label: "Billing Report", route: "/billing-report", icon: "fas fa-file-invoice-dollar" },
-    { label: "Verification", route: "/verifications", icon: "fas fa-check-circle" },
     { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
     { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
+    // { label: "Remarks & Correction", route: "/remarks", icon: "fas fa-clipboard-check" },
+
+
+    { label: "Billing Report", route: "/billing-report", icon: "fas fa-file-invoice-dollar" },
+    { label: "Verification", route: "/verifications", icon: "fas fa-check-circle" },
   ]
 
   menuItems = this.navItems
@@ -137,41 +139,67 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.menuItems = this.navItems.filter(item => item.label !== 'Billing Report' && item.label !== 'Vehicles' && item.label !== 'Agency' && item.label !== 'Dashboard Overview');
     } else if (uRoleName === 'CO') {
       this.menuItems = this.navItems.filter(item => item.label !== 'Verification' && item.label !== 'Vehicles' && item.label !== 'Agency' && item.label !== 'Dashboard Overview');
-    } else if (uRoleName?.toLowerCase() === 'admin' || uRoleName?.toLowerCase() === 'generator') {
-      this.menuItems = this.navItems.filter(item => item.label !== 'Billing Report' && item.label !== 'Verification' && item.label !== 'Dashboard Overview');
-    }
-    else if (uRoleName?.toLowerCase() === 'jo') {
-      let NavItem = [
-        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-        { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
+    } else if (uRoleName?.toLowerCase() === 'generator') {
+      this.menuItems = [
+        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },      
+        {
+          label: "Logsheet",
+          icon: "fas fa-clipboard-list",
+          expanded: false,
+          children: [
+            { label: "Generate Logsheet", route: "/logsheet/generatelogsheet", icon: "fas fa-plus-circle" },
+            { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
+          ],
+        },
+        { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
+        { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },       
       ]
-      this.menuItems = NavItem;
     }
-    else {
-      this.menuItems = this.navItems;
+    else if (uRoleName?.toLowerCase() === 'admin') {
+        this.menuItems = [
+          { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
+          // { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
+          { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
+          { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
+          { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
+          { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
+          { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
+          { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
+        ]
+      
+      }
+      else if (uRoleName?.toLowerCase() === 'jo') {
+        this.menuItems = [
+          { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
+          { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
+        ]
+       
+      }
+      else {
+        this.menuItems = this.navItems;
+      }
+
+      this.updateExpandedStates();
     }
 
-    this.updateExpandedStates();
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach((sub) => sub.unsubscribe())
-  }
-
-  // @HostListener("window:resize")
-  // onResize() {
-  //   if (this.isBrowser) {
-  //     this.checkScreenSize()
-  //   }
-  // }
-  @HostListener("window:scroll", [])
-  onScroll() {
-    // only auto-expand on scroll if user hasn't manually opened it
-    if (!this.manualOpened && !this.isExpanded && this.isSidebarInView()) {
-      this.sidebarService.expand();
-      this.autoExpandedByHover = true; // so leaving/collapse logic can be consistent
+    ngOnDestroy() {
+      this.subscriptions.forEach((sub) => sub.unsubscribe())
     }
-  }
+
+    // @HostListener("window:resize")
+    // onResize() {
+    //   if (this.isBrowser) {
+    //     this.checkScreenSize()
+    //   }
+    // }
+    @HostListener("window:scroll", [])
+    onScroll() {
+      // only auto-expand on scroll if user hasn't manually opened it
+      if (!this.manualOpened && !this.isExpanded && this.isSidebarInView()) {
+        this.sidebarService.expand();
+        this.autoExpandedByHover = true; // so leaving/collapse logic can be consistent
+      }
+    }
 
   private isSidebarInView(): boolean {
     const sidebarEl = document.querySelector('.sidebar');

@@ -79,8 +79,8 @@ export class VehicleMasterComponent implements OnInit {
   ) {
     this.uRole = Number(sessionStorage.getItem("Role")) || 0
     this.userType = Number(sessionStorage.getItem("UserType")) || 0
-    this.userId = Number(sessionStorage.getItem("UserID")) || 0
-    this.userSiteName=String(sessionStorage.getItem("SiteName")) || "";
+    this.userId = Number(sessionStorage.getItem("UserId")) || 0
+    this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
     this.components = {}
   }
 
@@ -166,9 +166,9 @@ export class VehicleMasterComponent implements OnInit {
   }
 
   loadInitialData() {
-   let obj= { 
-      UserId: Number(this.userId) ,
-      SiteName:this.userSiteName ,
+    let obj = {
+      UserId: Number(this.userId),
+      SiteName: this.userSiteName,
     }
     console.log("Loading initial data with params:", obj);
     this.dbcallingService.GetSiteLocations(obj).subscribe({
@@ -281,7 +281,7 @@ export class VehicleMasterComponent implements OnInit {
           this.vehicleTypesList = []
 
           // Add some mock data for testing
-    
+
           console.log("Using mock vehicle types data:", this.vehicleTypesList)
           this.cdr.detectChanges()
 
@@ -448,101 +448,61 @@ export class VehicleMasterComponent implements OnInit {
           }
           return { ...baseStyle, color: "#6b7280", fontWeight: "normal" }
         },
-        minWidth: 100,
-        flex: 0,
+        maxWidth: 100,
+       
       },
       {
         headerName: "Location",
         field: "siteName",
-        minWidth: 100,
-        flex: 1,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
+        maxWidth: 120,
+        
         valueFormatter: (params) => params.value || "N/A",
       },
       {
         headerName: "Ward",
         field: "ward",
-        minWidth: 100,
-        flex: 0,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
+        maxWidth: 120,
+        
         valueFormatter: (params) => params.value || "N/A",
       },
       {
         headerName: "Vehicle Number",
         field: "vehicleNumber",
-        minWidth: 120,
-        flex: 0,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
+        maxWidth: 120,
+       
       },
       {
         headerName: "Vehicle Type",
         field: "vehicleType",
-        minWidth: 100,
-        flex: 0,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
+        maxWidth: 300,
+      
       },
       {
         headerName: "Agency Number",
         field: "agencyNo",
-        minWidth: 130,
-        flex: 0,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
+        maxWidth: 20,
+      
         hide: true, // Hide this column by default
       },
       {
         headerName: "Agency Name",
         field: "agencyName",
-        minWidth: 140,
-        flex: 1,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
+        minWidth: 200,
+       
         valueFormatter: (params) => params.value || "N/A",
       },
       {
         headerName: "Gross Weight (kg)",
         field: "grossWeight",
-        minWidth: 140,
-        flex: 0,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
+        maxWidth: 120,
+       
         valueFormatter: (params) => (params.value ? `${params.value} kg` : "N/A"),
       },
       {
         headerName: "Tare Weight (kg)",
         field: "tareWeight",
-        minWidth: 140,
-        flex: 0,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
+        maxWidth: 120,
+       
         valueFormatter: (params) => (params.value ? `${params.value} kg` : "N/A"),
       },
 
@@ -551,18 +511,13 @@ export class VehicleMasterComponent implements OnInit {
         headerName: "Vehicle ID",
         field: "vehicleID",
         minWidth: 100,
-        flex: 0,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
+        
         hide: true, // Hide this column by default
       },
       {
         headerName: "Actions",
-        minWidth: 120,
-        flex: 0,
+        maxWidth: 100,
+     
         cellRenderer: (params: any) => {
           return `
             <div class="cell-button-container">
@@ -581,7 +536,7 @@ export class VehicleMasterComponent implements OnInit {
     ]
 
     this.context = { componentParent: this }
-    this.defaultColDef = {     
+    this.defaultColDef = {
       sortable: true,
       filter: true,
       resizable: true,
@@ -589,9 +544,12 @@ export class VehicleMasterComponent implements OnInit {
       cellStyle: {
         display: "flex",
         alignItems: "center",
+        padding: "0 12px"
       },
       wrapText: true,
+      autoHeight: true,   // Add this
       wrapHeaderText: true,
+      flex: 1
     }
   }
 

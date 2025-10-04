@@ -25,6 +25,7 @@ export class AgencyMasterComponent {
 
   agencyForm!: FormGroup;
   lstAgencyData: any[] = [];
+  lstAgencyDataFiltered: any[] = [];
   isAddModalOpen: boolean = false;
   isSubmitting: boolean = false;
   filterText: string = '';
@@ -38,8 +39,8 @@ export class AgencyMasterComponent {
   // Grid configuration
   columnDefs: ColDef[] = []
   context: any
-  gridApi!: GridApi
-  defaultColDef = { resizable: true, flex: 1 };
+  gridApi!: GridApi<any>;
+  defaultColDef: any
   public rowSelection: "single" | "multiple" = "multiple"
   components: any
 
@@ -54,26 +55,9 @@ export class AgencyMasterComponent {
     private router: Router,
   ) {
     // load dropdowns
-    this.userId = Number(sessionStorage.getItem("UserID")) || 0
+    this.userId = Number(sessionStorage.getItem("UserId")) || 0
     this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
-    let obj = {
-      UserId: this.userId,
-      SiteName: this.userSiteName,
-    }
-    this.agencyService.GetSiteLocations(obj).subscribe({
-      next: (response: any) => {
-        if (response && response.data) {
-          this.siteLocations = response.data;
-        }
-      }
-    });
-    this.agencyService.getVehicleTypes(obj).subscribe({
-      next: (response: any) => {
-        if (response && response.data) {
-          this.vehicleTypesList = response.data;
-        }
-      }
-    });
+
   }
 
   ngOnInit(): void {
@@ -87,7 +71,7 @@ export class AgencyMasterComponent {
       //  vehicleType: ['', Validators.required],
       agencyName: ['', [Validators.required, Validators.maxLength(500)]],
       isPaid: [false],
-      siteName: [this.userSiteName, Validators.required],
+      siteName: ['', Validators.required],
       isActive: [1, Validators.required]
     });
   }
@@ -102,15 +86,15 @@ export class AgencyMasterComponent {
           if (params.value === 0) return { ...baseStyle, color: "#f59e0b" }
           if (params.value === 1) return { ...baseStyle, color: "#10b981" }
           return { ...baseStyle, color: "#6b7280", fontWeight: "normal" }
-        },
+        }, maxWidth: 120
       },
-      { headerName: 'Location', field: 'siteName', sortable: true, filter: true },
-      { headerName: 'Agency No', field: 'agencyNo', sortable: true, filter: true, hide: true },
-      { headerName: 'Agency Name', field: 'agencyName', sortable: true, filter: true },
+      { headerName: 'Location', field: 'siteName', maxWidth: 200 },
+      { headerName: 'Agency No', field: 'agencyNo', hide: true },
+      { headerName: 'Agency Name', field: 'agencyName', minWidth: 300 },
       // { headerName: 'Vehicle Type', field: 'vehicleType', sortable: true, filter: true },
-      { headerName: 'Is Paid', field: 'isPaid', valueFormatter: (p: any) => p.value ? 'Yes' : 'No' },
+      { headerName: 'Is Paid', field: 'isPaid', valueFormatter: (p: any) => p.value ? 'Yes' : 'No', maxWidth: 100 },
       {
-        headerName: 'Actions',
+        headerName: 'Actions', maxWidth: 120,
         cellRenderer: () => `
           <div class="cell-button-container">
             <button class="btn-view">
@@ -122,6 +106,22 @@ export class AgencyMasterComponent {
         onCellClicked: (params) => this.openEditModal(params.data)
       }
     ];
+
+    this.defaultColDef = {
+      sortable: true,
+      filter: true,
+      resizable: true,
+      suppressMovable: true,
+      cellStyle: {
+        display: "flex",
+        alignItems: "center",
+        padding: "0 12px"
+      },
+      wrapText: true,
+      autoHeight: true,   // Add this
+      wrapHeaderText: true,
+      flex: 1
+    }
   }
 
   loadAgencies() {
@@ -129,9 +129,32 @@ export class AgencyMasterComponent {
       UserId: this.userId,
       SiteName: this.userSiteName,
     }
+
+
+    this.agencyService.GetSiteLocations(obj).subscribe({
+      next: (response: any) => {
+        if (response && response.data) {
+          this.siteLocations = response.data;
+          // 👇 If there is only one site, auto-select it in the form
+          if (this.siteLocations.length === 1) {
+            console.log("Only one site found, auto-selecting:", this.siteLocations[0]);
+            const singleSite = this.siteLocations[0];
+            this.agencyForm?.patchValue({ siteName: singleSite.siteName });
+          }
+        }
+      }
+    });
+    this.agencyService.getVehicleTypes(obj).subscribe({
+      next: (response: any) => {
+        if (response && response.data) {
+          this.vehicleTypesList = response.data;
+        }
+      }
+    });
     this.agencyService.GetAgencies(obj).subscribe({
       next: (res) => {
         this.lstAgencyData = res?.data || [];
+        this.lstAgencyDataFiltered = res?.data || [];
         this.getAGGridReady();
       }
     });
@@ -227,10 +250,20 @@ export class AgencyMasterComponent {
   }
 
   // ---------- Filters / Export ----------
-  FilterData(status: any) {
+  FilterData(status: number) {
     this.activeFilter = status;
-    if (status === 9) this.loadAgencies();
-    else this.lstAgencyData = this.lstAgencyData.filter(a => a.isActive === status);
+
+    if (status === 9) {
+      this.lstAgencyDataFiltered = [...this.lstAgencyData];
+    } else {
+      this.lstAgencyDataFiltered = this.lstAgencyData.filter(a => Number(a.isActive) === Number(status));
+    }
+
+    // Update grid
+    if (this.gridApi) {
+      // Cast to 'any' if TS complains
+      (this.gridApi as any).setRowData(this.lstAgencyDataFiltered);
+    }
   }
   getStatusCount(status: number): number {
     return this.lstAgencyData.filter(a => a.isActive === status).length;

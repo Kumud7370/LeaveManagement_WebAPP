@@ -54,12 +54,35 @@ export class ShiftReportComponent implements OnInit {
   totalWeight = 0
   topWard = ""
   topShift = ""
-
+  userId = 0;
+  userSiteName = "";
+  lstSiteNames: any[] = [];
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private dbCallingService: DbCallingService,
-  ) { }
+  ) {
+
+    this.userId = Number(sessionStorage.getItem("UserId")) || 0
+    this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
+    let obj = {
+      UserId: Number(this.userId),
+      SiteName: this.userSiteName,
+    }
+    console.log("Loading initial data with params:", obj);
+    this.dbCallingService.GetSiteLocations(obj).subscribe({
+      next: (response: any) => {
+        console.log("response:", response);
+        if (response && response.data) {
+          this.lstSiteNames = response.data;
+
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading site locations:', error);
+      }
+    });
+  }
 
   ngOnInit() {
     this.initForm()
@@ -75,7 +98,7 @@ export class ShiftReportComponent implements OnInit {
     lastMonth.setMonth(currentDate.getMonth() - 1)
 
     this.isLoading = true
-    const weighBridge = ""
+    const weighBridge = "ALLWB"
     const fromDate = this.formatDateForInput(lastMonth)
     const toDate = this.formatDateForInput(currentDate)
 
@@ -177,7 +200,7 @@ export class ShiftReportComponent implements OnInit {
     this.closeFilters() // Close filters panel after submission
 
     const formValues = this.reportForm.value
-    const weighBridge = formValues.weighBridge === "all" ? "" : formValues.weighBridge
+    const weighBridge = formValues.weighBridge
     const fromDate = formValues.fromDate
     const toDate = formValues.toDate
 
@@ -267,7 +290,7 @@ export class ShiftReportComponent implements OnInit {
     this.flattenedData = []
     this.resetSummaryStatistics()
   }
-  
+
   processDataForGrid() {
     if (!this.shiftData || this.shiftData.length === 0) {
       this.lstReportData = []

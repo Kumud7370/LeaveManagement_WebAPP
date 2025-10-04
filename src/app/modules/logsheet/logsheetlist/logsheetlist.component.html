@@ -63,12 +63,35 @@
       <!-- AG Grid -->
       <div class="grid-container">
         <ag-grid-angular #agGrid style="width: 100%; height: 500px;" id="myGrid" class="ag-theme-alpine"
-          [columnDefs]="columnDefs" [rowData]="lstReportData" [animateRows]="true" [pagination]="true" 
+          [columnDefs]="columnDefs" [rowData]="lstReportData" [animateRows]="true" [pagination]="true"
           [paginationPageSize]="10" [paginationPageSizeSelector]="[10, 20, 50, 100]" [context]="context"
           [enableCellTextSelection]="true" [suppressRowClickSelection]="true" [rowSelection]="rowSelection"
           [defaultColDef]="defaultColDef" [components]="components" (gridReady)="OnGridReady($event)"
-          (firstDataRendered)="headerHeightSetter($event)" (columnResized)="headerHeightSetter($event)" >
+          (firstDataRendered)="headerHeightSetter($event)" (columnResized)="headerHeightSetter($event)"
+          [getRowStyle]="getRowStyle">
         </ag-grid-angular>
+        <div style="display: flex; gap: 20px; margin-bottom: 10px; font-family: Arial, sans-serif;">
+          <!-- <div style="display: flex; align-items: center; gap: 5px;">
+            <div style="width: 20px; height: 20px; background-color: #d4edda; border: 1px solid #ccc;"></div>
+            Verified
+          </div> -->
+            <div style="display: flex; align-items: center; gap: 5px;">
+            <div style="width: 20px; height: 20px; background-color: #ffe5b4; border: 1px solid #ccc;"></div>
+            Open 
+          </div>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <div style="width: 20px; height: 20px; background-color: #28a745; border: 1px solid #ccc;"></div>
+            Closed
+          </div>
+
+         
+
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <div style="width: 20px; height: 20px; background-color: #f8d7da; border: 1px solid #ccc;"></div>
+            Cancelled
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -182,8 +205,8 @@
               <label for="ward">Ward</label>
               <div class="select-wrapper">
                 <select id="ward" formControlName="ward" class="form-control">
-                  <option value="">All Wards</option>
-                  <option *ngFor="let v of wardList" [value]="v.WardName">{{v.WardName}}</option>
+                  <option value=""  *ngIf="wardList.length> 1">All Wards</option>
+                  <option *ngFor="let v of wardList" [value]="v.wardName">{{v.wardName}}</option>
                 </select>
                 <i class="fas fa-chevron-down"></i>
               </div>

@@ -20,9 +20,8 @@ import { HttpClientModule, HttpClient } from "@angular/common/http" // Changed t
 import { environment } from "src/environments/environment"
 import { BtnPdfCellRenderer } from "src/app/modules/logsheet/logsheetlist/pdf/buttonPdf-cell-renderer.component"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
-import { A } from "node_modules/@angular/cdk/activedescendant-key-manager.d-Bjic5obv"
-import { RemarkFilterComponent } from "../../remarks/remarks.component"
 
+import { RowStyle, RowClassParams } from 'ag-grid-community';
 interface LogsheetData {
   id: number
   IsClosed: number
@@ -118,7 +117,7 @@ export class LogsheetlistComponent implements OnInit {
   resultData: any
   Form!: FormGroup
   lstZone: any[] = []
-  wardList: WardData[] = []
+  wardList: any[] = []
   lstFilteredWard: WardData[] = []
   siteLocations: any[] = []
   columnDefs: ColDef[] = []
@@ -139,7 +138,27 @@ export class LogsheetlistComponent implements OnInit {
   get f() {
     return this.Form.controls
   }
-refreshFlag = false;
+  refreshFlag = false;
+  getRowStyle = (params: RowClassParams): RowStyle | undefined => {
+    if (params.data?.IsClosed === 2) {
+      // Cancelled → light red
+      return { backgroundColor: '#f8d7da', color: '#721c24' };
+    }
+    if (params.data?.IsClosed === 1) {
+      // Closed → dark green
+      return { backgroundColor: '#28a745', color: 'white' };
+    }
+    // if (params.data?.VerifyStatus === 1) {
+    //   // Verified → light green
+    //   return { backgroundColor: '#d4edda' };
+    // }
+    if (params.data?.IsClosed === 0) {
+      // Open & not verified → light orange  && params.data?.VerifyStatus === 0
+      return { backgroundColor: '#ffe5b4' };
+    }
+    return undefined;
+  };
+
   constructor(
     private router: Router,
     private fb: FormBuilder,
@@ -148,7 +167,7 @@ refreshFlag = false;
   ) {
     this.uRole = Number(sessionStorage.getItem("Role")) || 0
     this.userType = Number(sessionStorage.getItem("UserType")) || 0
-    this.userId = Number(sessionStorage.getItem("UserID")) || 0
+    this.userId = Number(sessionStorage.getItem("UserId")) || 0
     this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
     this.components = {
       btnLogsheetViewCellRenderer: BtnLogsheetViewCellRenderer,
@@ -182,6 +201,19 @@ refreshFlag = false;
       }
     });
 
+     this.dbService.getWards(obj).subscribe({
+      next: (response: any) => {
+        if (response && response.data) {
+          console.log("Ward data loaded:", response.data);
+          this.wardList = response.data;
+
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading site locations:', error);
+      }
+    });
+
     this.getAGGridReady()
     this.fetchLogsheetData()
   }
@@ -203,7 +235,7 @@ refreshFlag = false;
       LogsheetNumber: null,
       LogsheetID: null,
       SiteName: (roleName === "GENERATOR") ? sessionStorage.getItem("SiteName") : this.Form.value.sitename || null,
-      UserId: Number(sessionStorage.getItem("UserID")) || null,
+      UserId: Number(sessionStorage.getItem("UserId")) || null,
     }
     console.log("Sending payload:", payload)
     this.dbService.GetLogsheetReport(payload).subscribe({
@@ -485,11 +517,11 @@ refreshFlag = false;
       ],
       body: [
         [{},
-        normalizedData?.RTSData?.trans_Date + ' ' + normalizedData?.RTSData?.trans_Time,
-        normalizedData?.RTSData?.trans_Date_UL + ' ' + normalizedData?.RTSData?.trans_Time_UL,
-        normalizedData?.RTSData?.gross_Weight,
-        normalizedData?.RTSData?.unladen_Weight,
-        normalizedData?.RTSData?.act_Net_Weight,
+        `${normalizedData?.RTSData?.trans_Date || ''} ${normalizedData?.RTSData?.trans_Time || ''}`.trim() || 'N/A',
+        `${normalizedData?.RTSData?.trans_Date_UL || ''} ${normalizedData?.RTSData?.trans_Time_UL || ''}`.trim() || 'N/A',
+        normalizedData?.RTSData?.gross_Weight || 'N/A',
+        normalizedData?.RTSData?.unladen_Weight || 'N/A',
+        normalizedData?.RTSData?.act_Net_Weight || 'N/A',
         ],
       ],
       theme: "grid",
@@ -552,11 +584,11 @@ refreshFlag = false;
       ],
       body: [
         [{},
-        normalizedData?.DumpingData?.trans_Date + ' ' + normalizedData?.DumpingData?.trans_Time,
-        normalizedData?.DumpingData?.trans_Date_UL + ' ' + normalizedData?.DumpingData?.trans_Time_UL,
-        normalizedData?.DumpingData?.gross_Weight,
-        normalizedData?.DumpingData?.unladen_Weight,
-        normalizedData?.DumpingData?.act_Net_Weight,
+        `${normalizedData?.DumpingData?.trans_Date || ''} ${normalizedData?.DumpingData?.trans_Time || ''}`.trim() || 'N/A',
+        `${normalizedData?.DumpingData?.trans_Date_UL || ''} ${normalizedData?.DumpingData?.trans_Time_UL || ''}`.trim() || 'N/A',
+        normalizedData?.DumpingData?.gross_Weight || 'N/A',
+        normalizedData?.DumpingData?.unladen_Weight || 'N/A',
+        normalizedData?.DumpingData?.act_Net_Weight || 'N/A',
         ],
       ],
       theme: "grid",
@@ -585,32 +617,32 @@ refreshFlag = false;
     // Section 3: Closure information table
     autoTable(doc, {
       // Use autoTable as a function
-      body: [       
-    [
-      { content: "Logsheet Closed Date & Time :", styles: { fontStyle: "bold" } },
-      { content: normalizedData.ClosedOn || "N/A", colSpan: 5 }
-    ],
-    [
-      { content: "Waste Processing Plant:", styles: { fontStyle: "bold" } },
-      { content: normalizedData.ClosedDestination || "N/A", colSpan: 5 }
-    ],
-    [
-      { content: "Signature & Stamp :", styles: { fontStyle: "bold" } },
-      { content: normalizedData.ClosedBy || "N/A", colSpan: 5 }
-    ],
-    [
-      { content: "Remark :", styles: { fontStyle: "bold" } },
-      { content: normalizedData.Remark || "N/A", colSpan: 5 }
-    ],
-    [
-      { content: "Verification :", styles: { fontStyle: "bold" } },
-      { content: normalizedData.VerifyStatus===1? "Veriried": "Pending" },
-      { content: "Verified By :", styles: { fontStyle: "bold" } },
-      { content: normalizedData.VerifiedBy || "N/A" },
-      { content: "Verified Date :", styles: { fontStyle: "bold" } },
-      { content: normalizedData.VerifiedOn || "N/A" }
-    ]
-  ],
+      body: [
+        [
+          { content: "Logsheet Closed Date & Time :", styles: { fontStyle: "bold" } },
+          { content: normalizedData.ClosedOn || "N/A" }
+        ],
+        [
+          { content: "Waste Processing Plant:", styles: { fontStyle: "bold" } },
+          { content: normalizedData.ClosedDestination || "N/A" }
+        ],
+        [
+          { content: "Signature & Stamp :", styles: { fontStyle: "bold" } },
+          { content: normalizedData.ClosedBy || "N/A" }
+        ],
+        [
+          { content: "Remark :", styles: { fontStyle: "bold" } },
+          { content: normalizedData.Remark || "N/A" }
+        ],
+        // [
+        //   { content: "Verification :", styles: { fontStyle: "bold" } },
+        //   { content: normalizedData.VerifyStatus === 1 ? "Verified" : "Pending" },
+        //   { content: "Verified By :", styles: { fontStyle: "bold" } },
+        //   { content: normalizedData.VerifiedBy || "N/A" },
+        //   { content: "Verified Date :", styles: { fontStyle: "bold" } },
+        //   { content: normalizedData.VerifiedOn || "N/A" }
+        // ]
+      ],
       theme: "grid",
       styles: {
         fontSize: 10,
@@ -620,7 +652,7 @@ refreshFlag = false;
       },
       columnStyles: {
         0: { cellWidth: 70 },
-        1: { cellWidth: 70 },
+        1: { cellWidth: 199 },
       },
       startY: doc.lastAutoTable.finalY + 5,
     })
@@ -860,7 +892,7 @@ refreshFlag = false;
           if (params.value === 0) {
             return { ...baseStyle, color: "#f59e0b" }
           } else if (params.value === 1) {
-            return { ...baseStyle, color: "#10b981" }
+            return { ...baseStyle, color: "#eef7f4ff" }
           } else if (params.value === 2) {
             return { ...baseStyle, color: "#ef4444" }
           }
@@ -1145,7 +1177,7 @@ refreshFlag = false;
           })
           dialogRef.afterClosed().subscribe((result) => {
             console.log("Dialog closed", result)
-             this.fetchLogsheetData();
+            this.fetchLogsheetData();
           })
         } else {
           // No transaction data found, open dialog with original data
@@ -1160,7 +1192,7 @@ refreshFlag = false;
           })
           dialogRef.afterClosed().subscribe((result) => {
             console.log("Dialog closed", result)
-             this.fetchLogsheetData();
+            this.fetchLogsheetData();
           })
         }
       },
@@ -1185,18 +1217,13 @@ refreshFlag = false;
         })
         dialogRef.afterClosed().subscribe((result) => {
           console.log("Dialog closed", result)
-           this.fetchLogsheetData();
+          this.fetchLogsheetData();
         })
       },
     })
   }
 
-  getRowStyle = (params: any) => {
-if (params.data && params.data.status === 'Verified') {
-return { backgroundColor: '#d4edda' }; // light green
-}
-return null;
-};
+
 }
 
 function dateComparator(date1: string, date2: string): number {

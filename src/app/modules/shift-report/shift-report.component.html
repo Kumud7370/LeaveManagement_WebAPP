@@ -146,9 +146,9 @@
             <label for="weighBridge">Weigh Bridge</label>
             <div class="select-wrapper">
               <select id="weighBridge" formControlName="weighBridge" class="form-control">
-                <option *ngFor="let option of weighBridgeOptions" [value]="option.id">
-                  {{ option.name }}
-                </option>
+                 <!-- <option value="ALLWB">ALL</option> -->
+                <option *ngFor="let l of lstSiteNames" [value]="l.siteName">
+                  {{ l.siteDescription }}
               </select>
               <i class="fas fa-chevron-down"></i>
             </div>

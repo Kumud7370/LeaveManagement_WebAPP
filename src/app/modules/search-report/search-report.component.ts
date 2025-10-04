@@ -9,6 +9,7 @@ import * as XLSX from "xlsx"
 import { BtnSearchViewCellRenderer } from "./viewSearch/buttonSearchView-cell-renderer.component"
 import { BtnSearchPdfCellRenderer } from "./viewSearch/buttonSearchPdf-cell-renderer.component"
 import { ViewSearchReportComponent } from "./viewSearch/viewsearchreport.component"
+import moment from "moment"
 
 @Component({
   selector: "app-search-report",
@@ -33,7 +34,7 @@ export class SearchReportComponent implements OnInit {
   // Form models
   reportForm!: FormGroup
   reportData: any[] = []
-
+  lstSiteNames: any[] = []
   // UI state
   isLoading = false
   isAdvancedSearch = false
@@ -119,7 +120,7 @@ export class SearchReportComponent implements OnInit {
         padding: "0",
       },
     },
-    { headerName: "Location", field: "deliveryLocation", sortable: true, filter: true, resizable: true },
+    { headerName: "Location", field: "locationName", sortable: true, filter: true, resizable: true },
     { headerName: "Slip No", field: "slipSrNo", sortable: true, filter: true, resizable: true },
     { headerName: "Transaction Date", field: "trans_Date", sortable: true, filter: true, resizable: true },
     { headerName: "Transaction Time", field: "trans_Time", sortable: true, filter: true, resizable: true },
@@ -210,14 +211,38 @@ export class SearchReportComponent implements OnInit {
   totalUnladenWeightInTon = 0
   totalActualNetWeightInKG = 0
   totalActualNetWeightInTon = 0
-
+  userId = 0
+  userSiteName = ""
   constructor(
     public router: Router,
     private fb: FormBuilder,
     private dbService: DbCallingService,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
-  ) { }
+  ) {
+    // this.uRole = Number(sessionStorage.getItem("Role")) || 0
+    // this.userType = Number(sessionStorage.getItem("UserType")) || 0
+    this.userId = Number(sessionStorage.getItem("UserId")) || 0
+    this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
+    let obj = {
+      UserId: Number(this.userId),
+      SiteName: this.userSiteName,
+    }
+    console.log("Loading initial data with params:", obj);
+    this.dbService.GetSiteLocations(obj).subscribe({
+      next: (response: any) => {
+        console.log("response:", response);
+        if (response && response.data) {
+          this.lstSiteNames = response.data;
+
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading site locations:', error);
+      }
+    });
+
+  }
 
   ngOnInit() {
     this.initForm()
@@ -229,16 +254,13 @@ export class SearchReportComponent implements OnInit {
 
   // NEW METHOD: Load initial data automatically with current month
   loadInitialData() {
-    const today = new Date();
-    const fromDate = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-
-    // Set value to the form control
-    this.reportForm.get('FromDate')?.setValue(this.formatDate(fromDate));
-
+    const today = moment().format('YYYY-MM-DD')  ;
+    const fromDate = moment().format('YYYY-MM-DD')  ;
+   
     const basicPayload = {
       WeighBridge: "ALLWB",
-      FromDate: this.formatDate(fromDate),
-      todate: this.formatDate(today),
+      FromDate: fromDate,
+      todate: today,
       reportType: 1,
     }
 
@@ -274,11 +296,11 @@ export class SearchReportComponent implements OnInit {
 
   initForm() {
     const today = new Date()
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+    const firstDay = moment().format('DD-MM-YYYY')
     this.reportForm = this.fb.group({
       WeighBridge: ["ALLWB", Validators.required],
-      FromDate: [this.formatDate(firstDay)],
-      todate: [this.formatDate(today)],
+      FromDate: [firstDay],
+      todate: [firstDay],
       reportType: [1],
     })
   }
@@ -598,9 +620,11 @@ export class SearchReportComponent implements OnInit {
       WeighBridge: this.reportForm.get("WeighBridge")?.value || "",
       FromDate: this.reportForm.get("FromDate")?.value,
       todate: this.reportForm.get("todate")?.value,
-      reportType: this.reportForm.get("reportType")?.value,
+      reportType: 0,
+      UserID: Number(this.userId),
+      SiteName: this.userSiteName,
     }
-
+    console.log("Submitting search with payload:", basicPayload)
     this.isLoading = true
     this.dbService.getSearchReports(basicPayload).subscribe(
       (response) => {
@@ -763,11 +787,12 @@ export class SearchReportComponent implements OnInit {
 
   resetForm() {
     const today = new Date()
+   
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
     this.reportForm.reset({
       WeighBridge: "",
-      FromDate: this.formatDate(firstDay),
-      todate: this.formatDate(today),
+      FromDate:  moment().format('YYYY-MM-DD'),
+      todate:  moment().format('YYYY-MM-DD'),
       reportType: "",
       Gross_Weight_From: 0,
       Gross_Weight_To: 0,

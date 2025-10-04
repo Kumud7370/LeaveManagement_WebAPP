@@ -120,7 +120,7 @@ export class DashboardComponent implements OnInit {
   pageSize = 6
   totalItems = 0
   totalPages = 0
-
+yDate:any;
   // Vehicle Count Pie Chart Options
   public vehicleChartOptions: PieChartOptions = {
     series: [831, 229],
@@ -325,7 +325,7 @@ export class DashboardComponent implements OnInit {
   //  this.loadNewsData()
 
     // Simulate loading
-
+this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
      let obj = {
       DateFrom: moment().format('YYYY-MM-DD'),
       UserId: Number(sessionStorage.getItem("UserId"))

@@ -49,12 +49,35 @@ export class WardReportComponent implements OnInit {
   totalWeight = 0
   topWard = ""
   daysWithData = 0
-
+userId=0;
+userSiteName="";
+lstSiteNames:any[]=[];
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private dbCallingService: DbCallingService,
-  ) {}
+  ) {
+
+    this.userId = Number(sessionStorage.getItem("UserId")) || 0
+    this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
+    let obj = {
+      UserId: Number(this.userId),
+      SiteName: this.userSiteName,
+    }
+    console.log("Loading initial data with params:", obj);
+    this.dbCallingService.GetSiteLocations(obj).subscribe({
+      next: (response: any) => {
+        console.log("response:", response);
+        if (response && response.data) {
+          this.lstSiteNames = response.data;
+
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading site locations:', error);
+      }
+    });
+  }
 
   ngOnInit() {
     this.initForm()
@@ -71,13 +94,15 @@ export class WardReportComponent implements OnInit {
     const fromDate = `${currentMonth}-01`
 
     const payload = {
-      WeighBridge: weighBridge,
+      WeighBridge: "ALLWB",
       FromDate: fromDate,
       ToDate: "", // Not used by Wardwise SP
       FullDate: "",
       WardName: "",
       Act_Shift: "",
       TransactionDate: fromDate,
+      UserId: this.userId,
+      SiteName: this.userSiteName
     }
 
     console.log("Loading initial wardwise data with payload:", payload)
@@ -140,12 +165,11 @@ export class WardReportComponent implements OnInit {
     this.isLoading = true
     this.isFiltersOpen = false
 
-    const formValues = this.reportForm.value
-    const weighBridge = formValues.weighBridge === "all" ? "" : formValues.weighBridge
+    const formValues = this.reportForm.value   
     const fromDate = `${formValues.month}-01`
 
     const payload = {
-      WeighBridge: weighBridge,
+      WeighBridge: this.reportForm.value,
       FromDate: fromDate,
       ToDate: "", // Not used by Wardwise SP
       FullDate: "",

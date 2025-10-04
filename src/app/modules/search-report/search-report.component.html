@@ -174,7 +174,9 @@
             <label for="weighBridge">Weigh Bridge</label>
             <div class="select-wrapper">
               <select id="weighBridge" formControlName="WeighBridge" class="form-control">
-                <option *ngFor="let wb of WeighBridgeData" [value]="wb.id">{{ wb.WeighBridge }}</option>
+               <option value="ALLWB">ALL</option>
+                <option *ngFor="let l of lstSiteNames" [value]="l.siteName">
+                  {{ l.siteDescription }}
               </select>
               <i class="fas fa-chevron-down"></i>
             </div>
@@ -202,7 +204,7 @@
             </div>
           </div>
 
-          <div class="form-group">
+          <!-- <div class="form-group">
             <label for="reportType">Report Type</label>
             <div class="select-wrapper">
               <select id="reportType" formControlName="reportType" class="form-control">
@@ -210,7 +212,7 @@
               </select>
               <i class="fas fa-chevron-down"></i>
             </div>
-          </div>
+          </div> -->
 
           <div class="form-actions">
             <button type="submit" class="btn-primary" [disabled]="reportForm.invalid || isLoading">

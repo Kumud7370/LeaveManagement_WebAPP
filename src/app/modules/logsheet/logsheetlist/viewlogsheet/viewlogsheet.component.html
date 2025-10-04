@@ -107,13 +107,20 @@
           <tbody>
             <tr>
               <td class="transaction-cell" rowspan="2">Trip Details</td>
-              <td class="transaction-cell">{{ lstFilterData.RTSData.trans_Date +' ' +lstFilterData?.RTSData?.trans_Time
-                }}</td>
-              <td class="transaction-cell">{{ lstFilterData.RTSData.trans_Date_UL +' '
-                +lstFilterData?.RTSData?.trans_Time_UL }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData.RTSData.gross_Weight) }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData.RTSData.unladen_Weight) }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData.RTSData.act_Net_Weight) }}</td>
+              <td class="transaction-cell">
+                {{ lstFilterData?.RTSData?.trans_Date && lstFilterData?.RTSData?.trans_Time
+                ? lstFilterData.RTSData.trans_Date + ' ' + lstFilterData.RTSData.trans_Time
+                : 'N/A' }}
+              </td>
+
+              <td class="transaction-cell">
+                {{ lstFilterData?.RTSData?.trans_Date_UL && lstFilterData?.RTSData?.trans_Time_UL
+                ? lstFilterData.RTSData.trans_Date_UL + ' ' + lstFilterData.RTSData.trans_Time_UL
+                : 'N/A' }}
+              </td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData?.RTSData?.gross_Weight) }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData?.RTSData?.unladen_Weight) }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData?.RTSData?.act_Net_Weight) }}</td>
             </tr>
           </tbody>
         </table>
@@ -137,13 +144,20 @@
           <tbody>
             <tr>
               <td class="transaction-cell" rowspan="2">Trip Details</td>
-              <td class="transaction-cell">{{ lstFilterData.DumpingData.trans_Date +' '
-                +lstFilterData?.DumpingData?.trans_Time }}</td>
-              <td class="transaction-cell">{{ lstFilterData.DumpingData.trans_Date_UL +' '
-                +lstFilterData?.DumpingData?.trans_Time_UL }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData.DumpingData.gross_Weight) }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData.DumpingData.unladen_Weight) }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData.DumpingData.act_Net_Weight) }}</td>
+              <td class="transaction-cell">
+                {{ lstFilterData?.DumpingData?.trans_Date && lstFilterData?.DumpingData?.trans_Time
+                ? lstFilterData.DumpingData.trans_Date + ' ' + lstFilterData.DumpingData.trans_Time
+                : 'N/A' }}
+              </td>
+
+              <td class="transaction-cell">
+                {{ lstFilterData?.DumpingData?.trans_Date_UL && lstFilterData?.DumpingData?.trans_Time_UL
+                ? lstFilterData.DumpingData.trans_Date_UL + ' ' + lstFilterData.DumpingData.trans_Time_UL
+                : 'N/A' }}
+              </td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData?.DumpingData?.gross_Weight) }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData?.DumpingData?.unladen_Weight) }}</td>
+              <td class="transaction-cell">{{ formatWeight(lstFilterData?.DumpingData?.act_Net_Weight) }}</td>
             </tr>
           </tbody>
         </table>
@@ -191,26 +205,25 @@
               <td class="label-cell">Remark :</td>
               <td class="value-cell-full" colspan="5">{{ lstFilterData.Remark || 'N/A' }}</td>
             </tr>
-            <tr  *ngIf="lstFilterData.IsClosed===0 && lstFilterData.VerifyStatus===0">
-              <td class="label-cell">Verify :</td>
-              <td class="value-cell-full" colspan="5">               
-                  <ag-grid-angular class="ag-theme-alpine" style="width: 100%; height: 400px;"
-                    [rowData]="lstPenaltyData" [columnDefs]="columnDefs" rowSelection="multiple"
-                    (gridReady)="onGridReady($event)">
-                  </ag-grid-angular>
-                  <button (click)="onVerify()" style="margin-bottom:10px; padding:6px 12px">
-                    Verify
-                  </button>              
+            <!-- <tr *ngIf="userRole==='JO' && lstFilterData.IsClosed===0 && lstFilterData.VerifyStatus===0">
+              <td class="label-cell">Verification :</td>
+              <td class="value-cell-full" colspan="5">
+                <ag-grid-angular class="ag-theme-alpine" style="width: 100%; height: 400px;" [rowData]="lstPenaltyData"
+                  [columnDefs]="columnDefs" rowSelection="multiple" (gridReady)="onGridReady($event)">
+                </ag-grid-angular>
+                <button (click)="onVerify()" style="margin-bottom:10px; padding:6px 12px">
+                  Verify
+                </button>
               </td>
             </tr>
-              <tr *ngIf="lstFilterData.VerifyStatus===1">
+            <tr *ngIf="lstFilterData.VerifyStatus===1">
               <td class="label-cell" style="width: 150px;">Verify :</td>
               <td class="value-cell">Verified</td>
               <td class="label-cell">VerifiedBy :</td>
               <td class="value-cell">{{ lstFilterData.VerifiedBy || 'N/A' }}</td>
               <td class="label-cell" style="width: 150px;">VerifiedOn :</td>
               <td class="value-cell" style="width: 150px;">{{ lstFilterData.VerifiedOn || 'N/A' }}</td>
-            </tr>
+            </tr> -->
           </tbody>
         </table>
       </div>
