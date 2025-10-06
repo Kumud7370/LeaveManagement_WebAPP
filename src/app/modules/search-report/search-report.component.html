@@ -1,18 +1,16 @@
-<div class="search-report-container">
+
+
+<div class="logsheet-list-container">
   <!-- Header -->
   <div class="report-header">
     <div class="header-content">
       <div class="header-title">
-        <i class="fas fa-search"></i>
+        <i class="fas fa-clipboard-list"></i>
         <h1>Search Report</h1>
       </div>
       <div class="header-actions">
-        <button 
-          class="btn-filters"
-          (click)="toggleFilters()"
-          [class.active]="isFiltersOpen"
-          aria-label="Toggle Filters"
-        >
+        <button class="btn-filters" (click)="toggleFilters()" [class.active]="isFiltersOpen"
+          aria-label="Toggle Filters">
           <i class="fas fa-filter"></i>
           <span>Filters</span>
         </button>
@@ -23,141 +21,124 @@
     </div>
   </div>
 
-  <!-- Loading Indicator -->
-  <div class="loading-overlay" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <div class="loading-text">Loading search data...</div>
-  </div>
+  <!-- Table View -->
+  <div class="table-view">
+    <div class="results-container">
+      <div class="results-header">
+         <div class="filter-controls">
+          <div class=" quick-filter">
+          <label for="filter-text-box" class="visually-hidden">Quick Filter</label>
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+            <input id="filter-text-box" class="form-control" placeholder="Search logsheets..."
+              (input)="onFilterTextBoxChanged()" [(ngModel)]="filterText" />
+          </div></div>
+        </div>
+        <div class="results-actions">
+          <button class="btn-export" (click)="exportToExcel()">
+            <i class="fas fa-file-excel"></i> Export to Excel
+          </button>
+        </div>
+      </div>
 
-  <!-- Report Content -->
-  <div class="report-content" *ngIf="!isLoading">
-    <!-- Report Header -->
-    <div class="report-title-section">
-      <h2>Search Report: {{ getSelectedPeriod() }}</h2>
+      <!-- Quick Filter and Status Filters -->
+       <!-- <div class="filter-controls">
+        <div class="quick-filter">
+          <label for="filter-text-box" class="visually-hidden">Quick Filter</label>
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+            <input id="filter-text-box" class="form-control" placeholder="Search logsheets..."
+              (input)="onFilterTextBoxChanged()" [(ngModel)]="filterText" />
+          </div>
+        </div>
+
+       <div class="status-filters">
+          <button class="status-btn" [class.active]="activeFilter === 9" (click)="FilterData(9)">
+            <i class="fas fa-list"></i> All
+          </button>
+          <button class="status-btn open" [class.active]="activeFilter === 0" (click)="FilterData(0)">
+            <i class="fas fa-clock"></i> Open
+          </button>
+          <button class="status-btn closed" [class.active]="activeFilter === 1" (click)="FilterData(1)">
+            <i class="fas fa-check-circle"></i> Closed
+          </button>
+          <button class="status-btn cancelled" [class.active]="activeFilter === 2" (click)="FilterData(2)">
+            <i class="fas fa-ban"></i> Cancelled
+          </button>
+        </div>
+      </div> 
+
+      <!-- AG Grid -->
+      <div class="grid-container">
+        <ag-grid-angular #agGrid style="width: 100%; height: 500px;" class="ag-theme-alpine" [rowData]="reportData"
+          [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="20"
+          [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading" [suppressColumnVirtualisation]="true"
+          [suppressRowVirtualisation]="false" [animateRows]="false" [enableCellTextSelection]="true" [rowBuffer]="10"
+          [suppressLoadingOverlay]="false" [suppressNoRowsOverlay]="false" [context]="context"
+          (gridReady)="onGridReady($event)">
+        </ag-grid-angular>
+
+      </div>
     </div>
+  </div>
+  <!-- No Data Message -->
+  <div class="no-data-message" *ngIf="lstReportData.length === 0">
+    <i class="fas fa-exclamation-circle"></i>
+    <p>No logsheet data available for the selected criteria.</p>
+    <button class="btn-primary" (click)="toggleFilters()">Adjust Filters</button>
+  </div>
+</div>
 
-    <!-- Grid Container -->
-    <div class="table-view">
-      <div class="results-container">
-        <div class="results-header">
-          <h2>Search Results</h2>
-          <div class="report-actions">
-            <button class="btn-export" (click)="exportToExcel()" [disabled]="reportData.length === 0">
-              <i class="fas fa-file-excel"></i> Export
-            </button>
-            <button class="btn-print" (click)="printReport()" [disabled]="reportData.length === 0">
-              <i class="fas fa-print"></i> Print
-            </button>
-          </div>
-        </div>
-
-        <!-- AG Grid Component -->
-        <div class="grid-container">
-          <div class="grid-controls">
-            <div class="grid-controls-left">
-              <span class="grid-info">
-                Showing {{ reportData.length }} records
-              </span>
-            </div>
-            <div class="grid-controls-right">
-              <button class="btn-grid-control" (click)="autoSizeAllColumns()" title="Auto-size columns" [disabled]="isLoading">
-                <i class="fas fa-expand-arrows-alt"></i> Auto Size
-              </button>
-              <button class="btn-grid-control" (click)="sizeColumnsToFit()" title="Fit to width" [disabled]="isLoading">
-                <i class="fas fa-compress-arrows-alt"></i> Fixed Width
-              </button>
-            </div>
-          </div>
-
-          <ag-grid-angular 
-            #agGrid 
-            style="width: 100%; height: 500px;" 
-            class="ag-theme-alpine"
-            [rowData]="reportData" 
-            [columnDefs]="columnDefs"
-            [defaultColDef]="defaultColDef" 
-            [pagination]="true" 
-            [paginationPageSize]="20"
-            [paginationPageSizeSelector]="[10, 20, 50, 100]" 
-            [loading]="isLoading" 
-            [suppressColumnVirtualisation]="true"
-            [suppressRowVirtualisation]="false" 
-            [animateRows]="false"
-            [enableCellTextSelection]="true" 
-            [rowBuffer]="10"
-            [suppressLoadingOverlay]="false" 
-            [suppressNoRowsOverlay]="false" 
-            [context]="context"
-            (gridReady)="onGridReady($event)">
-          </ag-grid-angular>
-        </div>
-
-        <!-- Summary Container -->
-        <div class="summary-container">
-          <h3>Summary</h3>
-          <div class="summary-grid" *ngIf="reportData.length > 0; else noDataSummary">
-            <div class="summary-item">
-              <div class="summary-label">Total Vehicles</div>
-              <div class="summary-value">{{ totalNoOfVehicles }}</div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">In Vehicles</div>
-              <div class="summary-value">{{ totalInVehicles }}</div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Out Vehicles</div>
-              <div class="summary-value">{{ totalOutVehicles }}</div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Total Gross Weight</div>
-              <div class="summary-value">{{ totalGrossWeightInKG | number:'1.2-2' }} KG
-                <span class="unit-conversion">({{ totalGrossWeightInTon | number:'1.2-2' }} Tons)</span>
-              </div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Total Net Weight</div>
-              <div class="summary-value">{{ totalActualNetWeightInKG | number:'1.2-2' }} KG
-                <span class="unit-conversion">({{ totalActualNetWeightInTon | number:'1.2-2' }} Tons)</span>
-              </div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Total Unladen Weight</div>
-              <div class="summary-value">{{ totalUnladenWeightInKg | number:'1.2-2' }} KG
-                <span class="unit-conversion">({{ totalUnladenWeightInTon | number:'1.2-2' }} Tons)</span>
-              </div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Selected Period</div>
-              <div class="summary-value">{{ getSelectedPeriod() }}</div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Report Type</div>
-              <div class="summary-value">{{ getReportTypeText() }}</div>
-            </div>
-          </div>
-          <ng-template #noDataSummary>
-            <div class="no-data-message">
-              <i class="fas fa-info-circle"></i>
-              <span *ngIf="isLoading">Loading data...</span>
-              <span *ngIf="!isLoading">No data available for the selected criteria.</span>
-            </div>
-          </ng-template>
-          <div class="summary-note" *ngIf="reportData.length > 0">
-            <i class="fas fa-info-circle"></i> 
-            Use Filters to adjust search criteria and generate reports for different periods
-          </div>
-        </div>
+<!-- Report Content -->
+<div class="report-content report-spacing">
+  <!-- Summary Cards -->
+  <!-- <div class="summary-cards">
+    <div class="summary-card">
+      <div class="card-icon">
+        <i class="fas fa-list-alt"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-value">{{ lstReportData?.length || 0 }}</div>
+        <div class="card-label">Total Logsheets</div>
       </div>
     </div>
 
-    <!-- No Data Message -->
-    <div class="no-data-message" *ngIf="reportData.length === 0 && !isLoading">
-      <i class="fas fa-exclamation-circle"></i>
-      <p>No search results found for the selected criteria.</p>
-      <button class="btn-primary" (click)="toggleFilters()">Change Filters</button>
+    <div class="summary-card">
+      <div class="card-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-value">{{ getStatusCount(1) }}</div>
+        <div class="card-label">Closed Logsheets</div>
+      </div>
     </div>
-  </div>
 
+    <div class="summary-card">
+      <div class="card-icon">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-value">{{ getStatusCount(0) }}</div>
+        <div class="card-label">Open Logsheets</div>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="card-icon">
+        <i class="fas fa-ban"></i>
+      </div>
+      <div class="card-content">
+        <div class="card-value">{{ getStatusCount(2) }}</div>
+        <div class="card-label">Cancelled Logsheets</div>
+      </div>
+    </div>
+  </div> -->
+
+  <!-- Filters Offcanvas Panel -->
   <!-- Filters Offcanvas Panel -->
   <div class="filters-offcanvas-overlay" [class.show]="isFiltersOpen" (click)="closeFilters()"></div>
   <div class="filters-offcanvas" [class.show]="isFiltersOpen">
@@ -174,7 +155,7 @@
             <label for="weighBridge">Weigh Bridge</label>
             <div class="select-wrapper">
               <select id="weighBridge" formControlName="WeighBridge" class="form-control">
-               <option value="ALLWB">ALL</option>
+                <option value="ALLWB">ALL</option>
                 <option *ngFor="let l of lstSiteNames" [value]="l.siteName">
                   {{ l.siteDescription }}
               </select>
@@ -188,7 +169,8 @@
               <input type="date" id="fromDate" formControlName="FromDate" class="form-control">
               <i class="fas fa-calendar-alt"></i>
             </div>
-            <div *ngIf="reportForm.get('FromDate')?.invalid && reportForm.get('FromDate')?.touched" class="error-message">
+            <div *ngIf="reportForm.get('FromDate')?.invalid && reportForm.get('FromDate')?.touched"
+              class="error-message">
               From date is required
             </div>
           </div>

@@ -10,6 +10,7 @@ import { BtnSearchViewCellRenderer } from "./viewSearch/buttonSearchView-cell-re
 import { BtnSearchPdfCellRenderer } from "./viewSearch/buttonSearchPdf-cell-renderer.component"
 import { ViewSearchReportComponent } from "./viewSearch/viewsearchreport.component"
 import moment from "moment"
+import { wrap } from "module"
 
 @Component({
   selector: "app-search-report",
@@ -40,7 +41,7 @@ export class SearchReportComponent implements OnInit {
   isAdvancedSearch = false
   activeTab = "search"
   isFiltersOpen = false
-
+  filterText = ""
   // Filter states
   GrossWeightInKAactive = false
   AgencynameIsAactive = false
@@ -143,6 +144,9 @@ export class SearchReportComponent implements OnInit {
     minWidth: 100,
     sortable: true,
     filter: true,
+    wrapText: true,
+    autoHeight: true,
+    wrapHeaderText: true,
   }
 
   // Context for AG Grid
@@ -254,9 +258,9 @@ export class SearchReportComponent implements OnInit {
 
   // NEW METHOD: Load initial data automatically with current month
   loadInitialData() {
-    const today = moment().format('YYYY-MM-DD')  ;
-    const fromDate = moment().format('YYYY-MM-DD')  ;
-   
+    const today = moment().format('YYYY-MM-DD');
+    const fromDate = moment().format('YYYY-MM-DD');
+
     const basicPayload = {
       WeighBridge: "ALLWB",
       FromDate: fromDate,
@@ -406,6 +410,12 @@ export class SearchReportComponent implements OnInit {
   onGridReady(params: any): void {
     this.gridApi = params.api
     console.log("Grid is ready")
+  }
+  onFilterTextBoxChanged() {
+    if (this.gridApi) {
+      const filterValue = (document.getElementById("filter-text-box") as HTMLInputElement)?.value || ""
+      this.gridApi.setGridOption("quickFilterText", filterValue)
+    }
   }
 
   // Auto Size and Fixed Width buttons functionality
@@ -787,12 +797,12 @@ export class SearchReportComponent implements OnInit {
 
   resetForm() {
     const today = new Date()
-   
+
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
     this.reportForm.reset({
       WeighBridge: "",
-      FromDate:  moment().format('YYYY-MM-DD'),
-      todate:  moment().format('YYYY-MM-DD'),
+      FromDate: moment().format('YYYY-MM-DD'),
+      todate: moment().format('YYYY-MM-DD'),
       reportType: "",
       Gross_Weight_From: 0,
       Gross_Weight_To: 0,
