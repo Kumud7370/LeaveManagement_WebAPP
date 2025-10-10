@@ -1,5 +1,4 @@
-<div class="ward-report-container">
-  <!-- Header -->
+<!-- <div class="ward-report-container">
   <div class="report-header">
     <div class="header-content">
       <div class="header-title">
@@ -19,20 +18,16 @@
     </div>
   </div>
 
-  <!-- Loading Indicator -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="spinner"></div>
     <div class="loading-text">Generating Report...</div>
   </div>
 
-  <!-- Report Content -->
   <div class="report-content" *ngIf="showReport && !isLoading" #reportContainer>
-    <!-- Report Header -->
     <div class="report-title-section">
       <h2>Ward-wise Report for {{ reportForm.value.month | date:'MMMM yyyy' }}</h2>
     </div>
 
-    <!-- Table View with AG Grid -->
     <div class="table-view">
       <div class="results-container">
         <div class="results-header">
@@ -48,7 +43,6 @@
           </div>
         </div>
 
-        <!-- AG Grid Component -->
         <div class="grid-container">
           <ag-grid-angular #agGrid style="width: 100%; height: 500px;" class="ag-theme-alpine" [rowData]="lstReportData"
             [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="10"
@@ -56,7 +50,6 @@
           </ag-grid-angular>
         </div>
 
-        <!-- Summary Container -->
         <div class="summary-container">
           <h3>Summary</h3>
           <div class="summary-grid" *ngIf="lstReportData && lstReportData.length > 0; else noDataSummary">
@@ -79,7 +72,6 @@
             </div>
           </div>
 
-          <!-- Template for when no data is available -->
           <ng-template #noDataSummary>
             <div class="no-data-message">
               <i class="fas fa-info-circle"></i>
@@ -95,7 +87,6 @@
       </div>
     </div>
 
-    <!-- No Data Message -->
     <div class="no-data-message" *ngIf="lstReportData.length === 0 && !isLoading">
       <i class="fas fa-exclamation-circle"></i>
       <p>No data available for the selected criteria.</p>
@@ -103,7 +94,6 @@
     </div>
   </div>
 
-  <!-- Filters Offcanvas Panel -->
   <div class="filters-offcanvas-overlay" [class.show]="isFiltersOpen" (click)="closeFilters()"></div>
   <div class="filters-offcanvas" [class.show]="isFiltersOpen">
     <div class="offcanvas-header">
@@ -119,7 +109,6 @@
             <label for="weighBridge">Location</label>
             <div class="select-wrapper">
               <select id="weighBridge" formControlName="weighBridge" class="form-control">
-                <!-- <option value="ALLWB">ALL</option> -->
                 <option *ngFor="let l of lstSiteNames" [value]="l.siteName">
                   {{ l.siteDescription }}
               </select>
@@ -136,6 +125,175 @@
               Month selection is required
             </div>
           </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" [disabled]="reportForm.invalid || isLoading">
+              <i class="fas fa-search"></i>
+              <span *ngIf="!isLoading">Generate Report</span>
+              <span *ngIf="isLoading">Generating...</span>
+            </button>
+            <button type="button" class="btn-secondary" (click)="reportForm.reset()" [disabled]="isLoading">
+              <i class="fas fa-undo"></i> Reset
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div> -->
+
+
+
+
+
+
+
+<div class="ward-report-container">
+  <!-- Header  -->
+  <div class="report-header">
+    <div class="header-content">
+      <div class="header-title">
+        <i class="fas fa-map-marker-alt"></i>
+        <h1>Ward-wise Report</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn-filters" (click)="toggleFilters()" [class.active]="isFiltersOpen"
+          aria-label="Toggle Filters">
+          <i class="fas fa-filter"></i>
+          <span>Filters</span>
+        </button>
+        <button class="btn-back" (click)="navigateBack()">
+          <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Indicator  -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <div class="loading-text">Generating Report...</div>
+  </div>
+
+  <!-- Report Content  -->
+  <div class="report-content" *ngIf="showReport && !isLoading" #reportContainer>
+    <!-- Report Header  -->
+    <div class="report-title-section">
+      <h2>Ward-wise Report for {{ reportForm.value.month | date:'MMMM yyyy' }}</h2>
+    </div>
+
+    <!-- Table View with AG Grid  -->
+    <div class="table-view">
+      <div class="results-container">
+        <div class="results-header">
+          <h2>Ward Report Data</h2>
+          <div class="report-actions">
+            <button class="btn-export" (click)="exportToExcel()"
+              [disabled]="!lstReportData || lstReportData.length === 0">
+              <i class="fas fa-file-excel"></i> Export to Excel
+            </button>
+            <!-- <button class="btn-print" (click)="printReport()">
+              <i class="fas fa-print"></i> Print
+            </button> -->
+          </div>
+        </div>
+
+        <!-- AG Grid Component  -->
+        <div class="grid-container">
+          <ag-grid-angular #agGrid style="width: 100%; height: 500px;" class="ag-theme-alpine" [rowData]="lstReportData"
+            [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="10"
+            [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading">
+          </ag-grid-angular>
+        </div>
+
+        <!-- Summary Container  -->
+        <div class="summary-container">
+          <h3>Summary</h3>
+          <div class="summary-grid" *ngIf="lstReportData && lstReportData.length > 0; else noDataSummary">
+            <div class="summary-item">
+              <div class="summary-label">Days with Data</div>
+              <div class="summary-value">{{ daysWithData }}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Highest Volume Ward</div>
+              <div class="summary-value">{{ topWard || 'N/A' }}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Total Weight</div>
+              <div class="summary-value">
+                {{ totalWeight | number:'1.2-2' }} KG
+                <span class="unit-conversion">({{ (totalWeight / 1000) | number:'1.2-2' }} Tons)</span>
+              </div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Total Vehicles</div>
+              <div class="summary-value">{{ totalVehicles }}</div>
+            </div>
+          </div>
+
+          <!-- Template for when no data is available  -->
+          <ng-template #noDataSummary>
+            <div class="no-data-message">
+              <i class="fas fa-info-circle"></i>
+              <span *ngIf="isLoading">Loading data...</span>
+              <span *ngIf="!isLoading">No data available for the selected criteria.</span>
+            </div>
+          </ng-template>
+
+          <div class="summary-note" *ngIf="lstReportData && lstReportData.length > 0">
+            <i class="fas fa-info-circle"></i>
+            Note: Data is aggregated by ward and date
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Data Message  -->
+    <div class="no-data-message" *ngIf="lstReportData.length === 0 && !isLoading">
+      <i class="fas fa-exclamation-circle"></i>
+      <p>No data available for the selected criteria.</p>
+      <button class="btn-primary" (click)="toggleFilters()">Change Filters</button>
+    </div>
+  </div>
+
+  <!-- Filters Offcanvas Panel  -->
+  <div class="filters-offcanvas-overlay" [class.show]="isFiltersOpen" (click)="closeFilters()"></div>
+  <div class="filters-offcanvas" [class.show]="isFiltersOpen">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title">Report Filters</h5>
+      <button class="btn-close" (click)="closeFilters()" aria-label="Close Filters">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="filters-content">
+        <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
+          <div class="form-group">
+            <label for="weighBridge">Select Location</label>
+            <div class="select-wrapper">
+              <select id="weighBridge" formControlName="weighBridge" class="form-control">
+                <!-- Default option shown before user selects -->
+                <option value="" disabled selected>Select Location</option>
+
+                <!-- Dynamic options -->
+                <option *ngFor="let l of lstSiteNames" [value]="l.siteName">
+                  {{ l.siteDescription }}
+                </option>
+              </select>
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="month">Select Month</label>
+            <div class="input-wrapper">
+              <input type="month" id="month" formControlName="month" class="form-control">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div *ngIf="reportForm.get('month')?.invalid && reportForm.get('month')?.touched" class="error-message">
+              Month selection is required
+            </div>
+          </div>
+
           <div class="form-actions">
             <button type="submit" class="btn-primary" [disabled]="reportForm.invalid || isLoading">
               <i class="fas fa-search"></i>
