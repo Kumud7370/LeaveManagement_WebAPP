@@ -92,7 +92,7 @@ export class DbCallingService {
     );
   }
   getWards(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/Master/getAllWards`, data).pipe(
+    return this.http.post<any>(`${this.apiUrl}/Logsheet/getAllWards`, data).pipe(
       catchError(error => {
         console.error('Error fetching ward data', error);
         return of({ WardData: [] });

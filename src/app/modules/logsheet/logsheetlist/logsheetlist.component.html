@@ -205,6 +205,7 @@
               <label for="ward">Ward</label>
               <div class="select-wrapper">
                 <select id="ward" formControlName="ward" class="form-control">
+                  <option value="">Select Ward Name</option>
                   <option value=""  *ngIf="wardList.length> 1">All Wards</option>
                   <option *ngFor="let v of wardList" [value]="v.wardName">{{v.wardName}}</option>
                 </select>
