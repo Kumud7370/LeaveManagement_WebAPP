@@ -1,59 +1,66 @@
-import { Injectable, NgZone } from "@angular/core"
-import { Router } from "@angular/router"
-import { AuthService } from "../services/AuthServices/auth.service"
+import { Injectable, NgZone, Inject, PLATFORM_ID } from "@angular/core";
+import { isPlatformBrowser } from "@angular/common";
+import { Router } from "@angular/router";
+import { AuthService } from "../services/AuthServices/auth.service";
 
 @Injectable({ providedIn: "root" })
 export class SessionService {
-    private idleTimeoutMs = 15 * 60 * 1000 // 15 minutes
-    private idleTimer: any = null
+    private idleTimeoutMs = 1 * 60 * 1000; // 15 minutes
+    private idleTimer: any = null;
+    private isBrowser: boolean;
 
     constructor(
         private ngZone: NgZone,
         private authService: AuthService,
         private router: Router,
+        @Inject(PLATFORM_ID) private platformId: Object
     ) {
-        this.startIdleWatch()
+        this.isBrowser = isPlatformBrowser(this.platformId);
+
+        if (this.isBrowser) {
+            this.startIdleWatch();
+        }
     }
 
-    // Public API to reset timer (if any other module wants to ping)
     public resetIdleTimer(): void {
-        if (!this.hasValidToken()) return
-        this.setupTimer()
+        if (!this.isBrowser || !this.hasValidToken()) return;
+        this.setupTimer();
     }
 
     private startIdleWatch(): void {
-        // Attach activity listeners
-        const events = ["mousemove", "keydown", "click", "touchstart", "scroll"]
-        events.forEach((evt) => {
-            window.addEventListener(evt, () => this.resetIdleTimer(), { passive: true })
-        })
+        if (!this.isBrowser) return;
 
-        // Initialize timer if already logged in
+        const events = ["mousemove", "keydown", "click", "touchstart", "scroll"];
+        events.forEach((evt) => {
+            window.addEventListener(evt, () => this.resetIdleTimer(), { passive: true });
+        });
+
         if (this.hasValidToken()) {
-            this.setupTimer()
+            this.setupTimer();
         }
     }
 
     private setupTimer(): void {
+        if (!this.isBrowser) return;
+
         if (this.idleTimer) {
-            clearTimeout(this.idleTimer)
+            clearTimeout(this.idleTimer);
         }
 
-        // Run timer outside Angular to avoid unnecessary change detection
         this.ngZone.runOutsideAngular(() => {
             this.idleTimer = setTimeout(() => {
-                // Back to Angular zone for navigation / state updates
                 this.ngZone.run(() => {
                     if (this.hasValidToken()) {
-                        this.authService.logout("idle") // will navigate to /login?reason=idle
+                        this.authService.logout("idle");
                     }
-                })
-            }, this.idleTimeoutMs)
-        })
+                });
+            }, this.idleTimeoutMs);
+        });
     }
 
     private hasValidToken(): boolean {
-        const token = localStorage.getItem("token")
-        return !!token
+        if (!this.isBrowser) return false;
+        const token = localStorage.getItem("token");
+        return !!token;
     }
 }

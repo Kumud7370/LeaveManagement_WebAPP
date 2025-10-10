@@ -385,7 +385,7 @@ export class SearchReportComponent implements OnInit {
 
   downloadSearchReportPDF(data: any) {
     console.log("Download Search Report PDF method called with data:", data)
-
+    
     // Create and open the view component to generate PDF
     const dialogRef = this.dialog.open(ViewSearchReportComponent, {
       width: "90%",
