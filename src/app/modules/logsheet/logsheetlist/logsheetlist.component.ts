@@ -201,7 +201,7 @@ export class LogsheetlistComponent implements OnInit {
       }
     });
 
-     this.dbService.getWards(obj).subscribe({
+    this.dbService.getWards(obj).subscribe({
       next: (response: any) => {
         if (response && response.data) {
           console.log("Ward data loaded:", response.data);
@@ -237,7 +237,7 @@ export class LogsheetlistComponent implements OnInit {
       SiteName: (roleName === "GENERATOR") ? sessionStorage.getItem("SiteName") : this.Form.value.sitename || null,
       UserId: Number(sessionStorage.getItem("UserId")) || null,
     }
-    console.log("Sending payload:", payload)
+   // console.log("Sending payload:", payload)
     this.dbService.GetLogsheetReport(payload).subscribe({
       next: (response) => {
         console.log("API response received:", response)
@@ -451,7 +451,7 @@ export class LogsheetlistComponent implements OnInit {
         [
           { content: "Agency Name:", styles: { fontStyle: "bold" } },
           normalizedData.AgencyName || "N/A",
-          { content: "Tare Weight (RC Book) :", styles: { fontStyle: "bold" } },
+          { content: "Tare Weight (RC Book) (KG):", styles: { fontStyle: "bold" } },
           normalizedData.RCBookTareWeight || "N/A",
         ],
         [
@@ -465,7 +465,7 @@ export class LogsheetlistComponent implements OnInit {
       theme: "grid",
       startY: doc.lastAutoTable.finalY + 2,
       styles: {
-        fontSize: 10,
+        fontSize: 9,
         textColor: 0,
         lineWidth: 0.3,
         lineColor: [0, 0, 0],
@@ -480,13 +480,15 @@ export class LogsheetlistComponent implements OnInit {
     })
 
     // UPDATED: Trip Details Table - ALWAYS show in PDF, but display N/A for non-closed logsheets (same as ViewlogsheetComponent)
+
     autoTable(doc, {
       // Use autoTable as a function
+
       head: [
         [
           {
             content: "Trip Details at RTS",
-            colSpan: 6, // ✅ Span across all 6 columns
+            colSpan: 7, // ✅ Span across all 6 columns
             styles: {
               fontStyle: "bold",
               halign: "left",
@@ -508,15 +510,17 @@ export class LogsheetlistComponent implements OnInit {
               fillColor: [240, 240, 240],
             },
           },
+          { content: "Slip Number", styles: { fontStyle: "bold", halign: "center" } },
           { content: "In Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
           { content: "Out Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Gross Weight", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Unladen Weight", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Actual Net Weight", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Gross Weight (KG)", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Unladen Weight (KG)", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Actual Net Weight (KG)", styles: { fontStyle: "bold", halign: "center" } },
         ],
       ],
       body: [
         [{},
+        normalizedData?.RTSData?.slipSrNo || 'N/A',
         `${normalizedData?.RTSData?.trans_Date || ''} ${normalizedData?.RTSData?.trans_Time || ''}`.trim() || 'N/A',
         `${normalizedData?.RTSData?.trans_Date_UL || ''} ${normalizedData?.RTSData?.trans_Time_UL || ''}`.trim() || 'N/A',
         normalizedData?.RTSData?.gross_Weight || 'N/A',
@@ -527,7 +531,7 @@ export class LogsheetlistComponent implements OnInit {
       theme: "grid",
       startY: doc.lastAutoTable.finalY + 5,
       styles: {
-        fontSize: 10,
+        fontSize: 9,
         textColor: 0,
         lineWidth: 0.3,
         lineColor: [0, 0, 0],
@@ -539,12 +543,13 @@ export class LogsheetlistComponent implements OnInit {
         fontStyle: "bold",
       },
       columnStyles: {
-        0: { cellWidth: 44.83 }, // Trip Details column
-        1: { cellWidth: 44.83 }, // In Time of Transact
-        2: { cellWidth: 44.83 }, // Out Time of Transact
-        3: { cellWidth: 44.83 }, // Gross Weight
-        4: { cellWidth: 44.83 }, // Unladen Weight
-        5: { cellWidth: 44.83 }, // Actual Net Weight
+        0: { cellWidth: 24 }, // Trip Details column
+        1: { cellWidth: 40.83 }, // In Time of Transact
+        2: { cellWidth: 40.83 }, // Out Time of Transact
+        3: { cellWidth: 40.83 }, // Gross Weight
+        4: { cellWidth: 40.83 }, // Unladen Weight
+        5: { cellWidth: 40.83 }, // Actual Net Weight
+        6: { cellWidth: 40.83 }, // Actual Net Weight
       },
     })
     autoTable(doc, {
@@ -553,7 +558,7 @@ export class LogsheetlistComponent implements OnInit {
         [
           {
             content: "Trip Details at Dumping Ground",
-            colSpan: 6, // ✅ Span across all 6 columns
+            colSpan: 7, // ✅ Span across all 6 columns
             styles: {
               fontStyle: "bold",
               halign: "left",
@@ -575,15 +580,17 @@ export class LogsheetlistComponent implements OnInit {
               fillColor: [240, 240, 240],
             },
           },
+          { content: "Slip Number", styles: { fontStyle: "bold", halign: "center" } },
           { content: "In Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
           { content: "Out Time of Transact", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Gross Weight", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Unladen Weight", styles: { fontStyle: "bold", halign: "center" } },
-          { content: "Actual Net Weight", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Gross Weight (KG)", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Unladen Weight (KG)", styles: { fontStyle: "bold", halign: "center" } },
+          { content: "Actual Net Weight (KG)", styles: { fontStyle: "bold", halign: "center" } },
         ],
       ],
       body: [
         [{},
+        normalizedData?.DumpingData?.slipSrNo || 'N/A',
         `${normalizedData?.DumpingData?.trans_Date || ''} ${normalizedData?.DumpingData?.trans_Time || ''}`.trim() || 'N/A',
         `${normalizedData?.DumpingData?.trans_Date_UL || ''} ${normalizedData?.DumpingData?.trans_Time_UL || ''}`.trim() || 'N/A',
         normalizedData?.DumpingData?.gross_Weight || 'N/A',
@@ -594,7 +601,7 @@ export class LogsheetlistComponent implements OnInit {
       theme: "grid",
       startY: doc.lastAutoTable.finalY + 5,
       styles: {
-        fontSize: 10,
+        fontSize: 9,
         textColor: 0,
         lineWidth: 0.3,
         lineColor: [0, 0, 0],
@@ -606,12 +613,13 @@ export class LogsheetlistComponent implements OnInit {
         fontStyle: "bold",
       },
       columnStyles: {
-        0: { cellWidth: 44.83 }, // Trip Details column
-        1: { cellWidth: 44.83 }, // In Time of Transact
-        2: { cellWidth: 44.83 }, // Out Time of Transact
-        3: { cellWidth: 44.83 }, // Gross Weight
-        4: { cellWidth: 44.83 }, // Unladen Weight
-        5: { cellWidth: 44.83 }, // Actual Net Weight
+        0: { cellWidth: 24 }, // Trip Details column
+        1: { cellWidth: 40.83 }, // In Time of Transact
+        2: { cellWidth: 40.83 }, // Out Time of Transact
+        3: { cellWidth: 40.83 }, // Gross Weight
+        4: { cellWidth: 40.83 }, // Unladen Weight
+        5: { cellWidth: 40.83 }, // Actual Net Weight
+        6: { cellWidth: 40.83 }, // Actual Net Weight
       },
     })
     // Section 3: Closure information table
@@ -645,7 +653,7 @@ export class LogsheetlistComponent implements OnInit {
       ],
       theme: "grid",
       styles: {
-        fontSize: 10,
+        fontSize: 9,
         textColor: 0,
         lineWidth: 0.3,
         lineColor: [0, 0, 0],
@@ -782,7 +790,7 @@ export class LogsheetlistComponent implements OnInit {
       return
     }
     this.closeFilters() // Close filters panel after submission
-    console.log("Form submitted with values:", this.Form.value)
+   // console.log("Form submitted with values:", this.Form.value)
     // Fetch new data based on form values
     this.fetchLogsheetData()
   }
@@ -1015,6 +1023,19 @@ export class LogsheetlistComponent implements OnInit {
         },
       },
       {
+        headerName: "Closed On",
+        field: "ClosedOn",
+        width: 160,
+        minWidth: 160,
+        maxWidth: 160,
+        flex: 0,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
+      },
+      {
         headerName: "Verified By",
         field: "VerifiedBy",
         width: 160,
@@ -1067,6 +1088,10 @@ export class LogsheetlistComponent implements OnInit {
         display: "flex",
         alignItems: "center",
       },
+      wrapText: true,
+      autoHeight: true,
+      wrapHeaderText: true,
+
     }
   }
 

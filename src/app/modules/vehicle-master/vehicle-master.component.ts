@@ -50,6 +50,7 @@ export class VehicleMasterComponent implements OnInit {
   vehicleTypesList: any[] = []
   agencyList: any[] = []
   wardList: any[] = []
+  wardListFiltered: any[] = []
   // Forms
   addVehicleForm!: FormGroup
 
@@ -69,6 +70,8 @@ export class VehicleMasterComponent implements OnInit {
   editMode = false;
   selectedVehicleId: number | null = null;
   modalTitle = 'Add New Vehicle';
+
+    loading: boolean = false
   constructor(
     private router: Router,
     private fb: FormBuilder,
@@ -130,7 +133,6 @@ export class VehicleMasterComponent implements OnInit {
   updateVehicleTypeValidators() {
     const vehicleTypeControl = this.addVehicleForm.get("vehicleType")
     // const vehicleTypeManualControl = this.addVehicleForm.get("vehicleTypeManual")
-
     if (this.isManualVehicleTypeEntry) {
       vehicleTypeControl?.clearValidators()
       // vehicleTypeManualControl?.setValidators([Validators.required])
@@ -138,7 +140,6 @@ export class VehicleMasterComponent implements OnInit {
       // vehicleTypeManualControl?.clearValidators()
       vehicleTypeControl?.setValidators([Validators.required])
     }
-
     vehicleTypeControl?.updateValueAndValidity()
     // vehicleTypeManualControl?.updateValueAndValidity()
   }
@@ -154,7 +155,6 @@ export class VehicleMasterComponent implements OnInit {
     this.addVehicleForm.get("vehicleType")?.setValue("")
     // this.addVehicleForm.get("vehicleTypeManual")?.setValue("")
     this.updateVehicleTypeValidators()
-
     // Force change detection
     this.cdr.detectChanges()
   }
@@ -168,14 +168,16 @@ export class VehicleMasterComponent implements OnInit {
   loadInitialData() {
     let obj = {
       UserId: Number(this.userId),
-      SiteName: this.userSiteName,
+      SiteName: (this.userSiteName) ? this.userSiteName : null,
     }
-    console.log("Loading initial data with params:", obj);
+    //  console.log("Loading initial data with params:", obj);
     this.dbcallingService.GetSiteLocations(obj).subscribe({
       next: (response: any) => {
         if (response && response.data) {
           this.siteLocations = response.data;
-
+          if (this.wardList.length === 1) {
+            this.addVehicleForm.patchValue({ siteName: this.wardList[0].siteName || this.wardList[0].siteName });
+          }
         }
       },
       error: (error: any) => {
@@ -193,11 +195,16 @@ export class VehicleMasterComponent implements OnInit {
         console.error('Error loading site locations:', error);
       }
     });
+    // console.log("Loading wards with params:", obj);
     this.dbcallingService.getWards(obj).subscribe({
       next: (response: any) => {
+        // console.log("Wards API response:", response);
         if (response && response.data) {
           this.wardList = response.data;
-
+          this.wardListFiltered = response.data;
+          if (this.wardList.length === 1) {
+            this.addVehicleForm.patchValue({ ward: this.wardList[0].wardName || this.wardList[0].wardName });
+          }
         }
       },
       error: (error: any) => {
@@ -217,11 +224,12 @@ export class VehicleMasterComponent implements OnInit {
       SiteName: this.userSiteName,
       VehicleType: null,
     }
-
+this.loading = true;
     this.dbcallingService.getVehiclemasterData(searchParams).subscribe({
       next: (res: any) => {
-        console.log("Vehicle data fetched successfully:", res)
+        // console.log("Vehicle data fetched successfully:", res)
         if (res && res.data) {
+          this.loading = false;
           this.vehicleList = res.data
           this.lstReportData = [...res.data]
           this.lstSearchResults = [...res.data]
@@ -239,6 +247,7 @@ export class VehicleMasterComponent implements OnInit {
       },
       error: (error) => {
         console.error("Error fetching vehicles:", error)
+        this.loading = false;
         this.vehicleList = []
         this.lstReportData = []
         this.lstSearchResults = []
@@ -267,6 +276,8 @@ export class VehicleMasterComponent implements OnInit {
           console.log("Vehicle types API response:", res)
           if (res && res.data && Array.isArray(res.data)) {
             this.vehicleTypesList = res.data;
+            // ✅ Auto-select if only one ward
+
             // Force change detection to update the UI
             this.cdr.detectChanges()
             resolve()
@@ -449,60 +460,60 @@ export class VehicleMasterComponent implements OnInit {
           return { ...baseStyle, color: "#6b7280", fontWeight: "normal" }
         },
         maxWidth: 100,
-       
+
       },
       {
         headerName: "Location",
         field: "siteName",
         maxWidth: 120,
-        
+
         valueFormatter: (params) => params.value || "N/A",
       },
       {
         headerName: "Ward",
         field: "ward",
         maxWidth: 120,
-        
+
         valueFormatter: (params) => params.value || "N/A",
       },
       {
         headerName: "Vehicle Number",
         field: "vehicleNumber",
         maxWidth: 120,
-       
+
       },
       {
         headerName: "Vehicle Type",
         field: "vehicleType",
         maxWidth: 300,
-      
+
       },
       {
         headerName: "Agency Number",
         field: "agencyNo",
         maxWidth: 20,
-      
+
         hide: true, // Hide this column by default
       },
       {
         headerName: "Agency Name",
         field: "agencyName",
         minWidth: 200,
-       
+
         valueFormatter: (params) => params.value || "N/A",
       },
       {
         headerName: "Gross Weight (kg)",
         field: "grossWeight",
         maxWidth: 120,
-       
+
         valueFormatter: (params) => (params.value ? `${params.value} kg` : "N/A"),
       },
       {
         headerName: "Tare Weight (kg)",
         field: "tareWeight",
         maxWidth: 120,
-       
+
         valueFormatter: (params) => (params.value ? `${params.value} kg` : "N/A"),
       },
 
@@ -511,13 +522,13 @@ export class VehicleMasterComponent implements OnInit {
         headerName: "Vehicle ID",
         field: "vehicleID",
         minWidth: 100,
-        
+
         hide: true, // Hide this column by default
       },
       {
         headerName: "Actions",
         maxWidth: 100,
-     
+
         cellRenderer: (params: any) => {
           return `
             <div class="cell-button-container">
@@ -594,9 +605,18 @@ export class VehicleMasterComponent implements OnInit {
     }
   }
 
+  OnLocationChange(event: any) {
+    const selectedLocation = event.target.value;
+    console.log("Selected Location:", selectedLocation);
+    if (selectedLocation === "") {
+      this.wardListFiltered = [...this.wardList];
+    } else {
+      this.wardListFiltered = this.wardList.filter(ward => ward.locationName === selectedLocation);
+    }
+  }
   // Get status count for summary cards
   getStatusCount(status: number): number {
-    return this.lstSearchResults.filter((item: any) => item.isVehicleActive === status).length
+    return this.lstSearchResults.filter((item: any) => item.isActive === status).length
   }
 
   // Navigation methods

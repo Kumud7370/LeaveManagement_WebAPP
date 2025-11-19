@@ -60,7 +60,7 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   private checkToken(): boolean {
     // ✅ Run only in browser environment
     if (isPlatformBrowser(this.platformId)) {
-      const token = localStorage.getItem("token")
+      const token = sessionStorage.getItem("token")
 
       // No token → redirect to login
       if (!token) {

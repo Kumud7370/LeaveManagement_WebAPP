@@ -5,7 +5,7 @@ import { AuthService } from "../services/AuthServices/auth.service";
 
 @Injectable({ providedIn: "root" })
 export class SessionService {
-    private idleTimeoutMs = 1 * 60 * 1000; // 15 minutes
+    private idleTimeoutMs = 5 * 60 * 1000; // 15 minutes
     private idleTimer: any = null;
     private isBrowser: boolean;
 
@@ -60,7 +60,7 @@ export class SessionService {
 
     private hasValidToken(): boolean {
         if (!this.isBrowser) return false;
-        const token = localStorage.getItem("token");
+        const token = sessionStorage.getItem("token");
         return !!token;
     }
 }

@@ -23,39 +23,16 @@ export class ViewSearchReportComponent {
     ) {
         this.data = data
         // Normalize data keys to handle case sensitivity issues
-        this.searchData = this.normalizeData(data)
+        this.searchData = data;
         console.log("Search Report View Dialog - Original data received:", data)
         console.log("Search Report View Dialog - Normalized data:", this.searchData)
     }
 
-    // This function normalizes the data keys to ensure consistent casing
-    normalizeData(data: any): any {
-        if (!data) return {}
 
-        // Create a standardized object with expected property names
-        return {
-            deliveryLocation: data.deliveryLocation || data.DeliveryLocation || "",
-            slipSrNo: data.slipSrNo || data.SlipSrNo || "",
-            trans_Date: data.trans_Date || data.Trans_Date || "",
-            trans_Time: data.trans_Time || data.Trans_Time || "",
-            agency_Name: data.agency_Name || data.Agency_Name || "",
-            vehicle_No: data.vehicle_No || data.Vehicle_No || "",
-            vehicleType: data.vehicleType || data.VehicleType || "",
-            ward: data.ward || data.Ward || "",
-            route: data.route || data.Route || "",
-            type_of_Garbage: data.type_of_Garbage || data.Type_of_Garbage || "",
-            gross_Weight: data.gross_Weight || data.Gross_Weight || "",
-            trans_Date_UL: data.trans_Date_UL || data.Trans_Date_UL || "",
-            trans_Time_UL: data.trans_Time_UL || data.Trans_Time_UL || "",
-            unladen_Weight: data.unladen_Weight || data.Unladen_Weight || "",
-            act_Net_Weight: data.act_Net_Weight || data.Act_Net_Weight || "",
-            remark: data.remark || data.Remark || "",
-        }
-    }
 
     // Format weight values - for UI display
     formatWeight(weight: string | number): string {
-        console.log("Formatting weight:", weight)
+        //  console.log("Formatting weight:", weight)
         if (!weight || weight === "N/A" || weight === "" || weight === null || weight === undefined) {
             return "N/A"
         }
@@ -73,61 +50,85 @@ export class ViewSearchReportComponent {
     }
 
     // PDF generation with weighing ticket layout
-    downloadPDF(): void {
-        const doc = new jsPDF("portrait")
-        const fileName = `SearchReport_${this.searchData.slipSrNo || "Unknown"}_${moment().format("DDMMYYYY_HHmmss")}`
+    async downloadPDF(): Promise<void> {
+        const doc = new jsPDF({
+            orientation: 'landscape',
+            unit: 'pt',
+            format: 'a4'
+        });
 
-        // Set consistent margins for all tables
-        const leftMargin = 15
-        const rightMargin = 15
-        const pageWidth = doc.internal.pageSize.getWidth()
-        const tableWidth = pageWidth - leftMargin - rightMargin
+        const generatedBy = sessionStorage.getItem('UserName') || 'User';
+        const currentDate = moment().format('DD-MM-YYYY');
+        const fileName = `WeighSlip_${this.searchData.slipSrNo || "Unknown"}_${moment().format("DDMMYYYY_HHmmss")}`;
 
-        // Company Header - centered with consistent margins
+        const bmcLogo = await this.getBase64ImageFromURL('assets/images/mcgmlogo.png');
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 20;
+        const leftMargin = 20;
+        const rightMargin = 20;
+        const tableWidth = pageWidth - leftMargin - rightMargin;
+
+        // === Header ===
+        doc.setFontSize(9);
+        doc.text('SWM-MSI', margin, margin + 10);
+        doc.text(`Date: ${currentDate}`, pageWidth - margin - 100, margin + 10);
+
+        // Draw top line
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.5);
+        doc.line(margin, margin + 15, pageWidth - margin, margin + 15);
+
+        // === Header Table ===
         autoTable(doc, {
-            body: [
-                [{ content: "SWM MIS", colSpan: 4, styles: { halign: "center", fontSize: 14, fontStyle: "bold" } }],
-                [
-                    {
-                        content: "WEIGHING TICKET",
-                        colSpan: 4,
-                        styles: { halign: "center", fontSize: 12 },
-                    },
-                ],
-            ],
-            theme: "grid",
+            startY: margin + 20,
+            theme: 'grid',
             styles: {
+                font: 'helvetica',
+                fontSize: 10,
+                halign: 'center',
+                valign: 'middle',
                 lineWidth: 0.5,
-                textColor: 0,
-                fontSize: 12,
-                halign: "center",
                 lineColor: [0, 0, 0],
             },
-            margin: { top: 10, left: leftMargin, right: rightMargin },
-            tableWidth: tableWidth,
-        })
+            margin: { left: margin, right: margin },
+            tableWidth: pageWidth - margin * 2,
+            body: [
+                [
+                    { content: '', rowSpan: 2, styles: { halign: 'center', valign: 'middle', cellWidth: 80, minCellHeight: 60 } },
+                    { content: 'SWM MIS', colSpan: 2, styles: { fontSize: 14, fontStyle: 'bold', halign: 'center', valign: 'middle' } },
+                ],
+                [
+                    { content: `User: ${generatedBy}`, styles: { halign: 'left', fontSize: 10 } },
+                    { content: `Date: ${currentDate}`, styles: { halign: 'right', fontSize: 10 } },
+                ]
+            ],
+            didDrawCell: (data: any) => {
+                if (data.row.index === 0 && data.column.index === 0) {
+                    doc.addImage(bmcLogo, 'PNG', data.cell.x + 10, data.cell.y + 5, 50, 50);
+                }
+            }
+        });
 
-        // WEIGHING TICKET Label - consistent margins
+        // === WEIGHING TICKET Label ===
         autoTable(doc, {
-            body: [[{ content: "WEIGHING TICKET", styles: { halign: "left", fontSize: 12, fontStyle: "bold" } }]],
+            body: [[{ content: "WEIGHING SLIP", styles: { halign: "left", fontSize: 12, fontStyle: "bold" } }]],
             theme: "plain",
-            styles: {
-                textColor: 0,
-                fontSize: 12,
-            },
+            styles: { textColor: 0, fontSize: 12 },
             startY: doc.lastAutoTable.finalY + 5,
             margin: { left: leftMargin, right: rightMargin },
             tableWidth: tableWidth,
-        })
+        });
 
-        // Main information table - consistent margins and centering
+        // === Main Info Table ===
         autoTable(doc, {
             body: [
                 [
-                    { content: "TICKET NO :", styles: { fontStyle: "bold", fillColor: [248, 249, 250] } },
+                    { content: "SLIP NO :", styles: { fontStyle: "bold", fillColor: [248, 249, 250] } },
                     this.searchData.slipSrNo || "N/A",
                     { content: "LOGSHEET NO :", styles: { fontStyle: "bold", fillColor: [248, 249, 250] } },
-                    this.searchData.slipSrNo || "N/A",
+                    this.searchData.dC_No || "N/A",
                 ],
                 [
                     { content: "VEHICLE NO :", styles: { fontStyle: "bold", fillColor: [248, 249, 250] } },
@@ -186,59 +187,115 @@ export class ViewSearchReportComponent {
             },
             margin: { left: leftMargin, right: rightMargin },
             tableWidth: tableWidth,
-        })
+        });
 
-        // Two Image Section as table row with two columns - consistent with main table
+        // === Vehicle Images ===
+        const inVehicleImg = await this.toBase64Image(this.searchData.in_Vehicle_Image);
+        const outVehicleImg = await this.toBase64Image(this.searchData.out_Vehicle_Image);
+
+        function addImageToCell(doc: any, base64: string, x: number, y: number, width: number, height: number) {
+            try {
+                const imgW = width - 10;
+                const imgH = height - 10;
+                doc.addImage(base64, "JPEG", x + 5, y + 5, imgW, imgH);
+            } catch (err) {
+                console.error("Error adding image to PDF:", err);
+            }
+        }
+
         autoTable(doc, {
             body: [
                 [
-                    {
-                        content: "Vehicle Entering (Tare Weight)",
-                        styles: {
-                            halign: "center",
-                            valign: "middle",
-                            fontSize: 10,
-                            minCellHeight: 60,
-                            fillColor: [248, 249, 250],
-                        },
-                    },
-                    {
-                        content: "Vehicle Exiting (Gross Weight)",
-                        styles: {
-                            halign: "center",
-                            valign: "middle",
-                            fontSize: 10,
-                            minCellHeight: 60,
-                            fillColor: [248, 249, 250],
-                        },
-                    },
+                    { content: "Vehicle Entering", styles: { halign: "center", minCellHeight: 320 } },
+                    { content: "Vehicle Exiting", styles: { halign: "center", minCellHeight: 320 } },
                 ],
             ],
             theme: "grid",
-            startY: doc.lastAutoTable.finalY, // No gap - start immediately after main table
-            styles: {
-                fontSize: 10,
-                textColor: 0,
-                lineWidth: 0.5,
-                lineColor: [0, 0, 0],
+            startY: doc.lastAutoTable.finalY + 2,
+            didDrawCell: (data) => {
+                if (data.row.index === 0 && data.column.index === 0 && inVehicleImg) {
+                    addImageToCell(doc, inVehicleImg, data.cell.x, data.cell.y, data.cell.width, data.cell.height);
+                }
+                if (data.row.index === 0 && data.column.index === 1 && outVehicleImg) {
+                    addImageToCell(doc, outVehicleImg, data.cell.x, data.cell.y, data.cell.width, data.cell.height);
+                }
             },
-            columnStyles: {
-                0: { cellWidth: tableWidth * 0.5 }, // 50% width for first image
-                1: { cellWidth: tableWidth * 0.5 }, // 50% width for second image
-            },
-            margin: { left: leftMargin, right: rightMargin },
-            tableWidth: tableWidth,
-        })
+        });
 
-        // Footer - centered
-        const pageHeight = doc.internal.pageSize.getHeight()
-        doc.setFontSize(8)
-        doc.text("1 of 1", pageWidth / 2, pageHeight - 8, { align: "center" })
+        // === Footer ===
+        doc.setFontSize(8);
+        doc.text("1 of 1", pageWidth / 2, pageHeight - 8, { align: "center" });
 
-        doc.save(`${fileName}.pdf`)
+        // === Save PDF ===
+        doc.save(`${fileName}.pdf`);
+    }
+
+    async toBase64Image(url: string): Promise<string> {
+        const response = await fetch(`https://swm.mcgm.gov.in/swmmsiwebapi/api/Report/proxy-image?url=${encodeURIComponent(url)}`);
+        const blob = await response.blob();
+        console.log("Blobsize:", blob.size, "type:", blob.type);
+        return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+    // ✅ Convert image URL → Base64 (with CORS fallback)
+    // async toBase64Image(url: string): Promise<string> {
+    //     try {
+    //         const response = await fetch(url, { mode: "no-cors" }); // attempt even without CORS
+    //         const blob = await response.blob();
+    //         return await new Promise<string>((resolve, reject) => {
+    //             const reader = new FileReader();
+    //             reader.onloadend = () => resolve(reader.result as string);
+    //             reader.onerror = reject;
+    //             reader.readAsDataURL(blob);
+    //         });
+    //     } catch (err) {
+    //         console.error("Error converting image:", url, err);
+    //         throw err;
+    //     }
+    // }
+    getBase64ImageFromURL(url: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous'; // Handle cross-origin issues
+            img.src = url;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    reject(new Error('Canvas context not available'));
+                    return;
+                }
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.onerror = (err) => reject(err);
+        });
     }
 
     Close() {
         this.dialogRef.close()
     }
+}
+// ✅ Helper function to safely load and draw image
+function addImageToCell(doc: any, base64: any, x: any, y: any, cellWidth: any, cellHeight: any) {
+    const img = new Image();
+    img.src = base64;
+    img.onload = () => {
+        const aspect = img.width / img.height;
+        let drawWidth = cellWidth - 10;
+        let drawHeight = drawWidth / aspect;
+        if (drawHeight > cellHeight - 10) {
+            drawHeight = cellHeight - 10;
+            drawWidth = drawHeight * aspect;
+        }
+        const offsetX = x + (cellWidth - drawWidth) / 2;
+        const offsetY = y + (cellHeight - drawHeight) / 2;
+        doc.addImage(base64, "JPEG", offsetX, offsetY, drawWidth, drawHeight);
+    };
 }

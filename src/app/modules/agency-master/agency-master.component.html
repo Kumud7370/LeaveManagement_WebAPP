@@ -17,7 +17,13 @@
       </div>
     </div>
   </div>
-
+ <!-- Loading Indicator -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Loading...</span>
+    </div>
+  </div>
   <!-- Add Agency Modal -->
   <div class="add-agency-modal-overlay" [class.show]="isAddModalOpen" (click)="closeAddModal()"></div>
   <div class="add-agency-modal" [class.show]="isAddModalOpen">
@@ -204,7 +210,7 @@
       </div>
     </div>
 
-    <div class="summary-card">
+    <!-- <div class="summary-card">
       <div class="card-icon">
         <i class="fas fa-truck"></i>
       </div>
@@ -212,6 +218,6 @@
         <div class="card-value">{{ vehicleTypesList?.length || 0 }}</div>
         <div class="card-label">Vehicle Types</div>
       </div>
-    </div>
+    </div> -->
   </div>
 </div>

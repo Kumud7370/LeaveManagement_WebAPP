@@ -12,6 +12,6 @@ import { AuthService } from "./core/services/AuthServices/auth.service"
   template: "<router-outlet></router-outlet>",
 })
 export class AppComponent {
-  title = "SWMWMS19" 
+  title = "SWM-WMS" 
 }
 

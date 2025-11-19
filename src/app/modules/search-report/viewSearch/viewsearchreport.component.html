@@ -23,29 +23,29 @@
         </div>
       </div>
     </div>
-        
+
     <!-- Main Content -->
     <div class="card-body">
       <!-- Title Section -->
       <div class="title-section">
         <h2 class="main-title">SWM MIS</h2>
-        <h3 class="sub-title">WEIGHING TICKET</h3>
+        <h3 class="sub-title">WEIGHING SLIP</h3>
       </div>
-  
+
       <!-- WEIGHING TICKET Label -->
       <div class="weighing-ticket-label">
-        <h4>WEIGHING TICKET</h4>
+        <h4>WEIGHING SLIP</h4>
       </div>
-        
+
       <!-- Search Report Information Table with Images (single unified structure) -->
       <div class="pdf-table-container">
         <table class="pdf-table">
           <tbody>
             <tr>
-              <td class="label-cell">TICKET NO :</td>
+              <td class="label-cell">SLIP NO :</td>
               <td class="value-cell">{{ searchData.slipSrNo || 'N/A' }}</td>
               <td class="label-cell">LOGSHEET NO :</td>
-              <td class="value-cell">{{ searchData.slipSrNo || 'N/A' }}</td>
+              <td class="value-cell">{{ searchData.dC_No || 'N/A' }}</td>
             </tr>
             <tr>
               <td class="label-cell">VEHICLE NO :</td>
@@ -63,7 +63,7 @@
               <td class="label-cell">WARD :</td>
               <td class="value-cell">{{ searchData.ward || 'N/A' }}</td>
               <td class="label-cell">LOCATION :</td>
-              <td class="value-cell">{{ searchData.deliveryLocation || 'N/A' }}</td>
+              <td class="value-cell">{{ searchData.location || 'N/A' }}</td>
             </tr>
             <tr>
               <td class="label-cell">GROSS WEIGHT :</td>
@@ -91,15 +91,21 @@
             <tr class="images-row">
               <td class="image-cell" colspan="2">
                 <div class="image-placeholder">
-                  <span>Vehicle Entering (Tare Weight)</span>
+                  <a [href]="searchData.in_Vehicle_Image" target="_blank" rel="noopener noreferrer">
+                    <img [src]="searchData.in_Vehicle_Image" alt="In Vehicle Image" class="vehicle-image" />
+                  </a>
                 </div>
               </td>
+
               <td class="image-cell" colspan="2">
                 <div class="image-placeholder">
-                  <span>Vehicle Exiting (Gross Weight)</span>
+                  <a [href]="searchData.out_Vehicle_Image" target="_blank" rel="noopener noreferrer">
+                    <img [src]="searchData.out_Vehicle_Image" alt="Out Vehicle Image" class="vehicle-image" />
+                  </a>
                 </div>
               </td>
             </tr>
+
           </tbody>
         </table>
       </div>

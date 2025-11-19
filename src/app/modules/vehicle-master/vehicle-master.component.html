@@ -17,7 +17,13 @@
       </div>
     </div>
   </div>
-
+ <!-- Loading Indicator -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Loading...</span>
+    </div>
+  </div>
   <!-- Add Vehicle Modal -->
   <div class="add-vehicle-modal-overlay" [class.show]="isAddModalOpen" (click)="closeAddModal()"></div>
   <div class="add-vehicle-modal" [class.show]="isAddModalOpen">
@@ -33,7 +39,7 @@
           <div class="form-group">
             <label for="siteName">Location Name</label>
             <div class="input-wrapper">
-              <select formControlName="siteName" id="siteName" class="form-control">
+              <select formControlName="siteName" id="siteName" class="form-control" (change)="OnLocationChange($event)">
                 <option value="">Select Site Name</option>
                 <option *ngFor="let l of siteLocations" [value]="l.siteName">
                   {{ l.siteDescription }}
@@ -50,7 +56,7 @@
             <div class="input-wrapper">
               <select formControlName="ward" id="ward" class="form-control">
                 <option value="">Select Ward</option>
-                <option *ngFor="let l of wardList" [value]="l.wardName">
+                <option *ngFor="let l of wardListFiltered" [value]="l.wardName">
                   {{ l.wardName }}
                 </option>
               </select>
@@ -328,7 +334,7 @@
       </div>
     </div>
 
-    <div class="summary-card">
+    <!-- <div class="summary-card">
       <div class="card-icon">
         <i class="fas fa-tools"></i>
       </div>
@@ -336,6 +342,6 @@
         <div class="card-value">{{ vehicleTypesList?.length || 0 }}</div>
         <div class="card-label">Vehicle Types</div>
       </div>
-    </div>
+    </div> -->
   </div>
 </div>

@@ -94,12 +94,12 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
         // Ensure the API URL doesn't have double slashes
         const baseUrl = this.apiUrl.endsWith('/') ? this.apiUrl.slice(0, -1) : this.apiUrl;
 
-        console.log('Base API URL:', baseUrl);
-        console.log('Making API calls to:');
-        console.log('- Vehicles:', `${baseUrl}/Logsheet/getVehicles`);
-        console.log('- Wards:', `${baseUrl}/Logsheet/getAllWards`);
-        console.log('- Routes:', `${baseUrl}/Logsheet/getAllRoutes`);
-        console.log('- Waste Types:', `${baseUrl}/Logsheet/getWasteTypes`);
+        // console.log('Base API URL:', baseUrl);
+        // console.log('Making API calls to:');
+        // console.log('- Vehicles:', `${baseUrl}/Logsheet/getVehicles`);
+        // console.log('- Wards:', `${baseUrl}/Logsheet/getAllWards`);
+        // console.log('- Routes:', `${baseUrl}/Logsheet/getAllRoutes`);
+        // console.log('- Waste Types:', `${baseUrl}/Logsheet/getWasteTypes`);
 
         forkJoin({
             vehicles: this.http.post<any>(`${baseUrl}/Logsheet/getVehicles`, searchVehicleModel)
@@ -130,8 +130,7 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
                 }))
         }).subscribe({
             next: (results) => {
-                console.log('API Results received:', results);
-
+                //   console.log('API Results received:', results);
                 // Process vehicles data
                 if (results.vehicles?.data && Array.isArray(results.vehicles.data)) {
                     this.vehiclesFilteredList = results.vehicles.data;
@@ -140,7 +139,7 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
                 } else {
                     this.vehiclesFilteredList = [];
                 }
-                console.log('Vehicles loaded:', this.vehiclesFilteredList.length);
+                //  console.log('Vehicles loaded:', this.vehiclesFilteredList.length);
 
                 // Process wards data
                 if (results.wards?.data && Array.isArray(results.wards.data)) {
@@ -148,7 +147,7 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
                 } else {
                     this.wardList = [];
                 }
-                console.log('Wards loaded:', this.wardList.length);
+                //  console.log('Wards loaded:', this.wardList.length);
 
                 // Process routes data
                 if (results.routes?.data && Array.isArray(results.routes.data)) {
@@ -156,7 +155,7 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
                 } else {
                     this.routesFilteredList = [];
                 }
-                console.log('Routes loaded:', this.routesFilteredList.length);
+                //  console.log('Routes loaded:', this.routesFilteredList.length);
 
                 // Process waste types data - based on your controller, it should return ApiResponse<List<RouteWasteType>>                
                 if (
@@ -167,13 +166,28 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
                 } else {
                     this.wasteTypeList = [];
                 }
-                console.log('Waste types loaded:', this.wasteTypeList.length);
+                //  console.log('Waste types loaded:', this.wasteTypeList.length);
 
                 // If waste types failed to load, show a specific message
                 if (this.wasteTypeList.length === 0) {
                     console.warn('No waste types loaded from API. Check if the endpoint is working.');
                 }
-
+                // ✅ Auto-select if only one vehicle
+                // if (this.vehiclesFilteredList.length === 1) {
+                //     this.Form.patchValue({ vehicleno: this.vehiclesFilteredList[0].VehicleNumber });
+                // }
+                // ✅ Auto-select if only one ward
+                if (this.wardList.length === 1) {
+                    this.Form.patchValue({ ward: this.wardList[0].wardName || this.wardList[0].wardName });
+                }
+                // ✅ Auto-select if only one route
+                if (this.routesFilteredList.length === 1) {
+                    this.Form.patchValue({ routeno: this.routesFilteredList[0].routeNumber });
+                }
+                // ✅ Auto-select if only one waste type
+                if (this.wasteTypeList.length === 1) {
+                    this.Form.patchValue({ typeofwaste: this.wasteTypeList[0].wasteType });
+                }
                 this.loading = false;
             },
             error: (error: any) => {
@@ -217,7 +231,7 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
     }
 
     Back() {
-        this.router.navigate(["/logsheet/report"])
+        this.router.navigate(["/logsheet/logsheetlist"])
     }
 
     onSubmit() {
@@ -252,6 +266,7 @@ export class GeneratelogsheetComponent implements OnInit, OnDestroy {
                 }).then(() => {
                     this.Form.reset()
                     this.showSuccessMessage = true
+                     this.router.navigate(["/logsheet/logsheetlist"])
                 })
             },
             error: (error: any) => {

@@ -75,7 +75,7 @@
       <!-- AG Grid -->
       <div class="grid-container">
         <ag-grid-angular #agGrid style="width: 100%; height: 500px;" class="ag-theme-alpine" [rowData]="reportData"
-          [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="20"
+          [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="100"
           [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading" [suppressColumnVirtualisation]="true"
           [suppressRowVirtualisation]="false" [animateRows]="false" [enableCellTextSelection]="true" [rowBuffer]="10"
           [suppressLoadingOverlay]="false" [suppressNoRowsOverlay]="false" [context]="context"
@@ -88,7 +88,7 @@
   <!-- No Data Message -->
   <div class="no-data-message" *ngIf="lstReportData.length === 0">
     <i class="fas fa-exclamation-circle"></i>
-    <p>No logsheet data available for the selected criteria.</p>
+    <!-- <p>No logsheet data available for the selected criteria.</p> -->
     <button class="btn-primary" (click)="toggleFilters()">Adjust Filters</button>
   </div>
 </div>
@@ -96,14 +96,14 @@
 <!-- Report Content -->
 <div class="report-content report-spacing">
   <!-- Summary Cards -->
-  <!-- <div class="summary-cards">
+  <div class="summary-cards"  *ngIf="lstReportData.length === 0">
     <div class="summary-card">
       <div class="card-icon">
         <i class="fas fa-list-alt"></i>
       </div>
       <div class="card-content">
-        <div class="card-value">{{ lstReportData?.length || 0 }}</div>
-        <div class="card-label">Total Logsheets</div>
+        <div class="card-value">{{ totalNoOfVehicles }}</div>
+        <div class="card-label">Total Vehicles</div>
       </div>
     </div>
 
@@ -112,8 +112,8 @@
         <i class="fas fa-check-circle"></i>
       </div>
       <div class="card-content">
-        <div class="card-value">{{ getStatusCount(1) }}</div>
-        <div class="card-label">Closed Logsheets</div>
+        <div class="card-value">{{ totalGrossWeightInKG }} KG</div>
+        <div class="card-label">Total Gross-Weight</div>
       </div>
     </div>
 
@@ -122,8 +122,8 @@
         <i class="fas fa-clock"></i>
       </div>
       <div class="card-content">
-        <div class="card-value">{{ getStatusCount(0) }}</div>
-        <div class="card-label">Open Logsheets</div>
+        <div class="card-value">{{totalUnladenWeightInKg }} KG</div>
+        <div class="card-label">Total Tare-Weight</div>
       </div>
     </div>
 
@@ -132,11 +132,11 @@
         <i class="fas fa-ban"></i>
       </div>
       <div class="card-content">
-        <div class="card-value">{{ getStatusCount(2) }}</div>
-        <div class="card-label">Cancelled Logsheets</div>
+        <div class="card-value">{{ totalActualNetWeightInKG }} KG</div>
+        <div class="card-label">Total Net-Weight</div>
       </div>
     </div>
-  </div> -->
+  </div>  
 
   <!-- Filters Offcanvas Panel -->
   <!-- Filters Offcanvas Panel -->

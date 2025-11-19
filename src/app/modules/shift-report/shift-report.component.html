@@ -236,7 +236,7 @@
         <!-- AG Grid Component  -->
         <div class="grid-container">
           <ag-grid-angular #agGrid style="width: 100%; height: 500px;" class="ag-theme-alpine" [rowData]="lstReportData"
-            [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="10"
+            [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="100"
             [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading">
           </ag-grid-angular>
         </div>
@@ -262,7 +262,7 @@
               <div class="summary-label">Highest Volume Shift</div>
               <div class="summary-value">{{ topShift || 'N/A' }}</div>
             </div>
-            <div class="summary-item">
+            <!-- <div class="summary-item">
               <div class="summary-label">Shift I Total</div>
               <div class="summary-value">{{ getShiftTotal('Shift I').totalNetWeight | number:'1.2-2' }} KG</div>
             </div>
@@ -273,7 +273,7 @@
             <div class="summary-item">
               <div class="summary-label">Shift III Total</div>
               <div class="summary-value">{{ getShiftTotal('Shift III').totalNetWeight | number:'1.2-2' }} KG</div>
-            </div>
+            </div> -->
             <div class="summary-item">
               <div class="summary-label">Date Range</div>
               <div class="summary-value">{{ (reportForm.value.fromDate | date:'dd/MM/yyyy') }} - {{

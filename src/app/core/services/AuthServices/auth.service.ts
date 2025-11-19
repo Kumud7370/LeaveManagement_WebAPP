@@ -114,9 +114,11 @@ export class AuthService {
             sessionStorage.removeItem("UserId")
             sessionStorage.removeItem("SiteName")
             sessionStorage.removeItem("RoleName")
-            localStorage.removeItem("token")
-            localStorage.removeItem("username")
-            localStorage.removeItem("role")
+            sessionStorage.removeItem("token")
+            sessionStorage.removeItem('deviceId');
+            // localStorage.removeItem("token")
+            // localStorage.removeItem("username")
+            // localStorage.removeItem("role")
         } catch (_) {
             // ignore storage errors
         }

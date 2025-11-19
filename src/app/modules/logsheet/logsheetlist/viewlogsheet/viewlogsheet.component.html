@@ -66,7 +66,7 @@
             <tr>
               <td class="label-cell">Agency Name :</td>
               <td class="value-cell">{{ lstFilterData.AgencyName || 'N/A' }}</td>
-              <td class="label-cell">Tare Weight (RC Book) :</td>
+              <td class="label-cell">Tare Weight (RC Book) (KG):</td>
               <td class="value-cell">{{ lstFilterData.RCBookTareWeight || 'N/A' }}</td>
             </tr>
             <tr>
@@ -97,16 +97,18 @@
             </tr>
             <tr>
               <th class="transaction-header trip-details-header" rowspan="2">Trip Details</th>
+              <th class="transaction-header">Slip Number</th>
               <th class="transaction-header">In Time of Transact</th>
               <th class="transaction-header">Out Time of Transact</th>
-              <th class="transaction-header">Gross Weight</th>
-              <th class="transaction-header">Unladen Weight</th>
-              <th class="transaction-header">Actual Net Weight</th>
+              <th class="transaction-header">Gross Weight (KG)</th>
+              <th class="transaction-header">Unladen Weight (KG)</th>
+              <th class="transaction-header">Actual Net Weight (KG)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td class="transaction-cell" rowspan="2">Trip Details</td>
+                <td class="transaction-cell">{{ (lstFilterData?.RTSData?.slipSrNo)?lstFilterData?.RTSData?.slipSrNo:'N/A' }}</td>
               <td class="transaction-cell">
                 {{ lstFilterData?.RTSData?.trans_Date && lstFilterData?.RTSData?.trans_Time
                 ? lstFilterData.RTSData.trans_Date + ' ' + lstFilterData.RTSData.trans_Time
@@ -118,9 +120,9 @@
                 ? lstFilterData.RTSData.trans_Date_UL + ' ' + lstFilterData.RTSData.trans_Time_UL
                 : 'N/A' }}
               </td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData?.RTSData?.gross_Weight) }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData?.RTSData?.unladen_Weight) }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData?.RTSData?.act_Net_Weight) }}</td>
+              <td class="transaction-cell">{{ lstFilterData?.RTSData?.gross_Weight || 'N/A' }}</td>
+              <td class="transaction-cell">{{ lstFilterData?.RTSData?.unladen_Weight || 'N/A'}}</td>
+              <td class="transaction-cell">{{ lstFilterData?.RTSData?.act_Net_Weight || 'N/A'}}</td>
             </tr>
           </tbody>
         </table>
@@ -134,16 +136,18 @@
             </tr>
             <tr>
               <th class="transaction-header trip-details-header" rowspan="2">Trip Details</th>
+               <th class="transaction-header">Slip Number</th>
               <th class="transaction-header">In Time of Transact</th>
               <th class="transaction-header">Out Time of Transact</th>
-              <th class="transaction-header">Gross Weight</th>
-              <th class="transaction-header">Unladen Weight</th>
-              <th class="transaction-header">Actual Net Weight</th>
+              <th class="transaction-header">Gross Weight (KG)</th>
+              <th class="transaction-header">Unladen Weight (KG)</th>
+              <th class="transaction-header">Actual Net Weight (KG)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td class="transaction-cell" rowspan="2">Trip Details</td>
+                <td class="transaction-cell">{{ lstFilterData?.DumpingData?.slipSrNo?lstFilterData?.DumpingData?.slipSrNo:"N/A"}}</td>
               <td class="transaction-cell">
                 {{ lstFilterData?.DumpingData?.trans_Date && lstFilterData?.DumpingData?.trans_Time
                 ? lstFilterData.DumpingData.trans_Date + ' ' + lstFilterData.DumpingData.trans_Time
@@ -155,9 +159,9 @@
                 ? lstFilterData.DumpingData.trans_Date_UL + ' ' + lstFilterData.DumpingData.trans_Time_UL
                 : 'N/A' }}
               </td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData?.DumpingData?.gross_Weight) }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData?.DumpingData?.unladen_Weight) }}</td>
-              <td class="transaction-cell">{{ formatWeight(lstFilterData?.DumpingData?.act_Net_Weight) }}</td>
+              <td class="transaction-cell">{{ lstFilterData?.DumpingData?.gross_Weight || 'N/A' }}</td>
+              <td class="transaction-cell">{{ lstFilterData?.DumpingData?.unladen_Weight || 'N/A' }}</td>
+              <td class="transaction-cell">{{ lstFilterData?.DumpingData?.act_Net_Weight || 'N/A' }}</td>
             </tr>
           </tbody>
         </table>

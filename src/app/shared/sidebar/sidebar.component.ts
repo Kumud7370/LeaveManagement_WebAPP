@@ -52,8 +52,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   manualOpened = false
 
   userProfile: UserProfile = {
-    name: "Rajesh Jadhav",
-    role: "System Administrator",
+    name: sessionStorage.getItem('username') || 'Guest User',
+    role:  sessionStorage.getItem('RoleName') || 'Guest',
     avatar:
       "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMiAxMkM5Ljc5IDEyIDggMTAuMjEgOCA4UzkuNzkgNDEyIDRTMTQuMjEgNiAxNiA4UzEyIDEwLjIxIDEyIDEyWk0xMiAxNEM5LjMzIDE0IDQgMTUuMzQgNCAyMFYyMkgyMFYyMEMxNiAxNS4zNCAxNC42NyAxNCAxMiAxNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo8L3N2Zz4K",
     isOnline: true,
@@ -61,7 +61,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   navItems: NavItem[] = [
     { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-    // { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
+   { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
     { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
     //{ label: "Export to Excel", route: "/export", icon: "fas fa-file-excel" },
     { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
@@ -120,8 +120,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
       }),
     );
 
-    const storedUsername = localStorage.getItem('username');
-    const storedRole = localStorage.getItem('role');
+    const storedUsername = sessionStorage.getItem('username');
+    const storedRole = sessionStorage.getItem('role');
     const uRoleName = sessionStorage.getItem('RoleName');
 
     if (storedUsername) {
@@ -129,7 +129,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
 
     if (storedRole) {
-      this.userProfile.role = this.getRoleName(storedRole);
+      this.userProfile.role =  sessionStorage.getItem('RoleName') || 'Genenral User';
     }
 
     this.activeRoute = this.router.url;
@@ -158,7 +158,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     else if (uRoleName?.toLowerCase() === 'admin') {
         this.menuItems = [
           { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-          // { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
+         { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
           { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
           { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
           { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
@@ -299,8 +299,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('deviceId');
+      sessionStorage.removeItem("UserId")
+      sessionStorage.removeItem("SiteName")
+      sessionStorage.removeItem("RoleName")
+      sessionStorage.removeItem("token")    
+     sessionStorage.removeItem('deviceId');
     this.router.navigate(['/login']);
 
   }

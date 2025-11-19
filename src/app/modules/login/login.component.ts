@@ -121,10 +121,10 @@ export class LoginComponent implements OnInit {
   ) { }
 
   getDeviceId(): string {
-    let deviceId = localStorage.getItem("deviceId")
+    let deviceId = sessionStorage.getItem("deviceId")
     if (!deviceId) {
       deviceId = crypto.randomUUID()
-      localStorage.setItem("deviceId", deviceId)
+      sessionStorage.setItem("deviceId", deviceId)
     }
     return deviceId
   }
@@ -143,7 +143,7 @@ export class LoginComponent implements OnInit {
       this.loginInfo = "You were signed out due to inactivity."
     }
 
-    const existingToken = localStorage.getItem("token")
+    const existingToken = sessionStorage.getItem("token")
     if (existingToken) {
       this.router.navigate(["/dashboard"])
     }
@@ -173,9 +173,11 @@ export class LoginComponent implements OnInit {
           sessionStorage.setItem("UserId", res.data.userId)
           sessionStorage.setItem("SiteName", res.data.locationName)
           sessionStorage.setItem("RoleName", res.data.roleName)
-          localStorage.setItem("token", res.data.token)
-          localStorage.setItem("username", username)
-          localStorage.setItem("role", res.data.role)
+          sessionStorage.setItem("token", res.data.token)
+          // localStorage.setItem("token", res.data.token)
+         sessionStorage.setItem("username", username)
+         sessionStorage.setItem("role", res.data.role)
+          // localStorage.setItem("RoleName", res.data.roleName)
           this.router.navigate(["/dashboard"])
         } else {
           this.loginError = "Invalid username or password"

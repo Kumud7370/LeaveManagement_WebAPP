@@ -82,7 +82,7 @@ export class SearchReportComponent implements OnInit {
   }
 
   // Updated columnDefs with View and PDF buttons
-  columnDefs = [
+  columnDefs:any = [
     {
       headerName: "View",
       field: "slipSrNo",
@@ -90,10 +90,6 @@ export class SearchReportComponent implements OnInit {
       width: 90,
       minWidth: 90,
       maxWidth: 90,
-      flex: 0,
-      sortable: false,
-      filter: false,
-      resizable: false,
       suppressMovable: true,
       cellStyle: {
         display: "flex",
@@ -103,40 +99,73 @@ export class SearchReportComponent implements OnInit {
       },
     },
     {
-      headerName: "PDF",
-      field: "slipSrNo",
-      cellRenderer: BtnSearchPdfCellRenderer,
-      width: 90,
-      minWidth: 90,
-      maxWidth: 90,
-      flex: 0,
-      sortable: false,
-      filter: false,
-      resizable: false,
-      suppressMovable: true,
-      cellStyle: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0",
-      },
+      headerName: "Location",
+      field: "locationName",
     },
-    { headerName: "Location", field: "locationName", sortable: true, filter: true, resizable: true },
-    { headerName: "Slip No", field: "slipSrNo", sortable: true, filter: true, resizable: true },
-    { headerName: "Transaction Date", field: "trans_Date", sortable: true, filter: true, resizable: true },
-    { headerName: "Transaction Time", field: "trans_Time", sortable: true, filter: true, resizable: true },
-    { headerName: "Agency", field: "agency_Name", sortable: true, filter: true, resizable: true },
-    { headerName: "Vehicle No", field: "vehicle_No", sortable: true, filter: true, resizable: true },
-    { headerName: "Vehicle Type", field: "vehicleType", sortable: true, filter: true, resizable: true },
-    { headerName: "Ward", field: "ward", sortable: true, filter: true, resizable: true },
-    { headerName: "Route No.", field: "route", sortable: true, filter: true, resizable: true },
-    { headerName: "Type of Waste", field: "type_of_Garbage", sortable: true, filter: true, resizable: true },
-    { headerName: "Gross Weight", field: "gross_Weight", sortable: true, filter: true, resizable: true },
-    { headerName: "Trans Date UL", field: "trans_Date_UL", sortable: true, filter: true, resizable: true },
-    { headerName: "Trans Time UL", field: "trans_Time_UL", sortable: true, filter: true, resizable: true },
-    { headerName: "Unladen Weight", field: "unladen_Weight", sortable: true, filter: true, resizable: true },
-    { headerName: "Actual Net Weight", field: "act_Net_Weight", sortable: true, filter: true, resizable: true },
-  ]
+    {
+      headerName: "Slip No",
+      field: "slipSrNo",
+      cellStyle: { fontWeight: "bold", },
+    },
+    {
+      headerName: "Transaction Date",
+      field: "trans_Date",
+    },
+    {
+      headerName: "Transaction Time",
+      field: "trans_Time",
+    },
+    {
+      headerName: "Agency",
+      field: "agency_Name",
+    },
+    {
+      headerName: "Vehicle No",
+      field: "vehicle_No",
+    },
+    {
+      headerName: "Vehicle Type",
+      field: "vehicleType",
+    },
+    {
+      headerName: "Ward",
+      field: "ward",
+    },
+    {
+      headerName: "Route No.",
+      field: "route",
+    },
+    {
+      headerName: "Type of Waste",
+      field: "type_of_Garbage",
+    },
+    {
+      headerName: "Gross Weight",
+      field: "gross_Weight",
+      valueFormatter: (params:any) => (params.value ? Number(params.value).toLocaleString() : ""),
+      cellStyle: { fontWeight: "bold" },
+    },
+    {
+      headerName: "Trans Date UL",
+      field: "trans_Date_UL",
+    },
+    {
+      headerName: "Trans Time UL",
+      field: "trans_Time_UL",
+    },
+    {
+      headerName: "Unladen Weight",
+      field: "unladen_Weight",
+      valueFormatter: (params:any) => (params.value ? Number(params.value).toLocaleString() : ""),
+      cellStyle: { fontWeight: "bold" },
+    },
+    {
+      headerName: "Actual Net Weight",
+      field: "act_Net_Weight",
+      valueFormatter: (params:any) => (params.value ? Number(params.value).toLocaleString() : ""),
+      cellStyle: { fontWeight: "bold" },
+    },
+  ];
 
   defaultColDef = {
     resizable: true,
@@ -147,7 +176,7 @@ export class SearchReportComponent implements OnInit {
     wrapText: true,
     autoHeight: true,
     wrapHeaderText: true,
-  }
+  };
 
   // Context for AG Grid
   context: any
@@ -160,34 +189,6 @@ export class SearchReportComponent implements OnInit {
     return ""
   }
 
-  WeighBridgeData = [
-    { id: "ALLWB", WeighBridge: "All" },
-    { id: "WBK1", WeighBridge: "Kanjur" },
-    { id: "D", WeighBridge: "Deonar" },
-  ]
-
-  reportTypeList = [
-    { id: 1, value: "In" },
-    { id: 0, value: "Out" },
-  ]
-
-  AgencyData = [
-    { FirmName: "ABC Waste Management" },
-    { FirmName: "XYZ Disposal Services" },
-    { FirmName: "City Sanitation Department" },
-  ]
-
-  VehcleData = [{ Veh_Num: "MH01-AB-1234" }, { Veh_Num: "MH01-CD-5678" }, { Veh_Num: "MH01-EF-9012" }]
-
-  GarbageData = [{ GarbageType: "Solid Waste" }, { GarbageType: "Recyclable" }, { GarbageType: "Hazardous" }]
-
-  WardData = [{ WardName: "Ward A" }, { WardName: "Ward B" }, { WardName: "Ward C" }]
-
-  uniqueWorkcode = ["WC001", "WC002", "WC003"]
-  uniqueZone = ["North", "South", "East", "West"]
-  morningHourDDL = ["7 AM-7:59:59 AM", "8 AM-8:59:59 AM", "9 AM-9:59:59 AM", "10 AM-10:59:59 AM", "11 AM-11:59:59 AM"]
-  afternoonHourDDL = ["12 PM-12:59:59 PM", "1 PM-1:59:59 PM", "2 PM-2:59:59 PM", "3 PM-3:59:59 PM", "4 PM-4:59:59 PM"]
-  nightHourDDL = ["6 PM-6:59:59 PM", "7 PM-7:59:59 PM", "8 PM-8:59:59 PM", "9 PM-9:59:59 PM", "10 PM-10:59:59 PM"]
 
   // Results (mock data)
   lstReportData: any[] = []
@@ -224,6 +225,9 @@ export class SearchReportComponent implements OnInit {
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
   ) {
+    fetch('https://swm.mcgm.gov.in/RTS/VehicleImage/grts/rts/in/44019.jpg')
+      .then(r => console.log(r))
+
     // this.uRole = Number(sessionStorage.getItem("Role")) || 0
     // this.userType = Number(sessionStorage.getItem("UserType")) || 0
     this.userId = Number(sessionStorage.getItem("UserId")) || 0
@@ -232,7 +236,7 @@ export class SearchReportComponent implements OnInit {
       UserId: Number(this.userId),
       SiteName: this.userSiteName,
     }
-    console.log("Loading initial data with params:", obj);
+    //  console.log("Loading initial data with params:", obj);
     this.dbService.GetSiteLocations(obj).subscribe({
       next: (response: any) => {
         console.log("response:", response);
@@ -263,9 +267,11 @@ export class SearchReportComponent implements OnInit {
 
     const basicPayload = {
       WeighBridge: "ALLWB",
-      FromDate: fromDate,
-      todate: today,
-      reportType: 1,
+      FromDate: this.reportForm.get("FromDate")?.value,
+      todate: this.reportForm.get("todate")?.value,
+      reportType: 0,
+      UserID: Number(this.userId),
+      SiteName: this.userSiteName,
     }
 
     this.isLoading = true
@@ -300,7 +306,7 @@ export class SearchReportComponent implements OnInit {
 
   initForm() {
     const today = new Date()
-    const firstDay = moment().format('DD-MM-YYYY')
+    const firstDay = moment().format('YYYY-MM-DD');
     this.reportForm = this.fb.group({
       WeighBridge: ["ALLWB", Validators.required],
       FromDate: [firstDay],
@@ -358,52 +364,75 @@ export class SearchReportComponent implements OnInit {
     return "Current Period"
   }
 
-  // Get report type text for display
-  getReportTypeText(): string {
-    const reportType = this.reportForm.get("reportType")?.value
-    const reportTypeObj = this.reportTypeList.find((rt) => rt.id === reportType)
-    return reportTypeObj ? reportTypeObj.value : "All"
-  }
 
   // NEW METHODS: View and PDF functionality for Search Report
   viewSearchReportDetails(data: any) {
-    console.log("View Search Report method called with data:", data)
 
-    const dialogRef = this.dialog.open(ViewSearchReportComponent, {
-      width: "90%",
-      maxWidth: "1200px",
-      height: "90%",
-      data: data,
-      disableClose: false,
-      panelClass: "custom-dialog-container",
-    })
+    let obj = { SlipSrNo: data.slipSrNo, SiteName: data.locationName }
+    console.log("View Search Report method called with data:", data, obj)
+    this.dbService.GetTripDetailsForSlipGeneartion(obj).subscribe(
+      (response) => {
+        console.log("Trip Details response:", response)
+        if (response && response.data) {
+          const Tdata = response.data[0]?.rtsData
+          console.log("Trip Details Tdata:", Tdata)
+          const dialogRef = this.dialog.open(ViewSearchReportComponent, {
+            width: "90%",
+            maxWidth: "1200px",
+            height: "90%",
+            data: Tdata,
+            disableClose: false,
+            panelClass: "custom-dialog-container",
+          })
+          dialogRef.afterClosed().subscribe((result) => {
+            console.log("Search Report Dialog closed", result)
+          })
+        }
+      },
+      (error) => {
+        console.error("Error fetching Trip Details:", error)
+      }
 
-    dialogRef.afterClosed().subscribe((result) => {
-      console.log("Search Report Dialog closed", result)
-    })
+    );
+
   }
 
   downloadSearchReportPDF(data: any) {
     console.log("Download Search Report PDF method called with data:", data)
-    
-    // Create and open the view component to generate PDF
-    const dialogRef = this.dialog.open(ViewSearchReportComponent, {
-      width: "90%",
-      maxWidth: "1200px",
-      height: "90%",
-      data: data,
-      disableClose: false,
-      panelClass: "custom-dialog-container",
-    })
+    let obj = { SlipSrNo: data.slipSrNo, SiteName: data.locationName }
+    console.log("View Search Report method called with data:", data, obj)
+    this.dbService.GetTripDetailsForSlipGeneartion(obj).subscribe(
+      (response) => {
+        console.log("Trip Details response:", response)
+        if (response && response.data) {
+          const Tdata = response.data[0]?.rtsData
+          console.log("Trip Details Tdata:", Tdata)
+          // Create and open the view component to generate PDF
+          const dialogRef = this.dialog.open(ViewSearchReportComponent, {
+            width: "90%",
+            maxWidth: "1200px",
+            height: "90%",
+            data: data,
+            disableClose: false,
+            panelClass: "custom-dialog-container",
+          })
 
-    // Automatically trigger PDF download after dialog opens
-    dialogRef.afterOpened().subscribe(() => {
-      setTimeout(() => {
-        const componentInstance = dialogRef.componentInstance
-        componentInstance.downloadPDF()
-        dialogRef.close()
-      }, 500)
-    })
+          // Automatically trigger PDF download after dialog opens
+          dialogRef.afterOpened().subscribe(() => {
+            setTimeout(() => {
+              const componentInstance = dialogRef.componentInstance
+              componentInstance.downloadPDF()
+              dialogRef.close()
+            }, 500)
+          })
+        }
+      },
+      (error) => {
+        console.error("Error fetching Trip Details:", error)
+      }
+
+    );
+
   }
 
   // Grid methods
@@ -431,184 +460,6 @@ export class SearchReportComponent implements OnInit {
       this.gridApi.sizeColumnsToFit()
     }
   }
-
-  // Form event handlers
-  getWeighBridge(e: any) {
-    const selected = e.target.value
-    if (selected === "Kanjur") {
-      this.reportmodel.WeighBridge = "K"
-    } else if (selected === "Deonar") {
-      this.reportmodel.WeighBridge = "D"
-    } else {
-      this.reportmodel.WeighBridge = ""
-    }
-  }
-
-  getreportType(e: any) {
-    this.reportmodel.reportType = Number(e.target.value)
-  }
-
-  getNallah(event: any) {
-    this.formData.selectNallah = event.target.value
-  }
-
-  // Checkbox handlers
-  isGrossWeightInKGChange(event: any) {
-    this.GrossWeightInKAactive = event.target.checked
-    if (!this.GrossWeightInKAactive) {
-      this.formData.Gross_Weight_From = 0
-      this.formData.Gross_Weight_To = 0
-    }
-  }
-
-  isAgencynameChange(event: any) {
-    this.AgencynameIsAactive = event.target.checked
-    if (!this.AgencynameIsAactive) {
-      this.formData.agencyName = ""
-    }
-  }
-
-  isvehicleNumberChange(event: any) {
-    this.vehicleNumberIsAactive = event.target.checked
-    if (!this.vehicleNumberIsAactive) {
-      this.formData.Vehicle_No = ""
-    }
-  }
-
-  isTypeOfGarbageChange(event: any) {
-    this.TypeOfGarbageIsAactive = event.target.checked
-    if (!this.TypeOfGarbageIsAactive) {
-      this.formData.TypeOfGarbage = ""
-    }
-  }
-
-  isWardChange(event: any) {
-    this.WardIsAactive = event.target.checked
-    if (!this.WardIsAactive) {
-      this.formData.Ward = ""
-    }
-  }
-
-  isWorkCodeChange(event: any) {
-    this.WorkCodeIsAactive = event.target.checked
-    if (!this.WorkCodeIsAactive) {
-      this.formData.Work_code = ""
-    }
-  }
-
-  isShiftChange(event: any) {
-    this.ShiftIsAactive = event.target.checked
-    if (!this.ShiftIsAactive) {
-      this.formData.Act_Shift = ""
-      this.ShiftIsAactive1 = false
-      this.ShiftIsAactive2 = false
-      this.ShiftIsAactive3 = false
-    } else {
-      this.HourlyIsAactive = false
-    }
-  }
-
-  isShift1Change(event: any) {
-    this.ShiftIsAactive1 = event.target.checked
-    if (this.ShiftIsAactive1) {
-      this.formData.Act_Shift_UL = "I"
-      this.ShiftIsAactive2 = false
-      this.ShiftIsAactive3 = false
-    }
-  }
-
-  isShift2Change(event: any) {
-    this.ShiftIsAactive2 = event.target.checked
-    if (this.ShiftIsAactive2) {
-      this.formData.Act_Shift_UL = "II"
-      this.ShiftIsAactive1 = false
-      this.ShiftIsAactive3 = false
-    }
-  }
-
-  isShift3Change(event: any) {
-    this.ShiftIsAactive3 = event.target.checked
-    if (this.ShiftIsAactive3) {
-      this.formData.Act_Shift_UL = "III"
-      this.ShiftIsAactive1 = false
-      this.ShiftIsAactive2 = false
-    }
-  }
-
-  isHourlyChange(event: any) {
-    this.HourlyIsAactive = event.target.checked
-    if (!this.HourlyIsAactive) {
-      this.morningHourlyIsAactive = false
-      this.afternoonHourlyIsAactive = false
-      this.nightHourlyIsAactive = false
-      this.formData.Trans_Time = ""
-      this.formData.ShiftTimeFrom = ""
-      this.formData.ShiftTimeTo = ""
-    } else {
-      this.ShiftIsAactive = false
-    }
-  }
-
-  morningHourlyIsAactiveChange(event: any) {
-    this.morningHourlyIsAactive = event.target.checked
-    if (this.morningHourlyIsAactive) {
-      this.formData.Trans_Time_UL = event.target.value
-      this.afternoonHourlyIsAactive = false
-      this.nightHourlyIsAactive = false
-    }
-  }
-
-  afternoonHourlyIsAactiveChange(event: any) {
-    this.afternoonHourlyIsAactive = event.target.checked
-    if (this.afternoonHourlyIsAactive) {
-      this.formData.Trans_Time_UL = event.target.value
-      this.morningHourlyIsAactive = false
-      this.nightHourlyIsAactive = false
-    }
-  }
-
-  nightHourlyIsAactiveChange(event: any) {
-    this.nightHourlyIsAactive = event.target.checked
-    if (this.nightHourlyIsAactive) {
-      this.formData.Trans_Time_UL = event.target.value
-      this.afternoonHourlyIsAactive = false
-      this.morningHourlyIsAactive = false
-    }
-  }
-
-  // Dropdown selection handlers
-  getAgencyname(event: any) {
-    this.formData.agencyName = event.target.value
-  }
-
-  getvehicleNumber(event: any) {
-    this.formData.Vehicle_No = event.target.value
-  }
-
-  getTypeOfGarbage(event: any) {
-    this.formData.TypeOfGarbage = event.target.value
-  }
-
-  getWard(event: any) {
-    this.formData.Ward = event.target.value
-  }
-
-  getWorkCode(event: any) {
-    this.formData.Work_code = event.target.value
-  }
-
-  getMorningHour(event: any) {
-    this.formData.Trans_Time = event.target.value
-  }
-
-  getafternoonHour(event: any) {
-    this.formData.Trans_Time = event.target.value
-  }
-
-  getnightHour(event: any) {
-    this.formData.Trans_Time = event.target.value
-  }
-
   // Search submission
   onSubmit() {
     const formValues = this.reportForm.value
@@ -730,70 +581,119 @@ export class SearchReportComponent implements OnInit {
   }
 
   exportToExcel() {
-    if (!this.reportData || this.reportData.length === 0) {
-      alert("There is no data to export")
-      return
-    }
-
-    const filteredData: any[] = []
-    this.agGrid.api.forEachNodeAfterFilter((node: any) => {
-      if (node.data) {
-        filteredData.push(node.data)
-      }
-    })
-
-    if (filteredData.length === 0) {
-      alert("No filtered data to export")
-      return
-    }
-
-    // Column mapping from API fields to UI headers
-    const columnMapping: { [key: string]: string } = {
-      deliveryLocation: "Location",
-      slipSrNo: "Slip No",
-      trans_Date: "Transaction Date",
-      trans_Time: "Transaction Time",
-      agency_Name: "Agency",
-      vehicle_No: "Vehicle No",
-      vehicleType: "Vehicle Type",
-      ward: "Ward",
-      route: "Route No.",
-      type_of_Garbage: "Type of Waste",
-      gross_Weight: "Gross Weight",
-      trans_Date_UL: "Trans Date UL",
-      trans_Time_UL: "Trans Time UL",
-      unladen_Weight: "Unladen Weight",
-      act_Net_Weight: "Actual Net Weight",
-    }
-
-    // Convert to UI-based headers
-    const transformedData = filteredData.map((item) => {
-      const row: { [key: string]: any } = {}
-      for (const field in columnMapping) {
-        row[columnMapping[field]] = item[field]
-      }
-      return row
-    })
-
-    // Create worksheet without header
-    const worksheet = XLSX.utils.json_to_sheet(transformedData)
-    // Prepend UI-based header row at A1
-    const headerRow = Object.values(columnMapping)
-    XLSX.utils.sheet_add_aoa(worksheet, [headerRow], { origin: "A1" })
-
-    // Adjust column widths
-    const colWidths = headerRow.map((header) => {
-      const columnContent = [header, ...transformedData.map((row) => String(row[header] ?? ""))]
-      const maxLength = Math.max(...columnContent.map((val) => val.length))
-      return { wch: maxLength + 2 }
-    })
-    worksheet["!cols"] = colWidths
-
-    // Create and save workbook
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "SearchReport.xlsx")
-    XLSX.writeFile(workbook, "SearchReport.xlsx")
+  if (!this.reportData || this.reportData.length === 0) {
+    alert("There is no data to export");
+    return;
   }
+
+  const filteredData: any[] = [];
+  this.agGrid.api.forEachNodeAfterFilter((node: any) => {
+    if (node.data) {
+      filteredData.push(node.data);
+    }
+  });
+
+  if (filteredData.length === 0) {
+    alert("No filtered data to export");
+    return;
+  }
+
+  // Define which columns to export and their headers
+  const columnMapping: any = {
+    locationName: "Location",
+    slipSrNo: "Slip No",
+    trans_Date: "Transaction Date",
+    trans_Time: "Transaction Time",
+    agency_Name: "Agency",
+    vehicle_No: "Vehicle No",
+    vehicleType: "Vehicle Type",
+    ward: "Ward",
+    route: "Route No.",
+    type_of_Garbage: "Type of Waste",
+    gross_Weight: "Gross Weight (kg)",
+    trans_Date_UL: "Trans Date UL",
+    trans_Time_UL: "Trans Time UL",
+    unladen_Weight: "Unladen Weight (kg)",
+    act_Net_Weight: "Actual Net Weight (kg)",
+  };
+
+  // Transform data to match header order
+  // Transform and clean data
+  const transformedData = filteredData.map((item) => {
+    const row: any = {};
+    for (const key of Object.keys(columnMapping)) {
+      let val = item[key];
+      // Convert SlipNo and Weights to numbers
+      if (["slipSrNo", "gross_Weight", "unladen_Weight", "act_Net_Weight"].includes(key)) {
+        val = val ? Number(val) : 0;
+      }
+      row[columnMapping[key]] = val ?? "";
+    }
+    return row;
+  });
+
+  // Calculate totals for weight columns
+  const totalGross = filteredData.reduce(
+    (sum, row) => sum + (Number(row.gross_Weight) || 0),
+    0
+  );
+  const totalUnladen = filteredData.reduce(
+    (sum, row) => sum + (Number(row.unladen_Weight) || 0),
+    0
+  );
+  const totalActualNet = filteredData.reduce(
+    (sum, row) => sum + (Number(row.act_Net_Weight) || 0),
+    0
+  );
+
+  // Create a total row
+  const totalRow: any = {};
+  Object.keys(columnMapping).forEach((key) => {
+    const header = columnMapping[key];
+    if (key === "gross_Weight") totalRow[header] = totalGross.toLocaleString() + " kg";
+    else if (key === "unladen_Weight")
+      totalRow[header] = totalUnladen.toLocaleString() + " kg";
+    else if (key === "act_Net_Weight")
+      totalRow[header] = totalActualNet.toLocaleString() + " kg";
+    else if (key === "locationName")
+      totalRow[header] = "TOTAL"; // Label cell
+    else totalRow[header] = "";
+  });
+
+  transformedData.push(totalRow);
+
+  // Create worksheet
+  const worksheet = XLSX.utils.json_to_sheet(transformedData);
+
+  // Prepend header row (first row)
+  const headerRow = Object.values(columnMapping);
+  XLSX.utils.sheet_add_aoa(worksheet, [headerRow], { origin: "A1" });
+
+  // Adjust column widths dynamically
+  const colWidths = headerRow.map((header:any) => {
+    const columnContent = [header, ...transformedData.map((row) => String(row[header] ?? ""))];
+    const maxLength = Math.max(...columnContent.map((val) => val.length));
+    return { wch: maxLength + 2 };
+  });
+  worksheet["!cols"] = colWidths;
+
+  // Apply basic Excel styling for the total row (bold text)
+  const totalRowIndex = transformedData.length + 1; // +1 for header
+  headerRow.forEach((_, colIndex) => {
+    const cellAddress = XLSX.utils.encode_cell({ r: totalRowIndex - 1, c: colIndex });
+    if (worksheet[cellAddress]) {
+      worksheet[cellAddress].s = {
+        font: { bold: true },
+      };
+    }
+  });
+
+  // Create workbook and export
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "SearchReport");
+
+  XLSX.writeFile(workbook, "SearchReport.xlsx");
+}
 
   resetForm() {
     const today = new Date()

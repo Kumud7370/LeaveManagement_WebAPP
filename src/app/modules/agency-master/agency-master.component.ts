@@ -49,6 +49,7 @@ export class AgencyMasterComponent {
   userType = 0
   userId = 0
   userSiteName = "";
+  loading: boolean = false
   constructor(
     private fb: FormBuilder,
     private agencyService: DbCallingService,
@@ -151,11 +152,17 @@ export class AgencyMasterComponent {
         }
       }
     });
+       this.loading = true;
     this.agencyService.GetAgencies(obj).subscribe({
       next: (res) => {
         this.lstAgencyData = res?.data || [];
         this.lstAgencyDataFiltered = res?.data || [];
         this.getAGGridReady();
+        this.loading = false;
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error("Error fetching agencies:", err);
       }
     });
   }

@@ -404,5 +404,14 @@ export class DbCallingService {
       }),
     );
   }
+ GetTripDetailsForSlipGeneartion(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/Report/GetTripDetailsForSlipGeneartion`, payload).pipe(
+      catchError((error) => {
+        console.error("Error fetching TripDetail", error);
+        return of(null);
+      }),
+    );
+  }
+
 }
 

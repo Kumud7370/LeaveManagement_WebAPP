@@ -8,7 +8,7 @@
       </div>
       <div class="header-actions">
         <button class="btn-back" (click)="Back()">
-          <i class="fas fa-arrow-left"></i> Back to Dashboard
+          <i class="fas fa-arrow-left"></i> Back to Logsheet List
         </button>
       </div>
     </div>
@@ -178,7 +178,7 @@
       </form>
     </div>
     <!-- Summary Cards -->
-    <div class="summary-cards">
+    <!-- <div class="summary-cards">
       <div class="summary-card" *ngFor="let card of [
         { icon: 'fa-truck', value: vehiclesFilteredList.length, label: 'Available Vehicles' },
         { icon: 'fa-map-marker-alt', value: wardList.length, label: 'Total Wards' },
@@ -193,7 +193,7 @@
           <div class="card-label">{{ card.label }}</div>
         </div>
       </div>
-    </div>
+    </div> -->
     <!-- Success Message -->
     <div class="success-message" *ngIf="showSuccessMessage">
       <i class="fas fa-check-circle"></i>
