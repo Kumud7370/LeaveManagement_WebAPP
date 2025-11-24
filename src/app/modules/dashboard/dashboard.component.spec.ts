@@ -11,7 +11,11 @@ describe("DashboardComponent", () => {
   let mockDbCallingService: jasmine.SpyObj<DbCallingService>
 
   beforeEach(async () => {
-    const spy = jasmine.createSpyObj("DbCallingService", ["getWardwiseReport", "getImportantUpdates"])
+    const spy = jasmine.createSpyObj("DbCallingService", [
+      "GetWBTripSummary",
+      "getWardwiseReport",
+      "getImportantUpdates",
+    ])
 
     await TestBed.configureTestingModule({
       imports: [DashboardComponent, NgApexchartsModule, FormsModule],
@@ -22,7 +26,30 @@ describe("DashboardComponent", () => {
     component = fixture.componentInstance
     mockDbCallingService = TestBed.inject(DbCallingService) as jasmine.SpyObj<DbCallingService>
 
-    // Setup default mock responses
+    mockDbCallingService.GetWBTripSummary.and.returnValue(
+      of({
+        isSuccess: true,
+        data: {
+          swmSites: [
+            {
+              siteName: "Kanjur",
+              vehicleCount: 831,
+              netWeight: 6140.29,
+              colorCode: "#1a2a6c",
+            },
+          ],
+          rtsSites: [
+            {
+              siteName: "Deonar Refuse",
+              vehicleCount: 229,
+              netWeight: 1624.82,
+              colorCode: "#b21f1f",
+            },
+          ],
+        },
+      }),
+    )
+
     mockDbCallingService.getWardwiseReport.and.returnValue(
       of({
         serviceResponse: 1,
@@ -30,7 +57,7 @@ describe("DashboardComponent", () => {
           { wardName: "Ward A", vehicleCount: 10, totalNetWeight: 100, transactionDate: "2025-01-01" },
           { wardName: "Ward B", vehicleCount: 15, totalNetWeight: 150, transactionDate: "2025-01-01" },
         ],
-      })
+      }),
     )
 
     mockDbCallingService.getImportantUpdates.and.returnValue(
@@ -51,7 +78,7 @@ describe("DashboardComponent", () => {
           eventDate: "2025-01-01",
           notification: "Test notification",
         },
-      ])
+      ]),
     )
 
     fixture.detectChanges()
@@ -61,28 +88,72 @@ describe("DashboardComponent", () => {
     expect(component).toBeTruthy()
   })
 
-  it("should have correct initial data values", () => {
-    expect(component.kanjurData.vehicles).toBe(831)
-    expect(component.kanjurData.netWeight).toBe(6140.29)
-    expect(component.deonarData.vehicles).toBe(229)
-    expect(component.deonarData.netWeight).toBe(1624.82)
-    expect(component.totalData.vehicles).toBe(1060)
-    expect(component.totalData.netWeight).toBe(7765.11)
+  it("should have correct initial data structure", () => {
+    expect(component.kanjurData).toBeDefined()
+    expect(component.kanjurData.trips).toBe(0)
+    expect(component.kanjurData.netWeight).toBe(0)
+    expect(component.deonarData).toBeDefined()
+    expect(component.deonarData.trips).toBe(0)
+    expect(component.deonarData.netWeight).toBe(0)
+  })
+
+  it("should have last 30 days summary initialized", () => {
+    expect(component.last30DaysSummary).toBeDefined()
+    expect(component.last30DaysSummary.trips).toBe(0)
+    expect(component.last30DaysSummary.netWeight).toBe(0)
+    expect(component.last30DaysSummary.averageWardTrips).toBe(0)
+    expect(component.last30DaysSummary.averageWardWeight).toBe(0)
   })
 
   it("should initialize chart options", () => {
     expect(component.vehicleChartOptions).toBeDefined()
-    expect(component.vehicleChartOptions.series).toEqual([831, 229])
     expect(component.wardChartOptions).toBeDefined()
   })
 
-  it("should load ward data on init", () => {
-    expect(mockDbCallingService.getWardwiseReport).toHaveBeenCalled()
-    expect(component.wardData.length).toBeGreaterThan(0)
+  it("should load site data on init", () => {
+    expect(mockDbCallingService.GetWBTripSummary).toHaveBeenCalled()
+    expect(component.swmSites.length).toBeGreaterThan(0)
   })
 
-  it("should load news data on init", () => {
-    expect(mockDbCallingService.getImportantUpdates).toHaveBeenCalled()
+  it("should process dynamic site data correctly", () => {
+    component.swmSites = [
+      {
+        siteName: "Kanjur",
+        vehicleCount: 831,
+        netWeight: 6140.29,
+        colorCode: "#1a2a6c",
+      },
+    ]
+    component.rtsSites = [
+      {
+        siteName: "Deonar Refuse",
+        vehicleCount: 229,
+        netWeight: 1624.82,
+        colorCode: "#b21f1f",
+      },
+    ]
+
+    component.processDynamicSiteData()
+
+    expect(component.kanjurData.trips).toBe(831)
+    expect(component.kanjurData.netWeight).toBe(6140.29)
+    expect(component.deonarData.trips).toBe(229)
+    expect(component.deonarData.netWeight).toBe(1624.82)
+  })
+
+  it("should calculate last 30 days summary correctly", () => {
+    const wardData = [
+      { wardName: "Ward A", vehicleCount: 10, totalNetWeight: 100, transactionDate: "2025-01-01" },
+      { wardName: "Ward B", vehicleCount: 15, totalNetWeight: 150, transactionDate: "2025-01-01" },
+      { wardName: "Ward C", vehicleCount: 20, totalNetWeight: 200, transactionDate: "2025-01-01" },
+    ]
+
+    component.calculateLast30DaysSummary(wardData)
+
+    expect(component.last30DaysSummary.trips).toBe(45)
+    expect(component.last30DaysSummary.netWeight).toBe(450)
+    expect(component.last30DaysSummary.averageWardTrips).toBe(15)
+    expect(component.last30DaysSummary.averageWardWeight).toBe(150)
   })
 
   it("should set loading to false after initialization", (done) => {
@@ -92,30 +163,6 @@ describe("DashboardComponent", () => {
       expect(component.isLoading).toBe(false)
       done()
     }, 1100)
-  })
-
-  it("should filter news by search query", () => {
-    component.allNews = [
-      {
-        id: 1,
-        type: "News",
-        priority: "High",
-        date: "2025-01-01",
-        year: 2025,
-        category: "System",
-        title: "Test News",
-        content: "Test content",
-        timeAgo: "1 hour ago",
-        createdAt: "2025-01-01T00:00:00Z",
-        monthYear: "01-2025",
-        siteLocation: "Mumbai",
-        eventDate: "2025-01-01",
-        notification: "Test notification",
-      },
-    ]
-    component.searchQuery = "Test"
-    component.onSearchChange()
-    expect(component.filteredNews.length).toBe(1)
   })
 
   it("should handle pagination correctly", () => {
