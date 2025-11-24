@@ -412,6 +412,12 @@ export class DbCallingService {
       }),
     );
   }
+getCumulativeTripSummary(payload: any) {
+  return this.http.post<any>(
+    environment.apiUrl + "/dashboard/getcumulativetripsummary",
+    payload
+  );
+}
 
 }
 

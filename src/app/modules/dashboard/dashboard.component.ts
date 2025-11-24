@@ -338,7 +338,8 @@ export class DashboardComponent implements OnInit {
       },
     })
 
-    this.loadLast30DaysData()
+    // this.loadLast30DaysData()
+    this.loadLast30DaysData();
 
     setTimeout(() => {
       this.isLoading = false
@@ -384,32 +385,99 @@ export class DashboardComponent implements OnInit {
     this.updatePieChart()
   }
 
+  // loadLast30DaysData(): void {
+  //   const toDate = moment().format("YYYY-MM-DD")
+  //   const fromDate = moment().subtract(30, "days").format("YYYY-MM-DD")
+
+  //   const payload = {
+  //     WeighBridge: "",
+  //     FromDate: fromDate,
+  //     ToDate: toDate,
+  //     FullDate: "",
+  //     WardName: "",
+  //     Act_Shift: "",
+  //     TransactionDate: "",
+  //   }
+
+  //   this.dbCallingService.getWardwiseReport(payload).subscribe({
+  //     next: (response) => {
+  //       if (response && response.wardData && response.wardData.length > 0) {
+  //         this.calculateLast30DaysSummary(response.wardData)
+  //         this.processLast30DaysChartData(response.wardData)
+  //       }
+  //     },
+  //     error: (error) => {
+  //       console.error("Error fetching 30-day data:", error)
+  //     },
+  //   })
+  // }
   loadLast30DaysData(): void {
-    const toDate = moment().format("YYYY-MM-DD")
-    const fromDate = moment().subtract(30, "days").format("YYYY-MM-DD")
-
     const payload = {
-      WeighBridge: "",
-      FromDate: fromDate,
-      ToDate: toDate,
-      FullDate: "",
-      WardName: "",
-      Act_Shift: "",
-      TransactionDate: "",
-    }
+      UserId: Number(sessionStorage.getItem("UserId")),
+      FromDate: null,
+      ToDate: null,
+      SiteName: "SWM"
+    };
 
-    this.dbCallingService.getWardwiseReport(payload).subscribe({
+    this.dbCallingService.getCumulativeTripSummary(payload).subscribe({
       next: (response) => {
-        if (response && response.wardData && response.wardData.length > 0) {
-          this.calculateLast30DaysSummary(response.wardData)
-          this.processLast30DaysChartData(response.wardData)
+        if (response && response.data && response.data.length > 0) {
+          this.processCumulativeChartData(response.data);
         }
       },
       error: (error) => {
-        console.error("Error fetching 30-day data:", error)
+        console.error("Error fetching cumulative summary:", error);
       },
-    })
+    });
   }
+
+  processCumulativeChartData(data: any[]): void {
+    if (!data || data.length === 0) return;
+
+    const wardNames: string[] = [];
+    const cumulativeWeightData: number[] = [];
+    const averageWeightData: number[] = [];
+
+    data.forEach(item => {
+      wardNames.push(item.ward);
+      cumulativeWeightData.push(Number(item.cumulativeNetWeight));
+      averageWeightData.push(Number(item.averageNetWeight));
+    });
+
+    this.wardChartOptions = {
+      ...this.wardChartOptions,
+      series: [
+        {
+          name: "Cumulative Net Weight (MT)",
+          data: cumulativeWeightData,
+          type: "column",
+        },
+        {
+          name: "Average Ward Weight (MT)",
+          data: averageWeightData,
+          type: "line",
+        },
+      ],
+      xaxis: {
+        ...this.wardChartOptions.xaxis,
+        categories: wardNames,
+        labels: {
+          ...this.wardChartOptions.xaxis.labels,
+          style: {
+            ...this.wardChartOptions.xaxis.labels?.style,
+            colors: Array(wardNames.length).fill(this.primaryColor),
+          },
+        },
+      },
+    };
+
+    console.log("Cumulative Chart Updated:", {
+      wardNames,
+      cumulativeWeightData,
+      averageWeightData
+    });
+  }
+
 
   calculateLast30DaysSummary(wardData: WardData[]): void {
     let totalTrips = 0
