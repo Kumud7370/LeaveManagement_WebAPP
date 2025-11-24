@@ -184,17 +184,19 @@ export class DashboardComponent implements OnInit {
   public wardChartOptions: ChartOptions = {
     series: [
       {
-        name: "Trips",
+        name: "Cumulative Net Weight (MT)",
         data: [],
+        type: "column",
       },
       {
-        name: "Weight (MT)",
+        name: "Average Ward Weight (MT)",
         data: [],
+        type: "line",
       },
     ],
     chart: {
       type: "bar",
-      height: 350,
+      height: 400,
       fontFamily: "Raleway, sans-serif",
       toolbar: {
         show: true,
@@ -212,7 +214,7 @@ export class DashboardComponent implements OnInit {
     plotOptions: {
       bar: {
         horizontal: false,
-        columnWidth: "60%",
+        columnWidth: "50%",
         borderRadius: 4,
         dataLabels: {
           position: "top",
@@ -223,7 +225,7 @@ export class DashboardComponent implements OnInit {
       enabled: true,
       formatter: (val: number, opts: any) => {
         if (opts.seriesIndex === 0) {
-          return val.toString()
+          return val.toFixed(1) + " MT"
         } else {
           return val.toFixed(1) + " MT"
         }
@@ -232,7 +234,7 @@ export class DashboardComponent implements OnInit {
       style: {
         fontSize: "10px",
         fontWeight: "bold",
-        colors: [this.primaryColor],
+        colors: [this.successColor],
       },
     },
     xaxis: {
@@ -249,23 +251,7 @@ export class DashboardComponent implements OnInit {
     yaxis: [
       {
         title: {
-          text: "Number of Trips",
-          style: {
-            color: this.primaryColor,
-            fontSize: "12px",
-            fontWeight: 600,
-          },
-        },
-        labels: {
-          style: {
-            colors: [this.primaryColor],
-          },
-        },
-      },
-      {
-        opposite: true,
-        title: {
-          text: "Weight (MT)",
+          text: "Cumulative Net Weight (MT)",
           style: {
             color: this.successColor,
             fontSize: "12px",
@@ -278,8 +264,24 @@ export class DashboardComponent implements OnInit {
           },
         },
       },
+      {
+        opposite: true,
+        title: {
+          text: "Average Ward Weight (MT)",
+          style: {
+            color: this.primaryColor,
+            fontSize: "12px",
+            fontWeight: 600,
+          },
+        },
+        labels: {
+          style: {
+            colors: [this.primaryColor],
+          },
+        },
+      },
     ],
-    colors: [this.primaryColor, this.successColor],
+    colors: [this.successColor, this.primaryColor],
     grid: {
       borderColor: "#e5e7eb",
       strokeDashArray: 3,
@@ -400,6 +402,7 @@ export class DashboardComponent implements OnInit {
       next: (response) => {
         if (response && response.wardData && response.wardData.length > 0) {
           this.calculateLast30DaysSummary(response.wardData)
+          this.processLast30DaysChartData(response.wardData)
         }
       },
       error: (error) => {
@@ -431,6 +434,70 @@ export class DashboardComponent implements OnInit {
     }
 
     console.log("Last 30 days summary:", this.last30DaysSummary)
+  }
+
+  processLast30DaysChartData(wardData: WardData[]): void {
+    if (!wardData || wardData.length === 0) {
+      return
+    }
+
+    const wardMap = new Map<string, { cumulativeWeight: number; count: number }>()
+
+    wardData.forEach((item) => {
+      const wardName = item.wardName || "Unknown"
+      const weight = item.totalNetWeight || 0
+
+      if (wardMap.has(wardName)) {
+        const existing = wardMap.get(wardName)!
+        existing.cumulativeWeight += weight
+        existing.count += 1
+      } else {
+        wardMap.set(wardName, { cumulativeWeight: weight, count: 1 })
+      }
+    })
+
+    const wardNames: string[] = []
+    const cumulativeWeightData: number[] = []
+    const averageWeightData: number[] = []
+
+    wardMap.forEach((data, wardName) => {
+      wardNames.push(wardName)
+      cumulativeWeightData.push(Number(data.cumulativeWeight.toFixed(2)))
+      averageWeightData.push(Number((data.cumulativeWeight / data.count).toFixed(2)))
+    })
+
+    this.wardChartOptions = {
+      ...this.wardChartOptions,
+      series: [
+        {
+          name: "Cumulative Net Weight (MT)",
+          data: cumulativeWeightData,
+          type: "column",
+        },
+        {
+          name: "Average Ward Weight (MT)",
+          data: averageWeightData,
+          type: "line",
+        },
+      ],
+      xaxis: {
+        ...this.wardChartOptions.xaxis,
+        categories: wardNames,
+        labels: {
+          ...this.wardChartOptions.xaxis.labels,
+          style: {
+            ...this.wardChartOptions.xaxis.labels?.style,
+            colors: Array(wardNames.length).fill(this.primaryColor),
+          },
+        },
+      },
+    }
+
+    console.log("Last 30 days chart updated:", {
+      wardNames,
+      cumulativeWeightData,
+      averageWeightData,
+    })
   }
 
   updatePieChart(): void {

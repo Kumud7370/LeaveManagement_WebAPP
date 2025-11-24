@@ -3,7 +3,8 @@
   <div class="dashboard-header">
     <div class="header-content">
       <div class="header-title">
-        <i class="fas fa-chart-bar"></i>        
+        <i class="fas fa-chart-bar"></i>
+        <!-- Updated heading to "SWM/Refuse Report" -->
         <h1>SWM/Refuse Report</h1>
       </div>
       <div class="header-date">
@@ -29,7 +30,8 @@
           <i class="fas fa-truck"></i>
         </div>
         <div class="card-stats">
-          <div class="stat-item">           
+          <div class="stat-item">
+            <!-- Changed "Vehicles" label to "Trips" -->
             <div class="stat-value">{{ card.vehicleCount }}</div>
             <div class="stat-label">Trips</div>
           </div>
@@ -41,7 +43,8 @@
       </div>
     </div>
     
-    <!-- RTS Sites Cards Section -->    
+    <!-- RTS Sites Cards Section -->
+    <!-- Removed "Deonar Debris" widget, keeping other RTS sites -->
     <div class="location-cards-section">
       <div class="location-card" *ngFor="let card of rtsSites" [ngStyle]="{'--card-color': card.colorCode }">
         <div class="card-header">
@@ -49,7 +52,8 @@
           <i class="fas fa-truck"></i>
         </div>
         <div class="card-stats">
-          <div class="stat-item">           
+          <div class="stat-item">
+            <!-- Changed "Vehicles" label to "Trips" -->
             <div class="stat-value">{{ card.vehicleCount }}</div>
             <div class="stat-label">Trips</div>
           </div>
@@ -61,52 +65,25 @@
       </div>
     </div>
 
-    <!-- Last 30 Days Summary Section -->
-    <!-- Added new section for last 30 days cumulative data and average ward-wise metrics -->
+    <!-- Ward-wise Cumulative Net Weight Summary Chart (Last 30 Days) replaces the summary widget -->
     <div class="summary-section">
       <div class="summary-card">
         <div class="summary-header">
-          <h3>Last 30 Days Summary</h3>
-          <i class="fas fa-calculator"></i>
+          <h3>Ward-wise Cumulative Net Weight Summary (Last 30 Days)</h3>
+          <i class="fas fa-chart-column"></i>
         </div>
-        <div class="summary-stats">
-          <div class="summary-item total-vehicles">
-            <div class="summary-icon">
-              <i class="fas fa-truck"></i>
-            </div>
-            <div class="summary-content">
-              <div class="summary-value">{{ last30DaysSummary.trips }}</div>
-              <div class="summary-label">Total Trips</div>
-            </div>
-          </div>
-          <div class="summary-item total-weight">
-            <div class="summary-icon">
-              <i class="fas fa-weight-hanging"></i>
-            </div>
-            <div class="summary-content">
-              <div class="summary-value">{{ last30DaysSummary.netWeight | number:'1.2-2' }}</div>
-              <div class="summary-label">Cumulative Net Weight (MT)</div>
-            </div>
-          </div>
-          <div class="summary-item ward-summary">
-            <div class="summary-icon">
-              <i class="fas fa-chart-line"></i>
-            </div>
-            <div class="summary-content">
-              <div class="summary-value">{{ last30DaysSummary.averageWardTrips }}</div>
-              <div class="summary-label">Average Ward Trips</div>
-            </div>
-          </div>
-          <div class="summary-item top-ward">
-            <div class="summary-icon">
-              <i class="fas fa-balance-scale"></i>
-            </div>
-            <div class="summary-content">
-              <div class="summary-value">{{ last30DaysSummary.averageWardWeight | number:'1.2-2' }}</div>
-              <div class="summary-label">Average Ward Weight (MT)</div>
-            </div>
-          </div>
-        </div>
+        <!-- Combined Bar Chart (Cumulative Weight) and Line Chart (Average Weight) -->
+        <apx-chart
+          [series]="wardChartOptions.series"
+          [chart]="wardChartOptions.chart"
+          [xaxis]="wardChartOptions.xaxis"
+          [yaxis]="wardChartOptions.yaxis"
+          [dataLabels]="wardChartOptions.dataLabels"
+          [colors]="wardChartOptions.colors"
+          [legend]="wardChartOptions.legend"
+          [grid]="wardChartOptions.grid"
+          [plotOptions]="wardChartOptions.plotOptions"
+        ></apx-chart>
       </div>
     </div>
   </div>
