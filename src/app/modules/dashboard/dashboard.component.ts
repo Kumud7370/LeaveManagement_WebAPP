@@ -77,29 +77,28 @@ export class DashboardComponent implements OnInit {
   isLoadingWardData = false
   isLoadingNews = false
 
-  // Data from requirements
   kanjurData = {
-    vehicles: 831,
-    netWeight: 6140.29,
+    trips: 0,
+    netWeight: 0,
   }
 
   deonarData = {
-    vehicles: 229,
-    netWeight: 1624.82,
+    trips: 0,
+    netWeight: 0,
   }
 
-  totalData = {
-    vehicles: 1060,
-    netWeight: 7765.11,
+  last30DaysSummary = {
+    trips: 0,
+    netWeight: 0,
+    averageWardTrips: 0,
+    averageWardWeight: 0,
   }
 
-  // Ward summary data
   wardSummary = {
     totalWards: 0,
     topWard: "",
   }
 
-  // Chart colors matching search-report theme
   private primaryColor = "#1a2a6c"
   private secondaryColor = "#b21f1f"
   private accentColor = "#00ffcc"
@@ -107,10 +106,7 @@ export class DashboardComponent implements OnInit {
   private infoColor = "#3b82f6"
   private warningColor = "#f59e0b"
 
-  // Dynamic ward data from API
   wardData: WardData[] = []
-
-  // News management
   allNews: NewsItem[] = []
   filteredNews: NewsItem[] = []
   availableYears: number[] = []
@@ -120,10 +116,10 @@ export class DashboardComponent implements OnInit {
   pageSize = 6
   totalItems = 0
   totalPages = 0
-yDate:any;
-  // Vehicle Count Pie Chart Options
+  yDate: any
+
   public vehicleChartOptions: PieChartOptions = {
-    series: [831, 229],
+    series: [0, 0],
     chart: {
       type: "donut",
       height: 350,
@@ -149,11 +145,11 @@ yDate:any;
             show: true,
             total: {
               show: true,
-              label: "Total Vehicles",
+              label: "Total Trips",
               fontSize: "16px",
               fontWeight: 600,
               color: this.primaryColor,
-              formatter: () => "1060",
+              formatter: () => "0",
             },
           },
         },
@@ -185,11 +181,10 @@ yDate:any;
     ],
   }
 
-  // Ward Report Chart Options
   public wardChartOptions: ChartOptions = {
     series: [
       {
-        name: "Vehicles",
+        name: "Trips",
         data: [],
       },
       {
@@ -254,7 +249,7 @@ yDate:any;
     yaxis: [
       {
         title: {
-          text: "Number of Vehicles",
+          text: "Number of Trips",
           style: {
             color: this.primaryColor,
             fontSize: "12px",
@@ -311,44 +306,158 @@ yDate:any;
       },
     },
   }
-  swmSites: any[] = [];
-  rtsSites: any[] = [];
-  allSites: any[] = [];
-  constructor(private dbCallingService: DbCallingService) {
-   
-  }
 
+  swmSites: any[] = []
+  rtsSites: any[] = []
+  allSites: any[] = []
+
+  constructor(private dbCallingService: DbCallingService) { }
 
   ngOnInit(): void {
-    // Load initial data
-  //  this.loadWardData()
-  //  this.loadNewsData()
-
-    // Simulate loading
-this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
-     let obj = {
-      DateFrom: moment().format('YYYY-MM-DD'),
-      UserId: Number(sessionStorage.getItem("UserId"))
+    this.yDate = moment().subtract(1, "days").format("DD-MM-YYYY")
+    const obj = {
+      DateFrom: moment().format("YYYY-MM-DD"),
+      UserId: Number(sessionStorage.getItem("UserId")),
     }
     this.isLoadingWardData = true
     this.dbCallingService.GetWBTripSummary(obj).subscribe({
       next: (response) => {
         if (response.isSuccess) {
-          this.swmSites = response.data.swmSites || [];
-          this.rtsSites = response.data.rtsSites || [];
-
-          this.allSites = [...this.swmSites, ...this.rtsSites]; // merge both lists
+          this.swmSites = response.data.swmSites || []
+          this.rtsSites = response.data.rtsSites || []
+          this.allSites = [...this.swmSites, ...this.rtsSites]
+          this.processDynamicSiteData()
         }
-        this.isLoadingWardData = false;
+        this.isLoadingWardData = false
       },
       error: (error) => {
-        console.error("Error fetching site locations:", error);
-        this.isLoadingWardData = false;
-      }
+        console.error("Error fetching site locations:", error)
+        this.isLoadingWardData = false
+      },
     })
+
+    this.loadLast30DaysData()
+
     setTimeout(() => {
       this.isLoading = false
     }, 1000)
+  }
+
+  processDynamicSiteData(): void {
+    let kanjurTrips = 0
+    let kanjurWeight = 0
+    let deonarTrips = 0
+    let deonarWeight = 0
+
+    this.swmSites.forEach((site) => {
+      if (site.siteName && site.siteName.toLowerCase().includes("kanjur")) {
+        kanjurTrips += site.vehicleCount || 0
+        kanjurWeight += site.netWeight || 0
+      } else if (site.siteName && site.siteName.toLowerCase().includes("deonar")) {
+        deonarTrips += site.vehicleCount || 0
+        deonarWeight += site.netWeight || 0
+      }
+    })
+
+    this.rtsSites.forEach((site) => {
+      if (site.siteName && site.siteName.toLowerCase().includes("kanjur")) {
+        kanjurTrips += site.vehicleCount || 0
+        kanjurWeight += site.netWeight || 0
+      } else if (site.siteName && site.siteName.toLowerCase().includes("deonar")) {
+        deonarTrips += site.vehicleCount || 0
+        deonarWeight += site.netWeight || 0
+      }
+    })
+
+    this.kanjurData = {
+      trips: kanjurTrips,
+      netWeight: kanjurWeight,
+    }
+
+    this.deonarData = {
+      trips: deonarTrips,
+      netWeight: deonarWeight,
+    }
+
+    this.updatePieChart()
+  }
+
+  loadLast30DaysData(): void {
+    const toDate = moment().format("YYYY-MM-DD")
+    const fromDate = moment().subtract(30, "days").format("YYYY-MM-DD")
+
+    const payload = {
+      WeighBridge: "",
+      FromDate: fromDate,
+      ToDate: toDate,
+      FullDate: "",
+      WardName: "",
+      Act_Shift: "",
+      TransactionDate: "",
+    }
+
+    this.dbCallingService.getWardwiseReport(payload).subscribe({
+      next: (response) => {
+        if (response && response.wardData && response.wardData.length > 0) {
+          this.calculateLast30DaysSummary(response.wardData)
+        }
+      },
+      error: (error) => {
+        console.error("Error fetching 30-day data:", error)
+      },
+    })
+  }
+
+  calculateLast30DaysSummary(wardData: WardData[]): void {
+    let totalTrips = 0
+    let totalWeight = 0
+    const uniqueWards = new Set<string>()
+
+    wardData.forEach((item) => {
+      totalTrips += item.vehicleCount || 0
+      totalWeight += item.totalNetWeight || 0
+      if (item.wardName) {
+        uniqueWards.add(item.wardName)
+      }
+    })
+
+    const wardCount = uniqueWards.size || 1
+
+    this.last30DaysSummary = {
+      trips: totalTrips,
+      netWeight: Number(totalWeight.toFixed(2)),
+      averageWardTrips: Number((totalTrips / wardCount).toFixed(2)),
+      averageWardWeight: Number((totalWeight / wardCount).toFixed(2)),
+    }
+
+    console.log("Last 30 days summary:", this.last30DaysSummary)
+  }
+
+  updatePieChart(): void {
+    const totalTrips = this.kanjurData.trips + this.deonarData.trips
+
+    this.vehicleChartOptions = {
+      ...this.vehicleChartOptions,
+      series: [this.kanjurData.trips, this.deonarData.trips],
+      plotOptions: {
+        pie: {
+          donut: {
+            size: "60%",
+            labels: {
+              show: true,
+              total: {
+                show: true,
+                label: "Total Trips",
+                fontSize: "16px",
+                fontWeight: 600,
+                color: this.primaryColor,
+                formatter: () => totalTrips.toString(),
+              },
+            },
+          },
+        },
+      },
+    }
   }
 
   loadWardData(): void {
@@ -399,7 +508,6 @@ this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
       return
     }
 
-    // Group data by ward name and sum up vehicles and weight
     const wardMap = new Map<string, { vehicles: number; weight: number }>()
 
     this.wardData.forEach((item) => {
@@ -416,7 +524,6 @@ this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
       }
     })
 
-    // Convert to arrays for chart
     const wardNames: string[] = []
     const vehicleData: number[] = []
     const weightData: number[] = []
@@ -427,12 +534,11 @@ this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
       weightData.push(Number(data.weight.toFixed(1)))
     })
 
-    // Update chart options
     this.wardChartOptions = {
       ...this.wardChartOptions,
       series: [
         {
-          name: "Vehicles",
+          name: "Trips",
           data: vehicleData,
         },
         {
@@ -462,11 +568,9 @@ this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
       return
     }
 
-    // Get unique ward names
-    const uniqueWards = new Set(this.wardData.map(item => item.wardName))
+    const uniqueWards = new Set(this.wardData.map((item) => item.wardName))
     this.wardSummary.totalWards = uniqueWards.size
 
-    // Find top ward by weight
     const wardTotals = new Map<string, number>()
     this.wardData.forEach((item) => {
       const wardName = item.wardName || "Unknown"
@@ -493,7 +597,7 @@ this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
     this.wardChartOptions = {
       ...this.wardChartOptions,
       series: [
-        { name: "Vehicles", data: [] },
+        { name: "Trips", data: [] },
         { name: "Weight (MT)", data: [] },
       ],
       xaxis: {
@@ -510,7 +614,6 @@ this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
   loadNewsData(): void {
     this.isLoadingNews = true
 
-    // Create payload for news API
     const payload = {
       Type: "News",
       Priority: "",
@@ -531,44 +634,6 @@ this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
 
     console.log("Loading news data with payload:", payload)
 
-    // this.dbCallingService.getImportantUpdates(payload).subscribe({
-    //   next: (response) => {
-    //     console.log("News API Response:", response)
-    //     if (response && response.length > 0) {
-    //       this.allNews = response
-    //       this.processNewsData()
-    //     } else {
-    //       console.log("No news data found")
-    //       this.resetNewsData()
-    //     }
-    //     this.isLoadingNews = false
-    //   },
-    //   error: (error) => {
-    //     console.error("News API Error:", error)
-    //     this.resetNewsData()
-    //     this.isLoadingNews = false
-    //   },
-    // })
-
-    // this.dbCallingService.getImportantUpdates(payload).subscribe({
-    //   next: (response: NewsItem[]) => {
-    //     console.log("News API Response:", response)
-
-    //     if (response && response.length > 0) {
-    //       this.allNews = response
-    //        this.filteredNews=[...this.allNews]
-    //     } else {
-    //       console.log("No news data found")
-    //       this.resetNewsData()
-    //     }
-    //     this.isLoadingNews = false
-    //   },
-    //   error: (error: any) => {
-    //     console.error("News API Error:", error)
-    //     this.resetNewsData()
-    //     this.isLoadingNews = false
-    //   },
-    // })
     this.dbCallingService.getImportantUpdates(payload).subscribe({
       next: (response: any) => {
         console.log("News API Response:", response)
@@ -589,43 +654,36 @@ this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
         this.isLoadingNews = false
       },
     })
-
   }
 
   processNewsData(): void {
-    // Get available years
     this.availableYears = Array.from(new Set(this.allNews.map((news) => news.year)))
       .sort()
       .reverse()
 
-    // Apply filters and pagination
     this.applyFiltersAndPagination()
   }
 
   applyFiltersAndPagination(): void {
     let filtered = [...this.allNews]
 
-    // Apply year filter
     if (this.selectedYear) {
       filtered = filtered.filter((news) => news.year.toString() === this.selectedYear)
     }
 
-    // Apply search filter
     if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase().trim()
       filtered = filtered.filter(
         (news) =>
           news.title.toLowerCase().includes(query) ||
           news.content.toLowerCase().includes(query) ||
-          news.category.toLowerCase().includes(query)
+          news.category.toLowerCase().includes(query),
       )
     }
 
-    // Calculate pagination
     this.totalItems = filtered.length
     this.totalPages = Math.ceil(this.totalItems / this.pageSize)
 
-    // Apply pagination
     const startIndex = (this.currentPage - 1) * this.pageSize
     const endIndex = startIndex + this.pageSize
     this.filteredNews = filtered.slice(startIndex, endIndex)
@@ -648,12 +706,12 @@ this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
   }
 
   onSearchChange(): void {
-    this.currentPage = 1 // Reset to first page when searching
+    this.currentPage = 1
     this.applyFiltersAndPagination()
   }
 
   onYearChange(): void {
-    this.currentPage = 1 // Reset to first page when changing year
+    this.currentPage = 1
     this.applyFiltersAndPagination()
   }
 
@@ -693,8 +751,6 @@ this.yDate = moment().subtract(1, 'days').format('DD-MM-YYYY');
   }
 
   openNewsDetail(newsItem: NewsItem): void {
-    // Implement modal or navigation to detailed view
     console.log("Opening news detail:", newsItem)
-    // You can implement a modal here or navigate to a detailed page
   }
 }

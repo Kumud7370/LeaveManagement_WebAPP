@@ -3,8 +3,8 @@
   <div class="dashboard-header">
     <div class="header-content">
       <div class="header-title">
-        <i class="fas fa-chart-bar"></i>
-        <h1>SWM Dashboard</h1>
+        <i class="fas fa-chart-bar"></i>        
+        <h1>SWM/Refuse Report</h1>
       </div>
       <div class="header-date">
         <span class="date-label">Refuse Report:</span>
@@ -21,6 +21,7 @@
 
   <!-- Dashboard Content  -->
   <div class="header-content dashboard-content" *ngIf="!isLoadingWardData">
+    <!-- SWM Sites Cards Section -->
     <div class="location-cards-section">
       <div class="location-card" *ngFor="let card of swmSites" [ngStyle]="{'--card-color': card.colorCode }">
         <div class="card-header">
@@ -28,9 +29,9 @@
           <i class="fas fa-truck"></i>
         </div>
         <div class="card-stats">
-          <div class="stat-item">
+          <div class="stat-item">           
             <div class="stat-value">{{ card.vehicleCount }}</div>
-            <div class="stat-label">Vehicles</div>
+            <div class="stat-label">Trips</div>
           </div>
           <div class="stat-item">
             <div class="stat-value">{{ card.netWeight | number:'1.2-2' }}</div>
@@ -39,6 +40,8 @@
         </div>
       </div>
     </div>
+    
+    <!-- RTS Sites Cards Section -->    
     <div class="location-cards-section">
       <div class="location-card" *ngFor="let card of rtsSites" [ngStyle]="{'--card-color': card.colorCode }">
         <div class="card-header">
@@ -46,9 +49,9 @@
           <i class="fas fa-truck"></i>
         </div>
         <div class="card-stats">
-          <div class="stat-item">
+          <div class="stat-item">           
             <div class="stat-value">{{ card.vehicleCount }}</div>
-            <div class="stat-label">Vehicles</div>
+            <div class="stat-label">Trips</div>
           </div>
           <div class="stat-item">
             <div class="stat-value">{{ card.netWeight | number:'1.2-2' }}</div>
@@ -57,142 +60,13 @@
         </div>
       </div>
     </div>
-    <!-- Charts Section -->
-    <!-- <div class="charts-section">
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>Vehicle Count Comparison</h3>
-        </div>
-        <div class="chart-container">
-          <apx-chart [series]="vehicleChartOptions.series" [chart]="vehicleChartOptions.chart"
-            [labels]="vehicleChartOptions.labels" [colors]="vehicleChartOptions.colors"
-            [legend]="vehicleChartOptions.legend" [plotOptions]="vehicleChartOptions.plotOptions"
-            [dataLabels]="vehicleChartOptions.dataLabels" [responsive]="vehicleChartOptions.responsive">
-          </apx-chart>
-          <apx-chart [series]="vehicleChartOptions.series" [chart]="vehicleChartOptions.chart"
-            [labels]="vehicleChartOptions.labels" [colors]="vehicleChartOptions.colors"
-            [legend]="vehicleChartOptions.legend" [plotOptions]="vehicleChartOptions.plotOptions"
-            [dataLabels]="vehicleChartOptions.dataLabels" [responsive]="vehicleChartOptions.responsive">
-          </apx-chart>
-        </div>
-      </div>
 
-      <!-- Ward Report Chart -->
-    <!-- <div class="chart-card">
-        <div class="chart-header">
-          <h3>Ward-wise Report</h3>
-          <div class="chart-controls">
-            <button class="btn-chart-control" (click)="refreshWardData()" [disabled]="isLoadingWardData">
-              <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingWardData"></i>
-              Refresh
-            </button>
-          </div>
-        </div>
-        <div class="chart-container">
-          <div *ngIf="isLoadingWardData" class="chart-loading">
-            <div class="chart-spinner"></div>
-            <span>Loading ward data...</span>
-          </div>
-          <div *ngIf="!isLoadingWardData && wardData.length === 0" class="chart-no-data">
-            <i class="fas fa-chart-bar"></i>
-            <span>No ward data available</span>
-          </div>
-          <apx-chart *ngIf="!isLoadingWardData && wardData.length > 0" [series]="wardChartOptions.series"
-            [chart]="wardChartOptions.chart" [xaxis]="wardChartOptions.xaxis" [yaxis]="wardChartOptions.yaxis!"
-            [colors]="wardChartOptions.colors" [plotOptions]="wardChartOptions.plotOptions"
-            [dataLabels]="wardChartOptions.dataLabels" [grid]="wardChartOptions.grid"
-            [legend]="wardChartOptions.legend!">
-          </apx-chart>
-        </div>
-      </div>
-    </div> -->
-
-    <!-- Important Updates & News Section -->
-    <!-- <div class="news-section">
-      <div class="news-header">
-        <h3>
-          <i class="fas fa-bell"></i>
-          Important Updates & News
-        </h3>
-        <div class="news-search-controls">
-          <div class="search-container">
-            <input type="text" class="search-input" placeholder="Search updates..." [(ngModel)]="searchQuery"
-              (input)="onSearchChange()" />
-            <i class="fas fa-search search-icon"></i>
-          </div>
-          <div class="year-filter">
-            <select class="year-select" [(ngModel)]="selectedYear" (change)="onYearChange()">
-              <option value="">All Years</option>
-              <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="news-content">
-        <!-- Loading State -->
-    <!-- <div *ngIf="isLoadingNews" class="news-loading">
-          <div class="news-spinner"></div>
-          <span>Loading updates...</span>
-        </div> -->
-
-    <!-- No Data State -->
-    <!-- <div *ngIf="!isLoadingNews && filteredNews.length === 0" class="news-no-data">
-          <i class="fas fa-newspaper"></i>
-          <span>No updates found</span>
-        </div> -->
-
-    <!-- News Cards -->
-    <!--   <div class="news-display-cards" *ngIf="!isLoadingNews && filteredNews.length > 0">
-          <div class="news-preview-grid">
-            <div *ngFor="let newsItem of filteredNews; let i = index" class="news-preview-card"
-              (click)="openNewsDetail(newsItem)">
-              <div class="news-preview-header">
-                <div class="news-category" [class]="'category-' + newsItem.category.toLowerCase()">
-                  {{ newsItem.category }}
-                </div>
-                <div class="news-date">{{ formatNewsDate(newsItem.date) }}</div>
-              </div>
-              <h4 class="news-preview-title">{{ newsItem.title }}</h4>
-              <p class="news-preview-excerpt">{{ getNewsExcerpt(newsItem.content, 80) }}</p>
-              <div class="news-preview-footer">
-                <span class="read-time">
-                  <i class="fas fa-clock"></i>
-                  {{ getReadTime(newsItem.content) }} min read
-                </span>
-                <span class="news-priority" [class]="'priority-' + newsItem.priority.toLowerCase()">
-                  {{ newsItem.priority }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Pagination Controls -->
-    <!--  <div class="news-pagination" *ngIf="totalPages > 1">
-            <button class="btn-pagination" [disabled]="currentPage === 1" (click)="goToPreviousPage()">
-              <i class="fas fa-chevron-left"></i>
-              Previous
-            </button>
-
-            <div class="pagination-info">
-              <span>Page {{ currentPage }} of {{ totalPages }}</span>
-              <span class="total-items">({{ totalItems }} items)</span>
-            </div>
-
-            <button class="btn-pagination" [disabled]="currentPage === totalPages" (click)="goToNextPage()">
-              Next
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div> -->
-
-    <!-- Total Summary Section -->
-    <!-- <div class="summary-section">
+    <!-- Last 30 Days Summary Section -->
+    <!-- Added new section for last 30 days cumulative data and average ward-wise metrics -->
+    <div class="summary-section">
       <div class="summary-card">
         <div class="summary-header">
-          <h3>Total Summary</h3>
+          <h3>Last 30 Days Summary</h3>
           <i class="fas fa-calculator"></i>
         </div>
         <div class="summary-stats">
@@ -201,8 +75,8 @@
               <i class="fas fa-truck"></i>
             </div>
             <div class="summary-content">
-              <div class="summary-value">{{ totalData.vehicles }}</div>
-              <div class="summary-label">Total Vehicles</div>
+              <div class="summary-value">{{ last30DaysSummary.trips }}</div>
+              <div class="summary-label">Total Trips</div>
             </div>
           </div>
           <div class="summary-item total-weight">
@@ -210,30 +84,30 @@
               <i class="fas fa-weight-hanging"></i>
             </div>
             <div class="summary-content">
-              <div class="summary-value">{{ totalData.netWeight }}</div>
-              <div class="summary-label">Total Net Weight (MT)</div>
+              <div class="summary-value">{{ last30DaysSummary.netWeight | number:'1.2-2' }}</div>
+              <div class="summary-label">Cumulative Net Weight (MT)</div>
             </div>
           </div>
           <div class="summary-item ward-summary">
             <div class="summary-icon">
-              <i class="fas fa-map-marker-alt"></i>
+              <i class="fas fa-chart-line"></i>
             </div>
             <div class="summary-content">
-              <div class="summary-value">{{ wardSummary.totalWards }}</div>
-              <div class="summary-label">Active Wards</div>
+              <div class="summary-value">{{ last30DaysSummary.averageWardTrips }}</div>
+              <div class="summary-label">Average Ward Trips</div>
             </div>
           </div>
           <div class="summary-item top-ward">
             <div class="summary-icon">
-              <i class="fas fa-trophy"></i>
+              <i class="fas fa-balance-scale"></i>
             </div>
             <div class="summary-content">
-              <div class="summary-value">{{ wardSummary.topWard || 'N/A' }}</div>
-              <div class="summary-label">Top Performing Ward</div>
+              <div class="summary-value">{{ last30DaysSummary.averageWardWeight | number:'1.2-2' }}</div>
+              <div class="summary-label">Average Ward Weight (MT)</div>
             </div>
           </div>
         </div>
       </div>
-    </div> -->
+    </div>
   </div>
 </div>
