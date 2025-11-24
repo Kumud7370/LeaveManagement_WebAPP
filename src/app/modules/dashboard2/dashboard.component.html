@@ -4,7 +4,8 @@
         <div class="header-content">
             <div class="header-title">
                 <i class="fas fa-chart-bar"></i>
-                <h1>SWM Dashboard</h1>
+                <!-- Changed heading to SWM/Refuse Report -->
+                <h1>SWM/Refuse Report</h1>
             </div>
             <div class="header-actions">
                 <button class="btn-header-action" (click)="exportAllData()" [disabled]="isExporting">
@@ -18,7 +19,7 @@
             </div>
             <div class="header-date">
                 <span class="date-label">Refuse Report:</span>
-                <span class="date-value">31-07-2025</span>
+                <span class="date-value">{{ timeMetrics.today | date:'dd-MM-yyyy' }}</span>
             </div>
         </div>
     </div>
@@ -76,15 +77,15 @@
                         </select>
                     </div>
 
-                    <!-- Route Filter -->
+                    <!-- Replaced Route Filter with Agency Filter -->
                     <div class="filter-group">
                         <label class="filter-label">
-                            <i class="fas fa-route"></i>
-                            Route
+                            <i class="fas fa-building"></i>
+                            Agency
                         </label>
-                        <select class="filter-select" [(ngModel)]="selectedRoute" (change)="onGlobalFilterChange()">
-                            <option value="">All Routes</option>
-                            <option *ngFor="let route of availableRoutes" [value]="route">{{ route }}</option>
+                        <select class="filter-select" [(ngModel)]="selectedAgency" (change)="onGlobalFilterChange()">
+                            <option value="">All Agencies</option>
+                            <option *ngFor="let agency of availableAgencies" [value]="agency">{{ agency }}</option>
                         </select>
                     </div>
 
@@ -101,15 +102,7 @@
                         </select>
                     </div>
 
-                    <!-- Search Filter -->
-                    <div class="filter-group filter-search">
-                        <label class="filter-label">
-                            <i class="fas fa-search"></i>
-                            Search
-                        </label>
-                        <input type="text" class="filter-input" placeholder="Search across all data..."
-                            [(ngModel)]="globalSearchQuery" (input)="onGlobalSearchChange()">
-                    </div>
+                    <!-- Removed Search Filter -->
                 </div>
             </div>
         </div>
@@ -143,11 +136,12 @@
                         <h3>Kanjur</h3>
                         <div class="card-metrics">
                             <div class="metric">
-                                <span class="value">{{ kanjurData.vehicles }}</span>
-                                <span class="label">Vehicles</span>
+                                <!-- Changed label to Trips -->
+                                <span class="value">{{ kanjurData.trips }}</span>
+                                <span class="label">Trips</span>
                             </div>
                             <div class="metric">
-                                <span class="value">{{ kanjurData.netWeight }}</span>
+                                <span class="value">{{ kanjurData.netWeight | number:'1.2-2' }}</span>
                                 <span class="label">MT</span>
                             </div>
                         </div>
@@ -166,11 +160,12 @@
                         <h3>Deonar</h3>
                         <div class="card-metrics">
                             <div class="metric">
-                                <span class="value">{{ deonarData.vehicles }}</span>
-                                <span class="label">Vehicles</span>
+                                <!-- Changed label to Trips -->
+                                <span class="value">{{ deonarData.trips }}</span>
+                                <span class="label">Trips</span>
                             </div>
                             <div class="metric">
-                                <span class="value">{{ deonarData.netWeight }}</span>
+                                <span class="value">{{ deonarData.netWeight | number:'1.2-2' }}</span>
                                 <span class="label">MT</span>
                             </div>
                         </div>
@@ -180,28 +175,7 @@
                     </div>
                 </div>
 
-                <!-- Ward -->
-                <div class="location-card ward-card" (click)="scrollToSection('ward')">
-                    <div class="card-icon">
-                        <i class="fas fa-map-marked-alt"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3>Ward Data</h3>
-                        <div class="card-metrics">
-                            <div class="metric">
-                                <span class="value">{{ wardSummary.totalWards }}</span>
-                                <span class="label">Wards</span>
-                            </div>
-                            <div class="metric">
-                                <span class="value">{{ totalData.netWeight }}</span>
-                                <span class="label">MT</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-trend">
-                        <i class="fas fa-arrow-up trend-up"></i>
-                    </div>
-                </div>
+                <!-- Removed Deonar Debris Widget -->
             </div>
 
             <!-- Secondary Locations Row -->
@@ -210,7 +184,7 @@
                 <div class="location-card vrts-card compact">
                     <div class="card-header">
                         <h4>VRTS</h4>
-                        <span class="card-value">{{ unifiedData.vrts }} MT</span>
+                        <span class="card-value">{{ unifiedData.vrts | number:'1.2-2' }} MT</span>
                     </div>
                     <div class="card-mini-chart">
                         <i class="fas fa-chart-line"></i>
@@ -221,7 +195,7 @@
                 <div class="location-card mrts-card compact">
                     <div class="card-header">
                         <h4>MRTS</h4>
-                        <span class="card-value">{{ unifiedData.mrts }} MT</span>
+                        <span class="card-value">{{ unifiedData.mrts | number:'1.2-2' }} MT</span>
                     </div>
                     <div class="card-mini-chart">
                         <i class="fas fa-chart-line"></i>
@@ -232,7 +206,7 @@
                 <div class="location-card grts-card compact">
                     <div class="card-header">
                         <h4>GRTS</h4>
-                        <span class="card-value">{{ unifiedData.grts }} MT</span>
+                        <span class="card-value">{{ unifiedData.grts | number:'1.2-2' }} MT</span>
                     </div>
                     <div class="card-mini-chart">
                         <i class="fas fa-chart-line"></i>
@@ -243,11 +217,12 @@
                 <div class="location-card total-card compact highlight">
                     <div class="card-header">
                         <h4>Total</h4>
-                        <span class="card-value">{{ totalData.vehicles }}</span>
+                        <!-- Changed to Trips -->
+                        <span class="card-value">{{ totalData.trips }} Trips</span>
                     </div>
                     <div class="card-detail">
                         <span class="detail-label">Weight:</span>
-                        <span class="detail-value">{{ totalData.netWeight }} MT</span>
+                        <span class="detail-value">{{ totalData.netWeight | number:'1.2-2' }} MT</span>
                     </div>
                 </div>
             </div>
@@ -271,12 +246,7 @@
                         <span *ngIf="!sidebarCollapsed">Overview</span>
                         <div class="nav-indicator"></div>
                     </button>
-                    <button class="nav-item" [class.active]="activeSection === 'routes'"
-                        (click)="switchSection('routes')" [title]="sidebarCollapsed ? 'Routes' : ''">
-                        <i class="fas fa-route"></i>
-                        <span *ngIf="!sidebarCollapsed">Routes</span>
-                        <div class="nav-indicator"></div>
-                    </button>
+                    <!-- Removed Routes and Map from navigation -->
                     <button class="nav-item" [class.active]="activeSection === 'performance'"
                         (click)="switchSection('performance')" [title]="sidebarCollapsed ? 'Performance' : ''">
                         <i class="fas fa-chart-line"></i>
@@ -287,12 +257,6 @@
                         (click)="switchSection('analytics')" [title]="sidebarCollapsed ? 'Analytics' : ''">
                         <i class="fas fa-chart-pie"></i>
                         <span *ngIf="!sidebarCollapsed">Analytics</span>
-                        <div class="nav-indicator"></div>
-                    </button>
-                    <button class="nav-item" [class.active]="activeSection === 'maps'" (click)="switchSection('maps')"
-                        [title]="sidebarCollapsed ? 'Map' : ''">
-                        <i class="fas fa-map"></i>
-                        <span *ngIf="!sidebarCollapsed">Map</span>
                         <div class="nav-indicator"></div>
                     </button>
                     <button class="nav-item" [class.active]="activeSection === 'reports'"
@@ -310,17 +274,52 @@
                 <!-- Overview Section -->
                 <div class="dashboard-section" *ngIf="activeSection === 'overview'">
 
-                    <!-- Compact Time Metrics - Horizontal Layout -->
+                    <!-- Added Last 30 Days Metrics -->
                     <div class="time-metrics-compact">
                         <div class="metrics-row">
-                            <div class="metric-item" (click)="drillDownMetric('day')">
+                            <div class="metric-item">
+                                <div class="metric-icon month">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="metric-info">
+                                    <span class="metric-label">Last 30 Days Total</span>
+                                    <span class="metric-value">{{ last30DaysMetrics.cumulativeWeight | number:'1.2-2' }}
+                                        MT</span>
+                                </div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-icon week">
+                                    <i class="fas fa-chart-area"></i>
+                                </div>
+                                <div class="metric-info">
+                                    <span class="metric-label">30 Days Avg (Ward-wise)</span>
+                                    <span class="metric-value">{{ last30DaysMetrics.averageWardWeight | number:'1.2-2'
+                                        }} MT</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Updated Time Metrics to show Yearly Comparative Analytics -->
+                    <div class="time-metrics-compact">
+                        <div class="metrics-row">
+                            <div class="metric-item" (click)="drillDownMetric('today')">
                                 <div class="metric-icon day">
                                     <i class="fas fa-calendar-day"></i>
                                 </div>
                                 <div class="metric-info">
                                     <span class="metric-label">Today</span>
-                                    <span class="metric-value">{{ timeMetrics.day }} Ton</span>
-                                    <span class="metric-change positive">+5.2%</span>
+                                    <span class="metric-value">{{ timeMetrics.today | number:'1.2-2' }} MT</span>
+                                </div>
+                            </div>
+
+                            <div class="metric-item" (click)="drillDownMetric('lastDay')">
+                                <div class="metric-icon day">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <div class="metric-info">
+                                    <span class="metric-label">Last Day</span>
+                                    <span class="metric-value">{{ timeMetrics.lastDay | number:'1.2-2' }} MT</span>
                                 </div>
                             </div>
 
@@ -330,8 +329,7 @@
                                 </div>
                                 <div class="metric-info">
                                     <span class="metric-label">This Week</span>
-                                    <span class="metric-value">{{ timeMetrics.week }} Ton</span>
-                                    <span class="metric-change positive">+2.1%</span>
+                                    <span class="metric-value">{{ timeMetrics.week | number:'1.2-2' }} MT</span>
                                 </div>
                             </div>
 
@@ -341,8 +339,7 @@
                                 </div>
                                 <div class="metric-info">
                                     <span class="metric-label">This Month</span>
-                                    <span class="metric-value">{{ timeMetrics.month }} Ton</span>
-                                    <span class="metric-change negative">-1.3%</span>
+                                    <span class="metric-value">{{ timeMetrics.month | number:'1.2-2' }} MT</span>
                                 </div>
                             </div>
 
@@ -352,28 +349,44 @@
                                 </div>
                                 <div class="metric-info">
                                     <span class="metric-label">This Year</span>
-                                    <span class="metric-value">{{ timeMetrics.year }} Ton</span>
-                                    <span class="metric-change positive">+8.7%</span>
-                                </div>
-                            </div>
-
-                            <div class="metric-item">
-                                <div class="metric-icon total">
-                                    <i class="fas fa-calculator"></i>
-                                </div>
-                                <div class="metric-info">
-                                    <span class="metric-label">Total Avg</span>
-                                    <span class="metric-value">{{ timeMetrics.total }} Ton</span>
-                                    <span class="metric-change positive">+12.5%</span>
+                                    <span class="metric-value">{{ timeMetrics.year | number:'1.2-2' }} MT</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Chart Sections with IDs for scrolling -->
-                    <div id="kanjur-section" class="chart-section">
-                        <h3>Kanjur Performance</h3>
-                        <div class="enhanced-chart-card">
+                    <!-- Chart Sections -->
+                    <div class="charts-grid">
+                        <!-- Added Vehicle Capacity vs Actual Weight Chart -->
+                        <div class="enhanced-chart-card full-width">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <h3>Vehicle Capacity vs Actual Weight Carried</h3>
+                                    <span class="chart-subtitle">Comparison of capacity utilization</span>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <apx-chart [series]="capacityVsActualChartOptions.series"
+                                    [chart]="capacityVsActualChartOptions.chart"
+                                    [xaxis]="capacityVsActualChartOptions.xaxis"
+                                    [yaxis]="capacityVsActualChartOptions.yaxis"
+                                    [plotOptions]="capacityVsActualChartOptions.plotOptions"
+                                    [dataLabels]="capacityVsActualChartOptions.dataLabels"
+                                    [stroke]="capacityVsActualChartOptions.stroke || {}"
+                                    [colors]="capacityVsActualChartOptions.colors"
+                                    [grid]="capacityVsActualChartOptions.grid"
+                                    [legend]="capacityVsActualChartOptions.legend">
+                                </apx-chart>
+                            </div>
+                        </div>
+
+                        <div id="kanjur-section" class="enhanced-chart-card">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <h3>Kanjur vs Deonar</h3>
+                                    <span class="chart-subtitle">Trip Distribution</span>
+                                </div>
+                            </div>
                             <div class="chart-container">
                                 <apx-chart [series]="vehicleChartOptions.series" [chart]="vehicleChartOptions.chart"
                                     [labels]="vehicleChartOptions.labels" [colors]="vehicleChartOptions.colors"
@@ -382,1155 +395,6 @@
                                     [dataLabels]="vehicleChartOptions.dataLabels"
                                     [responsive]="vehicleChartOptions.responsive">
                                 </apx-chart>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="deonar-section" class="chart-section">
-                        <h3>Deonar Performance</h3>
-                        <div class="enhanced-chart-card">
-                            <div class="chart-container">
-                                <apx-chart [series]="vehicleChartOptions.series" [chart]="vehicleChartOptions.chart"
-                                    [labels]="vehicleChartOptions.labels" [colors]="vehicleChartOptions.colors"
-                                    [legend]="vehicleChartOptions.legend"
-                                    [plotOptions]="vehicleChartOptions.plotOptions"
-                                    [dataLabels]="vehicleChartOptions.dataLabels"
-                                    [responsive]="vehicleChartOptions.responsive">
-                                </apx-chart>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="ward-section" class="chart-section">
-                        <h3>Ward Performance</h3>
-                        <div class="enhanced-chart-card">
-                            <div class="chart-container">
-                                <apx-chart [series]="wardChartOptions.series" [chart]="wardChartOptions.chart"
-                                    [xaxis]="wardChartOptions.xaxis" [yaxis]="wardChartOptions.yaxis"
-                                    [colors]="wardChartOptions.colors" [plotOptions]="wardChartOptions.plotOptions"
-                                    [dataLabels]="wardChartOptions.dataLabels" [grid]="wardChartOptions.grid"
-                                    [legend]="wardChartOptions.legend">
-                                </apx-chart>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Routes Section -->
-                <div class="dashboard-section" *ngIf="activeSection === 'routes'">
-                    <div class="section-header">
-                        <h2>Route Performance Analysis</h2>
-                        <div class="section-actions">
-                            <button class="btn-section-action" (click)="exportSectionData('routes')">
-                                <i class="fas fa-download"></i>
-                                Export Section
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Route Charts Grid -->
-                    <div class="charts-grid">
-                        <!-- Route Day Chart -->
-                        <div class="enhanced-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Daily Route Performance</h3>
-                                    <span class="chart-subtitle">Average Weight in Ton by Route</span>
-                                </div>
-                                <div class="chart-controls">
-                                    <div class="chart-filters">
-                                        <select class="chart-filter-select" [(ngModel)]="routeDayFilter"
-                                            (change)="updateRouteChart('day')">
-                                            <option value="all">All Routes</option>
-                                            <option *ngFor="let route of availableRoutes" [value]="route">{{ route }}
-                                            </option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="routeDaySortBy"
-                                            (change)="updateRouteChart('day')">
-                                            <option value="weight_desc">Weight (High to Low)</option>
-                                            <option value="weight_asc">Weight (Low to High)</option>
-                                            <option value="route_asc">Route (A to Z)</option>
-                                            <option value="route_desc">Route (Z to A)</option>
-                                        </select>
-                                    </div>
-                                    <div class="chart-actions">
-                                        <button class="btn-chart-action" (click)="exportChart('route-day', 'csv')"
-                                            title="Export CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="exportChart('route-day', 'json')"
-                                            title="Export JSON">
-                                            <i class="fas fa-file-code"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="fullscreenChart('route-day')"
-                                            title="Fullscreen">
-                                            <i class="fas fa-expand"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-container" [class.loading]="isLoadingCharts">
-                                <div *ngIf="isLoadingCharts" class="chart-loading">
-                                    <div class="chart-spinner"></div>
-                                    <span>Loading chart...</span>
-                                </div>
-                                <apx-chart *ngIf="!isLoadingCharts" [series]="routeDayChartOptions.series"
-                                    [chart]="routeDayChartOptions.chart" [xaxis]="routeDayChartOptions.xaxis"
-                                    [yaxis]="routeDayChartOptions.yaxis" [colors]="routeDayChartOptions.colors"
-                                    [plotOptions]="routeDayChartOptions.plotOptions"
-                                    [dataLabels]="routeDayChartOptions.dataLabels" [grid]="routeDayChartOptions.grid"
-                                    [legend]="routeDayChartOptions.legend">
-                                </apx-chart>
-                            </div>
-                            <div class="chart-pagination" *ngIf="routeDayTotalPages > 1">
-                                <button class="btn-pagination" [disabled]="routeDayCurrentPage === 1"
-                                    (click)="routeDayPreviousPage()">
-                                    <i class="fas fa-chevron-left"></i>
-                                </button>
-                                <span class="pagination-info">{{ routeDayCurrentPage }} / {{ routeDayTotalPages
-                                    }}</span>
-                                <button class="btn-pagination" [disabled]="routeDayCurrentPage === routeDayTotalPages"
-                                    (click)="routeDayNextPage()">
-                                    <i class="fas fa-chevron-right"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Route Week Chart -->
-                        <div class="enhanced-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Weekly Route Performance</h3>
-                                    <span class="chart-subtitle">Average Weight in Ton by Route</span>
-                                </div>
-                                <div class="chart-controls">
-                                    <div class="chart-filters">
-                                        <select class="chart-filter-select" [(ngModel)]="routeWeekFilter"
-                                            (change)="updateRouteChart('week')">
-                                            <option value="all">All Routes</option>
-                                            <option *ngFor="let route of availableRoutes" [value]="route">{{ route }}
-                                            </option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="routeWeekSortBy"
-                                            (change)="updateRouteChart('week')">
-                                            <option value="weight_desc">Weight (High to Low)</option>
-                                            <option value="weight_asc">Weight (Low to High)</option>
-                                            <option value="route_asc">Route (A to Z)</option>
-                                            <option value="route_desc">Route (Z to A)</option>
-                                        </select>
-                                    </div>
-                                    <div class="chart-actions">
-                                        <button class="btn-chart-action" (click)="exportChart('route-week', 'csv')"
-                                            title="Export CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="exportChart('route-week', 'json')"
-                                            title="Export JSON">
-                                            <i class="fas fa-file-code"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="fullscreenChart('route-week')"
-                                            title="Fullscreen">
-                                            <i class="fas fa-expand"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-container" [class.loading]="isLoadingCharts">
-                                <div *ngIf="isLoadingCharts" class="chart-loading">
-                                    <div class="chart-spinner"></div>
-                                    <span>Loading chart...</span>
-                                </div>
-                                <apx-chart *ngIf="!isLoadingCharts" [series]="routeWeekChartOptions.series"
-                                    [chart]="routeWeekChartOptions.chart" [xaxis]="routeWeekChartOptions.xaxis"
-                                    [yaxis]="routeWeekChartOptions.yaxis" [colors]="routeWeekChartOptions.colors"
-                                    [plotOptions]="routeWeekChartOptions.plotOptions"
-                                    [dataLabels]="routeWeekChartOptions.dataLabels" [grid]="routeWeekChartOptions.grid"
-                                    [legend]="routeWeekChartOptions.legend">
-                                </apx-chart>
-                            </div>
-                            <div class="chart-pagination" *ngIf="routeWeekTotalPages > 1">
-                                <button class="btn-pagination" [disabled]="routeWeekCurrentPage === 1"
-                                    (click)="routeWeekPreviousPage()">
-                                    <i class="fas fa-chevron-left"></i>
-                                </button>
-                                <span class="pagination-info">{{ routeWeekCurrentPage }} / {{ routeWeekTotalPages
-                                    }}</span>
-                                <button class="btn-pagination" [disabled]="routeWeekCurrentPage === routeWeekTotalPages"
-                                    (click)="routeWeekNextPage()">
-                                    <i class="fas fa-chevron-right"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Route Month Chart -->
-                        <div class="enhanced-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Monthly Route Performance</h3>
-                                    <span class="chart-subtitle">Average Weight in Ton by Route</span>
-                                </div>
-                                <div class="chart-controls">
-                                    <div class="chart-filters">
-                                        <select class="chart-filter-select" [(ngModel)]="routeMonthFilter"
-                                            (change)="updateRouteChart('month')">
-                                            <option value="all">All Routes</option>
-                                            <option *ngFor="let route of availableRoutes" [value]="route">{{ route }}
-                                            </option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="routeMonthSortBy"
-                                            (change)="updateRouteChart('month')">
-                                            <option value="weight_desc">Weight (High to Low)</option>
-                                            <option value="weight_asc">Weight (Low to High)</option>
-                                            <option value="route_asc">Route (A to Z)</option>
-                                            <option value="route_desc">Route (Z to A)</option>
-                                        </select>
-                                    </div>
-                                    <div class="chart-actions">
-                                        <button class="btn-chart-action" (click)="exportChart('route-month', 'csv')"
-                                            title="Export CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="exportChart('route-month', 'json')"
-                                            title="Export JSON">
-                                            <i class="fas fa-file-code"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="fullscreenChart('route-month')"
-                                            title="Fullscreen">
-                                            <i class="fas fa-expand"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-container" [class.loading]="isLoadingCharts">
-                                <div *ngIf="isLoadingCharts" class="chart-loading">
-                                    <div class="chart-spinner"></div>
-                                    <span>Loading chart...</span>
-                                </div>
-                                <apx-chart *ngIf="!isLoadingCharts" [series]="routeMonthChartOptions.series"
-                                    [chart]="routeMonthChartOptions.chart" [xaxis]="routeMonthChartOptions.xaxis"
-                                    [yaxis]="routeMonthChartOptions.yaxis" [colors]="routeMonthChartOptions.colors"
-                                    [plotOptions]="routeMonthChartOptions.plotOptions"
-                                    [dataLabels]="routeMonthChartOptions.dataLabels"
-                                    [grid]="routeMonthChartOptions.grid" [legend]="routeMonthChartOptions.legend">
-                                </apx-chart>
-                            </div>
-                            <div class="chart-pagination" *ngIf="routeMonthTotalPages > 1">
-                                <button class="btn-pagination" [disabled]="routeMonthCurrentPage === 1"
-                                    (click)="routeMonthPreviousPage()">
-                                    <i class="fas fa-chevron-left"></i>
-                                </button>
-                                <span class="pagination-info">{{ routeMonthCurrentPage }} / {{ routeMonthTotalPages
-                                    }}</span>
-                                <button class="btn-pagination"
-                                    [disabled]="routeMonthCurrentPage === routeMonthTotalPages"
-                                    (click)="routeMonthNextPage()">
-                                    <i class="fas fa-chevron-right"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Performance Section -->
-                <div class="dashboard-section" *ngIf="activeSection === 'performance'">
-                    <div class="section-header">
-                        <h2>Performance Analytics</h2>
-                        <div class="section-actions">
-                            <button class="btn-section-action" (click)="exportSectionData('performance')">
-                                <i class="fas fa-download"></i>
-                                Export Section
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="charts-grid">
-                        <!-- Best Routes Chart -->
-                        <div class="enhanced-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Best Performing Routes</h3>
-                                    <span class="chart-subtitle">Top Routes by Weight Performance</span>
-                                </div>
-                                <div class="chart-controls">
-                                    <div class="chart-filters">
-                                        <select class="chart-filter-select" [(ngModel)]="bestRoutesTimeRange"
-                                            (change)="updateBestRoutesChart()">
-                                            <option value="day">Today</option>
-                                            <option value="week">This Week</option>
-                                            <option value="month">This Month</option>
-                                            <option value="year">This Year</option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="bestRoutesLimit"
-                                            (change)="updateBestRoutesChart()">
-                                            <option value="5">Top 5</option>
-                                            <option value="10">Top 10</option>
-                                            <option value="15">Top 15</option>
-                                            <option value="20">Top 20</option>
-                                        </select>
-                                    </div>
-                                    <div class="chart-actions">
-                                        <button class="btn-chart-action" (click)="exportChart('best-routes', 'csv')"
-                                            title="Export CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="exportChart('best-routes', 'json')"
-                                            title="Export JSON">
-                                            <i class="fas fa-file-code"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="fullscreenChart('best-routes')"
-                                            title="Fullscreen">
-                                            <i class="fas fa-expand"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-container" [class.loading]="isLoadingCharts">
-                                <div *ngIf="isLoadingCharts" class="chart-loading">
-                                    <div class="chart-spinner"></div>
-                                    <span>Loading chart...</span>
-                                </div>
-                                <apx-chart *ngIf="!isLoadingCharts" [series]="bestRoutesChartOptions.series"
-                                    [chart]="bestRoutesChartOptions.chart" [xaxis]="bestRoutesChartOptions.xaxis"
-                                    [yaxis]="bestRoutesChartOptions.yaxis" [colors]="bestRoutesChartOptions.colors"
-                                    [plotOptions]="bestRoutesChartOptions.plotOptions"
-                                    [dataLabels]="bestRoutesChartOptions.dataLabels"
-                                    [grid]="bestRoutesChartOptions.grid" [legend]="bestRoutesChartOptions.legend"
-                                    [stroke]="bestRoutesChartOptions.stroke!"
-                                    [markers]="bestRoutesChartOptions.markers!">
-                                </apx-chart>
-                            </div>
-                            <div class="chart-pagination" *ngIf="bestRoutesTotalPages > 1">
-                                <button class="btn-pagination" [disabled]="bestRoutesCurrentPage === 1"
-                                    (click)="bestRoutesPreviousPage()">
-                                    <i class="fas fa-chevron-left"></i>
-                                </button>
-                                <span class="pagination-info">{{ bestRoutesCurrentPage }} / {{ bestRoutesTotalPages
-                                    }}</span>
-                                <button class="btn-pagination"
-                                    [disabled]="bestRoutesCurrentPage === bestRoutesTotalPages"
-                                    (click)="bestRoutesNextPage()">
-                                    <i class="fas fa-chevron-right"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Worst Routes Chart -->
-                        <div class="enhanced-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Worst Performing Routes</h3>
-                                    <span class="chart-subtitle">Bottom Routes by Weight Performance</span>
-                                </div>
-                                <div class="chart-controls">
-                                    <div class="chart-filters">
-                                        <select class="chart-filter-select" [(ngModel)]="worstRoutesTimeRange"
-                                            (change)="updateWorstRoutesChart()">
-                                            <option value="day">Today</option>
-                                            <option value="week">This Week</option>
-                                            <option value="month">This Month</option>
-                                            <option value="year">This Year</option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="worstRoutesLimit"
-                                            (change)="updateWorstRoutesChart()">
-                                            <option value="5">Bottom 5</option>
-                                            <option value="10">Bottom 10</option>
-                                            <option value="15">Bottom 15</option>
-                                            <option value="20">Bottom 20</option>
-                                        </select>
-                                    </div>
-                                    <div class="chart-actions">
-                                        <button class="btn-chart-action" (click)="exportChart('worst-routes', 'csv')"
-                                            title="Export CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="exportChart('worst-routes', 'json')"
-                                            title="Export JSON">
-                                            <i class="fas fa-file-code"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="fullscreenChart('worst-routes')"
-                                            title="Fullscreen">
-                                            <i class="fas fa-expand"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-container" [class.loading]="isLoadingCharts">
-                                <div *ngIf="isLoadingCharts" class="chart-loading">
-                                    <div class="chart-spinner"></div>
-                                    <span>Loading chart...</span>
-                                </div>
-                                <apx-chart *ngIf="!isLoadingCharts" [series]="worstRoutesChartOptions.series"
-                                    [chart]="worstRoutesChartOptions.chart" [xaxis]="worstRoutesChartOptions.xaxis"
-                                    [yaxis]="worstRoutesChartOptions.yaxis" [colors]="worstRoutesChartOptions.colors"
-                                    [plotOptions]="worstRoutesChartOptions.plotOptions"
-                                    [dataLabels]="worstRoutesChartOptions.dataLabels"
-                                    [grid]="worstRoutesChartOptions.grid" [legend]="worstRoutesChartOptions.legend"
-                                    [stroke]="worstRoutesChartOptions.stroke!"
-                                    [markers]="worstRoutesChartOptions.markers!">
-                                </apx-chart>
-                            </div>
-                            <div class="chart-pagination" *ngIf="worstRoutesTotalPages > 1">
-                                <button class="btn-pagination" [disabled]="worstRoutesCurrentPage === 1"
-                                    (click)="worstRoutesPreviousPage()">
-                                    <i class="fas fa-chevron-left"></i>
-                                </button>
-                                <span class="pagination-info">{{ worstRoutesCurrentPage }} / {{ worstRoutesTotalPages
-                                    }}</span>
-                                <button class="btn-pagination"
-                                    [disabled]="worstRoutesCurrentPage === worstRoutesTotalPages"
-                                    (click)="worstRoutesNextPage()">
-                                    <i class="fas fa-chevron-right"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Analytics Section -->
-                <div class="dashboard-section" *ngIf="activeSection === 'analytics'">
-                    <div class="section-header">
-                        <h2>Data Analytics</h2>
-                        <div class="section-actions">
-                            <button class="btn-section-action" (click)="exportSectionData('analytics')">
-                                <i class="fas fa-download"></i>
-                                Export Section
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="charts-grid">
-                        <!-- Waste Type Pie Chart -->
-                        <div class="enhanced-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Waste Type Distribution</h3>
-                                    <span class="chart-subtitle">Sum of Weight by Waste Type</span>
-                                </div>
-                                <div class="chart-controls">
-                                    <div class="chart-filters">
-                                        <select class="chart-filter-select" [(ngModel)]="wasteTypeTimeRange"
-                                            (change)="updateWasteTypeChart()">
-                                            <option value="day">Today</option>
-                                            <option value="week">This Week</option>
-                                            <option value="month">This Month</option>
-                                            <option value="year">This Year</option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="wasteTypeFilter"
-                                            (change)="updateWasteTypeChart()">
-                                            <option value="all">All Types</option>
-                                            <option *ngFor="let type of availableWasteTypes" [value]="type">{{ type }}
-                                            </option>
-                                        </select>
-                                    </div>
-                                    <div class="chart-actions">
-                                        <button class="btn-chart-action" (click)="exportChart('waste-type', 'csv')"
-                                            title="Export CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="exportChart('waste-type', 'json')"
-                                            title="Export JSON">
-                                            <i class="fas fa-file-code"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="fullscreenChart('waste-type')"
-                                            title="Fullscreen">
-                                            <i class="fas fa-expand"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-container" [class.loading]="isLoadingCharts">
-                                <div *ngIf="isLoadingCharts" class="chart-loading">
-                                    <div class="chart-spinner"></div>
-                                    <span>Loading chart...</span>
-                                </div>
-                                <apx-chart *ngIf="!isLoadingCharts" [series]="wasteTypePieOptions.series"
-                                    [chart]="wasteTypePieOptions.chart" [labels]="wasteTypePieOptions.labels"
-                                    [colors]="wasteTypePieOptions.colors" [legend]="wasteTypePieOptions.legend"
-                                    [plotOptions]="wasteTypePieOptions.plotOptions"
-                                    [dataLabels]="wasteTypePieOptions.dataLabels"
-                                    [responsive]="wasteTypePieOptions.responsive">
-                                </apx-chart>
-                            </div>
-                        </div>
-
-                        <!-- Dumping Station Pie Chart -->
-                        <div class="enhanced-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Dumping Station Analysis</h3>
-                                    <span class="chart-subtitle">Weight Distribution by Station</span>
-                                </div>
-                                <div class="chart-controls">
-                                    <div class="chart-filters">
-                                        <select class="chart-filter-select" [(ngModel)]="dumpingStationTimeRange"
-                                            (change)="updateDumpingStationChart()">
-                                            <option value="day">Today</option>
-                                            <option value="week">This Week</option>
-                                            <option value="month">This Month</option>
-                                            <option value="year">This Year</option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="dumpingStationSortBy"
-                                            (change)="updateDumpingStationChart()">
-                                            <option value="weight_desc">Weight (High to Low)</option>
-                                            <option value="weight_asc">Weight (Low to High)</option>
-                                            <option value="name_asc">Name (A to Z)</option>
-                                        </select>
-                                    </div>
-                                    <div class="chart-actions">
-                                        <button class="btn-chart-action" (click)="exportChart('dumping-station', 'csv')"
-                                            title="Export CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button class="btn-chart-action"
-                                            (click)="exportChart('dumping-station', 'json')" title="Export JSON">
-                                            <i class="fas fa-file-code"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="fullscreenChart('dumping-station')"
-                                            title="Fullscreen">
-                                            <i class="fas fa-expand"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-container" [class.loading]="isLoadingCharts">
-                                <div *ngIf="isLoadingCharts" class="chart-loading">
-                                    <div class="chart-spinner"></div>
-                                    <span>Loading chart...</span>
-                                </div>
-                                <apx-chart *ngIf="!isLoadingCharts" [series]="dumpingStationPieOptions.series"
-                                    [chart]="dumpingStationPieOptions.chart" [labels]="dumpingStationPieOptions.labels"
-                                    [colors]="dumpingStationPieOptions.colors"
-                                    [legend]="dumpingStationPieOptions.legend"
-                                    [plotOptions]="dumpingStationPieOptions.plotOptions"
-                                    [dataLabels]="dumpingStationPieOptions.dataLabels"
-                                    [responsive]="dumpingStationPieOptions.responsive">
-                                </apx-chart>
-                            </div>
-                        </div>
-
-                        <!-- Ward Wise Bar Chart -->
-                        <div class="enhanced-chart-card full-width">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Ward-wise Performance</h3>
-                                    <span class="chart-subtitle">Sum of Weight by Ward</span>
-                                </div>
-                                <div class="chart-controls">
-                                    <div class="chart-filters">
-                                        <select class="chart-filter-select" [(ngModel)]="wardWiseTimeRange"
-                                            (change)="updateWardWiseChart()">
-                                            <option value="day">Today</option>
-                                            <option value="week">This Week</option>
-                                            <option value="month">This Month</option>
-                                            <option value="year">This Year</option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="wardWiseFilter"
-                                            (change)="updateWardWiseChart()">
-                                            <option value="all">All Wards</option>
-                                            <option *ngFor="let ward of availableWards" [value]="ward">{{ ward }}
-                                            </option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="wardWiseSortBy"
-                                            (change)="updateWardWiseChart()">
-                                            <option value="weight_desc">Weight (High to Low)</option>
-                                            <option value="weight_asc">Weight (Low to High)</option>
-                                            <option value="ward_asc">Ward (A to Z)</option>
-                                            <option value="ward_desc">Ward (Z to A)</option>
-                                        </select>
-                                    </div>
-                                    <div class="chart-actions">
-                                        <button class="btn-chart-action" (click)="exportChart('ward-wise', 'csv')"
-                                            title="Export CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="exportChart('ward-wise', 'json')"
-                                            title="Export JSON">
-                                            <i class="fas fa-file-code"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="fullscreenChart('ward-wise')"
-                                            title="Fullscreen">
-                                            <i class="fas fa-expand"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-container" [class.loading]="isLoadingCharts">
-                                <div *ngIf="isLoadingCharts" class="chart-loading">
-                                    <div class="chart-spinner"></div>
-                                    <span>Loading chart...</span>
-                                </div>
-                                <apx-chart *ngIf="!isLoadingCharts" [series]="wardWiseBarOptions.series"
-                                    [chart]="wardWiseBarOptions.chart" [xaxis]="wardWiseBarOptions.xaxis"
-                                    [yaxis]="wardWiseBarOptions.yaxis" [colors]="wardWiseBarOptions.colors"
-                                    [plotOptions]="wardWiseBarOptions.plotOptions"
-                                    [dataLabels]="wardWiseBarOptions.dataLabels" [grid]="wardWiseBarOptions.grid"
-                                    [legend]="wardWiseBarOptions.legend">
-                                </apx-chart>
-                            </div>
-                            <div class="chart-pagination" *ngIf="wardWiseTotalPages > 1">
-                                <button class="btn-pagination" [disabled]="wardWiseCurrentPage === 1"
-                                    (click)="wardWisePreviousPage()">
-                                    <i class="fas fa-chevron-left"></i>
-                                </button>
-                                <span class="pagination-info">{{ wardWiseCurrentPage }} / {{ wardWiseTotalPages
-                                    }}</span>
-                                <button class="btn-pagination" [disabled]="wardWiseCurrentPage === wardWiseTotalPages"
-                                    (click)="wardWiseNextPage()">
-                                    <i class="fas fa-chevron-right"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Vehicle Type Bar Chart -->
-                        <div class="enhanced-chart-card full-width">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Vehicle Type Analysis</h3>
-                                    <span class="chart-subtitle">Average Weight by Vehicle Type</span>
-                                </div>
-                                <div class="chart-controls">
-                                    <div class="chart-filters">
-                                        <select class="chart-filter-select" [(ngModel)]="vehicleTypeTimeRange"
-                                            (change)="updateVehicleTypeChart()">
-                                            <option value="day">Today</option>
-                                            <option value="week">This Week</option>
-                                            <option value="month">This Month</option>
-                                            <option value="year">This Year</option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="vehicleTypeFilter"
-                                            (change)="updateVehicleTypeChart()">
-                                            <option value="all">All Types</option>
-                                            <option *ngFor="let type of availableVehicleTypes" [value]="type">{{ type }}
-                                            </option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="vehicleTypeSortBy"
-                                            (change)="updateVehicleTypeChart()">
-                                            <option value="weight_desc">Weight (High to Low)</option>
-                                            <option value="weight_asc">Weight (Low to High)</option>
-                                            <option value="type_asc">Type (A to Z)</option>
-                                            <option value="type_desc">Type (Z to A)</option>
-                                        </select>
-                                    </div>
-                                    <div class="chart-actions">
-                                        <button class="btn-chart-action" (click)="exportChart('vehicle-type', 'csv')"
-                                            title="Export CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="exportChart('vehicle-type', 'json')"
-                                            title="Export JSON">
-                                            <i class="fas fa-file-code"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="fullscreenChart('vehicle-type')"
-                                            title="Fullscreen">
-                                            <i class="fas fa-expand"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-container" [class.loading]="isLoadingCharts">
-                                <div *ngIf="isLoadingCharts" class="chart-loading">
-                                    <div class="chart-spinner"></div>
-                                    <span>Loading chart...</span>
-                                </div>
-                                <apx-chart *ngIf="!isLoadingCharts" [series]="vehicleTypeBarOptions.series"
-                                    [chart]="vehicleTypeBarOptions.chart" [xaxis]="vehicleTypeBarOptions.xaxis"
-                                    [yaxis]="vehicleTypeBarOptions.yaxis" [colors]="vehicleTypeBarOptions.colors"
-                                    [plotOptions]="vehicleTypeBarOptions.plotOptions"
-                                    [dataLabels]="vehicleTypeBarOptions.dataLabels" [grid]="vehicleTypeBarOptions.grid"
-                                    [legend]="vehicleTypeBarOptions.legend">
-                                </apx-chart>
-                            </div>
-                            <div class="chart-pagination" *ngIf="vehicleTypeTotalPages > 1">
-                                <button class="btn-pagination" [disabled]="vehicleTypeCurrentPage === 1"
-                                    (click)="vehicleTypePreviousPage()">
-                                    <i class="fas fa-chevron-left"></i>
-                                </button>
-                                <span class="pagination-info">{{ vehicleTypeCurrentPage }} / {{ vehicleTypeTotalPages
-                                    }}</span>
-                                <button class="btn-pagination"
-                                    [disabled]="vehicleTypeCurrentPage === vehicleTypeTotalPages"
-                                    (click)="vehicleTypeNextPage()">
-                                    <i class="fas fa-chevron-right"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Time Series Chart -->
-                        <div class="enhanced-chart-card full-width">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Time Series Analysis</h3>
-                                    <span class="chart-subtitle">Weight Trends Over Time</span>
-                                </div>
-                                <div class="chart-controls">
-                                    <div class="chart-filters">
-                                        <select class="chart-filter-select" [(ngModel)]="timeSeriesTimeRange"
-                                            (change)="updateTimeSeriesChart()">
-                                            <option value="day">Last 24 Hours</option>
-                                            <option value="week">Last 7 Days</option>
-                                            <option value="month">Last 30 Days</option>
-                                            <option value="year">Last 12 Months</option>
-                                        </select>
-                                        <select class="chart-filter-select" [(ngModel)]="timeSeriesInterval"
-                                            (change)="updateTimeSeriesChart()">
-                                            <option value="hour">Hourly</option>
-                                            <option value="day">Daily</option>
-                                            <option value="week">Weekly</option>
-                                            <option value="month">Monthly</option>
-                                        </select>
-                                    </div>
-                                    <div class="chart-actions">
-                                        <button class="btn-chart-action" (click)="exportChart('time-series', 'csv')"
-                                            title="Export CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="exportChart('time-series', 'json')"
-                                            title="Export JSON">
-                                            <i class="fas fa-file-code"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="fullscreenChart('time-series')"
-                                            title="Fullscreen">
-                                            <i class="fas fa-expand"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-container" [class.loading]="isLoadingCharts">
-                                <div *ngIf="isLoadingCharts" class="chart-loading">
-                                    <div class="chart-spinner"></div>
-                                    <span>Loading chart...</span>
-                                </div>
-                                <apx-chart *ngIf="!isLoadingCharts" [series]="timeSeriesChartOptions.series"
-                                    [chart]="timeSeriesChartOptions.chart" [xaxis]="timeSeriesChartOptions.xaxis"
-                                    [yaxis]="timeSeriesChartOptions.yaxis" [colors]="timeSeriesChartOptions.colors"
-                                    [plotOptions]="timeSeriesChartOptions.plotOptions"
-                                    [dataLabels]="timeSeriesChartOptions.dataLabels"
-                                    [grid]="timeSeriesChartOptions.grid" [legend]="timeSeriesChartOptions.legend"
-                                    [stroke]="timeSeriesChartOptions.stroke!" [fill]="timeSeriesChartOptions.fill!">
-                                </apx-chart>
-                            </div>
-                        </div>
-
-                        <!-- Waste Treemap Chart -->
-                        <div class="enhanced-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Waste Type Treemap</h3>
-                                    <span class="chart-subtitle">Hierarchical View of Waste Types</span>
-                                </div>
-                                <div class="chart-controls">
-                                    <div class="chart-filters">
-                                        <select class="chart-filter-select" [(ngModel)]="wasteTreemapTimeRange"
-                                            (change)="updateWasteTreemapChart()">
-                                            <option value="day">Today</option>
-                                            <option value="week">This Week</option>
-                                            <option value="month">This Month</option>
-                                            <option value="year">This Year</option>
-                                        </select>
-                                        <input type="number" class="chart-filter-input" placeholder="Min Weight"
-                                            [(ngModel)]="wasteTreemapMinWeight" (input)="updateWasteTreemapChart()">
-                                        <input type="number" class="chart-filter-input" placeholder="Max Weight"
-                                            [(ngModel)]="wasteTreemapMaxWeight" (input)="updateWasteTreemapChart()">
-                                    </div>
-                                    <div class="chart-actions">
-                                        <button class="btn-chart-action" (click)="exportChart('waste-treemap', 'csv')"
-                                            title="Export CSV">
-                                            <i class="fas fa-file-csv"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="exportChart('waste-treemap', 'json')"
-                                            title="Export JSON">
-                                            <i class="fas fa-file-code"></i>
-                                        </button>
-                                        <button class="btn-chart-action" (click)="fullscreenChart('waste-treemap')"
-                                            title="Fullscreen">
-                                            <i class="fas fa-expand"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="chart-container" [class.loading]="isLoadingCharts">
-                                <div *ngIf="isLoadingCharts" class="chart-loading">
-                                    <div class="chart-spinner"></div>
-                                    <span>Loading chart...</span>
-                                </div>
-                                <apx-chart *ngIf="!isLoadingCharts" [series]="wasteTreemapOptions.series"
-                                    [chart]="wasteTreemapOptions.chart" [colors]="wasteTreemapOptions.colors"
-                                    [plotOptions]="wasteTreemapOptions.plotOptions"
-                                    [dataLabels]="wasteTreemapOptions.dataLabels" [xaxis]="wasteTreemapOptions.xaxis"
-                                    [yaxis]="wasteTreemapOptions.yaxis" [grid]="wasteTreemapOptions.grid"
-                                    [legend]="wasteTreemapOptions.legend">
-                                </apx-chart>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Maps Section -->
-                <div class="dashboard-section" *ngIf="activeSection === 'maps'">
-                    <div class="section-header">
-                        <h2>Maps & Route Tracking</h2>
-                        <div class="section-actions">
-                            <button class="btn-section-action" (click)="exportSectionData('maps')">
-                                <i class="fas fa-download"></i>
-                                Export Section
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="map-layout">
-                        <div class="map-controls-panel">
-                            <div class="control-group">
-                                <h4>Map Layers</h4>
-                                <div class="layer-controls">
-                                    <label class="layer-control">
-                                        <input type="checkbox" [(ngModel)]="mapLayers.routes"
-                                            (change)="toggleMapLayer('routes')">
-                                        <span class="checkmark"></span>
-                                        <i class="fas fa-route"></i>
-                                        Routes
-                                    </label>
-                                    <label class="layer-control">
-                                        <input type="checkbox" [(ngModel)]="mapLayers.stations"
-                                            (change)="toggleMapLayer('stations')">
-                                        <span class="checkmark"></span>
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        Stations
-                                    </label>
-                                    <label class="layer-control">
-                                        <input type="checkbox" [(ngModel)]="mapLayers.vehicles"
-                                            (change)="toggleMapLayer('vehicles')">
-                                        <span class="checkmark"></span>
-                                        <i class="fas fa-truck"></i>
-                                        Vehicles
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="control-group">
-                                <h4>Real-time Tracking</h4>
-                                <div class="tracking-controls">
-                                    <button class="btn-tracking" [class.active]="realTimeTracking"
-                                        (click)="toggleRealTimeTracking()">
-                                        <i class="fas fa-play" *ngIf="!realTimeTracking"></i>
-                                        <i class="fas fa-pause" *ngIf="realTimeTracking"></i>
-                                        {{ realTimeTracking ? 'Pause' : 'Start' }} Tracking
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="control-group">
-                                <h4>Map Statistics</h4>
-                                <div class="map-stats">
-                                    <div class="map-stat">
-                                        <span class="stat-number">{{ mapStats.activeRoutes }}</span>
-                                        <span class="stat-label">Active Routes</span>
-                                    </div>
-                                    <div class="map-stat">
-                                        <span class="stat-number">{{ mapStats.activeVehicles }}</span>
-                                        <span class="stat-label">Active Vehicles</span>
-                                    </div>
-                                    <div class="map-stat">
-                                        <span class="stat-number">{{ mapStats.dumpingStations }}</span>
-                                        <span class="stat-label">Dumping Stations</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="map-container">
-                            <div class="map-content" *ngIf="!isLoadingMap">
-                                <div class="interactive-map">
-                                    <i class="fas fa-map"></i>
-                                    <p>Interactive Map</p>
-                                    <small>Routes, Dumping Stations & Vehicle Tracking</small>
-                                    <div class="map-overlay">
-                                        <div class="map-legend">
-                                            <div class="legend-item" *ngIf="mapLayers.routes">
-                                                <span class="legend-color routes"></span>
-                                                <span>Routes</span>
-                                            </div>
-                                            <div class="legend-item" *ngIf="mapLayers.stations">
-                                                <span class="legend-color stations"></span>
-                                                <span>Stations</span>
-                                            </div>
-                                            <div class="legend-item" *ngIf="mapLayers.vehicles">
-                                                <span class="legend-color vehicles"></span>
-                                                <span>Vehicles</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="map-loading" *ngIf="isLoadingMap">
-                                <div class="map-spinner"></div>
-                                <span>Loading map...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Reports Section -->
-                <div class="dashboard-section" *ngIf="activeSection === 'reports'">
-                    <div class="section-header">
-                        <h2>Reports & Data</h2>
-                        <div class="section-actions">
-                            <button class="btn-section-action" (click)="exportSectionData('reports')">
-                                <i class="fas fa-download"></i>
-                                Export Section
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="reports-layout">
-                        <!-- Ward Report -->
-                        <div class="report-card">
-                            <div class="report-header">
-                                <h3>Ward-wise Report</h3>
-                                <div class="report-controls">
-                                    <button class="btn-report-control" (click)="refreshWardData()"
-                                        [disabled]="isLoadingWardData">
-                                        <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingWardData"></i>
-                                        Refresh
-                                    </button>
-                                    <button class="btn-report-control" (click)="exportWardData()">
-                                        <i class="fas fa-file-csv"></i>
-                                        Export CSV
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="report-content">
-                                <div class="enhanced-chart-card">
-                                    <div class="chart-header">
-                                        <div class="chart-title">
-                                            <h3>Ward Performance Chart</h3>
-                                            <span class="chart-subtitle">Vehicles and Weight by Ward</span>
-                                        </div>
-                                        <div class="chart-controls">
-                                            <div class="chart-filters">
-                                                <select class="chart-filter-select" [(ngModel)]="wardChartTimeRange"
-                                                    (change)="updateWardChart()">
-                                                    <option value="day">Today</option>
-                                                    <option value="week">This Week</option>
-                                                    <option value="month">This Month</option>
-                                                    <option value="year">This Year</option>
-                                                </select>
-                                                <select class="chart-filter-select" [(ngModel)]="wardChartSortBy"
-                                                    (change)="updateWardChart()">
-                                                    <option value="vehicles_desc">Vehicles (High to Low)</option>
-                                                    <option value="vehicles_asc">Vehicles (Low to High)</option>
-                                                    <option value="weight_desc">Weight (High to Low)</option>
-                                                    <option value="weight_asc">Weight (Low to High)</option>
-                                                    <option value="ward_asc">Ward (A to Z)</option>
-                                                </select>
-                                            </div>
-                                            <div class="chart-actions">
-                                                <button class="btn-chart-action"
-                                                    (click)="exportChart('ward-chart', 'csv')" title="Export CSV">
-                                                    <i class="fas fa-file-csv"></i>
-                                                </button>
-                                                <button class="btn-chart-action"
-                                                    (click)="exportChart('ward-chart', 'json')" title="Export JSON">
-                                                    <i class="fas fa-file-code"></i>
-                                                </button>
-                                                <button class="btn-chart-action" (click)="fullscreenChart('ward-chart')"
-                                                    title="Fullscreen">
-                                                    <i class="fas fa-expand"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="chart-container" [class.loading]="isLoadingWardData">
-                                        <div *ngIf="isLoadingWardData" class="chart-loading">
-                                            <div class="chart-spinner"></div>
-                                            <span>Loading ward data...</span>
-                                        </div>
-                                        <div *ngIf="!isLoadingWardData && wardData.length === 0" class="chart-no-data">
-                                            <i class="fas fa-chart-bar"></i>
-                                            <span>No ward data available</span>
-                                        </div>
-                                        <apx-chart *ngIf="!isLoadingWardData && wardData.length > 0"
-                                            [series]="wardChartOptions.series" [chart]="wardChartOptions.chart"
-                                            [xaxis]="wardChartOptions.xaxis" [yaxis]="wardChartOptions.yaxis!"
-                                            [colors]="wardChartOptions.colors"
-                                            [plotOptions]="wardChartOptions.plotOptions"
-                                            [dataLabels]="wardChartOptions.dataLabels" [grid]="wardChartOptions.grid"
-                                            [legend]="wardChartOptions.legend!">
-                                        </apx-chart>
-                                    </div>
-                                    <div class="chart-pagination" *ngIf="wardChartTotalPages > 1">
-                                        <button class="btn-pagination" [disabled]="wardChartCurrentPage === 1"
-                                            (click)="wardChartPreviousPage()">
-                                            <i class="fas fa-chevron-left"></i>
-                                        </button>
-                                        <span class="pagination-info">{{ wardChartCurrentPage }} / {{
-                                            wardChartTotalPages }}</span>
-                                        <button class="btn-pagination"
-                                            [disabled]="wardChartCurrentPage === wardChartTotalPages"
-                                            (click)="wardChartNextPage()">
-                                            <i class="fas fa-chevron-right"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Ward Data Table with Proper Pagination -->
-                                <div class="data-table-container" *ngIf="wardData.length > 0">
-                                    <div class="table-header">
-                                        <h4>Ward Data Table</h4>
-                                        <div class="table-controls">
-                                            <input type="text" class="table-search" placeholder="Search wards..."
-                                                [(ngModel)]="wardSearchQuery" (input)="filterWardData()">
-                                            <select class="table-sort" [(ngModel)]="wardSortBy"
-                                                (change)="sortWardData()">
-                                                <option value="wardName">Sort by Ward</option>
-                                                <option value="vehicleCount">Sort by Vehicles</option>
-                                                <option value="totalNetWeight">Sort by Weight</option>
-                                            </select>
-                                            <button class="btn-table-export" (click)="exportWardTableData()">
-                                                <i class="fas fa-download"></i>
-                                                Export Table
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="table-wrapper">
-                                        <table class="data-table">
-                                            <thead class="table-header-sticky">
-                                                <tr>
-                                                    <th>Ward Name</th>
-                                                    <th>Vehicle Count</th>
-                                                    <th>Total Weight (MT)</th>
-                                                    <th>Transaction Date</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr
-                                                    *ngFor="let ward of paginatedWardData; let i = index; trackBy: trackByWardId">
-                                                    <td>{{ ward.wardName }}</td>
-                                                    <td>{{ ward.vehicleCount }}</td>
-                                                    <td>{{ ward.totalNetWeight | number:'1.2-2' }}</td>
-                                                    <td>{{ ward.transactionDate | date:'short' }}</td>
-                                                    <td>
-                                                        <button class="btn-table-action" (click)="viewWardDetails(ward)"
-                                                            title="View Details">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
-                                                        <button class="btn-table-action"
-                                                            (click)="exportWardDetails(ward)" title="Export Ward">
-                                                            <i class="fas fa-download"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    <div class="table-footer">
-                                        <div class="table-info">
-                                            Showing {{ getWardDisplayStart() }} - {{ getWardDisplayEnd() }} of {{
-                                            filteredWardData.length }} wards
-                                        </div>
-                                        <div class="table-pagination" *ngIf="wardTotalPages > 1">
-                                            <button class="btn-pagination" [disabled]="wardCurrentPage === 1"
-                                                (click)="wardPreviousPage()">
-                                                <i class="fas fa-chevron-left"></i>
-                                                Previous
-                                            </button>
-                                            <span class="pagination-info">
-                                                Page {{ wardCurrentPage }} of {{ wardTotalPages }}
-                                            </span>
-                                            <button class="btn-pagination"
-                                                [disabled]="wardCurrentPage === wardTotalPages"
-                                                (click)="wardNextPage()">
-                                                Next
-                                                <i class="fas fa-chevron-right"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- News & Updates Section -->
-                        <div class="report-card">
-                            <div class="report-header">
-                                <h3>Important Updates & News</h3>
-                                <div class="report-controls">
-                                    <div class="search-container">
-                                        <input type="text" class="search-input" placeholder="Search updates..."
-                                            [(ngModel)]="searchQuery" (input)="onSearchChange()">
-                                        <i class="fas fa-search search-icon"></i>
-                                    </div>
-                                    <select class="year-select" [(ngModel)]="selectedYear" (change)="onYearChange()">
-                                        <option value="">All Years</option>
-                                        <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
-                                    </select>
-                                    <select class="priority-select" [(ngModel)]="selectedPriority"
-                                        (change)="onPriorityChange()">
-                                        <option value="">All Priorities</option>
-                                        <option value="high">High</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="low">Low</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="news-content">
-                                <div *ngIf="isLoadingNews" class="news-loading">
-                                    <div class="news-spinner"></div>
-                                    <span>Loading updates...</span>
-                                </div>
-
-                                <div *ngIf="!isLoadingNews && filteredNews.length === 0" class="news-no-data">
-                                    <i class="fas fa-newspaper"></i>
-                                    <span>No updates found</span>
-                                </div>
-
-                                <div class="news-container" *ngIf="!isLoadingNews && filteredNews.length > 0">
-                                    <div class="news-grid">
-                                        <div class="news-card"
-                                            *ngFor="let newsItem of paginatedNews; trackBy: trackByNewsId"
-                                            (click)="openNewsDetail(newsItem)">
-                                            <div class="news-header">
-                                                <div class="news-category"
-                                                    [class]="'category-' + newsItem.category.toLowerCase()">
-                                                    {{ newsItem.category }}
-                                                </div>
-                                                <div class="news-date">{{ formatNewsDate(newsItem.date) }}</div>
-                                            </div>
-                                            <h4 class="news-title">{{ newsItem.title }}</h4>
-                                            <p class="news-excerpt">{{ getNewsExcerpt(newsItem.content, 120) }}</p>
-                                            <div class="news-footer">
-                                                <span class="read-time">
-                                                    <i class="fas fa-clock"></i>
-                                                    {{ getReadTime(newsItem.content) }} min read
-                                                </span>
-                                                <span class="news-priority"
-                                                    [class]="'priority-' + newsItem.priority.toLowerCase()">
-                                                    {{ newsItem.priority }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="news-pagination" *ngIf="newsTotalPages > 1">
-                                    <button class="btn-pagination" [disabled]="newsCurrentPage === 1"
-                                        (click)="newsPreviousPage()">
-                                        <i class="fas fa-chevron-left"></i>
-                                        Previous
-                                    </button>
-                                    <div class="pagination-info">
-                                        <span>Page {{ newsCurrentPage }} of {{ newsTotalPages }}</span>
-                                        <span class="total-items">({{ newsTotalItems }} items)</span>
-                                    </div>
-                                    <button class="btn-pagination" [disabled]="newsCurrentPage === newsTotalPages"
-                                        (click)="newsNextPage()">
-                                        Next
-                                        <i class="fas fa-chevron-right"></i>
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
