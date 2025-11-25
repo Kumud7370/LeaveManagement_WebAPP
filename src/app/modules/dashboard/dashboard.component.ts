@@ -80,6 +80,7 @@ export class DashboardComponent implements OnInit {
   isLoading = true
   isLoadingWardData = false
   isLoadingNews = false
+  isLoadingCumulative = false 
 
   kanjurData = {
     trips: 0,
@@ -102,6 +103,9 @@ export class DashboardComponent implements OnInit {
     totalWards: 0,
     topWard: "",
   }
+
+  // selectable site - default SWM
+  selectedSite: string = "SWM"
 
   private primaryColor = "#1a2a6c"
   private secondaryColor = "#b21f1f"
@@ -352,11 +356,20 @@ export class DashboardComponent implements OnInit {
       },
     })
 
+    // load default (SWM)
     this.loadLast30DaysData();
 
     setTimeout(() => {
       this.isLoading = false
     }, 1000)
+  }
+
+  // Switch between SWM and RTS and reload cumulative data
+  switchSite(site: string): void {
+    if (this.selectedSite === site) return
+    this.selectedSite = site
+    this.isLoadingCumulative = true
+    this.loadLast30DaysData()
   }
 
   processDynamicSiteData(): void {
@@ -403,17 +416,32 @@ export class DashboardComponent implements OnInit {
       UserId: Number(sessionStorage.getItem("UserId")),
       FromDate: null,
       ToDate: null,
-      SiteName: "SWM"
+      SiteName: this.selectedSite 
     };
 
     this.dbCallingService.getCumulativeTripSummary(payload).subscribe({
       next: (response) => {
         if (response && response.data && response.data.length > 0) {
           this.processCumulativeChartData(response.data);
+        } else {
+          // if response empty, clear chart
+          this.wardChartOptions = {
+            ...this.wardChartOptions,
+            series: [
+              { name: "Cumulative Net Weight (MT)", data: [] },
+              { name: "Average Ward Weight (MT)", data: [] },
+            ],
+            xaxis: {
+              ...this.wardChartOptions.xaxis,
+              categories: [],
+            },
+          }
         }
+        this.isLoadingCumulative = false
       },
       error: (error) => {
         console.error("Error fetching cumulative summary:", error);
+        this.isLoadingCumulative = false
       },
     });
   }

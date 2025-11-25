@@ -4,7 +4,6 @@
     <div class="header-content">
       <div class="header-title">
         <i class="fas fa-chart-bar"></i>
-        <!-- Updated heading to "SWM/Refuse Report" -->
         <h1>SWM/Refuse Report</h1>
       </div>
       <div class="header-date">
@@ -31,7 +30,6 @@
         </div>
         <div class="card-stats">
           <div class="stat-item">
-            <!-- Changed "Vehicles" label to "Trips" -->
             <div class="stat-value">{{ card.vehicleCount }}</div>
             <div class="stat-label">Trips</div>
           </div>
@@ -44,7 +42,6 @@
     </div>
 
     <!-- RTS Sites Cards Section -->
-    <!-- Removed "Deonar Debris" widget, keeping other RTS sites -->
     <div class="location-cards-section">
       <div class="location-card" *ngFor="let card of rtsSites" [ngStyle]="{'--card-color': card.colorCode }">
         <div class="card-header">
@@ -53,7 +50,6 @@
         </div>
         <div class="card-stats">
           <div class="stat-item">
-            <!-- Changed "Vehicles" label to "Trips" -->
             <div class="stat-value">{{ card.vehicleCount }}</div>
             <div class="stat-label">Trips</div>
           </div>
@@ -65,17 +61,51 @@
       </div>
     </div>
 
+    <!-- Tab selector for SWM / RTS -->
+    <div class="site-tabs-wrapper">
+      <div class="site-tabs">
+        <button
+          [class.active]="selectedSite === 'SWM'"
+          (click)="switchSite('SWM')"
+          type="button"
+        >
+          SWM
+        </button>
+        <button
+          [class.active]="selectedSite === 'RTS'"
+          (click)="switchSite('RTS')"
+          type="button"
+        >
+          RTS
+        </button>
+
+        <!-- optional small loader -->
+        <div class="site-loader" *ngIf="isLoadingCumulative">
+          <i class="fas fa-spinner fa-spin"></i>
+        </div>
+      </div>
+    </div>
+
     <!-- Ward-wise Cumulative Net Weight Summary Chart (Last 30 Days) replaces the summary widget -->
     <div class="summary-section">
       <div class="summary-card">
         <div class="summary-header">
-          <h3>Ward-wise Cumulative Net Weight Summary (Last 30 Days)</h3>
+          <h3>Ward-wise Cumulative Net Weight Summary (Last 30 Days) - {{selectedSite}}</h3>
           <i class="fas fa-chart-column"></i>
         </div>
-        <apx-chart [series]="wardChartOptions.series" [chart]="wardChartOptions.chart" [xaxis]="wardChartOptions.xaxis"
-          [yaxis]="wardChartOptions.yaxis" [dataLabels]="wardChartOptions.dataLabels" [colors]="wardChartOptions.colors"
-          [legend]="wardChartOptions.legend" [grid]="wardChartOptions.grid" [plotOptions]="wardChartOptions.plotOptions"
-          [stroke]="wardChartOptions.stroke" [markers]="wardChartOptions.markers"></apx-chart>
+        <apx-chart
+          [series]="wardChartOptions.series"
+          [chart]="wardChartOptions.chart"
+          [xaxis]="wardChartOptions.xaxis"
+          [yaxis]="wardChartOptions.yaxis"
+          [dataLabels]="wardChartOptions.dataLabels"
+          [colors]="wardChartOptions.colors"
+          [legend]="wardChartOptions.legend"
+          [grid]="wardChartOptions.grid"
+          [plotOptions]="wardChartOptions.plotOptions"
+          [stroke]="wardChartOptions.stroke"
+          [markers]="wardChartOptions.markers">
+        </apx-chart>
       </div>
     </div>
   </div>
