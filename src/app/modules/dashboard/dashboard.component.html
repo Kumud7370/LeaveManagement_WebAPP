@@ -61,36 +61,54 @@
       </div>
     </div>
 
-    <!-- Tab selector for SWM / RTS -->
-    <div class="site-tabs-wrapper">
-      <div class="site-tabs">
-        <button
-          [class.active]="selectedSite === 'SWM'"
-          (click)="switchSite('SWM')"
-          type="button"
-        >
-          SWM
-        </button>
-        <button
-          [class.active]="selectedSite === 'RTS'"
-          (click)="switchSite('RTS')"
-          type="button"
-        >
-          RTS
-        </button>
-
-        <!-- optional small loader -->
-        <div class="site-loader" *ngIf="isLoadingCumulative">
+    <!-- Enhanced Tab Section -->
+    <div class="tab-section-wrapper">
+      <div class="tab-section-header">
+        <div class="tab-section-title">
+          <i class="fas fa-layer-group"></i>
+          <span>Site Analysis</span>
+        </div>
+        <div class="site-tabs">
+          <button
+            class="tab-button"
+            [class.active]="selectedSite === 'SWM'"
+            (click)="switchSite('SWM')"
+            type="button"
+          >
+            <i class="fas fa-recycle"></i>
+            <span class="tab-label">SWM Sites</span>
+            <span class="tab-badge" *ngIf="swmSites.length > 0">{{swmSites.length}}</span>
+          </button>
+          <button
+            class="tab-button"
+            [class.active]="selectedSite === 'RTS'"
+            (click)="switchSite('RTS')"
+            type="button"
+          >
+            <i class="fas fa-warehouse"></i>
+            <span class="tab-label">RTS Sites</span>
+            <span class="tab-badge" *ngIf="rtsSites.length > 0">{{rtsSites.length}}</span>
+          </button>
+        </div>
+        <div class="tab-loading" *ngIf="isLoadingCumulative">
           <i class="fas fa-spinner fa-spin"></i>
+          <span>Loading data...</span>
         </div>
       </div>
     </div>
 
-    <!-- Ward-wise Cumulative Net Weight Summary Chart (Last 30 Days) replaces the summary widget -->
+    <!-- Ward-wise Cumulative Net Weight Summary Chart (Last 30 Days) -->
     <div class="summary-section">
       <div class="summary-card">
         <div class="summary-header">
-          <h3>Ward-wise Cumulative Net Weight Summary (Last 30 Days) - {{selectedSite}}</h3>
+          <div class="summary-title-group">
+            <h3>Ward-wise Cumulative Net Weight Summary (Last 30 Days)</h3>
+            <div class="summary-subtitle">
+              <span class="site-indicator" [class.swm-indicator]="selectedSite === 'SWM'" [class.rts-indicator]="selectedSite === 'RTS'">
+                {{selectedSite}} Sites
+              </span>
+            </div>
+          </div>
           <i class="fas fa-chart-column"></i>
         </div>
         <apx-chart
