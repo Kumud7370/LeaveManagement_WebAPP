@@ -42,7 +42,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- RTS Sites Cards Section -->
     <!-- Removed "Deonar Debris" widget, keeping other RTS sites -->
     <div class="location-cards-section">
@@ -72,18 +72,10 @@
           <h3>Ward-wise Cumulative Net Weight Summary (Last 30 Days)</h3>
           <i class="fas fa-chart-column"></i>
         </div>
-        <!-- Combined Bar Chart (Cumulative Weight) and Line Chart (Average Weight) -->
-        <apx-chart
-          [series]="wardChartOptions.series"
-          [chart]="wardChartOptions.chart"
-          [xaxis]="wardChartOptions.xaxis"
-          [yaxis]="wardChartOptions.yaxis"
-          [dataLabels]="wardChartOptions.dataLabels"
-          [colors]="wardChartOptions.colors"
-          [legend]="wardChartOptions.legend"
-          [grid]="wardChartOptions.grid"
-          [plotOptions]="wardChartOptions.plotOptions"
-        ></apx-chart>
+        <apx-chart [series]="wardChartOptions.series" [chart]="wardChartOptions.chart" [xaxis]="wardChartOptions.xaxis"
+          [yaxis]="wardChartOptions.yaxis" [dataLabels]="wardChartOptions.dataLabels" [colors]="wardChartOptions.colors"
+          [legend]="wardChartOptions.legend" [grid]="wardChartOptions.grid" [plotOptions]="wardChartOptions.plotOptions"
+          [stroke]="wardChartOptions.stroke" [markers]="wardChartOptions.markers"></apx-chart>
       </div>
     </div>
   </div>

@@ -14,6 +14,8 @@ import type {
   ApexLegend,
   ApexGrid,
   ApexResponsive,
+  ApexStroke,
+  ApexMarkers,
 } from "ng-apexcharts"
 
 export type ChartOptions = {
@@ -26,6 +28,8 @@ export type ChartOptions = {
   colors: string[]
   grid: ApexGrid
   legend: ApexLegend
+  stroke: ApexStroke
+  markers: ApexMarkers
 }
 
 export type PieChartOptions = {
@@ -195,7 +199,7 @@ export class DashboardComponent implements OnInit {
       },
     ],
     chart: {
-      type: "bar",
+      type: "line",
       height: 400,
       fontFamily: "Raleway, sans-serif",
       toolbar: {
@@ -223,18 +227,28 @@ export class DashboardComponent implements OnInit {
     },
     dataLabels: {
       enabled: true,
-      formatter: (val: number, opts: any) => {
-        if (opts.seriesIndex === 0) {
-          return val.toFixed(1) + " MT"
-        } else {
-          return val.toFixed(1) + " MT"
-        }
+      enabledOnSeries: [0],
+      formatter: (val: number) => {
+        return val.toFixed(1) + " MT";
       },
       offsetY: -20,
       style: {
         fontSize: "10px",
         fontWeight: "bold",
         colors: [this.successColor],
+      },
+    },
+    stroke: {
+      width: [0, 3],
+      curve: 'smooth',
+    },
+    markers: {
+      size: [0, 5],
+      colors: [this.successColor, this.primaryColor],
+      strokeColors: '#fff',
+      strokeWidth: 2,
+      hover: {
+        size: 7,
       },
     },
     xaxis: {
@@ -338,7 +352,6 @@ export class DashboardComponent implements OnInit {
       },
     })
 
-    // this.loadLast30DaysData()
     this.loadLast30DaysData();
 
     setTimeout(() => {
@@ -385,32 +398,6 @@ export class DashboardComponent implements OnInit {
     this.updatePieChart()
   }
 
-  // loadLast30DaysData(): void {
-  //   const toDate = moment().format("YYYY-MM-DD")
-  //   const fromDate = moment().subtract(30, "days").format("YYYY-MM-DD")
-
-  //   const payload = {
-  //     WeighBridge: "",
-  //     FromDate: fromDate,
-  //     ToDate: toDate,
-  //     FullDate: "",
-  //     WardName: "",
-  //     Act_Shift: "",
-  //     TransactionDate: "",
-  //   }
-
-  //   this.dbCallingService.getWardwiseReport(payload).subscribe({
-  //     next: (response) => {
-  //       if (response && response.wardData && response.wardData.length > 0) {
-  //         this.calculateLast30DaysSummary(response.wardData)
-  //         this.processLast30DaysChartData(response.wardData)
-  //       }
-  //     },
-  //     error: (error) => {
-  //       console.error("Error fetching 30-day data:", error)
-  //     },
-  //   })
-  // }
   loadLast30DaysData(): void {
     const payload = {
       UserId: Number(sessionStorage.getItem("UserId")),
@@ -469,6 +456,19 @@ export class DashboardComponent implements OnInit {
           },
         },
       },
+      stroke: {
+        width: [0, 3],
+        curve: 'smooth',
+      },
+      markers: {
+        size: [0, 5],
+        colors: [this.successColor, this.primaryColor],
+        strokeColors: '#fff',
+        strokeWidth: 2,
+        hover: {
+          size: 7,
+        },
+      },
     };
 
     console.log("Cumulative Chart Updated:", {
@@ -477,7 +477,6 @@ export class DashboardComponent implements OnInit {
       averageWeightData
     });
   }
-
 
   calculateLast30DaysSummary(wardData: WardData[]): void {
     let totalTrips = 0
