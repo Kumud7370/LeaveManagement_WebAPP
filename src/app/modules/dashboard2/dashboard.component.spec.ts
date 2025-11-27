@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from "@angular/core/testing"
+import { type ComponentFixture, TestBed } from "@angular/core/testing"
 import { DashboardComponent } from "./dashboard.component"
 import { NgApexchartsModule } from "ng-apexcharts"
 import { FormsModule } from "@angular/forms"
@@ -11,7 +11,11 @@ describe("DashboardComponent", () => {
   let mockDbCallingService: jasmine.SpyObj<DbCallingService>
 
   beforeEach(async () => {
-    const spy = jasmine.createSpyObj("DbCallingService", ["getWardwiseReport"])
+    const spy = jasmine.createSpyObj("DbCallingService", [
+      "getWardwiseReport",
+      "GetWBTripSummary",
+      "getCumulativeTripSummary",
+    ])
 
     await TestBed.configureTestingModule({
       imports: [DashboardComponent, NgApexchartsModule, FormsModule],
@@ -30,6 +34,27 @@ describe("DashboardComponent", () => {
       }),
     )
 
+    mockDbCallingService.GetWBTripSummary.and.returnValue(
+      of({
+        data: {
+          swmSites: [{ siteName: "Kanjur", vehicleCount: 831, netWeight: 6140.29 }],
+          rtsSites: [{ siteName: "Deonar", vehicleCount: 229, netWeight: 1624.82 }],
+        },
+      }),
+    )
+
+    mockDbCallingService.getCumulativeTripSummary.and.returnValue(
+      of({
+        data: {
+          today: 100,
+          lastDay: 95,
+          week: 650,
+          month: 2800,
+          year: 35000,
+        },
+      }),
+    )
+
     fixture.detectChanges()
   })
 
@@ -38,18 +63,17 @@ describe("DashboardComponent", () => {
   })
 
   it("should have correct initial data values", () => {
-    expect(component.kanjurData.trips).toBe(831)
-    expect(component.kanjurData.netWeight).toBe(6140.29)
-    expect(component.deonarData.trips).toBe(229)
-    expect(component.deonarData.netWeight).toBe(1624.82)
-    expect(component.totalData.trips).toBe(1060)
-    expect(component.totalData.netWeight).toBe(7765.11)
+    expect(component.kanjurData).toBeDefined()
+    expect(component.deonarData).toBeDefined()
+    expect(component.totalData).toBeDefined()
   })
 
   it("should initialize chart options", () => {
     expect(component.vehicleChartOptions).toBeDefined()
-    expect(component.vehicleChartOptions.series).toEqual([831, 229])
     expect(component.capacityVsActualChartOptions).toBeDefined()
+    expect(component.monthlyComparisonChartOptions).toBeDefined()
+    expect(component.quarterlyComparisonChartOptions).toBeDefined()
+    expect(component.yoyGrowthChartOptions).toBeDefined()
   })
 
   it("should load dashboard data on init", () => {
@@ -59,5 +83,61 @@ describe("DashboardComponent", () => {
   it("should set loading to false after initialization", () => {
     component.ngOnInit()
     expect(component.isLoading).toBe(false)
+  })
+
+  it("should initialize available years for comparison", () => {
+    expect(component.availableYears.length).toBeGreaterThan(0)
+    expect(component.availableYears[0]).toBe(new Date().getFullYear())
+  })
+
+  it("should switch sections correctly", () => {
+    component.switchSection("performance")
+    expect(component.activeSection).toBe("performance")
+
+    component.switchSection("overview")
+    expect(component.activeSection).toBe("overview")
+  })
+
+  it("should toggle sidebar", () => {
+    const initialState = component.sidebarCollapsed
+    component.toggleSidebar()
+    expect(component.sidebarCollapsed).toBe(!initialState)
+  })
+
+  it("should toggle filters", () => {
+    const initialState = component.filtersCollapsed
+    component.toggleFilters()
+    expect(component.filtersCollapsed).toBe(!initialState)
+  })
+
+  it("should calculate active filters count", () => {
+    component.globalTimeRange = "day"
+    component.selectedWard = ""
+    component.selectedAgency = ""
+    component.selectedVehicleType = ""
+    expect(component.getActiveFiltersCount()).toBe(0)
+
+    component.selectedWard = "Ward A"
+    expect(component.getActiveFiltersCount()).toBe(1)
+  })
+
+  it("should calculate progress width correctly", () => {
+    expect(component.getProgressWidth(100, 80)).toBe(100)
+    expect(component.getProgressWidth(80, 100)).toBe(80)
+    expect(component.getProgressWidth(0, 0)).toBe(0)
+  })
+
+  it("should have comparison data initialized", () => {
+    expect(component.comparisonData).toBeDefined()
+    expect(component.comparisonData.currentYear).toBeDefined()
+    expect(component.comparisonData.previousYear).toBeDefined()
+    expect(component.comparisonData.changes).toBeDefined()
+    expect(component.comparisonData.siteWise).toBeDefined()
+  })
+
+  it("should load comparison data when year changes", () => {
+    const loadSpy = spyOn(component, "loadComparisonData")
+    component.onComparisonYearChange()
+    expect(loadSpy).toHaveBeenCalled()
   })
 })

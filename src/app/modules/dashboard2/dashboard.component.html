@@ -406,6 +406,356 @@
 
                 </div>
 
+                <!-- Performance Comparison Section -->
+                <div class="dashboard-section" *ngIf="activeSection === 'performance'">
+                    
+                    <!-- Performance Header -->
+                    <div class="performance-header">
+                        <div class="performance-title">
+                            <h2><i class="fas fa-chart-line"></i> Performance Comparison</h2>
+                            <p>Compare current year performance with previous years</p>
+                        </div>
+                        <div class="performance-controls">
+                            <div class="year-selector">
+                                <label>Select Year:</label>
+                                <select [(ngModel)]="selectedComparisonYear" (change)="onComparisonYearChange()">
+                                    <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+                                </select>
+                            </div>
+                            <button class="btn-refresh-comparison" (click)="loadComparisonData()" [disabled]="isLoadingComparison">
+                                <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingComparison"></i>
+                                Refresh Data
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading State for Comparison -->
+                    <div class="comparison-loading" *ngIf="isLoadingComparison">
+                        <div class="spinner-small"></div>
+                        <span>Loading comparison data...</span>
+                    </div>
+
+                    <!-- Comparison Summary Cards -->
+                    <div class="comparison-summary-grid" *ngIf="!isLoadingComparison">
+                        
+                        <!-- Total Weight Comparison Card -->
+                        <div class="comparison-card">
+                            <div class="comparison-card-header">
+                                <div class="comparison-icon weight-icon">
+                                    <i class="fas fa-weight-hanging"></i>
+                                </div>
+                                <h4>Total Weight (MT)</h4>
+                            </div>
+                            <div class="comparison-card-body">
+                                <div class="comparison-values">
+                                    <div class="current-value">
+                                        <span class="label">{{ selectedComparisonYear }}</span>
+                                        <span class="value">{{ comparisonData.currentYear.totalWeight | number:'1.2-2' }}</span>
+                                    </div>
+                                    <div class="vs-divider">
+                                        <span>vs</span>
+                                    </div>
+                                    <div class="previous-value">
+                                        <span class="label">{{ selectedComparisonYear - 1 }}</span>
+                                        <span class="value">{{ comparisonData.previousYear.totalWeight | number:'1.2-2' }}</span>
+                                    </div>
+                                </div>
+                                <div class="comparison-change" [class.positive]="comparisonData.changes.weightChange >= 0" [class.negative]="comparisonData.changes.weightChange < 0">
+                                    <i class="fas" [class.fa-arrow-up]="comparisonData.changes.weightChange >= 0" [class.fa-arrow-down]="comparisonData.changes.weightChange < 0"></i>
+                                    <span>{{ comparisonData.changes.weightChange | number:'1.2-2' }}%</span>
+                                    <span class="change-label">{{ comparisonData.changes.weightChange >= 0 ? 'Increase' : 'Decrease' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total Trips Comparison Card -->
+                        <div class="comparison-card">
+                            <div class="comparison-card-header">
+                                <div class="comparison-icon trips-icon">
+                                    <i class="fas fa-truck"></i>
+                                </div>
+                                <h4>Total Trips</h4>
+                            </div>
+                            <div class="comparison-card-body">
+                                <div class="comparison-values">
+                                    <div class="current-value">
+                                        <span class="label">{{ selectedComparisonYear }}</span>
+                                        <span class="value">{{ comparisonData.currentYear.totalTrips | number }}</span>
+                                    </div>
+                                    <div class="vs-divider">
+                                        <span>vs</span>
+                                    </div>
+                                    <div class="previous-value">
+                                        <span class="label">{{ selectedComparisonYear - 1 }}</span>
+                                        <span class="value">{{ comparisonData.previousYear.totalTrips | number }}</span>
+                                    </div>
+                                </div>
+                                <div class="comparison-change" [class.positive]="comparisonData.changes.tripsChange >= 0" [class.negative]="comparisonData.changes.tripsChange < 0">
+                                    <i class="fas" [class.fa-arrow-up]="comparisonData.changes.tripsChange >= 0" [class.fa-arrow-down]="comparisonData.changes.tripsChange < 0"></i>
+                                    <span>{{ comparisonData.changes.tripsChange | number:'1.2-2' }}%</span>
+                                    <span class="change-label">{{ comparisonData.changes.tripsChange >= 0 ? 'Increase' : 'Decrease' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Average Daily Weight Card -->
+                        <div class="comparison-card">
+                            <div class="comparison-card-header">
+                                <div class="comparison-icon avg-icon">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <h4>Avg Daily Weight (MT)</h4>
+                            </div>
+                            <div class="comparison-card-body">
+                                <div class="comparison-values">
+                                    <div class="current-value">
+                                        <span class="label">{{ selectedComparisonYear }}</span>
+                                        <span class="value">{{ comparisonData.currentYear.avgDailyWeight | number:'1.2-2' }}</span>
+                                    </div>
+                                    <div class="vs-divider">
+                                        <span>vs</span>
+                                    </div>
+                                    <div class="previous-value">
+                                        <span class="label">{{ selectedComparisonYear - 1 }}</span>
+                                        <span class="value">{{ comparisonData.previousYear.avgDailyWeight | number:'1.2-2' }}</span>
+                                    </div>
+                                </div>
+                                <div class="comparison-change" [class.positive]="comparisonData.changes.avgDailyChange >= 0" [class.negative]="comparisonData.changes.avgDailyChange < 0">
+                                    <i class="fas" [class.fa-arrow-up]="comparisonData.changes.avgDailyChange >= 0" [class.fa-arrow-down]="comparisonData.changes.avgDailyChange < 0"></i>
+                                    <span>{{ comparisonData.changes.avgDailyChange | number:'1.2-2' }}%</span>
+                                    <span class="change-label">{{ comparisonData.changes.avgDailyChange >= 0 ? 'Increase' : 'Decrease' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Efficiency Rate Card -->
+                        <div class="comparison-card">
+                            <div class="comparison-card-header">
+                                <div class="comparison-icon efficiency-icon">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                </div>
+                                <h4>Efficiency Rate</h4>
+                            </div>
+                            <div class="comparison-card-body">
+                                <div class="comparison-values">
+                                    <div class="current-value">
+                                        <span class="label">{{ selectedComparisonYear }}</span>
+                                        <span class="value">{{ comparisonData.currentYear.efficiencyRate | number:'1.1-1' }}%</span>
+                                    </div>
+                                    <div class="vs-divider">
+                                        <span>vs</span>
+                                    </div>
+                                    <div class="previous-value">
+                                        <span class="label">{{ selectedComparisonYear - 1 }}</span>
+                                        <span class="value">{{ comparisonData.previousYear.efficiencyRate | number:'1.1-1' }}%</span>
+                                    </div>
+                                </div>
+                                <div class="comparison-change" [class.positive]="comparisonData.changes.efficiencyChange >= 0" [class.negative]="comparisonData.changes.efficiencyChange < 0">
+                                    <i class="fas" [class.fa-arrow-up]="comparisonData.changes.efficiencyChange >= 0" [class.fa-arrow-down]="comparisonData.changes.efficiencyChange < 0"></i>
+                                    <span>{{ comparisonData.changes.efficiencyChange | number:'1.2-2' }}%</span>
+                                    <span class="change-label">{{ comparisonData.changes.efficiencyChange >= 0 ? 'Improvement' : 'Decline' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Comparison Chart -->
+                    <div class="charts-grid" *ngIf="!isLoadingComparison">
+                        <div class="enhanced-chart-card full-width">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <h3>Monthly Weight Comparison</h3>
+                                    <span class="chart-subtitle">{{ selectedComparisonYear }} vs {{ selectedComparisonYear - 1 }} - Weight in MT</span>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <apx-chart 
+                                    [series]="monthlyComparisonChartOptions.series"
+                                    [chart]="monthlyComparisonChartOptions.chart"
+                                    [xaxis]="monthlyComparisonChartOptions.xaxis"
+                                    [yaxis]="monthlyComparisonChartOptions.yaxis"
+                                    [plotOptions]="monthlyComparisonChartOptions.plotOptions"
+                                    [dataLabels]="monthlyComparisonChartOptions.dataLabels"
+                                    [stroke]="monthlyComparisonChartOptions.stroke || {}"
+                                    [colors]="monthlyComparisonChartOptions.colors"
+                                    [grid]="monthlyComparisonChartOptions.grid"
+                                    [legend]="monthlyComparisonChartOptions.legend"
+                                    [tooltip]="monthlyComparisonChartOptions.tooltip || {}">
+                                </apx-chart>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Site-wise Comparison -->
+                    <div class="site-comparison-section" *ngIf="!isLoadingComparison">
+                        <h3 class="section-title"><i class="fas fa-map-marker-alt"></i> Site-wise Year Comparison</h3>
+                        
+                        <div class="site-comparison-grid">
+                            <!-- Kanjur Comparison -->
+                            <div class="site-comparison-card kanjur">
+                                <div class="site-header">
+                                    <h4>Kanjur</h4>
+                                    <div class="site-badge">SWM</div>
+                                </div>
+                                <div class="site-metrics">
+                                    <div class="site-metric-row">
+                                        <span class="metric-label">Weight (MT)</span>
+                                        <div class="metric-comparison">
+                                            <span class="current">{{ comparisonData.siteWise.kanjur.currentWeight | number:'1.2-2' }}</span>
+                                            <span class="separator">→</span>
+                                            <span class="previous">{{ comparisonData.siteWise.kanjur.previousWeight | number:'1.2-2' }}</span>
+                                            <span class="change" [class.positive]="comparisonData.siteWise.kanjur.weightChange >= 0" [class.negative]="comparisonData.siteWise.kanjur.weightChange < 0">
+                                                {{ comparisonData.siteWise.kanjur.weightChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.kanjur.weightChange | number:'1.1-1' }}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="site-metric-row">
+                                        <span class="metric-label">Trips</span>
+                                        <div class="metric-comparison">
+                                            <span class="current">{{ comparisonData.siteWise.kanjur.currentTrips | number }}</span>
+                                            <span class="separator">→</span>
+                                            <span class="previous">{{ comparisonData.siteWise.kanjur.previousTrips | number }}</span>
+                                            <span class="change" [class.positive]="comparisonData.siteWise.kanjur.tripsChange >= 0" [class.negative]="comparisonData.siteWise.kanjur.tripsChange < 0">
+                                                {{ comparisonData.siteWise.kanjur.tripsChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.kanjur.tripsChange | number:'1.1-1' }}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="site-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill kanjur-fill" [style.width.%]="getProgressWidth(comparisonData.siteWise.kanjur.currentWeight, comparisonData.siteWise.kanjur.previousWeight)"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Deonar Comparison -->
+                            <div class="site-comparison-card deonar">
+                                <div class="site-header">
+                                    <h4>Deonar</h4>
+                                    <div class="site-badge">SWM</div>
+                                </div>
+                                <div class="site-metrics">
+                                    <div class="site-metric-row">
+                                        <span class="metric-label">Weight (MT)</span>
+                                        <div class="metric-comparison">
+                                            <span class="current">{{ comparisonData.siteWise.deonar.currentWeight | number:'1.2-2' }}</span>
+                                            <span class="separator">→</span>
+                                            <span class="previous">{{ comparisonData.siteWise.deonar.previousWeight | number:'1.2-2' }}</span>
+                                            <span class="change" [class.positive]="comparisonData.siteWise.deonar.weightChange >= 0" [class.negative]="comparisonData.siteWise.deonar.weightChange < 0">
+                                                {{ comparisonData.siteWise.deonar.weightChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.deonar.weightChange | number:'1.1-1' }}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="site-metric-row">
+                                        <span class="metric-label">Trips</span>
+                                        <div class="metric-comparison">
+                                            <span class="current">{{ comparisonData.siteWise.deonar.currentTrips | number }}</span>
+                                            <span class="separator">→</span>
+                                            <span class="previous">{{ comparisonData.siteWise.deonar.previousTrips | number }}</span>
+                                            <span class="change" [class.positive]="comparisonData.siteWise.deonar.tripsChange >= 0" [class.negative]="comparisonData.siteWise.deonar.tripsChange < 0">
+                                                {{ comparisonData.siteWise.deonar.tripsChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.deonar.tripsChange | number:'1.1-1' }}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="site-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill deonar-fill" [style.width.%]="getProgressWidth(comparisonData.siteWise.deonar.currentWeight, comparisonData.siteWise.deonar.previousWeight)"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quarterly Trend Chart -->
+                    <div class="charts-grid" *ngIf="!isLoadingComparison">
+                        <div class="enhanced-chart-card">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <h3>Quarterly Trips Trend</h3>
+                                    <span class="chart-subtitle">Trips comparison by quarter</span>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <apx-chart 
+                                    [series]="quarterlyComparisonChartOptions.series"
+                                    [chart]="quarterlyComparisonChartOptions.chart"
+                                    [xaxis]="quarterlyComparisonChartOptions.xaxis"
+                                    [yaxis]="quarterlyComparisonChartOptions.yaxis"
+                                    [plotOptions]="quarterlyComparisonChartOptions.plotOptions"
+                                    [dataLabels]="quarterlyComparisonChartOptions.dataLabels"
+                                    [colors]="quarterlyComparisonChartOptions.colors"
+                                    [grid]="quarterlyComparisonChartOptions.grid"
+                                    [legend]="quarterlyComparisonChartOptions.legend">
+                                </apx-chart>
+                            </div>
+                        </div>
+
+                        <!-- Year Over Year Growth Chart -->
+                        <div class="enhanced-chart-card">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <h3>Year-Over-Year Growth</h3>
+                                    <span class="chart-subtitle">Performance growth trend</span>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <apx-chart 
+                                    [series]="yoyGrowthChartOptions.series"
+                                    [chart]="yoyGrowthChartOptions.chart"
+                                    [xaxis]="yoyGrowthChartOptions.xaxis"
+                                    [yaxis]="yoyGrowthChartOptions.yaxis"
+                                    [plotOptions]="yoyGrowthChartOptions.plotOptions"
+                                    [dataLabels]="yoyGrowthChartOptions.dataLabels"
+                                    [colors]="yoyGrowthChartOptions.colors"
+                                    [grid]="yoyGrowthChartOptions.grid"
+                                    [legend]="yoyGrowthChartOptions.legend">
+                                </apx-chart>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Historical Data Table -->
+                    <div class="historical-table-section" *ngIf="!isLoadingComparison">
+                        <h3 class="section-title"><i class="fas fa-table"></i> Historical Performance Data</h3>
+                        <div class="table-container">
+                            <table class="comparison-table">
+                                <thead>
+                                    <tr>
+                                        <th>Year</th>
+                                        <th>Total Weight (MT)</th>
+                                        <th>Total Trips</th>
+                                        <th>Avg Daily (MT)</th>
+                                        <th>Efficiency</th>
+                                        <th>YoY Change</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let record of historicalData" [class.current-year]="record.year === selectedComparisonYear">
+                                        <td class="year-cell">
+                                            <span class="year-badge" [class.active]="record.year === selectedComparisonYear">{{ record.year }}</span>
+                                        </td>
+                                        <td>{{ record.totalWeight | number:'1.2-2' }}</td>
+                                        <td>{{ record.totalTrips | number }}</td>
+                                        <td>{{ record.avgDaily | number:'1.2-2' }}</td>
+                                        <td>
+                                            <span class="efficiency-badge">{{ record.efficiency | number:'1.1-1' }}%</span>
+                                        </td>
+                                        <td>
+                                            <span class="yoy-change" [class.positive]="record.yoyChange >= 0" [class.negative]="record.yoyChange < 0">
+                                                <i class="fas" [class.fa-arrow-up]="record.yoyChange >= 0" [class.fa-arrow-down]="record.yoyChange < 0"></i>
+                                                {{ record.yoyChange | number:'1.2-2' }}%
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- End of Performance Section -->
+
             </div>
 
         </div>

@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { NgApexchartsModule } from "ng-apexcharts"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
-import { Subject, takeUntil, forkJoin, of, Observable } from "rxjs"
+import { Subject, takeUntil, forkJoin, of, type Observable } from "rxjs"
 import moment from "moment"
 import type {
   ApexAxisChartSeries,
@@ -47,6 +47,58 @@ export type PieChartOptions = {
   dataLabels: ApexDataLabels
   responsive: ApexResponsive[]
   stroke?: ApexStroke
+}
+
+interface ComparisonData {
+  currentYear: {
+    totalWeight: number
+    totalTrips: number
+    avgDailyWeight: number
+    efficiencyRate: number
+    monthlyData: number[]
+    quarterlyData: number[]
+  }
+  previousYear: {
+    totalWeight: number
+    totalTrips: number
+    avgDailyWeight: number
+    efficiencyRate: number
+    monthlyData: number[]
+    quarterlyData: number[]
+  }
+  changes: {
+    weightChange: number
+    tripsChange: number
+    avgDailyChange: number
+    efficiencyChange: number
+  }
+  siteWise: {
+    kanjur: {
+      currentWeight: number
+      previousWeight: number
+      currentTrips: number
+      previousTrips: number
+      weightChange: number
+      tripsChange: number
+    }
+    deonar: {
+      currentWeight: number
+      previousWeight: number
+      currentTrips: number
+      previousTrips: number
+      weightChange: number
+      tripsChange: number
+    }
+  }
+}
+
+interface HistoricalRecord {
+  year: number
+  totalWeight: number
+  totalTrips: number
+  avgDaily: number
+  efficiency: number
+  yoyChange: number
 }
 
 @Component({
@@ -118,12 +170,62 @@ export class DashboardComponent implements OnInit, OnDestroy {
   swmSites: any[] = []
   rtsSites: any[] = []
 
+  isLoadingComparison = false
+  selectedComparisonYear = new Date().getFullYear()
+  availableYears: number[] = []
+
+  comparisonData: ComparisonData = {
+    currentYear: {
+      totalWeight: 0,
+      totalTrips: 0,
+      avgDailyWeight: 0,
+      efficiencyRate: 0,
+      monthlyData: [],
+      quarterlyData: [],
+    },
+    previousYear: {
+      totalWeight: 0,
+      totalTrips: 0,
+      avgDailyWeight: 0,
+      efficiencyRate: 0,
+      monthlyData: [],
+      quarterlyData: [],
+    },
+    changes: {
+      weightChange: 0,
+      tripsChange: 0,
+      avgDailyChange: 0,
+      efficiencyChange: 0,
+    },
+    siteWise: {
+      kanjur: {
+        currentWeight: 0,
+        previousWeight: 0,
+        currentTrips: 0,
+        previousTrips: 0,
+        weightChange: 0,
+        tripsChange: 0,
+      },
+      deonar: {
+        currentWeight: 0,
+        previousWeight: 0,
+        currentTrips: 0,
+        previousTrips: 0,
+        weightChange: 0,
+        tripsChange: 0,
+      },
+    },
+  }
+
+  historicalData: HistoricalRecord[] = []
+
   // Chart colors
   private primaryColor = "#1a2a6c"
   private secondaryColor = "#b21f1f"
   private accentColor = "#00ffcc"
   private successColor = "#10b981"
   private warningColor = "#f59e0b"
+  private infoColor = "#3b82f6"
 
   // Trip Distribution (Kanjur vs Deonar) donut
   public vehicleChartOptions: PieChartOptions = {
@@ -247,18 +349,339 @@ export class DashboardComponent implements OnInit, OnDestroy {
     legend: { show: false },
   }
 
+  public monthlyComparisonChartOptions: ChartOptions = {
+    series: [],
+    chart: {
+      type: "bar",
+      height: 350,
+      fontFamily: "Raleway, sans-serif",
+      toolbar: {
+        show: true,
+      },
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: "60%",
+        borderRadius: 6,
+      },
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      show: true,
+      width: 2,
+      colors: ["transparent"],
+    },
+    xaxis: {
+      categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    },
+    yaxis: {
+      title: {
+        text: "Weight (MT)",
+      },
+    },
+    fill: {
+      opacity: 1,
+    },
+    colors: [this.primaryColor, this.infoColor],
+    grid: {
+      borderColor: "#e5e7eb",
+      strokeDashArray: 3,
+    },
+    legend: {
+      position: "top",
+    },
+    tooltip: {
+      y: {
+        formatter: (val: number) => `${val.toFixed(2)} MT`,
+      },
+    },
+  }
+
+  public quarterlyComparisonChartOptions: ChartOptions = {
+    series: [],
+    chart: {
+      type: "bar",
+      height: 350,
+      fontFamily: "Raleway, sans-serif",
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: "50%",
+        borderRadius: 8,
+      },
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: (val: number) => val.toLocaleString(),
+      style: {
+        fontSize: "10px",
+      },
+    },
+    xaxis: {
+      categories: ["Q1", "Q2", "Q3", "Q4"],
+    },
+    yaxis: {
+      title: {
+        text: "Trips",
+      },
+    },
+    colors: [this.successColor, this.warningColor],
+    grid: {
+      borderColor: "#e5e7eb",
+      strokeDashArray: 3,
+    },
+    legend: {
+      position: "top",
+    },
+  }
+
+  public yoyGrowthChartOptions: ChartOptions = {
+    series: [],
+    chart: {
+      type: "line",
+      height: 350,
+      fontFamily: "Raleway, sans-serif",
+    },
+    plotOptions: {
+      bar: {
+        horizontal: false,
+      },
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      curve: "smooth",
+      width: 3,
+    },
+    xaxis: {
+      categories: [],
+    },
+    yaxis: {
+      title: {
+        text: "Growth (%)",
+      },
+    },
+    colors: [this.primaryColor, this.secondaryColor],
+    grid: {
+      borderColor: "#e5e7eb",
+      strokeDashArray: 3,
+    },
+    legend: {
+      position: "top",
+    },
+  }
+
   constructor(
     private dbCallingService: DbCallingService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+  ) { }
 
   ngOnInit(): void {
+    this.initializeAvailableYears()
     this.loadDashboardData()
+    this.loadComparisonData()
   }
 
   ngOnDestroy(): void {
     this.destroy$.next()
     this.destroy$.complete()
+  }
+
+  private initializeAvailableYears(): void {
+    const currentYear = new Date().getFullYear()
+    this.availableYears = []
+    for (let i = currentYear; i >= currentYear - 5; i--) {
+      this.availableYears.push(i)
+    }
+  }
+
+  onComparisonYearChange(): void {
+    this.loadComparisonData()
+  }
+
+  loadComparisonData(): void {
+    this.isLoadingComparison = true
+
+    // Simulate API call - Replace with actual API call
+    setTimeout(() => {
+      this.generateComparisonData()
+      this.updateComparisonCharts()
+      this.generateHistoricalData()
+      this.isLoadingComparison = false
+      this.cdr.detectChanges()
+    }, 800)
+  }
+
+  private generateComparisonData(): void {
+    const year = this.selectedComparisonYear
+    const baseWeight = 85000 + Math.random() * 15000
+    const baseTrips = 12000 + Math.random() * 3000
+
+    // Current year data
+    const currentMonthly = Array.from({ length: 12 }, () => Math.round((baseWeight / 12) * (0.8 + Math.random() * 0.4)))
+    const currentQuarterly = [
+      currentMonthly.slice(0, 3).reduce((a, b) => a + b, 0),
+      currentMonthly.slice(3, 6).reduce((a, b) => a + b, 0),
+      currentMonthly.slice(6, 9).reduce((a, b) => a + b, 0),
+      currentMonthly.slice(9, 12).reduce((a, b) => a + b, 0),
+    ]
+
+    // Previous year data (slightly lower)
+    const prevMultiplier = 0.85 + Math.random() * 0.1
+    const previousMonthly = currentMonthly.map((v) => Math.round(v * prevMultiplier))
+    const previousQuarterly = [
+      previousMonthly.slice(0, 3).reduce((a, b) => a + b, 0),
+      previousMonthly.slice(3, 6).reduce((a, b) => a + b, 0),
+      previousMonthly.slice(6, 9).reduce((a, b) => a + b, 0),
+      previousMonthly.slice(9, 12).reduce((a, b) => a + b, 0),
+    ]
+
+    const currentTotalWeight = currentMonthly.reduce((a, b) => a + b, 0)
+    const previousTotalWeight = previousMonthly.reduce((a, b) => a + b, 0)
+    const currentTotalTrips = Math.round(baseTrips)
+    const previousTotalTrips = Math.round(baseTrips * prevMultiplier)
+
+    this.comparisonData = {
+      currentYear: {
+        totalWeight: currentTotalWeight,
+        totalTrips: currentTotalTrips,
+        avgDailyWeight: currentTotalWeight / 365,
+        efficiencyRate: 78 + Math.random() * 15,
+        monthlyData: currentMonthly,
+        quarterlyData: currentQuarterly,
+      },
+      previousYear: {
+        totalWeight: previousTotalWeight,
+        totalTrips: previousTotalTrips,
+        avgDailyWeight: previousTotalWeight / 365,
+        efficiencyRate: 72 + Math.random() * 15,
+        monthlyData: previousMonthly,
+        quarterlyData: previousQuarterly,
+      },
+      changes: {
+        weightChange: ((currentTotalWeight - previousTotalWeight) / previousTotalWeight) * 100,
+        tripsChange: ((currentTotalTrips - previousTotalTrips) / previousTotalTrips) * 100,
+        avgDailyChange: ((currentTotalWeight / 365 - previousTotalWeight / 365) / (previousTotalWeight / 365)) * 100,
+        efficiencyChange: 0,
+      },
+      siteWise: {
+        kanjur: {
+          currentWeight: currentTotalWeight * 0.6,
+          previousWeight: previousTotalWeight * 0.58,
+          currentTrips: Math.round(currentTotalTrips * 0.65),
+          previousTrips: Math.round(previousTotalTrips * 0.63),
+          weightChange: 0,
+          tripsChange: 0,
+        },
+        deonar: {
+          currentWeight: currentTotalWeight * 0.4,
+          previousWeight: previousTotalWeight * 0.42,
+          currentTrips: Math.round(currentTotalTrips * 0.35),
+          previousTrips: Math.round(previousTotalTrips * 0.37),
+          weightChange: 0,
+          tripsChange: 0,
+        },
+      },
+    }
+
+    // Calculate efficiency change
+    this.comparisonData.changes.efficiencyChange =
+      this.comparisonData.currentYear.efficiencyRate - this.comparisonData.previousYear.efficiencyRate
+
+    // Calculate site-wise changes
+    this.comparisonData.siteWise.kanjur.weightChange =
+      ((this.comparisonData.siteWise.kanjur.currentWeight - this.comparisonData.siteWise.kanjur.previousWeight) /
+        this.comparisonData.siteWise.kanjur.previousWeight) *
+      100
+    this.comparisonData.siteWise.kanjur.tripsChange =
+      ((this.comparisonData.siteWise.kanjur.currentTrips - this.comparisonData.siteWise.kanjur.previousTrips) /
+        this.comparisonData.siteWise.kanjur.previousTrips) *
+      100
+
+    this.comparisonData.siteWise.deonar.weightChange =
+      ((this.comparisonData.siteWise.deonar.currentWeight - this.comparisonData.siteWise.deonar.previousWeight) /
+        this.comparisonData.siteWise.deonar.previousWeight) *
+      100
+    this.comparisonData.siteWise.deonar.tripsChange =
+      ((this.comparisonData.siteWise.deonar.currentTrips - this.comparisonData.siteWise.deonar.previousTrips) /
+        this.comparisonData.siteWise.deonar.previousTrips) *
+      100
+  }
+
+  private updateComparisonCharts(): void {
+    const year = this.selectedComparisonYear
+
+    // Monthly comparison chart
+    this.monthlyComparisonChartOptions = {
+      ...this.monthlyComparisonChartOptions,
+      series: [
+        { name: `${year}`, data: this.comparisonData.currentYear.monthlyData },
+        { name: `${year - 1}`, data: this.comparisonData.previousYear.monthlyData },
+      ],
+    }
+
+    // Quarterly comparison chart
+    this.quarterlyComparisonChartOptions = {
+      ...this.quarterlyComparisonChartOptions,
+      series: [
+        { name: `${year}`, data: this.comparisonData.currentYear.quarterlyData.map((v) => Math.round(v / 100)) },
+        { name: `${year - 1}`, data: this.comparisonData.previousYear.quarterlyData.map((v) => Math.round(v / 100)) },
+      ],
+    }
+
+    // YoY Growth chart
+    const years = this.availableYears.slice().reverse()
+    const weightGrowth = years.map((y, i) => {
+      if (i === 0) return 0
+      return Math.round((Math.random() - 0.3) * 20 * 10) / 10
+    })
+    const tripsGrowth = years.map((y, i) => {
+      if (i === 0) return 0
+      return Math.round((Math.random() - 0.3) * 15 * 10) / 10
+    })
+
+    this.yoyGrowthChartOptions = {
+      ...this.yoyGrowthChartOptions,
+      series: [
+        { name: "Weight Growth (%)", data: weightGrowth },
+        { name: "Trips Growth (%)", data: tripsGrowth },
+      ],
+      xaxis: { categories: years.map((y) => y.toString()) },
+    }
+  }
+
+  private generateHistoricalData(): void {
+    this.historicalData = this.availableYears.map((year, index) => {
+      const baseWeight = 80000 + (this.availableYears.length - index) * 5000 + Math.random() * 10000
+      const baseTrips = 11000 + (this.availableYears.length - index) * 500 + Math.random() * 2000
+      const prevWeight =
+        index < this.availableYears.length - 1
+          ? 80000 + (this.availableYears.length - index - 1) * 5000 + Math.random() * 10000
+          : baseWeight
+
+      return {
+        year,
+        totalWeight: Math.round(baseWeight * 100) / 100,
+        totalTrips: Math.round(baseTrips),
+        avgDaily: Math.round((baseWeight / 365) * 100) / 100,
+        efficiency: Math.round((70 + Math.random() * 20) * 10) / 10,
+        yoyChange:
+          index === this.availableYears.length - 1
+            ? 0
+            : Math.round(((baseWeight - prevWeight) / prevWeight) * 100 * 100) / 100,
+      }
+    })
+  }
+
+  getProgressWidth(current: number, previous: number): number {
+    const max = Math.max(current, previous)
+    if (max === 0) return 0
+    return Math.min((current / max) * 100, 100)
   }
 
   /**
@@ -340,7 +763,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Process GetWBTripSummary response - FIXED to match old dashboard logic
+   * Process GetWBTripSummary response
    */
   private processWBTripSummary(response: any): void {
     if (!response || !response.data) {
@@ -350,20 +773,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const data = response.data
 
-    // Store raw site arrays
     this.swmSites = Array.isArray(data.swmSites) ? data.swmSites : []
     this.rtsSites = Array.isArray(data.rtsSites) ? data.rtsSites : []
 
-    console.log("SWM Sites:", this.swmSites)
-    console.log("RTS Sites:", this.rtsSites)
-
-    // Process Kanjur and Deonar from both SWM and RTS sites
     let kanjurTrips = 0
     let kanjurWeight = 0
     let deonarTrips = 0
     let deonarWeight = 0
 
-    // Process SWM sites
     this.swmSites.forEach((site) => {
       const siteName = (site.siteName || "").toLowerCase()
       const trips = Number(site.vehicleCount || 0)
@@ -378,7 +795,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     })
 
-    // Process RTS sites
     this.rtsSites.forEach((site) => {
       const siteName = (site.siteName || "").toLowerCase()
       const trips = Number(site.vehicleCount || 0)
@@ -403,7 +819,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       netWeight: Number(deonarWeight.toFixed(2)),
     }
 
-    // Process VRTS, MRTS, GRTS from RTS sites
     let vrtsWeight = 0
     let mrtsWeight = 0
     let grtsWeight = 0
@@ -427,7 +842,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       grts: Number(grtsWeight.toFixed(2)),
     }
 
-    // Calculate totals from all sites
     const allSites = [...this.swmSites, ...this.rtsSites]
     const totalTrips = allSites.reduce((sum, site) => sum + Number(site.vehicleCount || 0), 0)
     const totalWeight = allSites.reduce((sum, site) => sum + Number(site.netWeight || 0), 0)
@@ -436,13 +850,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       trips: totalTrips,
       netWeight: Number(totalWeight.toFixed(2)),
     }
-
-    console.log("Processed Data:", {
-      kanjur: this.kanjurData,
-      deonar: this.deonarData,
-      unified: this.unifiedData,
-      total: this.totalData,
-    })
   }
 
   /**
@@ -472,7 +879,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.timeMetrics.year = map.get("year") ?? 0
 
       this.last30DaysMetrics.cumulativeWeight = Number(map.get("last30daystotal") ?? map.get("last30days") ?? 0)
-      this.last30DaysMetrics.averageWardWeight = Number(map.get("avgwardweight30days") ?? map.get("averagewardweight") ?? 0)
+      this.last30DaysMetrics.averageWardWeight = Number(
+        map.get("avgwardweight30days") ?? map.get("averagewardweight") ?? 0,
+      )
 
       return
     }
@@ -486,8 +895,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.timeMetrics.month = getN(d.month ?? d.thisMonth ?? d.this_month ?? d.monthly ?? 0)
     this.timeMetrics.year = getN(d.year ?? d.thisYear ?? d.yearly ?? 0)
 
-    this.last30DaysMetrics.cumulativeWeight = getN(d.last30DaysTotal ?? d.last30DaysTotalWeight ?? d.last30 ?? d.last30Total ?? 0)
-    this.last30DaysMetrics.averageWardWeight = getN(d.averageWardWeight ?? d.avgWardWeight ?? d.avgWardWeight30Days ?? 0)
+    this.last30DaysMetrics.cumulativeWeight = getN(
+      d.last30DaysTotal ?? d.last30DaysTotalWeight ?? d.last30 ?? d.last30Total ?? 0,
+    )
+    this.last30DaysMetrics.averageWardWeight = getN(
+      d.averageWardWeight ?? d.avgWardWeight ?? d.avgWardWeight30Days ?? 0,
+    )
   }
 
   /**
@@ -496,13 +909,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private processWardwiseReport(response: any): void {
     if (!response) return
 
-    const wardData = Array.isArray(response.wardData) ? response.wardData : Array.isArray(response.data) ? response.data : []
+    const wardData = Array.isArray(response.wardData)
+      ? response.wardData
+      : Array.isArray(response.data)
+        ? response.data
+        : []
 
     if (!wardData || wardData.length === 0) return
 
-    this.availableWards = Array.from(
-      new Set(wardData.map((w: any) => w.wardName ?? w.WardName ?? w.ward ?? "Unknown"))
-    )
+    this.availableWards = Array.from(new Set(wardData.map((w: any) => w.wardName ?? w.WardName ?? w.ward ?? "Unknown")))
 
     const categories: string[] = []
     const capacitySeries: number[] = []
@@ -584,6 +999,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   refreshAllData(): void {
     this.isRefreshing = true
     this.loadDashboardData()
+    this.loadComparisonData()
     setTimeout(() => {
       this.isRefreshing = false
     }, 800)
@@ -627,6 +1043,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   switchSection(section: "overview" | "performance" | "analytics" | "reports"): void {
     this.activeSection = section
+    if (section === "performance" && this.historicalData.length === 0) {
+      this.loadComparisonData()
+    }
   }
 
   scrollToSection(sectionId: string): void {
