@@ -1,5 +1,5 @@
 import { type ComponentFixture, TestBed } from "@angular/core/testing"
-import { DashboardComponent } from "./dashboard.component"
+import { DashboardComponent } from "../dashboard2/dashboard.component"
 import { NgApexchartsModule } from "ng-apexcharts"
 import { FormsModule } from "@angular/forms"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
@@ -15,6 +15,11 @@ describe("DashboardComponent", () => {
       "getWardwiseReport",
       "GetWBTripSummary",
       "getCumulativeTripSummary",
+      "getAllWards",
+      "getVehicleTypes",
+      "getAgencies",
+      "getOverviewMetrics",
+      "getYearlyComparison",
     ])
 
     await TestBed.configureTestingModule({
@@ -27,33 +32,51 @@ describe("DashboardComponent", () => {
     mockDbCallingService = TestBed.inject(DbCallingService) as jasmine.SpyObj<DbCallingService>
 
     // Setup default mock responses
-    mockDbCallingService.getWardwiseReport.and.returnValue(
-      of({
-        serviceResponse: 1,
-        wardData: [{ wardName: "Ward A", vehicleCount: 10, totalNetWeight: 100, transactionDate: "2025-01-01" }],
-      }),
-    )
+    // mockDbCallingService.getWardwiseReport.and.returnValue(
+    //   of({
+    //     serviceResponse: 1,
+    //     wardData: [{ wardName: "Ward A", vehicleCount: 10, totalNetWeight: 100, transactionDate: "2025-01-01" }],
+    //   }),
+    // )
 
-    mockDbCallingService.GetWBTripSummary.and.returnValue(
-      of({
-        data: {
-          swmSites: [{ siteName: "Kanjur", vehicleCount: 831, netWeight: 6140.29 }],
-          rtsSites: [{ siteName: "Deonar", vehicleCount: 229, netWeight: 1624.82 }],
-        },
-      }),
-    )
+    // mockDbCallingService.getWards.and.returnValue(
+    //   of({
+    //     data: [{ wardName: "Ward A" }, { wardName: "Ward B" }, { wardName: "Ward C" }],
+    //   }),
+    // )
 
-    mockDbCallingService.getCumulativeTripSummary.and.returnValue(
-      of({
-        data: {
-          today: 100,
-          lastDay: 95,
-          week: 650,
-          month: 2800,
-          year: 35000,
-        },
-      }),
-    )
+    // mockDbCallingService.getVehicleTypes.and.returnValue(
+    //   of({
+    //     data: [{ vehicleTypeName: "COMPACTOR" }, { vehicleTypeName: "MINI COMPACTOR" }, { vehicleTypeName: "DUMPER" }],
+    //   }),
+    // )
+
+    // mockDbCallingService.GetAgencies.and.returnValue(
+    //   of({
+    //     data: [{ agencyName: "Agency A" }, { agencyName: "Agency B" }],
+    //   }),
+    // )
+
+    // mockDbCallingService.getCumulativeTripSummary.and.returnValue(
+    //   of({
+    //     data: {
+    //       today: 100,
+    //       lastDay: 95,
+    //       week: 650,
+    //       month: 2800,
+    //       year: 35000,
+    //     },
+    //   }),
+    // )
+
+    // mockDbCallingService.GetWBTripSummary.and.returnValue(
+    //   of({
+    //     data: {
+    //       swmSites: [{ siteName: "Kanjur", vehicleCount: 831, netWeight: 6140.29 }],
+    //       rtsSites: [{ siteName: "Deonar", vehicleCount: 229, netWeight: 1624.82 }],
+    //     },
+    //   }),
+    // )
 
     fixture.detectChanges()
   })
@@ -78,6 +101,12 @@ describe("DashboardComponent", () => {
 
   it("should load dashboard data on init", () => {
     expect(mockDbCallingService.getWardwiseReport).toHaveBeenCalled()
+  })
+
+  it("should load filters from API on init", () => {
+    expect(mockDbCallingService.getWards).toHaveBeenCalled()
+    expect(mockDbCallingService.getVehicleTypes).toHaveBeenCalled()
+    expect(mockDbCallingService.GetAgencies).toHaveBeenCalled()
   })
 
   it("should set loading to false after initialization", () => {
@@ -121,6 +150,12 @@ describe("DashboardComponent", () => {
     expect(component.getActiveFiltersCount()).toBe(1)
   })
 
+  it("should show custom date range when custom option selected", () => {
+    component.globalTimeRange = "custom"
+    component.onTimeRangeChange()
+    expect(component.showCustomDateRange).toBe(true)
+  })
+
   it("should calculate progress width correctly", () => {
     expect(component.getProgressWidth(100, 80)).toBe(100)
     expect(component.getProgressWidth(80, 100)).toBe(80)
@@ -139,5 +174,19 @@ describe("DashboardComponent", () => {
     const loadSpy = spyOn(component, "loadComparisonData")
     component.onComparisonYearChange()
     expect(loadSpy).toHaveBeenCalled()
+  })
+
+  it("should clear all filters correctly", () => {
+    component.selectedWard = "Ward A"
+    component.selectedAgency = "Agency A"
+    component.selectedVehicleType = "COMPACTOR"
+    component.globalTimeRange = "month"
+
+    component.clearAllFilters()
+
+    expect(component.selectedWard).toBe("")
+    expect(component.selectedAgency).toBe("")
+    expect(component.selectedVehicleType).toBe("")
+    expect(component.globalTimeRange).toBe("day")
   })
 })

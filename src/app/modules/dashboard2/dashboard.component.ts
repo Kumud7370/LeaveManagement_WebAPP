@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { NgApexchartsModule } from "ng-apexcharts"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
-import { Subject, takeUntil, forkJoin, of, type Observable } from "rxjs"
+import { Subject, takeUntil, forkJoin, of, Observable } from "rxjs"
 import moment from "moment"
 import type {
   ApexAxisChartSeries,
@@ -49,7 +49,7 @@ export type PieChartOptions = {
   stroke?: ApexStroke
 }
 
-interface ComparisonData {
+export interface ComparisonData {
   currentYear: {
     totalWeight: number
     totalTrips: number
@@ -92,13 +92,22 @@ interface ComparisonData {
   }
 }
 
-interface HistoricalRecord {
+export interface HistoricalRecord {
   year: number
   totalWeight: number
   totalTrips: number
   avgDaily: number
   efficiency: number
   yoyChange: number
+}
+
+export interface WardAnalytics {
+  wardName: string
+  trips: number
+  netWeight: number
+  avgWeight: number
+  capacity: number
+  utilization: number
 }
 
 @Component({
@@ -122,13 +131,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   globalTimeRange = "day"
 
   selectedAgency = ""
-  availableAgencies: string[] = ["Agency A", "Agency B", "Agency C"]
+  availableAgencies: string[] = []
 
   availableWards: string[] = []
-  availableVehicleTypes: string[] = ["COMPACTOR", "MINI COMPACTOR", "DUMPER", "TEMPO", "BIG DUMPER"]
+  availableVehicleTypes: string[] = []
 
   selectedWard = ""
   selectedVehicleType = ""
+
+  customDateFrom = ""
+  customDateTo = ""
+  showCustomDateRange = false
 
   // Timeframe metrics
   timeMetrics = {
@@ -166,6 +179,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
     vrts: 0,
   }
 
+  deonarAnalytics: WardAnalytics[] = []
+  kanjurAnalytics: WardAnalytics[] = []
+  overallAnalytics = {
+    totalTrips: 0,
+    totalWeight: 0,
+    avgDailyWeight: 0,
+    capacityUtilization: 0,
+  }
+
   // Store raw site data
   swmSites: any[] = []
   rtsSites: any[] = []
@@ -180,16 +202,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
       totalTrips: 0,
       avgDailyWeight: 0,
       efficiencyRate: 0,
-      monthlyData: [],
-      quarterlyData: [],
+      monthlyData: Array(12).fill(0),
+      quarterlyData: [0, 0, 0, 0],
     },
     previousYear: {
       totalWeight: 0,
       totalTrips: 0,
       avgDailyWeight: 0,
       efficiencyRate: 0,
-      monthlyData: [],
-      quarterlyData: [],
+      monthlyData: Array(12).fill(0),
+      quarterlyData: [0, 0, 0, 0],
     },
     changes: {
       weightChange: 0,
@@ -476,13 +498,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     },
   }
 
-  constructor(
-    private dbCallingService: DbCallingService,
-    private cdr: ChangeDetectorRef,
-  ) { }
+  constructor(private dbCallingService: DbCallingService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.initializeAvailableYears()
+    this.initializeCustomDateRange()
+    this.loadFiltersFromAPI()
     this.loadDashboardData()
     this.loadComparisonData()
   }
@@ -500,6 +521,75 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  private initializeCustomDateRange(): void {
+    const today = moment()
+    this.customDateTo = today.format("YYYY-MM-DD")
+    this.customDateFrom = today.subtract(7, "days").format("YYYY-MM-DD")
+  }
+
+  private loadFiltersFromAPI(): void {
+    const userId = Number(sessionStorage.getItem("UserId")) || 0
+
+    const wards$ = this.safeCall(() => this.dbCallingService.getWards({ UserId: userId }))
+    const vehicleTypes$ = this.safeCall(() => this.dbCallingService.getVehicleTypes({ UserId: userId }))
+    const agencies$ = this.safeCall(() => this.dbCallingService.GetAgencies({ UserId: userId }))
+
+    forkJoin({ wards: wards$, vehicleTypes: vehicleTypes$, agencies: agencies$ })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ wards, vehicleTypes, agencies }) => {
+          if (wards) {
+            const wardData = Array.isArray(wards) ? wards : wards.data || wards.WardData || wards.wards || []
+            this.availableWards = wardData
+              .map((w: any) => w.wardName || w.WardName || w.name || w.Ward || "")
+              .filter((name: string) => name !== "")
+            this.availableWards = [...new Set(this.availableWards)]
+          }
+
+          if (vehicleTypes) {
+            const vtData = Array.isArray(vehicleTypes)
+              ? vehicleTypes
+              : vehicleTypes.data || vehicleTypes.VehicleData || vehicleTypes.vehicleTypes || []
+            this.availableVehicleTypes = vtData
+              .map(
+                (v: any) =>
+                  v.vehicleType || v.vehicleTypeName || v.VehicleTypeName || v.VehicleType || v.name || v.type || "",
+              )
+              .filter((name: string) => name !== "")
+            this.availableVehicleTypes = [...new Set(this.availableVehicleTypes)]
+          }
+
+          if (agencies) {
+            const agencyData = Array.isArray(agencies)
+              ? agencies
+              : agencies.data || agencies.agencies || agencies.AgencyData || []
+            this.availableAgencies = agencyData
+              .map((a: any) => a.agencyName || a.AgencyName || a.name || a.Agency || "")
+              .filter((name: string) => name !== "")
+            this.availableAgencies = [...new Set(this.availableAgencies)]
+          }
+
+          this.cdr.detectChanges()
+        },
+        error: (err) => {
+          console.error("Error loading filters:", err)
+        },
+      })
+  }
+
+  onTimeRangeChange(): void {
+    this.showCustomDateRange = this.globalTimeRange === "custom"
+    if (this.globalTimeRange !== "custom") {
+      this.onGlobalFilterChange()
+    }
+  }
+
+  applyCustomDateRange(): void {
+    if (this.customDateFrom && this.customDateTo) {
+      this.onGlobalFilterChange()
+    }
+  }
+
   onComparisonYearChange(): void {
     this.loadComparisonData()
   }
@@ -507,175 +597,357 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loadComparisonData(): void {
     this.isLoadingComparison = true
 
-    // Simulate API call - Replace with actual API call
-    setTimeout(() => {
-      this.generateComparisonData()
-      this.updateComparisonCharts()
-      this.generateHistoricalData()
-      this.isLoadingComparison = false
-      this.cdr.detectChanges()
-    }, 800)
+    const year = this.selectedComparisonYear
+    const userId = Number(sessionStorage.getItem("UserId")) || 0
+
+    // Build payloads (same as earlier) to fetch wardwise items for current and previous year
+    const currentYearPayload = {
+      WeighBridge: "",
+      FromDate: `${year}-01-01`,
+      ToDate: `${year}-12-31`,
+      FullDate: "",
+      WardName: this.selectedWard || "",
+      Act_Shift: "",
+      TransactionDate: `${year}-01-01`,
+      Agency: this.selectedAgency || "",
+      VehicleType: this.selectedVehicleType || "",
+    }
+
+    const previousYearPayload = {
+      WeighBridge: "",
+      FromDate: `${year - 1}-01-01`,
+      ToDate: `${year - 1}-12-31`,
+      FullDate: "",
+      WardName: this.selectedWard || "",
+      Act_Shift: "",
+      TransactionDate: `${year - 1}-01-01`,
+      Agency: this.selectedAgency || "",
+      VehicleType: this.selectedVehicleType || "",
+    }
+
+    const currentYear$ = this.safeCall(() => this.dbCallingService.getWardwiseReport(currentYearPayload))
+    const previousYear$ = this.safeCall(() => this.dbCallingService.getWardwiseReport(previousYearPayload))
+
+    forkJoin({ currentYear: currentYear$, previousYear: previousYear$ })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ currentYear, previousYear }) => {
+          try {
+            const currentItems = this.extractWardData(currentYear)
+            const previousItems = this.extractWardData(previousYear)
+
+            const currentAggregates = this.aggregateByYearAndMonth(currentItems, year)
+            const previousAggregates = this.aggregateByYearAndMonth(previousItems, year - 1)
+
+            // Fill comparisonData deterministically from aggregates
+            this.comparisonData.currentYear.monthlyData = currentAggregates.monthlyWeights
+            this.comparisonData.previousYear.monthlyData = previousAggregates.monthlyWeights
+
+            this.comparisonData.currentYear.quarterlyData = this.monthsToQuarters(
+              this.comparisonData.currentYear.monthlyData,
+            )
+            this.comparisonData.previousYear.quarterlyData = this.monthsToQuarters(
+              this.comparisonData.previousYear.monthlyData,
+            )
+
+            this.comparisonData.currentYear.totalWeight = currentAggregates.totalWeight
+            this.comparisonData.previousYear.totalWeight = previousAggregates.totalWeight
+
+            this.comparisonData.currentYear.totalTrips = currentAggregates.totalTrips
+            this.comparisonData.previousYear.totalTrips = previousAggregates.totalTrips
+
+            this.comparisonData.currentYear.avgDailyWeight =
+              this.comparisonData.currentYear.totalWeight / (this.isLeapYear(year) ? 366 : 365)
+            this.comparisonData.previousYear.avgDailyWeight =
+              this.comparisonData.previousYear.totalWeight / (this.isLeapYear(year - 1) ? 366 : 365)
+
+            this.comparisonData.currentYear.efficiencyRate = this.computeEfficiencyFromItems(currentItems)
+            this.comparisonData.previousYear.efficiencyRate = this.computeEfficiencyFromItems(previousItems)
+
+            // site wise
+            const kanjurCurrent = this.calculateSiteTotalsFromItems(currentItems, "kanjur")
+            const kanjurPrevious = this.calculateSiteTotalsFromItems(previousItems, "kanjur")
+            const deonarCurrent = this.calculateSiteTotalsFromItems(currentItems, "deonar")
+            const deonarPrevious = this.calculateSiteTotalsFromItems(previousItems, "deonar")
+
+            this.comparisonData.siteWise.kanjur.currentWeight = kanjurCurrent.weight
+            this.comparisonData.siteWise.kanjur.previousWeight = kanjurPrevious.weight
+            this.comparisonData.siteWise.kanjur.currentTrips = kanjurCurrent.trips
+            this.comparisonData.siteWise.kanjur.previousTrips = kanjurPrevious.trips
+
+            this.comparisonData.siteWise.deonar.currentWeight = deonarCurrent.weight
+            this.comparisonData.siteWise.deonar.previousWeight = deonarPrevious.weight
+            this.comparisonData.siteWise.deonar.currentTrips = deonarCurrent.trips
+            this.comparisonData.siteWise.deonar.previousTrips = deonarPrevious.trips
+
+            // percentage changes (deterministic, guarded)
+            this.comparisonData.changes.weightChange =
+              this.safePercentChange(this.comparisonData.currentYear.totalWeight, this.comparisonData.previousYear.totalWeight)
+            this.comparisonData.changes.tripsChange =
+              this.safePercentChange(this.comparisonData.currentYear.totalTrips, this.comparisonData.previousYear.totalTrips)
+            this.comparisonData.changes.avgDailyChange =
+              this.safePercentChange(this.comparisonData.currentYear.avgDailyWeight, this.comparisonData.previousYear.avgDailyWeight)
+            this.comparisonData.changes.efficiencyChange =
+              this.comparisonData.currentYear.efficiencyRate - this.comparisonData.previousYear.efficiencyRate
+
+            // site-wise percent changes
+            this.comparisonData.siteWise.kanjur.weightChange = this.safePercentChange(
+              this.comparisonData.siteWise.kanjur.currentWeight,
+              this.comparisonData.siteWise.kanjur.previousWeight,
+            )
+            this.comparisonData.siteWise.kanjur.tripsChange = this.safePercentChange(
+              this.comparisonData.siteWise.kanjur.currentTrips,
+              this.comparisonData.siteWise.kanjur.previousTrips,
+            )
+            this.comparisonData.siteWise.deonar.weightChange = this.safePercentChange(
+              this.comparisonData.siteWise.deonar.currentWeight,
+              this.comparisonData.siteWise.deonar.previousWeight,
+            )
+            this.comparisonData.siteWise.deonar.tripsChange = this.safePercentChange(
+              this.comparisonData.siteWise.deonar.currentTrips,
+              this.comparisonData.siteWise.deonar.previousTrips,
+            )
+
+            // historical from available years (derived deterministically from API)
+            this.generateHistoricalFromYears([currentItems, previousItems])
+
+            this.updateComparisonCharts()
+          } catch (err) {
+            console.error("Error processing comparison data:", err)
+            // reset to zeroed deterministic structure if something goes wrong
+            this.resetComparisonData()
+            this.updateComparisonCharts()
+          } finally {
+            this.isLoadingComparison = false
+            this.cdr.detectChanges()
+          }
+        },
+        error: (err) => {
+          console.error("Error loading comparison data:", err)
+          this.resetComparisonData()
+          this.updateComparisonCharts()
+          this.isLoadingComparison = false
+          this.cdr.detectChanges()
+        },
+      })
   }
 
-  private generateComparisonData(): void {
-    const year = this.selectedComparisonYear
-    const baseWeight = 85000 + Math.random() * 15000
-    const baseTrips = 12000 + Math.random() * 3000
-
-    // Current year data
-    const currentMonthly = Array.from({ length: 12 }, () => Math.round((baseWeight / 12) * (0.8 + Math.random() * 0.4)))
-    const currentQuarterly = [
-      currentMonthly.slice(0, 3).reduce((a, b) => a + b, 0),
-      currentMonthly.slice(3, 6).reduce((a, b) => a + b, 0),
-      currentMonthly.slice(6, 9).reduce((a, b) => a + b, 0),
-      currentMonthly.slice(9, 12).reduce((a, b) => a + b, 0),
-    ]
-
-    // Previous year data (slightly lower)
-    const prevMultiplier = 0.85 + Math.random() * 0.1
-    const previousMonthly = currentMonthly.map((v) => Math.round(v * prevMultiplier))
-    const previousQuarterly = [
-      previousMonthly.slice(0, 3).reduce((a, b) => a + b, 0),
-      previousMonthly.slice(3, 6).reduce((a, b) => a + b, 0),
-      previousMonthly.slice(6, 9).reduce((a, b) => a + b, 0),
-      previousMonthly.slice(9, 12).reduce((a, b) => a + b, 0),
-    ]
-
-    const currentTotalWeight = currentMonthly.reduce((a, b) => a + b, 0)
-    const previousTotalWeight = previousMonthly.reduce((a, b) => a + b, 0)
-    const currentTotalTrips = Math.round(baseTrips)
-    const previousTotalTrips = Math.round(baseTrips * prevMultiplier)
-
+  private resetComparisonData(): void {
     this.comparisonData = {
       currentYear: {
-        totalWeight: currentTotalWeight,
-        totalTrips: currentTotalTrips,
-        avgDailyWeight: currentTotalWeight / 365,
-        efficiencyRate: 78 + Math.random() * 15,
-        monthlyData: currentMonthly,
-        quarterlyData: currentQuarterly,
+        totalWeight: 0,
+        totalTrips: 0,
+        avgDailyWeight: 0,
+        efficiencyRate: 0,
+        monthlyData: Array(12).fill(0),
+        quarterlyData: [0, 0, 0, 0],
       },
       previousYear: {
-        totalWeight: previousTotalWeight,
-        totalTrips: previousTotalTrips,
-        avgDailyWeight: previousTotalWeight / 365,
-        efficiencyRate: 72 + Math.random() * 15,
-        monthlyData: previousMonthly,
-        quarterlyData: previousQuarterly,
+        totalWeight: 0,
+        totalTrips: 0,
+        avgDailyWeight: 0,
+        efficiencyRate: 0,
+        monthlyData: Array(12).fill(0),
+        quarterlyData: [0, 0, 0, 0],
       },
       changes: {
-        weightChange: ((currentTotalWeight - previousTotalWeight) / previousTotalWeight) * 100,
-        tripsChange: ((currentTotalTrips - previousTotalTrips) / previousTotalTrips) * 100,
-        avgDailyChange: ((currentTotalWeight / 365 - previousTotalWeight / 365) / (previousTotalWeight / 365)) * 100,
+        weightChange: 0,
+        tripsChange: 0,
+        avgDailyChange: 0,
         efficiencyChange: 0,
       },
       siteWise: {
         kanjur: {
-          currentWeight: currentTotalWeight * 0.6,
-          previousWeight: previousTotalWeight * 0.58,
-          currentTrips: Math.round(currentTotalTrips * 0.65),
-          previousTrips: Math.round(previousTotalTrips * 0.63),
+          currentWeight: 0,
+          previousWeight: 0,
+          currentTrips: 0,
+          previousTrips: 0,
           weightChange: 0,
           tripsChange: 0,
         },
         deonar: {
-          currentWeight: currentTotalWeight * 0.4,
-          previousWeight: previousTotalWeight * 0.42,
-          currentTrips: Math.round(currentTotalTrips * 0.35),
-          previousTrips: Math.round(previousTotalTrips * 0.37),
+          currentWeight: 0,
+          previousWeight: 0,
+          currentTrips: 0,
+          previousTrips: 0,
           weightChange: 0,
           tripsChange: 0,
         },
       },
     }
-
-    // Calculate efficiency change
-    this.comparisonData.changes.efficiencyChange =
-      this.comparisonData.currentYear.efficiencyRate - this.comparisonData.previousYear.efficiencyRate
-
-    // Calculate site-wise changes
-    this.comparisonData.siteWise.kanjur.weightChange =
-      ((this.comparisonData.siteWise.kanjur.currentWeight - this.comparisonData.siteWise.kanjur.previousWeight) /
-        this.comparisonData.siteWise.kanjur.previousWeight) *
-      100
-    this.comparisonData.siteWise.kanjur.tripsChange =
-      ((this.comparisonData.siteWise.kanjur.currentTrips - this.comparisonData.siteWise.kanjur.previousTrips) /
-        this.comparisonData.siteWise.kanjur.previousTrips) *
-      100
-
-    this.comparisonData.siteWise.deonar.weightChange =
-      ((this.comparisonData.siteWise.deonar.currentWeight - this.comparisonData.siteWise.deonar.previousWeight) /
-        this.comparisonData.siteWise.deonar.previousWeight) *
-      100
-    this.comparisonData.siteWise.deonar.tripsChange =
-      ((this.comparisonData.siteWise.deonar.currentTrips - this.comparisonData.siteWise.deonar.previousTrips) /
-        this.comparisonData.siteWise.deonar.previousTrips) *
-      100
   }
 
-  private updateComparisonCharts(): void {
-    const year = this.selectedComparisonYear
-
-    // Monthly comparison chart
-    this.monthlyComparisonChartOptions = {
-      ...this.monthlyComparisonChartOptions,
-      series: [
-        { name: `${year}`, data: this.comparisonData.currentYear.monthlyData },
-        { name: `${year - 1}`, data: this.comparisonData.previousYear.monthlyData },
-      ],
-    }
-
-    // Quarterly comparison chart
-    this.quarterlyComparisonChartOptions = {
-      ...this.quarterlyComparisonChartOptions,
-      series: [
-        { name: `${year}`, data: this.comparisonData.currentYear.quarterlyData.map((v) => Math.round(v / 100)) },
-        { name: `${year - 1}`, data: this.comparisonData.previousYear.quarterlyData.map((v) => Math.round(v / 100)) },
-      ],
-    }
-
-    // YoY Growth chart
-    const years = this.availableYears.slice().reverse()
-    const weightGrowth = years.map((y, i) => {
-      if (i === 0) return 0
-      return Math.round((Math.random() - 0.3) * 20 * 10) / 10
-    })
-    const tripsGrowth = years.map((y, i) => {
-      if (i === 0) return 0
-      return Math.round((Math.random() - 0.3) * 15 * 10) / 10
-    })
-
-    this.yoyGrowthChartOptions = {
-      ...this.yoyGrowthChartOptions,
-      series: [
-        { name: "Weight Growth (%)", data: weightGrowth },
-        { name: "Trips Growth (%)", data: tripsGrowth },
-      ],
-      xaxis: { categories: years.map((y) => y.toString()) },
-    }
+  private extractWardData(response: any): any[] {
+    if (!response) return []
+    return Array.isArray(response.wardData)
+      ? response.wardData
+      : Array.isArray(response.data)
+      ? response.data
+      : Array.isArray(response)
+      ? response
+      : []
   }
 
-  private generateHistoricalData(): void {
-    this.historicalData = this.availableYears.map((year, index) => {
-      const baseWeight = 80000 + (this.availableYears.length - index) * 5000 + Math.random() * 10000
-      const baseTrips = 11000 + (this.availableYears.length - index) * 500 + Math.random() * 2000
-      const prevWeight =
-        index < this.availableYears.length - 1
-          ? 80000 + (this.availableYears.length - index - 1) * 5000 + Math.random() * 10000
-          : baseWeight
+  private aggregateByYearAndMonth(items: any[], year: number): { monthlyWeights: number[]; totalWeight: number; totalTrips: number } {
+    const monthlyWeights = Array(12).fill(0)
+    let totalWeight = 0
+    let totalTrips = 0
 
-      return {
-        year,
-        totalWeight: Math.round(baseWeight * 100) / 100,
-        totalTrips: Math.round(baseTrips),
-        avgDaily: Math.round((baseWeight / 365) * 100) / 100,
-        efficiency: Math.round((70 + Math.random() * 20) * 10) / 10,
-        yoyChange:
-          index === this.availableYears.length - 1
-            ? 0
-            : Math.round(((baseWeight - prevWeight) / prevWeight) * 100 * 100) / 100,
+    items.forEach((it: any) => {
+      const parsed = this.parseDateFromItem(it)
+      if (!parsed) return
+      const d = parsed
+      const itemYear = d.getFullYear()
+      if (itemYear !== year) return
+
+      const monthIndex = d.getMonth() // 0..11
+      const weight = Number(it.totalNetWeight ?? it.netWeight ?? it.totalWeight ?? it.actualWeight ?? 0)
+      const trips = Number(it.vehicleCount ?? it.vehicles ?? it.trips ?? 0)
+
+      monthlyWeights[monthIndex] += isFinite(weight) ? weight : 0
+      totalWeight += isFinite(weight) ? weight : 0
+      totalTrips += isFinite(trips) ? trips : 0
+    })
+
+    // ensure numeric and rounded values
+    const roundedMonthly = monthlyWeights.map((v) => Number(Number(v).toFixed(2)))
+    totalWeight = Number(totalWeight.toFixed(2))
+    totalTrips = Math.round(totalTrips)
+
+    return { monthlyWeights: roundedMonthly, totalWeight, totalTrips }
+  }
+
+  private parseDateFromItem(item: any): Date | null {
+    if (!item) return null
+
+    const candidates = [
+      item.TransactionDate,
+      item.FullDate,
+      item.date,
+      item.CreatedDate,
+      item.transactionDate,
+      item.createdDate,
+      item.EntryDate,
+      item.entryDate,
+    ]
+
+    for (const c of candidates) {
+      if (!c && c !== 0) continue
+      const s = typeof c === "string" ? c.trim() : c
+      if (!s) continue
+      const m = moment(s)
+      if (m.isValid()) return m.toDate()
+    }
+
+    return null
+  }
+
+  private monthsToQuarters(months: number[]): number[] {
+    const q1 = months.slice(0, 3).reduce((a, b) => a + b, 0)
+    const q2 = months.slice(3, 6).reduce((a, b) => a + b, 0)
+    const q3 = months.slice(6, 9).reduce((a, b) => a + b, 0)
+    const q4 = months.slice(9, 12).reduce((a, b) => a + b, 0)
+    return [Number(q1.toFixed(2)), Number(q2.toFixed(2)), Number(q3.toFixed(2)), Number(q4.toFixed(2))]
+  }
+
+  private computeEfficiencyFromItems(items: any[]): number {
+    // efficiency = totalActual / totalCapacity * 100
+    let totalCapacity = 0
+    let totalActual = 0
+
+    items.forEach((it: any) => {
+      const capacity = Number(it.vehicleCapacity ?? it.capacity ?? it.maxCapacity ?? 0)
+      const vehicles = Number(it.vehicleCount ?? it.vehicles ?? 0)
+      const estimatedCapacity = capacity > 0 ? capacity : vehicles * 6 // deterministic estimate if capacity absent
+      const actual = Number(it.actualWeight ?? it.actualWeightMT ?? it.totalNetWeight ?? it.netWeight ?? it.totalWeight ?? 0)
+
+      totalCapacity += isFinite(estimatedCapacity) ? estimatedCapacity : 0
+      totalActual += isFinite(actual) ? actual : 0
+    })
+
+    if (totalCapacity === 0) return 0 // deterministic, no random fallback
+    return Number(((totalActual / totalCapacity) * 100).toFixed(2))
+  }
+
+  private calculateSiteTotalsFromItems(items: any[], siteName: string): { weight: number; trips: number } {
+    let weight = 0
+    let trips = 0
+
+    items.forEach((w: any) => {
+      const wName = (w.wardName ?? w.WardName ?? w.siteName ?? w.site ?? "").toString().toLowerCase()
+      if (wName.includes(siteName)) {
+        weight += Number(w.totalNetWeight ?? w.netWeight ?? w.totalWeight ?? 0)
+        trips += Number(w.vehicleCount ?? w.vehicles ?? w.trips ?? 0)
       }
     })
+
+    // deterministic fallback if no site-specific entries: return zeros (not random)
+    return { weight: Number(weight.toFixed(2)), trips: Math.round(trips) }
+  }
+
+  private safePercentChange(current: number, previous: number): number {
+    if (!previous || previous === 0) {
+      return previous === 0 && current === 0 ? 0 : 100 * (current - previous) / (previous === 0 ? 1 : previous)
+    }
+    return Number((((current - previous) / previous) * 100).toFixed(2))
+  }
+
+  private generateHistoricalFromYears(listOfItemArrays: any[][]): void {
+    // Combine items and derive yearly aggregates for availableYears deterministically
+    const combined: any[] = []
+    listOfItemArrays.forEach((arr) => {
+      if (Array.isArray(arr)) combined.push(...arr)
+    })
+
+    const yearMap = new Map<number, { weight: number; trips: number; capacity: number; actual: number }>()
+
+    combined.forEach((it: any) => {
+      const d = this.parseDateFromItem(it)
+      if (!d) return
+      const y = d.getFullYear()
+      const cur = yearMap.get(y) ?? { weight: 0, trips: 0, capacity: 0, actual: 0 }
+
+      cur.weight += Number(it.totalNetWeight ?? it.netWeight ?? it.totalWeight ?? 0) || 0
+      cur.trips += Number(it.vehicleCount ?? it.vehicles ?? it.trips ?? 0) || 0
+      const cap = Number(it.vehicleCapacity ?? it.capacity ?? it.maxCapacity ?? 0)
+      const vehicles = Number(it.vehicleCount ?? it.vehicles ?? 0)
+      cur.capacity += isFinite(cap) && cap > 0 ? cap : vehicles * 6
+      cur.actual += Number(it.actualWeight ?? it.actualWeightMT ?? it.totalNetWeight ?? it.netWeight ?? 0) || 0
+
+      yearMap.set(y, cur)
+    })
+
+    const hist: HistoricalRecord[] = []
+    this.availableYears.forEach((y) => {
+      const v = yearMap.get(y) ?? { weight: 0, trips: 0, capacity: 0, actual: 0 }
+      const avgDaily = v.weight > 0 ? Number((v.weight / (this.isLeapYear(y) ? 366 : 365)).toFixed(2)) : 0
+      const efficiency = v.capacity > 0 ? Number(((v.actual / v.capacity) * 100).toFixed(2)) : 0
+      hist.push({
+        year: y,
+        totalWeight: Number(v.weight.toFixed(2)),
+        totalTrips: Math.round(v.trips),
+        avgDaily,
+        efficiency,
+        yoyChange: 0, // calculate below
+      })
+    })
+
+    // compute YoY deterministically
+    for (let i = 0; i < hist.length; i++) {
+      if (i === hist.length - 1) {
+        hist[i].yoyChange = 0
+      } else {
+        const cur = hist[i].totalWeight
+        const prev = hist[i + 1].totalWeight || 0
+        hist[i].yoyChange = prev === 0 ? (cur === 0 ? 0 : 100) : Number((((cur - prev) / prev) * 100).toFixed(2))
+      }
+    }
+
+    this.historicalData = hist
+  }
+
+  private isLeapYear(y: number): boolean {
+    return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0
   }
 
   getProgressWidth(current: number, previous: number): number {
@@ -684,35 +956,71 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return Math.min((current / max) * 100, 100)
   }
 
-  /**
-   * Load all dashboard data
-   */
+  private getDateRange(): { fromDate: string; toDate: string } {
+    const today = moment()
+    let fromDate: string
+    let toDate: string = today.format("YYYY-MM-DD")
+
+    switch (this.globalTimeRange) {
+      case "day":
+        fromDate = today.format("YYYY-MM-DD")
+        break
+      case "week":
+        fromDate = today.clone().startOf("week").format("YYYY-MM-DD")
+        break
+      case "month":
+        fromDate = today.clone().startOf("month").format("YYYY-MM-DD")
+        break
+      case "year":
+        fromDate = today.clone().startOf("year").format("YYYY-MM-DD")
+        break
+      case "custom":
+        fromDate = this.customDateFrom || today.format("YYYY-MM-DD")
+        toDate = this.customDateTo || today.format("YYYY-MM-DD")
+        break
+      default:
+        fromDate = today.format("YYYY-MM-DD")
+    }
+
+    return { fromDate, toDate }
+  }
+
   loadDashboardData(): void {
     this.isLoading = true
-
-    // Use moment to set today's date
     this.timeMetrics.today = moment().toDate()
 
+    const { fromDate, toDate } = this.getDateRange()
+    const userId = Number(sessionStorage.getItem("UserId")) || 0
+
     const wbSummaryPayload = {
-      DateFrom: moment().format("YYYY-MM-DD"),
-      UserId: Number(sessionStorage.getItem("UserId")) || 0,
+      DateFrom: fromDate,
+      DateTo: toDate,
+      UserId: userId,
+      WardName: this.selectedWard || "",
+      Agency: this.selectedAgency || "",
+      VehicleType: this.selectedVehicleType || "",
     }
 
     const cumulativePayload = {
-      UserId: Number(sessionStorage.getItem("UserId")) || 0,
-      FromDate: null,
-      ToDate: null,
+      UserId: userId,
+      FromDate: fromDate,
+      ToDate: toDate,
       SiteName: "SWM",
+      WardName: this.selectedWard || "",
+      Agency: this.selectedAgency || "",
+      VehicleType: this.selectedVehicleType || "",
     }
 
     const wardwisePayload = {
       WeighBridge: "",
-      FromDate: moment().format("YYYY-MM-DD"),
-      ToDate: "",
+      FromDate: fromDate,
+      ToDate: toDate,
       FullDate: "",
       WardName: this.selectedWard || "",
       Act_Shift: "",
-      TransactionDate: moment().format("YYYY-MM-DD"),
+      TransactionDate: fromDate,
+      Agency: this.selectedAgency || "",
+      VehicleType: this.selectedVehicleType || "",
     }
 
     const wb$ = this.safeCall(() => this.dbCallingService.GetWBTripSummary(wbSummaryPayload))
@@ -752,7 +1060,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       })
   }
 
-  private safeCall(fn: () => Observable<any> | null): Observable<any> {
+  private safeCall(fn: () => Observable<any> | null | undefined): Observable<any> {
     try {
       const obs = fn()
       return obs ?? of(null)
@@ -762,9 +1070,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Process GetWBTripSummary response
-   */
   private processWBTripSummary(response: any): void {
     if (!response || !response.data) {
       console.warn("No WB Trip Summary data received")
@@ -781,7 +1086,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
     let deonarTrips = 0
     let deonarWeight = 0
 
-    this.swmSites.forEach((site) => {
+    const filterSite = (site: any): boolean => {
+      if (
+        this.selectedWard &&
+        site.wardName &&
+        !site.wardName.toLowerCase().includes(this.selectedWard.toLowerCase())
+      ) {
+        return false
+      }
+      if (
+        this.selectedAgency &&
+        site.agency &&
+        !site.agency.toLowerCase().includes(this.selectedAgency.toLowerCase())
+      ) {
+        return false
+      }
+      if (
+        this.selectedVehicleType &&
+        site.vehicleType &&
+        !site.vehicleType.toLowerCase().includes(this.selectedVehicleType.toLowerCase())
+      ) {
+        return false
+      }
+      return true
+    }
+
+    this.swmSites.filter(filterSite).forEach((site) => {
       const siteName = (site.siteName || "").toLowerCase()
       const trips = Number(site.vehicleCount || 0)
       const weight = Number(site.netWeight || 0)
@@ -795,7 +1125,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     })
 
-    this.rtsSites.forEach((site) => {
+    this.rtsSites.filter(filterSite).forEach((site) => {
       const siteName = (site.siteName || "").toLowerCase()
       const trips = Number(site.vehicleCount || 0)
       const weight = Number(site.netWeight || 0)
@@ -810,12 +1140,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     })
 
     this.kanjurData = {
-      trips: kanjurTrips,
+      trips: Math.round(kanjurTrips),
       netWeight: Number(kanjurWeight.toFixed(2)),
     }
 
     this.deonarData = {
-      trips: deonarTrips,
+      trips: Math.round(deonarTrips),
       netWeight: Number(deonarWeight.toFixed(2)),
     }
 
@@ -823,7 +1153,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     let mrtsWeight = 0
     let grtsWeight = 0
 
-    this.rtsSites.forEach((site) => {
+    this.rtsSites.filter(filterSite).forEach((site) => {
       const siteName = (site.siteName || "").toLowerCase()
       const weight = Number(site.netWeight || 0)
 
@@ -842,19 +1172,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
       grts: Number(grtsWeight.toFixed(2)),
     }
 
-    const allSites = [...this.swmSites, ...this.rtsSites]
+    const allSites = [...this.swmSites, ...this.rtsSites].filter(filterSite)
     const totalTrips = allSites.reduce((sum, site) => sum + Number(site.vehicleCount || 0), 0)
     const totalWeight = allSites.reduce((sum, site) => sum + Number(site.netWeight || 0), 0)
 
     this.totalData = {
-      trips: totalTrips,
+      trips: Math.round(totalTrips),
       netWeight: Number(totalWeight.toFixed(2)),
+    }
+
+    this.overallAnalytics = {
+      totalTrips: Math.round(totalTrips),
+      totalWeight: Number(totalWeight.toFixed(2)),
+      avgDailyWeight: Number((totalWeight / 30).toFixed(2)),
+      capacityUtilization: this.calculateCapacityUtilization(allSites),
     }
   }
 
-  /**
-   * Process getCumulativeTripSummary response
-   */
+  private calculateCapacityUtilization(sites: any[]): number {
+    const totalCapacity = sites.reduce((sum, site) => sum + Number(site.vehicleCapacity || site.capacity || 0), 0)
+    const totalActual = sites.reduce((sum, site) => sum + Number(site.netWeight || site.actualWeight || 0), 0)
+    if (totalCapacity === 0) return 0
+    return Number(((totalActual / totalCapacity) * 100).toFixed(2))
+  }
+
   private processCumulativeSummary(response: any): void {
     if (!response) return
 
@@ -903,21 +1244,58 @@ export class DashboardComponent implements OnInit, OnDestroy {
     )
   }
 
-  /**
-   * Process wardwise report
-   */
   private processWardwiseReport(response: any): void {
     if (!response) return
 
     const wardData = Array.isArray(response.wardData)
       ? response.wardData
       : Array.isArray(response.data)
-        ? response.data
-        : []
+      ? response.data
+      : []
 
-    if (!wardData || wardData.length === 0) return
+    if (!wardData || wardData.length === 0) {
+      // No ward data: reset charts deterministically
+      this.capacityVsActualChartOptions = {
+        ...this.capacityVsActualChartOptions,
+        series: [
+          { name: "Vehicle Capacity", data: [0] },
+          { name: "Actual Weight", data: [0] },
+        ],
+        xaxis: { categories: ["No data"] },
+      }
+      this.wardChartOptions = {
+        ...this.wardChartOptions,
+        series: [{ name: "Trips", data: [0] }, { name: "Weight (MT)", data: [0] }],
+        xaxis: { categories: ["No data"] },
+      }
+      return
+    }
 
-    this.availableWards = Array.from(new Set(wardData.map((w: any) => w.wardName ?? w.WardName ?? w.ward ?? "Unknown")))
+    if (this.availableWards.length === 0) {
+      this.availableWards = Array.from(
+        new Set(wardData.map((w: any) => w.wardName ?? w.WardName ?? w.ward ?? "Unknown")),
+      )
+    }
+
+    let filteredWardData = wardData
+    if (this.selectedWard) {
+      filteredWardData = wardData.filter((w: any) => {
+        const wardName = (w.wardName ?? w.WardName ?? w.ward ?? "").toLowerCase()
+        return wardName.includes(this.selectedWard.toLowerCase())
+      })
+    }
+    if (this.selectedAgency) {
+      filteredWardData = filteredWardData.filter((w: any) => {
+        const agency = (w.agency ?? w.Agency ?? "").toLowerCase()
+        return agency.includes(this.selectedAgency.toLowerCase())
+      })
+    }
+    if (this.selectedVehicleType) {
+      filteredWardData = filteredWardData.filter((w: any) => {
+        const vehicleType = (w.vehicleType ?? w.VehicleType ?? "").toLowerCase()
+        return vehicleType.includes(this.selectedVehicleType.toLowerCase())
+      })
+    }
 
     const categories: string[] = []
     const capacitySeries: number[] = []
@@ -925,7 +1303,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const vehicleCounts: number[] = []
     const weightSeries: number[] = []
 
-    wardData.forEach((w: any) => {
+    this.deonarAnalytics = []
+    this.kanjurAnalytics = []
+
+    filteredWardData.forEach((w: any) => {
       const wardName = (w.wardName ?? w.WardName ?? w.ward ?? "Unknown").toString()
       const capacity = Number(w.vehicleCapacity ?? w.capacity ?? w.maxCapacity ?? w.vehicle_capacity ?? 0)
       const actual = Number(w.actualWeight ?? w.actualWeightMT ?? w.totalNetWeight ?? w.netWeight ?? w.totalWeight ?? 0)
@@ -933,18 +1314,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const weight = Number(w.totalNetWeight ?? w.netWeight ?? w.totalWeight ?? 0)
 
       categories.push(wardName)
-      capacitySeries.push(Number(isFinite(capacity) ? capacity : 0))
-      actualSeries.push(Number(isFinite(actual) ? actual : 0))
+      capacitySeries.push(Number(isFinite(capacity) ? capacity : vehicles * 6))
+      actualSeries.push(Number(isFinite(actual) ? actual : weight))
       vehicleCounts.push(Number(isFinite(vehicles) ? vehicles : 0))
       weightSeries.push(Number(isFinite(weight) ? weight : 0))
-    })
 
-    const anyCapacity = capacitySeries.some((v) => v > 0)
-    if (!anyCapacity) {
-      for (let i = 0; i < capacitySeries.length; i++) {
-        capacitySeries[i] = vehicleCounts[i] * 6
+      const estimatedCapacity = capacity || vehicles * 6 || 0
+      const wardAnalytics: WardAnalytics = {
+        wardName: wardName,
+        trips: vehicles,
+        netWeight: weight,
+        avgWeight: vehicles > 0 ? weight / vehicles : 0,
+        capacity: estimatedCapacity,
+        utilization: estimatedCapacity > 0 ? (actual / estimatedCapacity) * 100 : 0,
       }
-    }
+
+      const siteName = (w.siteName ?? w.site ?? "").toLowerCase()
+      if (siteName.includes("deonar") || wardName.toLowerCase().includes("deonar")) {
+        this.deonarAnalytics.push(wardAnalytics)
+      } else if (siteName.includes("kanjur") || wardName.toLowerCase().includes("kanjur")) {
+        this.kanjurAnalytics.push(wardAnalytics)
+      } else {
+        if (this.deonarAnalytics.length <= this.kanjurAnalytics.length) {
+          this.deonarAnalytics.push(wardAnalytics)
+        } else {
+          this.kanjurAnalytics.push(wardAnalytics)
+        }
+      }
+    })
 
     this.capacityVsActualChartOptions = {
       ...this.capacityVsActualChartOptions,
@@ -958,21 +1355,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.wardChartOptions = {
       ...this.wardChartOptions,
       series: [
-        { name: "Trips", data: vehicleCounts },
-        { name: "Weight (MT)", data: weightSeries },
+        { name: "Trips", data: vehicleCounts.map((v) => Math.round(v)) },
+        { name: "Weight (MT)", data: weightSeries.map((v) => Number(v.toFixed(2))) },
       ],
       xaxis: { categories },
     }
 
     const totalWeight = weightSeries.reduce((a, b) => a + (Number(b) || 0), 0)
     const wardCount = categories.length || 1
+
     this.last30DaysMetrics.cumulativeWeight = Number(totalWeight.toFixed(2))
     this.last30DaysMetrics.averageWardWeight = Number((totalWeight / wardCount).toFixed(2))
   }
 
-  /**
-   * Update charts
-   */
   private updateCharts(): void {
     this.vehicleChartOptions = {
       ...this.vehicleChartOptions,
@@ -996,8 +1391,55 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  private updateComparisonCharts(): void {
+    const year = this.selectedComparisonYear
+
+    this.monthlyComparisonChartOptions = {
+      ...this.monthlyComparisonChartOptions,
+      series: [
+        { name: `${year}`, data: this.comparisonData.currentYear.monthlyData || Array(12).fill(0) },
+        { name: `${year - 1}`, data: this.comparisonData.previousYear.monthlyData || Array(12).fill(0) },
+      ],
+    }
+
+    this.quarterlyComparisonChartOptions = {
+      ...this.quarterlyComparisonChartOptions,
+      series: [
+        { name: `${year}`, data: this.comparisonData.currentYear.quarterlyData || [0, 0, 0, 0] },
+        { name: `${year - 1}`, data: this.comparisonData.previousYear.quarterlyData || [0, 0, 0, 0] },
+      ],
+    }
+
+    const years = this.availableYears.slice().reverse()
+    // deterministic zero/actual growth (no random). Growth computed from historicalData if present
+    const weightGrowth = years.map((y, i) => {
+      const idx = this.historicalData.findIndex((h) => h.year === y)
+      if (idx === -1 || idx === this.historicalData.length - 1) return 0
+      const cur = this.historicalData[idx].totalWeight
+      const prev = this.historicalData[idx + 1]?.totalWeight ?? 0
+      return prev === 0 ? (cur === 0 ? 0 : 100) : Number((((cur - prev) / prev) * 100).toFixed(2))
+    })
+    const tripsGrowth = years.map((y, i) => {
+      const idx = this.historicalData.findIndex((h) => h.year === y)
+      if (idx === -1 || idx === this.historicalData.length - 1) return 0
+      const cur = this.historicalData[idx].totalTrips
+      const prev = this.historicalData[idx + 1]?.totalTrips ?? 0
+      return prev === 0 ? (cur === 0 ? 0 : 100) : Number((((cur - prev) / prev) * 100).toFixed(2))
+    })
+
+    this.yoyGrowthChartOptions = {
+      ...this.yoyGrowthChartOptions,
+      series: [
+        { name: "Weight Growth (%)", data: weightGrowth },
+        { name: "Trips Growth (%)", data: tripsGrowth },
+      ],
+      xaxis: { categories: years.map((y) => y.toString()) },
+    }
+  }
+
   refreshAllData(): void {
     this.isRefreshing = true
+    this.loadFiltersFromAPI()
     this.loadDashboardData()
     this.loadComparisonData()
     setTimeout(() => {
@@ -1021,6 +1463,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.selectedWard = ""
     this.selectedAgency = ""
     this.selectedVehicleType = ""
+    this.showCustomDateRange = false
+    this.initializeCustomDateRange()
     this.loadDashboardData()
   }
 
@@ -1049,11 +1493,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   scrollToSection(sectionId: string): void {
-    const el = document.getElementById(sectionId + "-section")
-    if (el) el.scrollIntoView({ behavior: "smooth" })
+    const element = document.getElementById(sectionId + "-section")
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
   }
 
-  drillDownMetric(metricType: string): void {
-    console.log("Drilling down into", metricType)
+  drillDownMetric(metric: string): void {
+    console.log("Drill down to:", metric)
   }
 }
