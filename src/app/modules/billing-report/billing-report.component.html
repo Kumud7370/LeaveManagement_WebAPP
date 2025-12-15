@@ -7,25 +7,18 @@
         <h1>Billing Report</h1>
       </div>
       <div class="header-actions">
-        <button 
-          class="btn-verification-page" 
-          (click)="viewVerificationPage()"
-          title="View Verification Page">
+        <button class="btn-verification-page" (click)="viewVerificationPage()" title="View Verification Page">
           <i class="fas fa-clipboard-check"></i>
           <span>Verification Center</span>
         </button>
-        <button           
-          class="btn-filters"
-          (click)="toggleFilters()"
-          [class.active]="isFiltersOpen"
-          aria-label="Toggle Filters"
-        >
+        <button class="btn-filters" (click)="toggleFilters()" [class.active]="isFiltersOpen"
+          aria-label="Toggle Filters">
           <i class="fas fa-filter"></i>
           <span>Filters</span>
         </button>
-        <button class="btn-back" (click)="navigateBack()">
+        <!-- <button class="btn-back" (click)="navigateBack()">
           <i class="fas fa-arrow-left"></i> Back to Dashboard
-        </button>
+        </button> -->
       </div>
     </div>
   </div>
@@ -91,7 +84,8 @@
                 <option *ngFor="let month of months" [value]="month.value">{{ month.name }}</option>
               </select>
             </div>
-            <div class="form-group" *ngIf="quickFilterForm.get('filterType')?.value === 'month' || quickFilterForm.get('filterType')?.value === 'year'">
+            <div class="form-group"
+              *ngIf="quickFilterForm.get('filterType')?.value === 'month' || quickFilterForm.get('filterType')?.value === 'year'">
               <label>Year</label>
               <select formControlName="selectedYear" class="form-control">
                 <option *ngFor="let year of years" [value]="year">{{ year }}</option>
@@ -131,11 +125,10 @@
           <h2>Billing Data</h2>
           <div class="report-actions">
             <button class="btn-go-verification" (click)="goForVerification()"
-               [disabled]="!hasSelectedRows() || isLoading">
+              [disabled]="!hasSelectedRows() || isLoading">
               <i class="fas fa-paper-plane"></i> Go for Verification ({{ selectedRowsCount }})
             </button>
-            <button class="btn-verify" (click)="sendForMonthlyVerification()"
-               [disabled]="isLoading">
+            <button class="btn-verify" (click)="sendForMonthlyVerification()" [disabled]="isLoading">
               <i class="fas fa-calendar-check"></i> Send All
             </button>
             <button class="btn-export" (click)="exportToExcel()"
@@ -158,7 +151,8 @@
               </span>
             </div>
             <div class="grid-controls-right">
-              <button class="btn-grid-control" (click)="autoSizeAllColumns()" title="Auto-size columns" [disabled]="isLoading">
+              <button class="btn-grid-control" (click)="autoSizeAllColumns()" title="Auto-size columns"
+                [disabled]="isLoading">
                 <i class="fas fa-expand-arrows-alt"></i> Auto Size
               </button>
               <button class="btn-grid-control" (click)="sizeColumnsToFit()" title="Fit to width" [disabled]="isLoading">
@@ -166,53 +160,28 @@
               </button>
             </div>
           </div>
-                    
-          <ag-grid-angular 
-            #agGrid
-            style="width: 100%; height: 500px;"
-            class="ag-theme-alpine"
-            [rowData]="filteredData.length > 0 ? filteredData : billableSearchData"
-            [columnDefs]="columnDefs"
-            [defaultColDef]="defaultColDef"
-            [pagination]="true"
-            [paginationPageSize]="20"
-            [paginationPageSizeSelector]="[10, 20, 50, 100]"
-            [loading]="isLoading"
-            [rowSelection]="rowSelection"
-            [suppressColumnVirtualisation]="true"
-            [suppressRowVirtualisation]="false"
-            [animateRows]="false"
-            [enableCellTextSelection]="true"
-            [suppressRowClickSelection]="true"
-            [rowBuffer]="10"
-            [suppressLoadingOverlay]="false"
-            [suppressNoRowsOverlay]="false"
-            (gridReady)="onGridReady($event)"
-            (firstDataRendered)="onFirstDataRendered($event)"
-            (selectionChanged)="onSelectionChanged($event)">
+
+          <ag-grid-angular #agGrid style="width: 100%; height: 500px;" class="ag-theme-alpine"
+            [rowData]="filteredData.length > 0 ? filteredData : billableSearchData" [columnDefs]="columnDefs"    [getRowStyle]="getRowStyle"
+            [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="20"
+            [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading" [rowSelection]="rowSelection"
+            [suppressColumnVirtualisation]="true" [suppressRowVirtualisation]="false" [animateRows]="false"
+            [enableCellTextSelection]="true" [suppressRowClickSelection]="true" [rowBuffer]="10"
+            [suppressLoadingOverlay]="false" [suppressNoRowsOverlay]="false" (gridReady)="onGridReady($event)"
+            (firstDataRendered)="onFirstDataRendered($event)" (selectionChanged)="onSelectionChanged($event)">
           </ag-grid-angular>
         </div>
 
         <!-- Summary Container -->
         <div class="summary-container">
           <h3>Summary</h3>
-          <div class="summary-grid" *ngIf="(filteredData.length > 0 ? filteredData : billableSearchData).length > 0; else noDataSummary">
+          <div class="summary-grid"
+            *ngIf="(filteredData.length > 0 ? filteredData : billableSearchData).length > 0; else noDataSummary">
             <div class="summary-item">
               <div class="summary-label">Total Vehicles</div>
               <div class="summary-value">{{ totalNoOfVehicles }}</div>
             </div>
-            <div class="summary-item">
-              <div class="summary-label">Total Gross Weight</div>
-              <div class="summary-value">{{ totalGrossWeightInKG | number:'1.2-2' }} KG 
-                <span class="unit-conversion">({{ totalGrossWeightInTon | number:'1.2-2' }} Tons)</span>
-              </div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Total Net Weight</div>
-              <div class="summary-value">{{ totalActualNetWeightInKG | number:'1.2-2' }} KG 
-                <span class="unit-conversion">({{ totalActualNetWeightInTon | number:'1.2-2' }} Tons)</span>
-              </div>
-            </div>
+       
             <div class="summary-item">
               <div class="summary-label">Pending Verification</div>
               <div class="summary-value">{{ getPendingVerificationCount() }}</div>
@@ -229,6 +198,24 @@
               <div class="summary-label">Selected Period</div>
               <div class="summary-value">{{ getSelectedMonthYear() }}</div>
             </div>
+                 <div class="summary-item">
+              <div class="summary-label">Total Gross Weight</div>
+              <div class="summary-value">{{ totalGrossWeightInKG | number:'1.2-2' }} KG
+                <span class="unit-conversion">({{ totalGrossWeightInTon | number:'1.2-2' }} Tons)</span>
+              </div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Total Tare Weight</div>
+              <div class="summary-value">{{ totalTareWeightInKG | number:'1.2-2' }} KG
+                <span class="unit-conversion">({{ totalTareWeightInTon | number:'1.2-2' }} Tons)</span>
+              </div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Total Net Weight</div>
+              <div class="summary-value">{{ totalActualNetWeightInKG | number:'1.2-2' }} KG
+                <span class="unit-conversion">({{ totalActualNetWeightInTon | number:'1.2-2' }} Tons)</span>
+              </div>
+            </div>
             <div class="summary-item">
               <div class="summary-label">Selected Records</div>
               <div class="summary-value">{{ selectedRowsCount }}</div>
@@ -242,7 +229,7 @@
             </div>
           </ng-template>
           <div class="summary-note" *ngIf="(filteredData.length > 0 ? filteredData : billableSearchData).length > 0">
-            <i class="fas fa-info-circle"></i> 
+            <i class="fas fa-info-circle"></i>
             Use Smart Filters to select data by month, year, or date range, then click "Go for Verification"
           </div>
         </div>
@@ -275,7 +262,8 @@
               <input type="date" id="fromDate" formControlName="fromDate" class="form-control">
               <i class="fas fa-calendar-alt"></i>
             </div>
-            <div *ngIf="reportForm.get('fromDate')?.invalid && reportForm.get('fromDate')?.touched" class="error-message">
+            <div *ngIf="reportForm.get('fromDate')?.invalid && reportForm.get('fromDate')?.touched"
+              class="error-message">
               From date is required
             </div>
           </div>

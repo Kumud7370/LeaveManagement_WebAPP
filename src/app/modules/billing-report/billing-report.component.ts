@@ -2,18 +2,18 @@ import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from "@an
 import { CommonModule } from "@angular/common"
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angular/forms"
 import { Router, RouterModule } from "@angular/router"
-import { ICellRendererParams } from "ag-grid-community"
+import { ICellRendererParams, RowClassParams, RowStyle } from "ag-grid-community"
 import { AgGridModule, AgGridAngular } from "ag-grid-angular"
 import * as XLSX from "xlsx"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
 import Swal from "sweetalert2"
 import { Subject } from "rxjs"
 import { debounceTime, distinctUntilChanged } from "rxjs/operators"
+import { wrap } from "node:module"
 
 
 interface BillingData {
   slipSrNo: string
-  slipSrNoNew: string | null
   weighbridge: string
   dC_No: string
   trans_Date: string
@@ -34,6 +34,7 @@ interface BillingData {
   net_Weight: string | number
   unladen_Weight: string | number
   billingRemark: string
+  siteName: string
 }
 
 interface ApiResponse {
@@ -116,16 +117,74 @@ export class BillingReportComponent implements OnInit {
     filter: true,
     suppressSizeToFit: false,
     minWidth: 80,
+    wrapText: true,
+    autoHeight: true,
+    wrapHeaderText: true,
   }
   rowSelection: "single" | "multiple" = "multiple"
   gridApi: any
-
+  gridOptions: any = {} 
   // Summary metrics
   totalNoOfVehicles = 0
+  totalPendingForVerification = 0
+  totalApproved = 0
+  totalVerified = 0
   totalGrossWeightInKG = 0
   totalGrossWeightInTon = 0
+  totalTareWeightInKG = 0;
+  totalTareWeightInTon = 0
   totalActualNetWeightInKG = 0
   totalActualNetWeightInTon = 0
+  userSiteName: any;
+  userRole: number = 0
+  userId: number = 0
+
+  getRowStyle = (params: RowClassParams): RowStyle | undefined => {
+  const status = params.data?.billingStatus;
+console.log(params.data)
+  // Rejected → light red
+  if (status === -2 || status === -3) {
+    return {
+      backgroundColor: '#f8d7da',
+      color: '#721c24'
+    };
+  }
+
+  // Approved → dark green
+  if (status === 3) {
+    return {
+      backgroundColor: '#28a745',
+      color: '#ffffff',
+      fontWeight: '600'
+    };
+  }
+
+  // Verified → light green
+  if (status === 2) {
+    return {
+      backgroundColor: '#d4edda',
+      color: '#155724'
+    };
+  }
+
+  // Sent to verification → light blue
+  if (status === 1) {
+    return {
+      backgroundColor: '#e3f2fd',
+      color: '#0d47a1'
+    };
+  }
+
+  // Pending → light orange
+  if (status === 0) {
+    return {
+      backgroundColor: '#ffe5b4',
+      color: '#7a4a00'
+    };
+  }
+
+  return undefined;
+};
 
   constructor(
     private fb: FormBuilder,
@@ -137,6 +196,9 @@ export class BillingReportComponent implements OnInit {
     this.resizeSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
       this.performColumnResize()
     })
+    this.userRole = Number(sessionStorage.getItem("role")) || 0;
+    this.userId = Number(sessionStorage.getItem("UserId")) || 0;
+    this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
   }
 
   ngOnDestroy(): void {
@@ -147,6 +209,7 @@ export class BillingReportComponent implements OnInit {
     this.initYears()
     this.initForms()
     this.setupColumnDefs()
+   // this.agGrid.gridOptions.rowClassRules = this.rowClassRules;
     this.loadDefaultData()
   }
 
@@ -185,19 +248,28 @@ export class BillingReportComponent implements OnInit {
   formatDateForInput(date: Date): string {
     return date.toISOString().split("T")[0]
   }
-
+  rowClassRules: any;
   setupColumnDefs(): void {
     this.columnDefs = [
       {
         headerName: "Select",
-        checkboxSelection: true,
+
         headerCheckboxSelection: true,
-        width: 60,
-        minWidth: 60,
-        maxWidth: 80,
+        maxWidth: 100,
         pinned: "left",
         suppressSizeToFit: true,
         lockPosition: true,
+        checkboxSelection: (params: any) => {
+          const status = params.data?.billingStatus;
+          if (status === 0 || status === -2 || status === -3) {
+            // Disable checkbox if already processed
+            return true
+          }
+
+          else {
+            return false
+          }
+        },
       },
       {
         headerName: "Status",
@@ -238,7 +310,7 @@ export class BillingReportComponent implements OnInit {
       },
       {
         headerName: "Location",
-        field: "weighbridge",
+        field: "siteName",
         minWidth: 100,
         maxWidth: 150,
       },
@@ -255,46 +327,20 @@ export class BillingReportComponent implements OnInit {
         minWidth: 100,
         maxWidth: 130,
       },
-      {
-        headerName: "Trans Date",
-        field: "trans_Date",
-        minWidth: 120,
-        maxWidth: 150,
-        sortable: true,
-        valueFormatter: (params: any) => {
-          if (params.value) {
-            return new Date(params.value).toLocaleDateString()
-          }
-          return ""
-        },
-      },
-      {
-        headerName: "Month",
-        field: "trans_Date",
-        minWidth: 100,
-        maxWidth: 120,
-        valueGetter: (params: any) => {
-          if (params.data?.trans_Date) {
-            const date = new Date(params.data.trans_Date)
-            return this.months[date.getMonth()]?.name || ""
-          }
-          return ""
-        },
-        sortable: true,
-      },
-      {
-        headerName: "Year",
-        field: "trans_Date",
-        minWidth: 80,
-        maxWidth: 100,
-        valueGetter: (params: any) => {
-          if (params.data?.trans_Date) {
-            return new Date(params.data.trans_Date).getFullYear()
-          }
-          return ""
-        },
-        sortable: true,
-      },
+
+      // {
+      //   headerName: "Year",
+      //   field: "trans_Date",
+      //   minWidth: 80,
+      //   maxWidth: 100,
+      //   valueGetter: (params: any) => {
+      //     if (params.data?.trans_Date) {
+      //       return new Date(params.data.trans_Date).getFullYear()
+      //     }
+      //     return ""
+      //   },
+      //   sortable: true,
+      // },
       {
         headerName: "Agency",
         field: "agency_Name",
@@ -314,8 +360,60 @@ export class BillingReportComponent implements OnInit {
         maxWidth: 130,
       },
       {
+        headerName: "In Date",
+        field: "trans_Date",
+        minWidth: 120,
+        maxWidth: 150,
+        sortable: true,
+      },
+      {
+        headerName: "In Time",
+        field: "trans_Time",
+        minWidth: 100,
+        maxWidth: 120,
+        // valueGetter: (params: any) => {
+        //   if (params.data?.trans_Date) {
+        //     const date = new Date(params.data.trans_Date)
+        //     return this.months[date.getMonth()]?.name || ""
+        //   }
+        //   return ""
+        // },
+        sortable: true,
+      },
+      {
         headerName: "Gross Weight (Kg)",
         field: "gross_Weight",
+        minWidth: 140,
+        maxWidth: 180,
+        type: "numericColumn",
+        valueFormatter: (params: any) => {
+          return params.value ? Number(params.value).toLocaleString() : "0"
+        },
+      },
+      {
+        headerName: "Out Date",
+        field: "trans_Date_UL",
+        minWidth: 120,
+        maxWidth: 150,
+        sortable: true,
+      },
+      {
+        headerName: "Out Time",
+        field: "trans_Time_UL",
+        minWidth: 100,
+        maxWidth: 120,
+        // valueGetter: (params: any) => {
+        //   if (params.data?.trans_Date) {
+        //     const date = new Date(params.data.trans_Date)
+        //     return this.months[date.getMonth()]?.name || ""
+        //   }
+        //   return ""
+        // },
+        sortable: true,
+      },
+      {
+        headerName: "Tare Weight",
+        field: "unladen_Weight",
         minWidth: 140,
         maxWidth: 180,
         type: "numericColumn",
@@ -340,6 +438,15 @@ export class BillingReportComponent implements OnInit {
         maxWidth: 300,
       },
     ]
+
+    this.rowClassRules = {
+      'row-pending': (params: any) => params.data?.billingStatus === 0,
+      'row-sent-verification': (params: any) => params.data?.billingStatus === 1,
+      'row-verified': (params: any) => params.data?.billingStatus === 2,
+      'row-approved': (params: any) => params.data?.billingStatus === 3,
+      'row-rejected': (params: any) =>
+        params.data?.billingStatus === -2 || params.data?.billingStatus === -3
+    };
   }
 
   // Load default data (current month) on component initialization
@@ -352,13 +459,11 @@ export class BillingReportComponent implements OnInit {
     this.isLoading = true
     const obj = {
       UserId: Number(sessionStorage.getItem("UserId")) || 1,
-      Zone: null,
-      Parentcode: null,
-      Workcode: null,
       FromDate: fromDate,
       ToDate: toDate,
+      SiteName: this.userSiteName
     }
-
+    console.log("API Response:", obj)
     this.dbCallingService.getBillableSearchData(obj).subscribe({
       next: (response: any) => {
         console.log("API Response:", response)
@@ -439,32 +544,27 @@ export class BillingReportComponent implements OnInit {
     this.isLoading = true
     const slipNos = eligibleRows.map((row: BillingData) => row.slipSrNo).join(",")
     const formValues = this.reportForm.value
-
-    const obj: VerificationRequest = {
+    const objList = eligibleRows.map((row: BillingData) => ({
       UserId: Number(sessionStorage.getItem("UserId")) || 1,
-      SlipSrNoNew: slipNos,
+      SlipSrNo: row.slipSrNo,
       BillingStatus: 1,
-      FromDate: formValues.fromDate,
-      ToDate: formValues.toDate,
-    }
+      SiteName: this.userSiteName
+    }))
 
-    this.dbCallingService.sendToVerifyBillingData(obj).subscribe({
-      next: (response: VerificationResponse) => {
+    console.log(objList)
+    this.dbCallingService.sendToVerifyBillingData(objList).subscribe({
+      next: (response: any) => {
+        console.log(response)
         this.isLoading = false
-        if (response.ServiceResponse === 1) {
+        if (response.isSuccess === true) {
           Swal.fire({
             title: "Success!",
             text: response.msg || `${eligibleRows.length} selected records sent for verification successfully!`,
             icon: "success",
           }).then(() => {
             // Navigate to verification page with the sent records
-            this.router.navigate(["/verification"], {
-              queryParams: {
-                slipNos: slipNos,
-                fromDate: formValues.fromDate,
-                toDate: formValues.toDate,
-              },
-            })
+            this.loadBillingData(formValues.fromDate, formValues.toDate)
+
           })
         } else {
           Swal.fire({
@@ -652,16 +752,28 @@ export class BillingReportComponent implements OnInit {
     }
 
     this.totalNoOfVehicles = dataToCalculate.length
+    this.totalPendingForVerification = dataToCalculate.filter((f: any) => f.billingStatus === 1).length
+    this.totalVerified = dataToCalculate.filter((f: any) => f.billingStatus === 2).length
+    this.totalApproved = dataToCalculate.filter((f: any) => f.billingStatus === 3).length
     this.totalGrossWeightInKG = dataToCalculate.reduce((sum, item) => sum + Number(item.gross_Weight || 0), 0)
     this.totalGrossWeightInTon = this.totalGrossWeightInKG / 1000
+    this.totalTareWeightInKG = dataToCalculate.reduce((sum, item) => sum + Number(item.unladen_Weight || 0), 0)
+    this.totalTareWeightInTon = this.totalTareWeightInKG / 1000
     this.totalActualNetWeightInKG = dataToCalculate.reduce((sum, item) => sum + Number(item.act_Net_Weight || 0), 0)
     this.totalActualNetWeightInTon = this.totalActualNetWeightInKG / 1000
   }
 
   resetSummaryStatistics(): void {
+
+
     this.totalNoOfVehicles = 0
+    this.totalPendingForVerification = 0
+    this.totalApproved = 0
+    this.totalVerified = 0
     this.totalGrossWeightInKG = 0
     this.totalGrossWeightInTon = 0
+    this.totalTareWeightInKG = 0;
+    this.totalTareWeightInTon = 0
     this.totalActualNetWeightInKG = 0
     this.totalActualNetWeightInTon = 0
   }

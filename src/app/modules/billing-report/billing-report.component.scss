@@ -1210,3 +1210,29 @@ $transition-speed: 0.2s;
     }
   }
 }
+/* Pending */
+.row-pending {
+  background-color: #fff8e1 !important; /* light yellow */
+}
+
+/* Sent to Verification */
+.row-sent-verification {
+  background-color: #e3f2fd !important; /* light blue */
+}
+
+/* Verified */
+.row-verified {
+  background-color: #e8f5e9 !important; /* light green */
+}
+
+/* Approved */
+.row-approved {
+  background-color: #c8e6c9 !important; /* green */
+  font-weight: 600;
+}
+
+/* Rejected */
+.row-rejected {
+  background-color: #fdecea !important; /* light red */
+  color: #b71c1c;
+}

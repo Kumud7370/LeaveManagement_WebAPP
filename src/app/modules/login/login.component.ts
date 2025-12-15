@@ -175,8 +175,8 @@ export class LoginComponent implements OnInit {
           sessionStorage.setItem("RoleName", res.data.roleName)
           sessionStorage.setItem("token", res.data.token)
           // localStorage.setItem("token", res.data.token)
-         sessionStorage.setItem("username", username)
-         sessionStorage.setItem("role", res.data.role)
+          sessionStorage.setItem("username", username)
+          sessionStorage.setItem("role", res.data.role)
           // localStorage.setItem("RoleName", res.data.roleName)
           this.router.navigate(["/dashboard"])
         } else {

@@ -53,7 +53,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   userProfile: UserProfile = {
     name: sessionStorage.getItem('username') || 'Guest User',
-    role:  sessionStorage.getItem('RoleName') || 'Guest',
+    role: sessionStorage.getItem('RoleName') || 'Guest',
     avatar:
       "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMiAxMkM5Ljc5IDEyIDggMTAuMjEgOCA4UzkuNzkgNDEyIDRTMTQuMjEgNiAxNiA4UzEyIDEwLjIxIDEyIDEyWk0xMiAxNEM5LjMzIDE0IDQgMTUuMzQgNCAyMFYyMkgyMFYyMEMxNiAxNS4zNCAxNC42NyAxNCAxMiAxNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo8L3N2Zz4K",
     isOnline: true,
@@ -61,7 +61,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   navItems: NavItem[] = [
     { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-   { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
+    { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
     { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
     //{ label: "Export to Excel", route: "/export", icon: "fas fa-file-excel" },
     { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
@@ -87,9 +87,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
   menuItems = this.navItems
   private autoExpandedByHover = false
   private subscriptions: Subscription[] = [];
-
+  userSiteName: any;
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
+    this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
   }
   private getRoleName(roleId: string | number): string {
     const roles: Record<string | number, string> = {
@@ -129,19 +130,27 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
 
     if (storedRole) {
-      this.userProfile.role =  sessionStorage.getItem('RoleName') || 'Genenral User';
+      this.userProfile.role = sessionStorage.getItem('RoleName') || 'Genenral User';
     }
 
     this.activeRoute = this.router.url;
 
     // 🌟 Hide modules based on username
     if (uRoleName === 'SE' || uRoleName === 'AE') {
-      this.menuItems = this.navItems.filter(item => item.label !== 'Billing Report' && item.label !== 'Vehicles' && item.label !== 'Agency' && item.label !== 'Dashboard Overview');
+      this.menuItems = [
+        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
+        { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
+        { label: "Verification", route: "/verifications", icon: "fas fa-check-circle" },
+      ]
     } else if (uRoleName === 'CO') {
-      this.menuItems = this.navItems.filter(item => item.label !== 'Verification' && item.label !== 'Vehicles' && item.label !== 'Agency' && item.label !== 'Dashboard Overview');
+      this.menuItems = [
+        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
+        { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
+        { label: "Billing Report", route: "/billing-report", icon: "fas fa-file-invoice-dollar" },
+      ]
     } else if (uRoleName?.toLowerCase() === 'generator') {
       this.menuItems = [
-        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },      
+        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
         {
           label: "Logsheet",
           icon: "fas fa-clipboard-list",
@@ -152,54 +161,54 @@ export class SidebarComponent implements OnInit, OnDestroy {
           ],
         },
         { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
-        { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },       
+        { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
       ]
     }
     else if (uRoleName?.toLowerCase() === 'admin') {
-        this.menuItems = [
-          { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-         { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
-          { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
-          { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
-          { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
-          { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
-          { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
-          { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
-        ]
-      
-      }
-      else if (uRoleName?.toLowerCase() === 'jo') {
-        this.menuItems = [
-          { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-          { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
-        ]
-       
-      }
-      else {
-        this.menuItems = this.navItems;
-      }
+      this.menuItems = [
+        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
+        { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
+        { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
+        { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
+        { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
+        { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
+        { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
+        { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
+      ]
 
-      this.updateExpandedStates();
+    }
+    else if (uRoleName?.toLowerCase() === 'jo') {
+      this.menuItems = [
+        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
+        { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
+      ]
+
+    }
+    else {
+      this.menuItems = this.navItems;
     }
 
-    ngOnDestroy() {
-      this.subscriptions.forEach((sub) => sub.unsubscribe())
-    }
+    this.updateExpandedStates();
+  }
 
-    // @HostListener("window:resize")
-    // onResize() {
-    //   if (this.isBrowser) {
-    //     this.checkScreenSize()
-    //   }
-    // }
-    @HostListener("window:scroll", [])
-    onScroll() {
-      // only auto-expand on scroll if user hasn't manually opened it
-      if (!this.manualOpened && !this.isExpanded && this.isSidebarInView()) {
-        this.sidebarService.expand();
-        this.autoExpandedByHover = true; // so leaving/collapse logic can be consistent
-      }
+  ngOnDestroy() {
+    this.subscriptions.forEach((sub) => sub.unsubscribe())
+  }
+
+  // @HostListener("window:resize")
+  // onResize() {
+  //   if (this.isBrowser) {
+  //     this.checkScreenSize()
+  //   }
+  // }
+  @HostListener("window:scroll", [])
+  onScroll() {
+    // only auto-expand on scroll if user hasn't manually opened it
+    if (!this.manualOpened && !this.isExpanded && this.isSidebarInView()) {
+      this.sidebarService.expand();
+      this.autoExpandedByHover = true; // so leaving/collapse logic can be consistent
     }
+  }
 
   private isSidebarInView(): boolean {
     const sidebarEl = document.querySelector('.sidebar');
@@ -299,11 +308,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   logout() {
-      sessionStorage.removeItem("UserId")
-      sessionStorage.removeItem("SiteName")
-      sessionStorage.removeItem("RoleName")
-      sessionStorage.removeItem("token")    
-     sessionStorage.removeItem('deviceId');
+    sessionStorage.removeItem("UserId")
+    sessionStorage.removeItem("SiteName")
+    sessionStorage.removeItem("RoleName")
+    sessionStorage.removeItem("token")
+    sessionStorage.removeItem('deviceId');
     this.router.navigate(['/login']);
 
   }

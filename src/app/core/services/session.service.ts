@@ -5,7 +5,7 @@ import { AuthService } from "../services/AuthServices/auth.service";
 
 @Injectable({ providedIn: "root" })
 export class SessionService {
-    private idleTimeoutMs = 5 * 60 * 1000; // 15 minutes
+    private idleTimeoutMs = 50 * 60 * 1000; // 15 minutes
     private idleTimer: any = null;
     private isBrowser: boolean;
 

@@ -7,9 +7,9 @@
         <h1>Verification Center</h1>
       </div>
       <div class="header-actions">
-        <button class="btn-back" (click)="navigateBack()">
+        <!-- <button class="btn-back" (click)="navigateBack()">
           <i class="fas fa-arrow-left"></i> Back to Billing Report
-        </button>
+        </button> -->
       </div>
     </div>
   </div>
@@ -29,7 +29,7 @@
   </div>
 
   <!-- Add Date Filter Panel after route-info-panel -->
-  <div class="date-filter-panel">
+  <!-- <div class="date-filter-panel">
     <div class="filter-header">
       <h3><i class="fas fa-calendar-alt"></i> Date Filters</h3>
       <span class="total-records">Total Records: {{ verificationData.length }}</span>
@@ -86,12 +86,12 @@
       <span class="filter-value">{{ getFilterDisplayText() }}</span>
       <span class="filtered-count">Showing {{ filteredData.length }} of {{ verificationData.length }} records</span>
     </div>
-  </div>
+  </div> -->
 
   <!-- Verification Content -->
-  <div class="verification-content" *ngIf="!isLoading">
-    <!-- Status Filter Tabs -->
-    <div class="status-filter-tabs">
+   <div class="verification-content" *ngIf="!isLoading">
+
+  <!--  <div class="status-filter-tabs">
       <button class="status-tab" [class.active]="currentStatusFilter === 'all'" (click)="filterByStatus('all')">
         All Records ({{ totalRecords }})
       </button>
@@ -115,7 +115,7 @@
         (click)="filterByStatus('sent_back')">
         Sent Back ({{ sentBackCount }})
       </button>
-    </div>
+    </div>-->
 
     <!-- Bulk Actions Panel -->
     <div class="bulk-actions-panel" *ngIf="hasSelectedRows()">
@@ -124,11 +124,12 @@
           <label>Bulk Action:</label>
           <select formControlName="bulkAction" class="form-control">
             <option value="">Select Action</option>
-            <option value="2" *ngIf="currentUsername === 'SE-01'">Verify Selected</option>
-            <option value="3" *ngIf="currentUsername === 'AE-01' || currentUsername === 'CO-01'">Approve Selected
+            <option value="2" *ngIf="userRole === 5">Verify Selected</option>
+            <option value="3" *ngIf="userRole === 4">Approve Selected
             </option>
-            <option value="-2">Reject Selected</option>
-            <option value="4">Send Back Selected</option>
+            <option value="-2" *ngIf="userRole === 5">Reject Selected</option>
+            <option value="-3" *ngIf="userRole === 4">Reject Selected
+              <!-- <option value="4">Send Back Selected</option> -->
           </select>
         </div>
         <div class="bulk-form-group">
@@ -227,10 +228,10 @@
           <div class="summary-label">Rejected</div>
           <div class="summary-value">{{ rejectedCount }}</div>
         </div>
-        <div class="summary-item sent-back">
+        <!-- <div class="summary-item sent-back">
           <div class="summary-label">Sent Back</div>
           <div class="summary-value">{{ sentBackCount }}</div>
-        </div>
+        </div> -->
       </div>
       <div class="verifier-info">
         <p><strong>Verifier:</strong> {{ verifierInfo.name }} ({{ verifierInfo.designation }})</p>
@@ -238,7 +239,7 @@
         <p><strong>Date:</strong> {{ getCurrentDateString() }}</p>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <!-- Verification Detail Panel -->
   <div class="verification-detail-overlay" [class.show]="showVerificationPanel" (click)="closeVerificationPanel()">
@@ -252,6 +253,10 @@
     </div>
     <div class="detail-content" *ngIf="selectedRecord">
       <div class="detail-grid">
+           <div class="detail-item">
+          <label>Location:</label>
+          <span>{{ selectedRecord.siteName }}</span>
+        </div>
         <div class="detail-item">
           <label>Slip No:</label>
           <span>{{ selectedRecord.slipSrNo }}</span>
@@ -260,10 +265,7 @@
           <label>DC No:</label>
           <span>{{ selectedRecord.dC_No }}</span>
         </div>
-        <div class="detail-item">
-          <label>Transaction Date:</label>
-          <span>{{ selectedRecord.trans_Date | date }}</span>
-        </div>
+      
         <div class="detail-item">
           <label>Agency:</label>
           <span>{{ selectedRecord.agency_Name }}</span>
@@ -276,9 +278,21 @@
           <label>Ward:</label>
           <span>{{ selectedRecord.ward }}</span>
         </div>
+          <div class="detail-item">
+          <label>In Date Time:</label>
+          <span>{{ selectedRecord.trans_Date | date }}:{{ selectedRecord.trans_Time }}</span>
+        </div>
+         <div class="detail-item">
+          <label>Out Date Time:</label>
+          <span>{{ selectedRecord.trans_Date_UL | date }}:{{ selectedRecord.trans_Time_UL }}</span>
+        </div>
         <div class="detail-item">
           <label>Gross Weight:</label>
           <span>{{ selectedRecord.gross_Weight | number }} KG</span>
+        </div>
+          <div class="detail-item">
+          <label>Tare Weight:</label>
+          <span>{{ selectedRecord.unladen_Weight | number }} KG</span>
         </div>
         <div class="detail-item">
           <label>Net Weight:</label>
@@ -319,7 +333,7 @@
         </div>
         <div class="form-actions">
           <button type="button" class="btn-primary"
-            (click)="performVerificationAction(selectedRecord.slipSrNo, verificationForm.get('action')?.value, verificationForm.get('remark')?.value)"
+            (click)="performVerificationAction(selectedRecord.slipSrNo,selectedRecord.tableName, verificationForm.get('action')?.value, verificationForm.get('remark')?.value)"
             [disabled]="!verificationForm.get('action')?.value">
             <i class="fas fa-check"></i> Apply Action
           </button>
