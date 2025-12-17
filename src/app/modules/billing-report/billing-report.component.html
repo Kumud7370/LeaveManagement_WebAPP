@@ -37,7 +37,7 @@
     </div>
 
     <!-- Quick Filter Controls -->
-    <div class="quick-filter-section">
+    <!-- <div class="quick-filter-section">
       <div class="quick-filter-header">
         <h3><i class="fas fa-filter"></i> Smart Filters & Selection</h3>
         <button class="btn-toggle-quick-filters" (click)="toggleQuickFilters()" [class.active]="isQuickFiltersOpen">
@@ -45,7 +45,7 @@
         </button>
       </div>
 
-      <!-- Quick Action Buttons -->
+    
       <div class="quick-actions">
         <button class="btn-quick-action current-month" (click)="selectCurrentMonthData()" [disabled]="isLoading">
           <i class="fas fa-calendar-day"></i>
@@ -65,7 +65,7 @@
         </button>
       </div>
 
-      <!-- Advanced Filter Panel -->
+
       <div class="advanced-filters" [class.show]="isQuickFiltersOpen">
         <form [formGroup]="quickFilterForm" (ngSubmit)="applyQuickFilter()">
           <div class="filter-row">
@@ -108,7 +108,7 @@
         </form>
       </div>
 
-      <!-- Current Filter Display -->
+   
       <div class="current-filter-display" *ngIf="currentFilterType !== 'all'">
         <span class="filter-label">Current Filter:</span>
         <span class="filter-value">{{ getFilterTypeText() }}</span>
@@ -116,7 +116,7 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-    </div>
+    </div> -->
 
     <!-- Table View with AG Grid -->
     <div class="table-view">
@@ -135,8 +135,8 @@
               [disabled]="!billableSearchData || billableSearchData.length === 0 || isLoading">
               <i class="fas fa-file-excel"></i> Export
             </button>
-            <button class="btn-print" (click)="printReport()" [disabled]="isLoading">
-              <i class="fas fa-print"></i> Print
+            <button class="btn-export" (click)="generatePDFWithData()" [disabled]="isLoading">
+              <i class="fas fa-file-pdf"></i> Export PDF
             </button>
           </div>
         </div>
@@ -168,8 +168,35 @@
             [suppressColumnVirtualisation]="true" [suppressRowVirtualisation]="false" [animateRows]="false"
             [enableCellTextSelection]="true" [suppressRowClickSelection]="true" [rowBuffer]="10"
             [suppressLoadingOverlay]="false" [suppressNoRowsOverlay]="false" (gridReady)="onGridReady($event)"
-            (firstDataRendered)="onFirstDataRendered($event)" (selectionChanged)="onSelectionChanged($event)">
+            (firstDataRendered)="onFirstDataRendered($event)" (selectionChanged)="onSelectionChanged($event)" [context]="context">
           </ag-grid-angular>
+          <!-- STATUS LEGEND -->
+<div class="grid-legend">
+  <div class="legend-item">
+    <span class="legend-color row-pending"></span>
+    <span>Pending</span>
+  </div>
+
+  <div class="legend-item">
+    <span class="legend-color row-sent-verification"></span>
+    <span>Sent for Verification</span>
+  </div>
+
+  <div class="legend-item">
+    <span class="legend-color row-verified"></span>
+    <span>Verified</span>
+  </div>
+
+  <div class="legend-item">
+    <span class="legend-color row-approved"></span>
+    <span>Approved</span>
+  </div>
+
+  <div class="legend-item">
+    <span class="legend-color row-rejected"></span>
+    <span>Rejected</span>
+  </div>
+</div>
         </div>
 
         <!-- Summary Container -->

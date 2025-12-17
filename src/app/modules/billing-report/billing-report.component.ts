@@ -9,7 +9,14 @@ import { DbCallingService } from "src/app/core/services/db-calling.service"
 import Swal from "sweetalert2"
 import { Subject } from "rxjs"
 import { debounceTime, distinctUntilChanged } from "rxjs/operators"
-import { wrap } from "node:module"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable" // Import autoTable as a function
+import { GState } from "jspdf" // Import GState for type reference
+import { CellHookData } from "jspdf-autotable" // Import types for autotable hooks
+import moment from "moment"
+import { BtnSearchViewCellRenderer } from "./viewSearch/buttonSearchView-cell-renderer.component"
+import { ViewSearchReportComponent } from "./viewSearch/viewsearchreport.component"
+import { MatDialog, MatDialogModule } from "@angular/material/dialog"
 
 
 interface BillingData {
@@ -61,7 +68,7 @@ interface VerificationResponse {
   templateUrl: "./billing-report.component.html",
   styleUrls: ["./billing-report.component.scss"],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, AgGridModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, AgGridModule, ViewSearchReportComponent, BtnSearchViewCellRenderer, MatDialogModule,],
 })
 export class BillingReportComponent implements OnInit {
   @ViewChild("reportContainer") reportContainer!: ElementRef
@@ -123,7 +130,8 @@ export class BillingReportComponent implements OnInit {
   }
   rowSelection: "single" | "multiple" = "multiple"
   gridApi: any
-  gridOptions: any = {} 
+  gridOptions: any = {}
+  context: any;
   // Summary metrics
   totalNoOfVehicles = 0
   totalPendingForVerification = 0
@@ -140,57 +148,57 @@ export class BillingReportComponent implements OnInit {
   userId: number = 0
 
   getRowStyle = (params: RowClassParams): RowStyle | undefined => {
-  const status = params.data?.billingStatus;
-console.log(params.data)
-  // Rejected → light red
-  if (status === -2 || status === -3) {
-    return {
-      backgroundColor: '#f8d7da',
-      color: '#721c24'
-    };
-  }
+    const status = params.data?.billingStatus;
+    console.log(params.data)
+    // Rejected → light red
+    if (status === -2 || status === -3) {
+      return {
+        backgroundColor: '#f8d7da',
+        color: '#721c24'
+      };
+    }
 
-  // Approved → dark green
-  if (status === 3) {
-    return {
-      backgroundColor: '#28a745',
-      color: '#ffffff',
-      fontWeight: '600'
-    };
-  }
+    // Approved → dark green
+    if (status === 3) {
+      return {
+        backgroundColor: '#28a745',
+        color: '#ffffff',
+        fontWeight: '600'
+      };
+    }
 
-  // Verified → light green
-  if (status === 2) {
-    return {
-      backgroundColor: '#d4edda',
-      color: '#155724'
-    };
-  }
+    // Verified → light green
+    if (status === 2) {
+      return {
+        backgroundColor: '#d4edda',
+        color: '#155724'
+      };
+    }
 
-  // Sent to verification → light blue
-  if (status === 1) {
-    return {
-      backgroundColor: '#e3f2fd',
-      color: '#0d47a1'
-    };
-  }
+    // Sent to verification → light blue
+    if (status === 1) {
+      return {
+        backgroundColor: '#e3f2fd',
+        color: '#0d47a1'
+      };
+    }
 
-  // Pending → light orange
-  if (status === 0) {
-    return {
-      backgroundColor: '#ffe5b4',
-      color: '#7a4a00'
-    };
-  }
+    // Pending → light orange
+    if (status === 0) {
+      return {
+        backgroundColor: '#ffe5b4',
+        color: '#7a4a00'
+      };
+    }
 
-  return undefined;
-};
+    return undefined;
+  };
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private dbCallingService: DbCallingService,
-    private cdr: ChangeDetectorRef,
+    private cdr: ChangeDetectorRef, private dialog: MatDialog,
   ) {
     // Debounce resize operations for performance
     this.resizeSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
@@ -209,8 +217,9 @@ console.log(params.data)
     this.initYears()
     this.initForms()
     this.setupColumnDefs()
-   // this.agGrid.gridOptions.rowClassRules = this.rowClassRules;
+    // this.agGrid.gridOptions.rowClassRules = this.rowClassRules;
     this.loadDefaultData()
+    this.context = { componentParent: this }
   }
 
   initYears(): void {
@@ -253,7 +262,6 @@ console.log(params.data)
     this.columnDefs = [
       {
         headerName: "Select",
-
         headerCheckboxSelection: true,
         maxWidth: 100,
         pinned: "left",
@@ -269,6 +277,21 @@ console.log(params.data)
           else {
             return false
           }
+        },
+      },
+      {
+        headerName: "View",
+        field: "slipSrNo",
+        cellRenderer: BtnSearchViewCellRenderer,
+        width: 90,
+        minWidth: 90,
+        maxWidth: 90,
+        suppressMovable: true,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0",
         },
       },
       {
@@ -341,17 +364,24 @@ console.log(params.data)
       //   },
       //   sortable: true,
       // },
-      {
-        headerName: "Agency",
-        field: "agency_Name",
-        minWidth: 150,
-        maxWidth: 250,
-      },
+
       {
         headerName: "Vehicle No",
         field: "vehicle_No",
         minWidth: 120,
         maxWidth: 150,
+      },
+      {
+        headerName: "Vehicle Type",
+        field: "vehicleType",
+        minWidth: 120,
+        maxWidth: 150,
+      },
+      {
+        headerName: "Agency",
+        field: "agency_Name",
+        minWidth: 150,
+        maxWidth: 250,
       },
       {
         headerName: "Ward",
@@ -439,14 +469,7 @@ console.log(params.data)
       },
     ]
 
-    this.rowClassRules = {
-      'row-pending': (params: any) => params.data?.billingStatus === 0,
-      'row-sent-verification': (params: any) => params.data?.billingStatus === 1,
-      'row-verified': (params: any) => params.data?.billingStatus === 2,
-      'row-approved': (params: any) => params.data?.billingStatus === 3,
-      'row-rejected': (params: any) =>
-        params.data?.billingStatus === -2 || params.data?.billingStatus === -3
-    };
+ 
   }
 
   // Load default data (current month) on component initialization
@@ -503,7 +526,37 @@ console.log(params.data)
       },
     })
   }
+  // NEW METHODS: View and PDF functionality for Search Report
+  viewSearchReportDetails(data: any) {
 
+    let obj = { SlipSrNo: data.slipSrNo, SiteName: data.siteName }
+    console.log("View Search Report method called with data:", data, obj)
+    this.dbCallingService.GetTripDetailsForSlipGeneartion(obj).subscribe(
+      (response) => {
+        console.log("Trip Details response:", response)
+        if (response && response.data) {
+          const Tdata = response.data[0]?.rtsData
+          console.log("Trip Details Tdata:", Tdata)
+          const dialogRef = this.dialog.open(ViewSearchReportComponent, {
+            width: "90%",
+            maxWidth: "1200px",
+            height: "90%",
+            data: Tdata,
+            disableClose: false,
+            panelClass: "custom-dialog-container",
+          })
+          dialogRef.afterClosed().subscribe((result) => {
+            console.log("Search Report Dialog closed", result)
+          })
+        }
+      },
+      (error) => {
+        console.error("Error fetching Trip Details:", error)
+      }
+
+    );
+
+  }
   // Enhanced verification method for selected rows
   goForVerification(): void {
     if (!this.hasSelectedRows()) {
@@ -1037,6 +1090,200 @@ console.log(params.data)
     XLSX.utils.book_append_sheet(workbook, worksheet, "Billing Report")
     const fileName = `Billing_Report_${this.getSelectedMonthYear().replace(/[^a-zA-Z0-9]/g, "_")}.xlsx`
     XLSX.writeFile(workbook, fileName)
+  }
+  getGridDataForPdf(): any[] {
+    const rows: any[] = [];
+
+    this.gridApi.forEachNodeAfterFilterAndSort((node: any) => {
+      rows.push(node.data);
+    });
+
+    return rows;
+  }
+  async generatePDFWithData() {
+    // Normalize data exactly like ViewlogsheetComponent does
+    const formValues = this.reportForm.value
+
+    const doc = new jsPDF("landscape")
+    const fileName = `BillingReport_${formValues.fromDate}_TO_${formValues.toDate}`
+
+    const logoBase64 = await this.getBase64ImageFromAssets("assets/images/mcgmlogo.png")
+
+    // Header table with logo and text
+    autoTable(doc, {
+      body: [
+        [
+          { content: "", rowSpan: 3, styles: { cellWidth: 30, minCellHeight: 30, fillColor: [255, 255, 255] } },
+          {
+            content: "MUNICIPAL CORPORATION OF GREATER MUMBAI",
+            colSpan: 5,
+            styles: { halign: "center", fontSize: 14, fontStyle: "bold" },
+          },
+        ],
+        [
+          {
+            content: "SOLID WASTE MANAGEMENT",
+            colSpan: 5,
+            styles: { halign: "center", fontSize: 12, fontStyle: "bold" },
+          },
+        ],
+        [{ content: "BILLING REPORT FROM " + formValues.fromDate + " TO " + formValues.toDate, colSpan: 5, styles: { halign: "center", fontSize: 10, fontStyle: "bold" } }],
+      ],
+      theme: "grid",
+      styles: {
+        lineWidth: 0.1,
+        textColor: 0,
+        lineColor: [0, 0, 0],
+      },
+      margin: { top: 10, left: 15, right: 15 },
+      didDrawCell: (hookData: CellHookData) => {
+        if (hookData.row.index === 0 && hookData.column.index === 0 && logoBase64) {
+          doc.addImage(logoBase64, "PNG", hookData.cell.x + 2, hookData.cell.y + 2, 25, 25)
+        }
+      },
+    })
+
+    // Add AG Grid Billing Data Table
+    const gridData = this.getGridDataForPdf();
+
+    let totalGross = 0;
+    let totalTare = 0;
+    let totalNet = 0;
+
+    gridData.forEach((row: any) => {
+      totalGross += Number(row.gross_Weight) || 0;
+      totalTare += Number(row.unladen_Weight) || 0;
+      totalNet += Number(row.act_Net_Weight) || 0;
+    });
+    if (gridData && gridData.length > 0) {
+      const tableBody = gridData.map((row: any) => [
+        row.siteName || '',
+        this.getBillingStatusText(row.billingStatus),
+        row.slipSrNo || '',
+        row.dC_No || '',
+        row.vehicle_No || '',
+        row.vehicleType || '',
+        row.agency_Name || '',
+        row.ward || '',
+        (row.trans_Date + ' ' + row.trans_Time) || '',
+        Number(row.gross_Weight).toLocaleString() || '0',
+        (row.trans_Date_UL + ' ' + row.trans_Time_UL) || '',
+        Number(row.unladen_Weight).toLocaleString() || '0',
+        Number(row.act_Net_Weight).toLocaleString() || '0',
+        row.remark || ''
+
+      ])
+      // ✅ PUSH TOTAL ROW AT END
+      tableBody.push([
+        'TOTAL', '', '', '', '', '', '', '',
+        '',
+        totalGross.toLocaleString(),
+        '',
+        totalTare.toLocaleString(),
+        totalNet.toLocaleString(),
+        ''
+      ]);
+      autoTable(doc, {
+        head: [[
+          "Location", "Status", "Slip No", "DC No", "Vehicle No", "Vehicle Type", "Agency",
+          "Ward", "In Date Time", "Gross Wt (kg)",
+          "Out Date Time", "Tare Wt (kg)", "Net Wt (kg) ", "Remark"
+        ]],
+        body: tableBody,
+        startY: doc.lastAutoTable.finalY + 5,
+        theme: "grid",
+        tableWidth: "auto",
+        margin: { left: 15, right: 15 },
+        styles: {
+          fontSize: 6,
+          cellPadding: 2,
+          overflow: "linebreak",
+          halign: "center",
+          valign: "middle",
+          textColor: [0, 0, 0],   // ✅ BLACK TEXT
+          lineWidth: 0.3
+        },
+
+        headStyles: {
+          fillColor: [240, 240, 240],
+          textColor: [0, 0, 0],   // ✅ BLACK
+          fontStyle: "bold"       // ✅ BOLD
+        },
+        didParseCell: function (data) {
+          // ✅ LAST ROW (TOTAL)
+          if (data.row.index === tableBody.length - 1) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [245, 245, 245];
+          }
+        }
+      });
+    }
+
+    // Add watermark on all pages
+    const watermarkWidth = 150
+    const watermarkHeight = 150
+    const centerX = (doc.internal.pageSize.getWidth() - watermarkWidth) / 2
+    const centerY = (doc.internal.pageSize.getHeight() - watermarkHeight) / 2
+    const totalPages = doc.getNumberOfPages();
+
+
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i)
+      doc.setGState(new GState({ opacity: 0.1 }))
+      doc.addImage(logoBase64, "PNG", centerX, centerY, watermarkWidth, watermarkHeight)
+      doc.setGState(new GState({ opacity: 1 }))
+    }
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const finalY = doc.lastAutoTable.finalY + 15;
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+
+    // Left side
+    doc.text(`Generated By: ${String(sessionStorage.getItem("username")) || 'User'}`, 20, finalY);
+    doc.text(`Date: ${moment().format('DD-MM-YYYY')}`, 20, finalY + 6);
+
+    // Right side (signature)
+    doc.text('Authorized Signatory', pageWidth - 60, finalY);
+    doc.line(pageWidth - 80, finalY + 4, pageWidth - 20, finalY + 4);
+
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.text(`${i} of ${totalPages}`, pageWidth / 2, pageHeight - 8, { align: "center" })
+    }
+
+    doc.save(`${fileName}.pdf`)
+    console.log(`PDF generated: ${fileName}.pdf`)
+  }
+
+  // ...existing code...
+  // ...existing code...
+
+  // Helper to get base64 image from assets
+  private getBase64ImageFromAssets(path: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      img.src = path
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext("2d")
+        if (ctx) {
+          ctx.drawImage(img, 0, 0)
+          const dataURL = canvas.toDataURL("image/png")
+          resolve(dataURL)
+        } else {
+          reject("Canvas context not found")
+        }
+      }
+      img.onerror = (err) => reject(err)
+    })
   }
 
   getBillingStatusText(status: number): string {

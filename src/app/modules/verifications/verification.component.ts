@@ -9,6 +9,8 @@ import { DbCallingService } from "src/app/core/services/db-calling.service"
 import Swal from "sweetalert2"
 import { debounceTime, distinctUntilChanged } from "rxjs/operators"
 import { Subject } from "rxjs"
+import { ViewSearchReportComponent } from "../billing-report/viewSearch/viewsearchreport.component"
+import { MatDialog } from "@angular/material/dialog"
 
 // Verification data interface
 interface VerificationData {
@@ -126,7 +128,7 @@ export class VerificationComponent implements OnInit {
   }
   rowSelection: "single" | "multiple" = "multiple"
   gridApi: any
-
+  context: any;
   // Summary metrics
   totalRecords = 0
   pendingCount = 0
@@ -159,7 +161,7 @@ export class VerificationComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private dbCallingService: DbCallingService,
-    private cdr: ChangeDetectorRef,
+    private cdr: ChangeDetectorRef, private dialog: MatDialog,
   ) {
     // Debounce resize operations for performance
     this.resizeSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
@@ -181,6 +183,7 @@ export class VerificationComponent implements OnInit {
     this.setupColumnDefs()
     this.loadVerificationData()
     this.setupGlobalActions()
+    this.context = { componentParent: this }
   }
 
   ngOnDestroy(): void {
@@ -366,17 +369,24 @@ export class VerificationComponent implements OnInit {
         minWidth: 100,
         maxWidth: 130,
       },
-      {
-        headerName: "Agency",
-        field: "agency_Name",
-        minWidth: 150,
-        maxWidth: 250,
-      },
+     
       {
         headerName: "Vehicle No",
         field: "vehicle_No",
         minWidth: 120,
         maxWidth: 150,
+      },
+        {
+        headerName: "Vehicle Type",
+        field: "vehicleType",
+        minWidth: 120,
+        maxWidth: 150,
+      },
+       {
+        headerName: "Agency",
+        field: "agency_Name",
+        minWidth: 150,
+        maxWidth: 250,
       },
       {
         headerName: "Ward",
@@ -708,7 +718,7 @@ export class VerificationComponent implements OnInit {
     ; (window as any).verifyRecord = (slipSrNo: string, siteName: string, status: number) => this.verifyRecord(slipSrNo, siteName, status)
       ; (window as any).rejectRecord = (slipSrNo: string, siteName: string, status: number) => this.rejectRecord(slipSrNo, siteName, status)
       //; (window as any).sendBackRecord = (slipSrNo: string,siteName:string,ststus:number) => this.sendBackRecord(slipSrNo)
-      ; (window as any).viewRecord = (slipSrNo: string, siteName: string) => this.viewRecord(slipSrNo)
+      ; (window as any).viewRecord = (slipSrNo: string, siteName: string) => this.viewRecord(slipSrNo,siteName)
   }
 
   // NEW: Verify record method for SE (sets status to 2 - Verified)
@@ -837,23 +847,51 @@ export class VerificationComponent implements OnInit {
   //   })
   // }
 
-  viewRecord(slipSrNo: string): void {
-    console.log("🔍 Viewing record:", slipSrNo)
-    const record = this.verificationData.find((r) => r.slipSrNo === slipSrNo)
+  viewRecord(slipSrNo: string, siteName: string): void {
+    // console.log("🔍 Viewing record:", slipSrNo)
+    // const record = this.verificationData.find((r) => r.slipSrNo === slipSrNo)
 
-    if (!record) {
-      console.error("❌ Record not found:", slipSrNo)
-      Swal.fire({
-        title: "Record Not Found",
-        text: `Could not find record with slip number: ${slipSrNo}`,
-        icon: "error",
-      })
-      return
-    }
+    // if (!record) {
+    //   console.error("❌ Record not found:", slipSrNo)
+    //   Swal.fire({
+    //     title: "Record Not Found",
+    //     text: `Could not find record with slip number: ${slipSrNo}`,
+    //     icon: "error",
+    //   })
+    //   return
+    // }
 
-    console.log("✅ Found record:", record)
-    this.selectedRecord = record
-    this.showVerificationPanel = true
+    // console.log("✅ Found record:", record)
+    // this.selectedRecord = record
+    // this.showVerificationPanel = true
+
+
+       let obj = { SlipSrNo: slipSrNo, SiteName: siteName }
+   // console.log("View Search Report method called with data:", data, obj)
+    this.dbCallingService.GetTripDetailsForSlipGeneartion(obj).subscribe(
+      (response) => {
+        console.log("Trip Details response:", response)
+        if (response && response.data) {
+          const Tdata = response.data[0]?.rtsData
+          console.log("Trip Details Tdata:", Tdata)
+          const dialogRef = this.dialog.open(ViewSearchReportComponent, {
+            width: "90%",
+            maxWidth: "1200px",
+            height: "90%",
+            data: Tdata,
+            disableClose: false,
+            panelClass: "custom-dialog-container",
+          })
+          dialogRef.afterClosed().subscribe((result) => {
+            console.log("Search Report Dialog closed", result)
+          })
+        }
+      },
+      (error) => {
+        console.error("Error fetching Trip Details:", error)
+      }
+
+    );
     this.cdr.detectChanges() // Force change detection
   }
 
@@ -1408,5 +1446,39 @@ export class VerificationComponent implements OnInit {
     }
 
     return false
+  }
+
+
+
+
+  viewSearchReportDetails(data: any) {
+
+    let obj = { SlipSrNo: data.slipSrNo, SiteName: data.siteName }
+    console.log("View Search Report method called with data:", data, obj)
+    this.dbCallingService.GetTripDetailsForSlipGeneartion(obj).subscribe(
+      (response) => {
+        console.log("Trip Details response:", response)
+        if (response && response.data) {
+          const Tdata = response.data[0]?.rtsData
+          console.log("Trip Details Tdata:", Tdata)
+          const dialogRef = this.dialog.open(ViewSearchReportComponent, {
+            width: "90%",
+            maxWidth: "1200px",
+            height: "90%",
+            data: Tdata,
+            disableClose: false,
+            panelClass: "custom-dialog-container",
+          })
+          dialogRef.afterClosed().subscribe((result) => {
+            console.log("Search Report Dialog closed", result)
+          })
+        }
+      },
+      (error) => {
+        console.error("Error fetching Trip Details:", error)
+      }
+
+    );
+
   }
 }

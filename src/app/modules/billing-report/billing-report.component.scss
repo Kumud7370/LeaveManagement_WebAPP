@@ -1236,3 +1236,23 @@ $transition-speed: 0.2s;
   background-color: #fdecea !important; /* light red */
   color: #b71c1c;
 }
+.grid-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid #999;
+}
