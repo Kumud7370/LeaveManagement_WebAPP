@@ -374,7 +374,7 @@ export class DbCallingService {
     );
   }
 
-    GetPenaltyList(payload: any): Observable<any> {
+  GetPenaltyList(payload: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/Master/GetPenaltyList`, payload).pipe(
       catchError((error) => {
         console.error("Error fetching TripDetail", error);
@@ -382,7 +382,7 @@ export class DbCallingService {
       }),
     );
   }
-   VerifyLogsheet(payload: any): Observable<any> {
+  VerifyLogsheet(payload: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/Logsheet/VerifyLogsheet`, payload).pipe(
       catchError((error) => {
         console.error("Error fetching TripDetail", error);
@@ -390,7 +390,7 @@ export class DbCallingService {
       }),
     );
   }
- GetTripDetailsForSlipGeneartion(payload: any): Observable<any> {
+  GetTripDetailsForSlipGeneartion(payload: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/Report/GetTripDetailsForSlipGeneartion`, payload).pipe(
       catchError((error) => {
         console.error("Error fetching TripDetail", error);
@@ -398,12 +398,60 @@ export class DbCallingService {
       }),
     );
   }
-getCumulativeTripSummary(payload: any) {
-  return this.http.post<any>(
-    environment.apiUrl + "/dashboard/getcumulativetripsummary",
-    payload
-  );
-}
+  getCumulativeTripSummary(payload: any) {
+    return this.http.post<any>(
+      environment.apiUrl + "/dashboard/getcumulativetripsummary",
+      payload
+    );
+  }
 
+  // getDashboardMetrics(data: {
+  //   userId?: number;
+  //   siteName?: string;
+  //   wardName?: string;
+  //   agency?: string;
+  //   vehicleType?: string;
+  // }): Observable<any> {
+  //   return this.http.post<any>(`${this.apiUrl}/Dashboard/getdashboardmetrics`, data).pipe(
+  //     catchError((error) => {
+  //       console.error("Error fetching dashboard metrics", error);
+  //       // Return fallback data structure on error
+  //       return of({
+  //         status: "error",
+  //         message: "Failed to fetch dashboard metrics",
+  //         data: {
+  //           last30DaysTotal: 0,
+  //           last30DaysAvgWardWise: 0,
+  //           todayWeight: 0,
+  //           yesterdayWeight: 0,
+  //           thisWeekWeight: 0,
+  //           thisMonthWeight: 0,
+  //           thisYearWeight: 0,
+  //           wardCount: 0
+  //         }
+  //       });
+  //     })
+  //   );
+  // }
+  // db-calling.service.ts
+  getDashboardMetrics(payload: {
+    userId?: number
+    siteName?: string
+    wardName?: string
+    agency?: string
+    vehicleType?: string
+    fromDate?: string
+    toDate?: string
+  }): Observable<any> {
+    return this.http
+      .post<any>(`${this.apiUrl}/dashboard/getdashboardmetrics`, payload)
+      .pipe(
+        map(res => res?.data ?? null),
+        catchError(error => {
+          console.error("Error fetching dashboard metrics", error)
+          return of(null)
+        })
+      )
+  }
 }
 

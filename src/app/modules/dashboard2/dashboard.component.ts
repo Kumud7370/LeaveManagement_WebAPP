@@ -498,7 +498,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     },
   }
 
-  constructor(private dbCallingService: DbCallingService, private cdr: ChangeDetectorRef) {}
+  constructor(private dbCallingService: DbCallingService, private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     this.initializeAvailableYears()
@@ -506,6 +506,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadFiltersFromAPI()
     this.loadDashboardData()
     this.loadComparisonData()
+    //this.loadDashboardMetrics()
   }
 
   ngOnDestroy(): void {
@@ -782,10 +783,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return Array.isArray(response.wardData)
       ? response.wardData
       : Array.isArray(response.data)
-      ? response.data
-      : Array.isArray(response)
-      ? response
-      : []
+        ? response.data
+        : Array.isArray(response)
+          ? response
+          : []
   }
 
   private aggregateByYearAndMonth(items: any[], year: number): { monthlyWeights: number[]; totalWeight: number; totalTrips: number } {
@@ -985,6 +986,365 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return { fromDate, toDate }
   }
 
+  // loadDashboardData(): void {
+  //   this.isLoading = true
+  //   this.timeMetrics.today = moment().toDate()
+
+  //   const { fromDate, toDate } = this.getDateRange()
+  //   const userId = Number(sessionStorage.getItem("UserId")) || 0
+
+  //   const wbSummaryPayload = {
+  //     DateFrom: fromDate,
+  //     DateTo: toDate,
+  //     UserId: userId,
+  //     WardName: this.selectedWard || "",
+  //     Agency: this.selectedAgency || "",
+  //     VehicleType: this.selectedVehicleType || "",
+  //   }
+
+  //   const cumulativePayload = {
+  //     UserId: userId,
+  //     FromDate: fromDate,
+  //     ToDate: toDate,
+  //     SiteName: "SWM",
+  //     WardName: this.selectedWard || "",
+  //     Agency: this.selectedAgency || "",
+  //     VehicleType: this.selectedVehicleType || "",
+  //   }
+
+  //   const wardwisePayload = {
+  //     WeighBridge: "",
+  //     FromDate: fromDate,
+  //     ToDate: toDate,
+  //     FullDate: "",
+  //     WardName: this.selectedWard || "",
+  //     Act_Shift: "",
+  //     TransactionDate: fromDate,
+  //     Agency: this.selectedAgency || "",
+  //     VehicleType: this.selectedVehicleType || "",
+  //   }
+
+  //   const wb$ = this.safeCall(() => this.dbCallingService.GetWBTripSummary(wbSummaryPayload))
+  //   const cum$ = this.safeCall(() => this.dbCallingService.getCumulativeTripSummary(cumulativePayload))
+  //   const ward$ = this.safeCall(() => this.dbCallingService.getWardwiseReport(wardwisePayload))
+
+  //   forkJoin({ wbSummary: wb$, cumulative: cum$, wardwise: ward$ })
+  //     .pipe(takeUntil(this.destroy$))
+  //     .subscribe({
+  //       next: ({ wbSummary, cumulative, wardwise }) => {
+  //         try {
+  //           this.processWBTripSummary(wbSummary)
+  //         } catch (err) {
+  //           console.error("processWBTripSummary error:", err)
+  //         }
+
+  //         try {
+  //           this.processCumulativeSummary(cumulative)
+  //         } catch (err) {
+  //           console.error("processCumulativeSummary error:", err)
+  //         }
+
+  //         try {
+  //           this.processWardwiseReport(wardwise)
+  //         } catch (err) {
+  //           console.error("processWardwiseReport error:", err)
+  //         }
+
+  //         this.updateCharts()
+  //         this.isLoading = false
+  //         this.cdr.detectChanges()
+  //       },
+  //       error: (err) => {
+  //         console.error("forkJoin error:", err)
+  //         this.isLoading = false
+  //       },
+  //     })
+  // }
+  // Add this new method to your DashboardComponent class
+
+  /**
+   * Load dashboard metrics using the new API endpoint
+   * This replaces the need for processCumulativeSummary for time-based metrics
+   */
+  // private loadDashboardMetrics(): void {
+  //   const userId = Number(sessionStorage.getItem("UserId")) || 0;
+
+  //   const metricsPayload = {
+  //     userId: userId,
+  //     siteName: "SWM", // or "RTS" based on your needs
+  //     wardName: this.selectedWard || "",
+  //     agency: this.selectedAgency || "",
+  //     vehicleType: this.selectedVehicleType || ""
+  //   };
+
+  //   this.dbCallingService.getDashboardMetrics(metricsPayload)
+  //     .pipe(takeUntil(this.destroy$))
+  //     .subscribe({
+  //       next: (response) => {
+  //         if (response && response.status === "success" && response.data) {
+  //           const data = response.data;
+
+  //           // Map to timeMetrics
+  //           this.timeMetrics.todayWeight = Number(data.todayWeight || 0);
+  //           this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0);
+  //           this.timeMetrics.week = Number(data.thisWeekWeight || 0);
+  //           this.timeMetrics.month = Number(data.thisMonthWeight || 0);
+  //           this.timeMetrics.year = Number(data.thisYearWeight || 0);
+
+  //           // Map to last30DaysMetrics
+  //           this.last30DaysMetrics.cumulativeWeight = Number(data.last30DaysTotal || 0);
+  //           this.last30DaysMetrics.averageWardWeight = Number(data.last30DaysAvgWardWise || 0);
+
+  //           console.log("Dashboard metrics loaded successfully:", data);
+  //           this.cdr.detectChanges();
+  //         } else {
+  //           console.warn("Invalid dashboard metrics response:", response);
+  //         }
+  //       },
+  //       error: (err) => {
+  //         console.error("Error loading dashboard metrics:", err);
+  //       }
+  //     });
+  // }
+
+  // private loadDashboardMetrics(): void {
+  //   const userId = Number(sessionStorage.getItem("UserId")) || undefined
+  //   const payload = {
+  //     userId: userId || undefined,
+  //     siteName: "SWM",
+  //     wardName: this.selectedWard || undefined,
+  //     agency: this.selectedAgency || undefined,
+  //     vehicleType: this.selectedVehicleType || undefined,
+  //   }
+
+
+  //   this.dbCallingService
+  //     .getDashboardMetrics(payload)
+  //     .pipe(takeUntil(this.destroy$))
+  //     .subscribe({
+  //       next: (data) => {
+  //         if (!data) return
+
+  //         // Time metrics
+  //         this.timeMetrics.todayWeight = Number(data.todayWeight || 0)
+  //         this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0)
+  //         this.timeMetrics.week = Number(data.thisWeekWeight || 0)
+  //         this.timeMetrics.month = Number(data.thisMonthWeight || 0)
+  //         this.timeMetrics.year = Number(data.thisYearWeight || 0)
+
+  //         // Last 30 days metrics
+  //         this.last30DaysMetrics.cumulativeWeight =
+  //           Number(data.last30DaysTotal || 0)
+  //         this.last30DaysMetrics.averageWardWeight =
+  //           Number(data.last30DaysAvgWardWise || 0)
+
+  //         this.cdr.detectChanges()
+  //       },
+  //       error: (err) => {
+  //         console.error("Dashboard metrics API failed", err)
+  //       },
+  //     })
+  // }
+
+
+// private loadDashboardMetrics(): void {
+//   const userId = Number(sessionStorage.getItem("UserId")) || undefined
+//   const payload = {
+//     userId: userId || undefined,
+//     //siteName: this.selectedSite || undefined,  // ✅ Changed from "SWM" to dynamic
+//     wardName: this.selectedWard || undefined,
+//     agency: this.selectedAgency || undefined,
+//     vehicleType: this.selectedVehicleType || undefined,
+//   }
+
+//   this.dbCallingService
+//     .getDashboardMetrics(payload)
+//     .pipe(takeUntil(this.destroy$))
+//     .subscribe({
+//       next: (data) => {
+//         if (!data) return
+
+//         // Time metrics
+//         this.timeMetrics.todayWeight = Number(data.todayWeight || 0)
+//         this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0)
+//         this.timeMetrics.week = Number(data.thisWeekWeight || 0)
+//         this.timeMetrics.month = Number(data.thisMonthWeight || 0)
+//         this.timeMetrics.year = Number(data.thisYearWeight || 0)
+
+//         // Last 30 days metrics
+//         this.last30DaysMetrics.cumulativeWeight =
+//           Number(data.last30DaysTotal || 0)
+//         this.last30DaysMetrics.averageWardWeight =
+//           Number(data.last30DaysAvgWardWise || 0)
+
+//         this.cdr.detectChanges()
+//       },
+//       error: (err) => {
+//         console.error("Dashboard metrics API failed", err)
+//       },
+//     })
+// }
+// private loadDashboardMetrics(): void {
+//   const userId = Number(sessionStorage.getItem("UserId")) || undefined
+
+//  const payload = {
+//   userId,
+//   siteName: "Deonar",
+//   wardName: "A",
+//   agency: "BMC",
+//   vehicleType: "DUMPER",
+// }
+// private loadDashboardMetrics(): void {
+//   const userId = Number(sessionStorage.getItem("UserId")) || undefined
+//   const payload = {
+//     userId: userId || undefined,
+//     //siteName: this.selectedSite || undefined,  // ✅ Changed from "SWM" to dynamic
+//     wardName: this.selectedWard || undefined,
+//     agency: this.selectedAgency || undefined,
+//     vehicleType: this.selectedVehicleType || undefined,
+//   }
+
+//   this.dbCallingService
+//     .getDashboardMetrics(payload)
+//     .pipe(takeUntil(this.destroy$))
+//     .subscribe({
+//       next: (data) => {
+//         if (!data) return
+
+//         this.timeMetrics.todayWeight = Number(data.todayWeight || 0)
+//         this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0)
+//         this.timeMetrics.week = Number(data.thisWeekWeight || 0)
+//         this.timeMetrics.month = Number(data.thisMonthWeight || 0)
+//         this.timeMetrics.year = Number(data.thisYearWeight || 0)
+
+//         this.last30DaysMetrics.cumulativeWeight =
+//           Number(data.last30DaysTotal || 0)
+//         this.last30DaysMetrics.averageWardWeight =
+//           Number(data.last30DaysAvgWardWise || 0)
+
+//         this.cdr.detectChanges()
+//       },
+//       error: (err) => {
+//         console.error("Dashboard metrics API failed", err)
+//       },
+//     })
+// }
+private loadDashboardMetrics(): void {
+  const userId = Number(sessionStorage.getItem("UserId")) || undefined
+  const { fromDate, toDate } = this.getDateRange() // ✅ Use existing method
+  
+  const payload = {
+    userId: userId || undefined,
+    wardName: this.selectedWard || undefined,
+    agency: this.selectedAgency || undefined,
+    vehicleType: this.selectedVehicleType || undefined,
+    fromDate: fromDate,  // ✅ NEW
+    toDate: toDate       // ✅ NEW
+  }
+
+  this.dbCallingService
+    .getDashboardMetrics(payload)
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (data) => {
+        if (!data) return
+
+        this.timeMetrics.todayWeight = Number(data.todayWeight || 0)
+        this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0)
+        this.timeMetrics.week = Number(data.thisWeekWeight || 0)
+        this.timeMetrics.month = Number(data.thisMonthWeight || 0)
+        this.timeMetrics.year = Number(data.thisYearWeight || 0)
+
+        this.last30DaysMetrics.cumulativeWeight =
+          Number(data.last30DaysTotal || 0)
+        this.last30DaysMetrics.averageWardWeight =
+          Number(data.last30DaysAvgWardWise || 0)
+
+        this.cdr.detectChanges()
+      },
+      error: (err) => {
+        console.error("Dashboard metrics API failed", err)
+      },
+    })
+}
+
+  /**
+   * Modified loadDashboardData to use the new metrics API
+   */
+  // loadDashboardData(): void {
+  //   this.isLoading = true;
+  //   this.timeMetrics.today = moment().toDate();
+
+  //   const { fromDate, toDate } = this.getDateRange();
+  //   const userId = Number(sessionStorage.getItem("UserId")) || 0;
+
+  //   const wbSummaryPayload = {
+  //     DateFrom: fromDate,
+  //     DateTo: toDate,
+  //     UserId: userId,
+  //     WardName: this.selectedWard || "",
+  //     Agency: this.selectedAgency || "",
+  //     VehicleType: this.selectedVehicleType || "",
+  //   };
+
+  //   const wardwisePayload = {
+  //     WeighBridge: "",
+  //     FromDate: fromDate,
+  //     ToDate: toDate,
+  //     FullDate: "",
+  //     WardName: this.selectedWard || "",
+  //     Act_Shift: "",
+  //     TransactionDate: fromDate,
+  //     Agency: this.selectedAgency || "",
+  //     VehicleType: this.selectedVehicleType || "",
+  //   };
+
+  //   // NEW: Add dashboard metrics call
+  //   const metricsPayload = {
+  //     userId: userId,
+  //     siteName: "SWM",
+  //     wardName: this.selectedWard || "",
+  //     agency: this.selectedAgency || "",
+  //     vehicleType: this.selectedVehicleType || ""
+  //   };
+
+  //   const wb$ = this.safeCall(() => this.dbCallingService.GetWBTripSummary(wbSummaryPayload));
+  //   const ward$ = this.safeCall(() => this.dbCallingService.getWardwiseReport(wardwisePayload));
+  //   const metrics$ = this.safeCall(() => this.dbCallingService.getDashboardMetrics(metricsPayload));
+
+  //   forkJoin({ wbSummary: wb$, wardwise: ward$, metrics: metrics$ })
+  //     .pipe(takeUntil(this.destroy$))
+  //     .subscribe({
+  //       next: ({ wbSummary, wardwise, metrics }) => {
+  //         try {
+  //           this.processWBTripSummary(wbSummary);
+  //         } catch (err) {
+  //           console.error("processWBTripSummary error:", err);
+  //         }
+
+  //         try {
+  //           this.processWardwiseReport(wardwise);
+  //         } catch (err) {
+  //           console.error("processWardwiseReport error:", err);
+  //         }
+
+  //         // NEW: Process dashboard metrics
+  //         try {
+  //           this.processDashboardMetrics(metrics);
+  //         } catch (err) {
+  //           console.error("processDashboardMetrics error:", err);
+  //         }
+
+  //         this.updateCharts();
+  //         this.isLoading = false;
+  //         this.cdr.detectChanges();
+  //       },
+  //       error: (err) => {
+  //         console.error("forkJoin error:", err);
+  //         this.isLoading = false;
+  //       },
+  //     });
+  // }
   loadDashboardData(): void {
     this.isLoading = true
     this.timeMetrics.today = moment().toDate()
@@ -996,16 +1356,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       DateFrom: fromDate,
       DateTo: toDate,
       UserId: userId,
-      WardName: this.selectedWard || "",
-      Agency: this.selectedAgency || "",
-      VehicleType: this.selectedVehicleType || "",
-    }
-
-    const cumulativePayload = {
-      UserId: userId,
-      FromDate: fromDate,
-      ToDate: toDate,
-      SiteName: "SWM",
       WardName: this.selectedWard || "",
       Agency: this.selectedAgency || "",
       VehicleType: this.selectedVehicleType || "",
@@ -1023,41 +1373,105 @@ export class DashboardComponent implements OnInit, OnDestroy {
       VehicleType: this.selectedVehicleType || "",
     }
 
-    const wb$ = this.safeCall(() => this.dbCallingService.GetWBTripSummary(wbSummaryPayload))
-    const cum$ = this.safeCall(() => this.dbCallingService.getCumulativeTripSummary(cumulativePayload))
-    const ward$ = this.safeCall(() => this.dbCallingService.getWardwiseReport(wardwisePayload))
+    // EXISTING CALLS
+    const wb$ = this.safeCall(() =>
+      this.dbCallingService.GetWBTripSummary(wbSummaryPayload),
+    )
+    const ward$ = this.safeCall(() =>
+      this.dbCallingService.getWardwiseReport(wardwisePayload),
+    )
 
-    forkJoin({ wbSummary: wb$, cumulative: cum$, wardwise: ward$ })
+    // 🔴 NEW METRICS CALL
+    const metrics$ = this.safeCall(() => {
+      return this.dbCallingService.getDashboardMetrics({
+        userId: userId || undefined,
+        siteName: "SWM",
+        wardName: this.selectedWard || undefined,
+        agency: this.selectedAgency || undefined,
+        vehicleType: this.selectedVehicleType || undefined,
+      })
+    })
+
+    forkJoin({ wbSummary: wb$, wardwise: ward$, metrics: metrics$ })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: ({ wbSummary, cumulative, wardwise }) => {
+        next: ({ wbSummary, wardwise, metrics }) => {
           try {
             this.processWBTripSummary(wbSummary)
-          } catch (err) {
-            console.error("processWBTripSummary error:", err)
-          }
-
-          try {
-            this.processCumulativeSummary(cumulative)
-          } catch (err) {
-            console.error("processCumulativeSummary error:", err)
-          }
-
-          try {
             this.processWardwiseReport(wardwise)
-          } catch (err) {
-            console.error("processWardwiseReport error:", err)
-          }
 
-          this.updateCharts()
-          this.isLoading = false
-          this.cdr.detectChanges()
+            // 🔴 NEW
+            if (metrics) {
+              this.processDashboardMetrics(metrics)
+            }
+
+            this.updateCharts()
+          } catch (err) {
+            console.error("Dashboard load error:", err)
+          } finally {
+            this.isLoading = false
+            this.cdr.detectChanges()
+          }
         },
         error: (err) => {
           console.error("forkJoin error:", err)
           this.isLoading = false
         },
       })
+  }
+
+  /**
+   * Process the dashboard metrics response
+   */
+  // private processDashboardMetrics(response: any): void {
+  //   if (!response) {
+  //     console.warn("No dashboard metrics response received");
+  //     return;
+  //   }
+
+  //   // Handle both direct data and wrapped response
+  //   const data = response.data || response;
+
+  //   if (!data) {
+  //     console.warn("No data in dashboard metrics response");
+  //     return;
+  //   }
+
+  //   // Map to timeMetrics with proper type conversion
+  //   this.timeMetrics.todayWeight = Number(data.todayWeight || 0);
+  //   this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0);
+  //   this.timeMetrics.week = Number(data.thisWeekWeight || 0);
+  //   this.timeMetrics.month = Number(data.thisMonthWeight || 0);
+  //   this.timeMetrics.year = Number(data.thisYearWeight || 0);
+
+  //   // Map to last30DaysMetrics with proper type conversion
+  //   this.last30DaysMetrics.cumulativeWeight = Number(data.last30DaysTotal || 0);
+  //   this.last30DaysMetrics.averageWardWeight = Number(data.last30DaysAvgWardWise || 0);
+
+  //   console.log("Dashboard metrics processed:", {
+  //     today: this.timeMetrics.todayWeight,
+  //     yesterday: this.timeMetrics.lastDay,
+  //     week: this.timeMetrics.week,
+  //     month: this.timeMetrics.month,
+  //     year: this.timeMetrics.year,
+  //     last30DaysTotal: this.last30DaysMetrics.cumulativeWeight,
+  //     avgWardWeight: this.last30DaysMetrics.averageWardWeight
+  //   });
+  // }
+
+  private processDashboardMetrics(data: any): void {
+    if (!data) return
+
+    this.timeMetrics.todayWeight = Number(data.todayWeight || 0)
+    this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0)
+    this.timeMetrics.week = Number(data.thisWeekWeight || 0)
+    this.timeMetrics.month = Number(data.thisMonthWeight || 0)
+    this.timeMetrics.year = Number(data.thisYearWeight || 0)
+
+    this.last30DaysMetrics.cumulativeWeight =
+      Number(data.last30DaysTotal || 0)
+    this.last30DaysMetrics.averageWardWeight =
+      Number(data.last30DaysAvgWardWise || 0)
   }
 
   private safeCall(fn: () => Observable<any> | null | undefined): Observable<any> {
@@ -1250,8 +1664,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const wardData = Array.isArray(response.wardData)
       ? response.wardData
       : Array.isArray(response.data)
-      ? response.data
-      : []
+        ? response.data
+        : []
 
     if (!wardData || wardData.length === 0) {
       // No ward data: reset charts deterministically
@@ -1479,6 +1893,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   onGlobalFilterChange(): void {
     this.loadDashboardData()
+    this.loadDashboardMetrics()
   }
 
   toggleSidebar(): void {
