@@ -140,15 +140,52 @@
             </button>
           </div>
         </div>
+        <div class="filter-controls">
+          <div class="quick-filter">
+            <label for="filter-text-box" class="visually-hidden">Quick Filter</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+              <input id="filter-text-box" class="form-control" placeholder="Search..."
+                (input)="onFilterTextBoxChanged()" [(ngModel)]="filterText" />
+            </div>
+          </div>
 
+          <div class="status-filters">
+            <button class="status-btn" [class.active]="activeFilter === 9" (click)="FilterData(9)">
+              <i class="fas fa-list"></i> All
+            </button>
+            <button class="status-btn open" [class.active]="activeFilter === 0" (click)="FilterData(0)">
+              <i class="fas fa-clock"></i> Pending
+            </button>
+            <button class="status-btn closed" [class.active]="activeFilter === 2" (click)="FilterData(2)">
+              <i class="fas fa-check"></i> Verified
+            </button>
+            <button class="status-btn approved" [class.active]="activeFilter === 3" (click)="FilterData(3)">
+              <i class="fas  fa-check"></i> Approved
+            </button>
+            <button class="status-btn cancelled" [class.active]="activeFilter === -3" (click)="FilterData(-3)">
+              <i class="fas fa-ban"></i> Rejected
+            </button>
+          </div>
+        </div>
         <!-- AG Grid Component -->
         <div class="grid-container">
-          <div class="grid-controls">
-            <div class="grid-controls-left">
-              <span class="grid-info">
-                Showing {{ (filteredData.length > 0 ? filteredData : billableSearchData).length }} records
-                <span *ngIf="selectedRowsCount > 0" class="selected-info">({{ selectedRowsCount }} selected)</span>
-              </span>
+          <!-- <div class="grid-controls">
+            <div class="grid-controls-left">            
+              <div class="filter-controls">
+                <div class=" quick-filter">
+                  <label for="filter-text-box" class="visually-hidden">Quick Filter</label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="fas fa-search"></i>
+                    </span>
+                    <input id="filter-text-box" class="form-control" placeholder="S earch logsheets..."
+                      (input)="onFilterTextBoxChanged()" [(ngModel)]="filterText" />
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="grid-controls-right">
               <button class="btn-grid-control" (click)="autoSizeAllColumns()" title="Auto-size columns"
@@ -158,45 +195,49 @@
               <button class="btn-grid-control" (click)="sizeColumnsToFit()" title="Fit to width" [disabled]="isLoading">
                 <i class="fas fa-compress-arrows-alt"></i> Fit Width
               </button>
+              <button class="btn-export" (click)="generatePDFWithData()" [disabled]="isLoading">
+                <i class="fas fa-file-pdf"></i> Export PDF
+              </button>
             </div>
-          </div>
+          </div> -->
 
           <ag-grid-angular #agGrid style="width: 100%; height: 500px;" class="ag-theme-alpine"
-            [rowData]="filteredData.length > 0 ? filteredData : billableSearchData" [columnDefs]="columnDefs"    [getRowStyle]="getRowStyle"
-            [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="20"
+            [rowData]="filteredData.length > 0 ? filteredData : billableSearchData" [columnDefs]="columnDefs"
+            [getRowStyle]="getRowStyle" [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="20"
             [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading" [rowSelection]="rowSelection"
             [suppressColumnVirtualisation]="true" [suppressRowVirtualisation]="false" [animateRows]="false"
             [enableCellTextSelection]="true" [suppressRowClickSelection]="true" [rowBuffer]="10"
             [suppressLoadingOverlay]="false" [suppressNoRowsOverlay]="false" (gridReady)="onGridReady($event)"
-            (firstDataRendered)="onFirstDataRendered($event)" (selectionChanged)="onSelectionChanged($event)" [context]="context">
+            (firstDataRendered)="onFirstDataRendered($event)" (selectionChanged)="onSelectionChanged($event)"
+            [context]="context">
           </ag-grid-angular>
           <!-- STATUS LEGEND -->
-<div class="grid-legend">
-  <div class="legend-item">
-    <span class="legend-color row-pending"></span>
-    <span>Pending</span>
-  </div>
+          <div class="grid-legend">
+            <div class="legend-item">
+              <span class="legend-color row-pending"></span>
+              <span>Pending</span>
+            </div>
 
-  <div class="legend-item">
-    <span class="legend-color row-sent-verification"></span>
-    <span>Sent for Verification</span>
-  </div>
+            <div class="legend-item">
+              <span class="legend-color row-sent-verification"></span>
+              <span>Sent for Verification</span>
+            </div>
 
-  <div class="legend-item">
-    <span class="legend-color row-verified"></span>
-    <span>Verified</span>
-  </div>
+            <div class="legend-item">
+              <span class="legend-color row-verified"></span>
+              <span>Verified</span>
+            </div>
 
-  <div class="legend-item">
-    <span class="legend-color row-approved"></span>
-    <span>Approved</span>
-  </div>
+            <div class="legend-item">
+              <span class="legend-color row-approved"></span>
+              <span>Approved</span>
+            </div>
 
-  <div class="legend-item">
-    <span class="legend-color row-rejected"></span>
-    <span>Rejected</span>
-  </div>
-</div>
+            <div class="legend-item">
+              <span class="legend-color row-rejected"></span>
+              <span>Rejected</span>
+            </div>
+          </div>
         </div>
 
         <!-- Summary Container -->
@@ -205,27 +246,35 @@
           <div class="summary-grid"
             *ngIf="(filteredData.length > 0 ? filteredData : billableSearchData).length > 0; else noDataSummary">
             <div class="summary-item">
+              <div class="summary-label">Selected Trips</div>
+              <div class="summary-value">{{ selectedRowsCount }}</div>
+            </div>
+            <div class="summary-item">
               <div class="summary-label">Total Vehicles</div>
               <div class="summary-value">{{ totalNoOfVehicles }}</div>
             </div>
-       
+
             <div class="summary-item">
               <div class="summary-label">Pending Verification</div>
               <div class="summary-value">{{ getPendingVerificationCount() }}</div>
             </div>
             <div class="summary-item">
-              <div class="summary-label">Verified Records</div>
+              <div class="summary-label">Verified Trips</div>
               <div class="summary-value">{{ getVerifiedCount() }}</div>
             </div>
             <div class="summary-item">
-              <div class="summary-label">Approved Records</div>
+              <div class="summary-label">Approved Trips</div>
               <div class="summary-value">{{ getApprovedCount() }}</div>
+            </div>
+            <div class="summary-item">
+              <div class="summary-label">Rejected Trips</div>
+              <div class="summary-value">{{ getRejectedCount() }}</div>
             </div>
             <div class="summary-item">
               <div class="summary-label">Selected Period</div>
               <div class="summary-value">{{ getSelectedMonthYear() }}</div>
             </div>
-                 <div class="summary-item">
+            <div class="summary-item">
               <div class="summary-label">Total Gross Weight</div>
               <div class="summary-value">{{ totalGrossWeightInKG | number:'1.2-2' }} KG
                 <span class="unit-conversion">({{ totalGrossWeightInTon | number:'1.2-2' }} Tons)</span>
@@ -243,10 +292,7 @@
                 <span class="unit-conversion">({{ totalActualNetWeightInTon | number:'1.2-2' }} Tons)</span>
               </div>
             </div>
-            <div class="summary-item">
-              <div class="summary-label">Selected Records</div>
-              <div class="summary-value">{{ selectedRowsCount }}</div>
-            </div>
+
           </div>
           <ng-template #noDataSummary>
             <div class="no-data-message">

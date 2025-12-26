@@ -9,22 +9,29 @@ $text-muted: #6b7280;
 $success-color: #10b981;
 $warning-color: #f59e0b;
 $danger-color: #ef4444;
+$approve-color: #28a745;
 $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 $shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-$border-radius: 8px;
-$transition-speed: 0.2s;
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+$border-radius: 12px;
+$border-radius-sm: 8px;
+$border-radius-lg: 16px;
+$transition-speed: 0.3s;
+$transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
 // Global styles
 .billing-report-container {
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  background-color: $background-color;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   color: $text-color;
-  font-family: 'Raleway', sans-serif;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   position: relative;
 }
+
+
 
 // Header styles
 .report-header {
@@ -143,26 +150,10 @@ $transition-speed: 0.2s;
 
 // Report content
 .report-content {
-  padding: 0 1.5rem 1.5rem;
-  max-width: 1400px;
+  padding: 0 2rem 2rem;
+ // max-width: 1400px;
   margin: 0 auto;
   width: 100%;
-
-  .report-title-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-
-    h2 {
-      margin: 0;
-      font-size: 1.5rem;
-      color: $primary-color;
-      font-weight: 600;
-    }
-  }
 }
 
 // Results Container
@@ -292,6 +283,238 @@ $transition-speed: 0.2s;
 
       &:hover {
         background-color: darken(#007bff, 5%);
+      }
+    }
+  }
+}
+
+// Enhanced Table View Styles
+.table-view {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-xl;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
+  .results-container {
+    .results-header {
+      background: linear-gradient(135deg, rgba($primary-color, 0.05) 0%, rgba($secondary-color, 0.05) 100%);
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid rgba($primary-color, 0.1);
+
+      h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: $primary-color;
+        font-weight: 700;
+      }
+
+      .results-actions {
+        .btn-export {
+          padding: 0.75rem 1.5rem;
+          background: linear-gradient(135deg, $success-color 0%, darken($success-color, 10%) 100%);
+          color: white;
+          border: none;
+          border-radius: $border-radius;
+          font-size: 0.875rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: all $transition-speed;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: $shadow-md;
+          }
+        }
+      }
+    }
+
+    // Filter Controls
+    .filter-controls {
+      padding: 0rem 0rem;
+      background: rgba($background-color, 0.5);
+      border-bottom: 1px solid rgba($border-color, 0.5);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+
+      .quick-filter {
+        flex: 1;
+        min-width: 300px;
+
+        .input-group {
+          display: flex;
+          border-radius: $border-radius;
+          overflow: hidden;
+          box-shadow: $shadow-sm;
+
+          .input-group-text {
+            background: rgba($primary-color, 0.1);
+            border: 1px solid rgba($border-color, 0.5);
+            border-right: none;
+            color: $primary-color;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+          }
+
+          .form-control {
+            border: 1px solid rgba($border-color, 0.5);
+            border-left: none;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+
+            &:focus {
+              outline: none;
+              border-color: $accent-color;
+              box-shadow: 0 0 0 3px rgba($accent-color, 0.1);
+            }
+          }
+        }
+      }
+
+      .status-filters {
+        display: flex;
+        gap: 0.5rem;
+
+        .status-btn {
+          padding: 0.5rem 1rem;
+          border: 2px solid transparent;
+          border-radius: $border-radius;
+          background: rgba(255, 255, 255, 0.8);
+          color: $text-color;
+          cursor: pointer;
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          transition: all $transition-speed;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: $shadow-md;
+          }
+
+          &.active {
+            background: $primary-color;
+            color: white;
+            border-color: $primary-color;
+          }
+
+          &.open.active {
+            background: $warning-color;
+            border-color: $warning-color;
+          }
+
+          &.closed.active {
+            background: $success-color;
+            border-color: $success-color;
+          }
+
+          &.cancelled.active {
+            background: $danger-color;
+            border-color: $danger-color;
+          }
+          &.approved.active {
+            background: $approve-color;
+            border-color: $approve-color;
+          }
+        }
+      }
+    }
+
+    // Enhanced AG Grid Styling
+    .grid-container {
+      padding: 1.5rem;
+      background: white;
+      border-radius: $border-radius;
+      box-shadow: $shadow-sm;
+
+      ag-grid-angular {
+        display: block;
+        width: 100%;
+        height: 500px;
+
+        .ag-theme-alpine {
+          width: 100%;
+          height: 100%;
+          border: 1px solid $border-color;
+          border-radius: $border-radius;
+          overflow: hidden;
+
+          .ag-cell {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+
+            // Specific styling for the View button column
+            &:first-child {
+              justify-content: center !important;
+              padding: 0 !important;
+            }
+          }
+
+          // Fix for button cell renderer
+          .ag-cell-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          // Ensure grid is visible and properly sized
+          .ag-root-wrapper {
+            border: 1px solid $border-color;
+            border-radius: $border-radius;
+          }
+
+          .ag-header-row {
+            background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($secondary-color, 0.08) 100%);
+          }
+
+          .ag-header-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            .ag-header-cell-label {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 100%;
+            }
+          }
+
+          // Fix row height and cell content alignment
+          .ag-row {
+            .ag-cell {
+              line-height: normal;
+
+              // Special handling for first column (View button)
+              &:first-child {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 4px !important;
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -813,6 +1036,8 @@ $transition-speed: 0.2s;
 }
 
 // Grid Controls
+// ...existing code...
+
 .grid-container {
   margin-bottom: 1.5rem;
 
@@ -866,7 +1091,63 @@ $transition-speed: 0.2s;
       }
     }
   }
+
+  // Responsive adjustments for grid-container
+  @media (max-width: 768px) {
+    .grid-controls {
+      flex-direction: column;
+      gap: 1rem;
+      padding: 0.5rem;
+
+      .grid-controls-left {
+        text-align: center;
+
+        .grid-info {
+          font-size: 0.75rem;
+        }
+      }
+
+      .grid-controls-right {
+        justify-content: center;
+        flex-wrap: wrap;
+
+        .btn-grid-control {
+          padding: 0.5rem;
+          font-size: 0.7rem;
+
+          i {
+            font-size: 0.7rem;
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .grid-controls {
+      padding: 0.25rem;
+
+      .grid-controls-right {
+        gap: 0.25rem;
+
+        .btn-grid-control {
+          padding: 0.375rem 0.5rem;
+          font-size: 0.65rem;
+
+          span {
+            display: none; // Hide text on very small screens, keep icons
+          }
+
+          i {
+            font-size: 0.8rem;
+          }
+        }
+      }
+    }
+  }
 }
+
+// ...existing code...
 
 // Quick Filter Section Styles
 .quick-filter-section {
@@ -1103,6 +1384,7 @@ $transition-speed: 0.2s;
 
 // Print styles
 @media print {
+
   .report-header,
   .filter-panel,
   .report-actions,
@@ -1148,6 +1430,7 @@ $transition-speed: 0.2s;
     }
 
     .header-actions {
+
       .btn-filters span,
       .btn-verification-page span {
         display: none;
@@ -1210,32 +1493,39 @@ $transition-speed: 0.2s;
     }
   }
 }
+
 /* Pending */
 .row-pending {
-  background-color: #fff8e1 !important; /* light yellow */
+  background-color: #7a4a00 !important;
+  /* light yellow */
 }
 
 /* Sent to Verification */
 .row-sent-verification {
-  background-color: #e3f2fd !important; /* light blue */
+  background-color: #0d47a1 !important;
+  /* light blue */
 }
 
 /* Verified */
 .row-verified {
-  background-color: #e8f5e9 !important; /* light green */
+  background-color: #155724 !important;
+  /* light green */
 }
 
 /* Approved */
 .row-approved {
-  background-color: #c8e6c9 !important; /* green */
+  background-color: #28a745 !important;
+  /* green */
   font-weight: 600;
 }
 
 /* Rejected */
 .row-rejected {
-  background-color: #fdecea !important; /* light red */
-  color: #b71c1c;
+  background-color: #fdecea !important;
+  /* light red */
+  color: #721c24;
 }
+
 .grid-legend {
   display: flex;
   flex-wrap: wrap;

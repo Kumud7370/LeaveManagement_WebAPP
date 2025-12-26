@@ -155,7 +155,7 @@
             <label for="weighBridge">Weigh Bridge</label>
             <div class="select-wrapper">
               <select id="weighBridge" formControlName="WeighBridge" class="form-control">
-                <option value="ALLWB">ALL</option>
+                <option value="ALLWB" *ngIf="lstSiteNames.length > 1">ALL</option>
                 <option *ngFor="let l of lstSiteNames" [value]="l.siteName">
                   {{ l.siteDescription }}
               </select>

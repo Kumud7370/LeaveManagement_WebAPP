@@ -1,8 +1,8 @@
 import { Component, OnInit, ViewChild, ChangeDetectorRef } from "@angular/core"
 import { CommonModule } from "@angular/common"
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angular/forms"
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from "@angular/forms"
 import { Router, ActivatedRoute, RouterModule } from "@angular/router"
-import { ICellRendererParams } from "ag-grid-community"
+import { ICellRendererParams, RowClassParams, RowStyle } from "ag-grid-community"
 import { AgGridModule, AgGridAngular } from "ag-grid-angular"
 import * as XLSX from "xlsx"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
@@ -70,7 +70,7 @@ interface VerifierInfo {
   templateUrl: "./verification.component.html",
   styleUrls: ["./verification.component.scss"],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, AgGridModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, AgGridModule, FormsModule],
 })
 export class VerificationComponent implements OnInit {
   @ViewChild("agGrid") agGrid!: AgGridAngular
@@ -136,7 +136,53 @@ export class VerificationComponent implements OnInit {
   approvedCount = 0
   rejectedCount = 0
   sentBackCount = 0
+  getRowStyle = (params: RowClassParams): RowStyle | undefined => {
+    const status = params.data?.billingStatus;
+    console.log(params.data)
+    // Rejected → light red
+    if (status === -2 || status === -3) {
+      return {
+        backgroundColor: '#f8d7da',
+        color: '#721c24'
+      };
+    }
 
+    // Approved → dark green
+    if (status === 3) {
+      return {
+        backgroundColor: '#28a745',
+        color: '#ffffff',
+        fontWeight: '600'
+      };
+    }
+
+    // Verified → light green
+    if (status === 2) {
+      return {
+        backgroundColor: '#d4edda',
+        color: '#155724'
+      };
+    }
+
+    // Sent to verification → light blue
+    if (status === 1) {
+      return {
+        backgroundColor: '#e3f2fd',
+        color: '#0d47a1'
+      };
+    }
+
+    // Pending → light orange
+    if (status === 0) {
+      return {
+        backgroundColor: '#ffe5b4',
+        color: '#7a4a00'
+      };
+    }
+
+    return undefined;
+  };
+  filterText: string = ""
   // Add month and year options:
   months = [
     { value: 1, name: "January" },
@@ -338,18 +384,18 @@ export class VerificationComponent implements OnInit {
         },
         suppressSizeToFit: true,
       },
-      {
-        headerName: "Status",
-        field: "billingStatus",
-        minWidth: 120,
-        maxWidth: 150,
-        cellRenderer: (params: ICellRendererParams) => {
-          const status = params.data?.billingStatus || 0
-          const statusClass = this.getStatusClass(status)
-          const statusText = this.getBillingStatusText(status)
-          return `<span class="${statusClass}">${statusText}</span>`
-        },
-      },
+      // {
+      //   headerName: "Status",
+      //   field: "billingStatus",
+      //   minWidth: 120,
+      //   maxWidth: 150,
+      //   cellRenderer: (params: ICellRendererParams) => {
+      //     const status = params.data?.billingStatus || 0
+      //     const statusClass = this.getStatusClass(status)
+      //     const statusText = this.getBillingStatusText(status)
+      //     return `<span class="${statusClass}">${statusText}</span>`
+      //   },
+      // },
       {
         headerName: "Location",
         field: "siteName",
@@ -364,29 +410,43 @@ export class VerificationComponent implements OnInit {
         cellStyle: { "font-weight": "bold" },
       },
       {
-        headerName: "DC No",
+        headerName: "Logsheet No",
         field: "dC_No",
         minWidth: 100,
-        maxWidth: 130,
+        maxWidth: 150,
       },
-     
+
+      // {
+      //   headerName: "Year",
+      //   field: "trans_Date",
+      //   minWidth: 80,
+      //   maxWidth: 100,
+      //   valueGetter: (params: any) => {
+      //     if (params.data?.trans_Date) {
+      //       return new Date(params.data.trans_Date).getFullYear()
+      //     }
+      //     return ""
+      //   },
+      //   sortable: true,
+      // },
+
       {
         headerName: "Vehicle No",
         field: "vehicle_No",
         minWidth: 120,
         maxWidth: 150,
       },
-        {
+      {
         headerName: "Vehicle Type",
         field: "vehicleType",
         minWidth: 120,
-        maxWidth: 150,
+
       },
-       {
+      {
         headerName: "Agency",
         field: "agency_Name",
         minWidth: 150,
-        maxWidth: 250,
+
       },
       {
         headerName: "Ward",
@@ -394,63 +454,132 @@ export class VerificationComponent implements OnInit {
         minWidth: 100,
         maxWidth: 130,
       },
+      // {
+      //   headerName: "In Date",
+      //   field: "trans_Date",
+      //   minWidth: 120,
+      //   maxWidth: 150,
+      //   sortable: true,
+      // },
+      // {
+      //   headerName: "In Time",
+      //   field: "trans_Time",
+      //   minWidth: 100,
+      //   maxWidth: 120,
+      //   // valueGetter: (params: any) => {
+      //   //   if (params.data?.trans_Date) {
+      //   //     const date = new Date(params.data.trans_Date)
+      //   //     return this.months[date.getMonth()]?.name || ""
+      //   //   }
+      //   //   return ""
+      //   // },
+      //   sortable: true,
+      // },
       {
-        headerName: "In Date",
-        field: "trans_Date",
-        minWidth: 120,
-        maxWidth: 150,
+        headerName: "In Date & Time",
+        minWidth: 180,
         sortable: true,
+
+        // Used for sorting (returns Date object)
+        valueGetter: (params: any) => {
+          const dateStr = params.data?.trans_Date; // "24-11-2025"
+          const timeStr = params.data?.trans_Time; // "11:12"
+
+          if (!dateStr || !timeStr) return null;
+
+          const [day, month, year] = dateStr.split('-');
+          const [hour, minute] = timeStr.split(':');
+
+          return new Date(
+            Number(year),
+            Number(month) - 1,
+            Number(day),
+            Number(hour),
+            Number(minute)
+          );
+        },
+
+        // Used for display (your required format)
+        valueFormatter: (params: any) => {
+          if (!params.value) return '';
+
+          const d = params.value;
+          const pad = (n: number) => n.toString().padStart(2, '0');
+
+          return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
       },
       {
-        headerName: "In Time",
-        field: "trans_Time",
-        minWidth: 100,
-        maxWidth: 120,
-        // valueGetter: (params: any) => {
-        //   if (params.data?.trans_Date) {
-        //     const date = new Date(params.data.trans_Date)
-        //     return this.months[date.getMonth()]?.name || ""
-        //   }
-        //   return ""
-        // },
+        headerName: "Out Date & Time",
+        minWidth: 180,
         sortable: true,
+
+        // Used for sorting (returns Date object)
+        valueGetter: (params: any) => {
+          const dateStr = params.data?.trans_Date_UL; // "24-11-2025"
+          const timeStr = params.data?.trans_Time_UL; // "11:12"
+
+          if (!dateStr || !timeStr) return null;
+
+          const [day, month, year] = dateStr.split('-');
+          const [hour, minute] = timeStr.split(':');
+
+          return new Date(
+            Number(year),
+            Number(month) - 1,
+            Number(day),
+            Number(hour),
+            Number(minute)
+          );
+        },
+
+        // Used for display (your required format)
+        valueFormatter: (params: any) => {
+          if (!params.value) return '';
+
+          const d = params.value;
+          const pad = (n: number) => n.toString().padStart(2, '0');
+
+          return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
       },
+
       {
         headerName: "Gross Weight (Kg)",
         field: "gross_Weight",
-        minWidth: 140,
-        maxWidth: 180,
+        minWidth: 100,
+        maxWidth: 120,
         type: "numericColumn",
         valueFormatter: (params: any) => {
           return params.value ? Number(params.value).toLocaleString() : "0"
         },
       },
-      {
-        headerName: "Out Date",
-        field: "trans_Date_UL",
-        minWidth: 120,
-        maxWidth: 150,
-        sortable: true,
-      },
-      {
-        headerName: "Out Time",
-        field: "trans_Time_UL",
-        minWidth: 100,
-        maxWidth: 120,
-        // valueGetter: (params: any) => {
-        //   if (params.data?.trans_Date) {
-        //     const date = new Date(params.data.trans_Date)
-        //     return this.months[date.getMonth()]?.name || ""
-        //   }
-        //   return ""
-        // },
-        sortable: true,
-      },
+      // {
+      //   headerName: "Out Date",
+      //   field: "trans_Date_UL",
+      //   minWidth: 120,
+      //   maxWidth: 150,
+      //   sortable: true,
+      // },
+      // {
+      //   headerName: "Out Time",
+      //   field: "trans_Time_UL",
+      //   minWidth: 100,
+      //   maxWidth: 120,
+      //   // valueGetter: (params: any) => {
+      //   //   if (params.data?.trans_Date) {
+      //   //     const date = new Date(params.data.trans_Date)
+      //   //     return this.months[date.getMonth()]?.name || ""
+      //   //   }
+      //   //   return ""
+      //   // },
+      //   sortable: true,
+      // },
       {
         headerName: "Tare Weight",
         field: "unladen_Weight",
-        minWidth: 140,
-        maxWidth: 180,
+        minWidth: 100,
+        maxWidth: 120,
         type: "numericColumn",
         valueFormatter: (params: any) => {
           return params.value ? Number(params.value).toLocaleString() : "0"
@@ -459,8 +588,8 @@ export class VerificationComponent implements OnInit {
       {
         headerName: "Net Weight (Kg)",
         field: "act_Net_Weight",
-        minWidth: 140,
-        maxWidth: 180,
+        minWidth: 100,
+        maxWidth: 120,
         type: "numericColumn",
         valueFormatter: (params: any) => {
           return params.value ? Number(params.value).toLocaleString() : "0"
@@ -468,7 +597,7 @@ export class VerificationComponent implements OnInit {
       },
       {
         headerName: "Remark",
-        field: "remark",
+        field: "billingRemark",
         minWidth: 150,
         maxWidth: 300,
       },
@@ -489,15 +618,7 @@ export class VerificationComponent implements OnInit {
       next: (response: any) => {
         console.log(response)
         // Store ALL verification records for viewing purposes
-        this.verificationData = response.data.filter((item: any) => {
-          return (
-            item.billingStatus === 1 ||
-            item.billingStatus === 2 ||
-            item.billingStatus === 3 ||
-            item.billingStatus === -2 ||
-            item.billingStatus === 4
-          )
-        })
+        this.verificationData = response.data
 
         const loggedInUser = sessionStorage.getItem("username")
 
@@ -508,7 +629,7 @@ export class VerificationComponent implements OnInit {
         } else if (this.userRole === 4) {
           // AE sees records with status 2 (Verified by SE) and 3 (approved) for their workflow
           this.filteredData = this.verificationData.filter(
-            (item) => item.billingStatus === 2 || item.billingStatus === 3,
+            (item) => item.billingStatus === 2
           )
         } else if (this.userRole === 6) {
           // CO sees all records
@@ -718,7 +839,7 @@ export class VerificationComponent implements OnInit {
     ; (window as any).verifyRecord = (slipSrNo: string, siteName: string, status: number) => this.verifyRecord(slipSrNo, siteName, status)
       ; (window as any).rejectRecord = (slipSrNo: string, siteName: string, status: number) => this.rejectRecord(slipSrNo, siteName, status)
       //; (window as any).sendBackRecord = (slipSrNo: string,siteName:string,ststus:number) => this.sendBackRecord(slipSrNo)
-      ; (window as any).viewRecord = (slipSrNo: string, siteName: string) => this.viewRecord(slipSrNo,siteName)
+      ; (window as any).viewRecord = (slipSrNo: string, siteName: string) => this.viewRecord(slipSrNo, siteName)
   }
 
   // NEW: Verify record method for SE (sets status to 2 - Verified)
@@ -866,8 +987,8 @@ export class VerificationComponent implements OnInit {
     // this.showVerificationPanel = true
 
 
-       let obj = { SlipSrNo: slipSrNo, SiteName: siteName }
-   // console.log("View Search Report method called with data:", data, obj)
+    let obj = { SlipSrNo: slipSrNo, SiteName: siteName }
+    console.log("View Search Report method called with data:", obj)
     this.dbCallingService.GetTripDetailsForSlipGeneartion(obj).subscribe(
       (response) => {
         console.log("Trip Details response:", response)
@@ -940,37 +1061,49 @@ export class VerificationComponent implements OnInit {
 
   // Bulk actions
   performBulkAction(): void {
+
     if (!this.hasSelectedRows()) {
       Swal.fire({
         text: "Please select records to perform bulk action",
         icon: "warning",
-      })
-      return
+      });
+      return;
     }
 
-    const formValues = this.bulkActionForm.value
-    const selectedRows = this.gridApi.getSelectedRows()
-    const userName = sessionStorage.getItem("username")
+    const formValues = this.bulkActionForm.value;
+    const selectedRows = this.gridApi.getSelectedRows();
 
-    // Filter eligible rows based on user role
-    let eligibleRows = []
+    // 🔹 1. Remark mandatory for Reject actions
+    if (
+      (formValues.bulkAction === "-2" || formValues.bulkAction === "-3") &&
+      (!formValues.bulkRemark || !formValues.bulkRemark.trim())
+    ) {
+      Swal.fire({
+        text: "Remark is mandatory for rejection actions",
+        icon: "warning",
+      });
+      return;
+    }
+
+    // 🔹 2. Filter eligible rows based on role
+    let eligibleRows = [];
     if (this.userRole === 5) {
-      eligibleRows = selectedRows.filter((row: VerificationData) => row.billingStatus === 1)
+      eligibleRows = selectedRows.filter((row: VerificationData) => row.billingStatus === 1);
     } else if (this.userRole === 4) {
-      eligibleRows = selectedRows.filter((row: VerificationData) => row.billingStatus === 2)
-    } else {
-      eligibleRows = selectedRows.filter((row: VerificationData) => row.billingStatus === 1 || row.billingStatus === 2)
+      eligibleRows = selectedRows.filter((row: VerificationData) => row.billingStatus === 2);
     }
 
     if (eligibleRows.length === 0) {
       Swal.fire({
         text: "Selected records are not eligible for verification by your role",
         icon: "warning",
-      })
-      return
+      });
+      return;
     }
 
-    const actionText = this.getActionText(formValues.bulkAction)
+    // 🔹 3. Confirmation dialog
+    const actionText = this.getActionText(formValues.bulkAction);
+
     Swal.fire({
       title: `Confirm Bulk ${actionText}`,
       text: `${actionText} ${eligibleRows.length} selected records?`,
@@ -980,10 +1113,15 @@ export class VerificationComponent implements OnInit {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-        this.processBulkAction(eligibleRows, formValues.bulkAction, formValues.bulkRemark)
+        this.processBulkAction(
+          eligibleRows,
+          formValues.bulkAction,
+          formValues.bulkRemark
+        );
       }
-    })
+    });
   }
+
 
   processBulkAction(records: VerificationData[], action: string, remark: string): void {
     this.isLoading = true
@@ -992,9 +1130,9 @@ export class VerificationComponent implements OnInit {
       UserId: Number(sessionStorage.getItem("UserId")) || 1,
       SlipSrNo: row.slipSrNo,
       BillingStatus: Number.parseInt(action),
-      SiteName: this.userSiteName
+      SiteName: row.tableName
     }))
-
+    console.log("📤 Bulk Action API Call:", objList)
     this.dbCallingService.sendToVerifyBillingData(objList).subscribe({
       next: (response: any) => {
         this.isLoading = false
@@ -1009,6 +1147,8 @@ export class VerificationComponent implements OnInit {
             timer: 2000,
             showConfirmButton: false,
           })
+          this.selectedRowsCount=0
+          this.bulkActionForm.reset();
           this.loadVerificationData();
           // Recalculate summary and refresh grid
           this.calculateSummary()
@@ -1253,14 +1393,20 @@ export class VerificationComponent implements OnInit {
 
   calculateSummary(): void {
     // Always calculate summary based on what's currently being displayed
-    const dataToCalculate = this.filteredData.length > 0 ? this.filteredData : this.verificationData
+    const dataToCalculate = this.verificationData
 
     this.totalRecords = dataToCalculate.length
-    this.pendingCount = dataToCalculate.filter((item) => item.billingStatus === 1).length
+       if(this.userRole===5){
+      this.pendingCount = dataToCalculate.filter((item) => item.billingStatus === 1).length
+    }
+    else if(this.userRole===4){
+      this.pendingCount = dataToCalculate.filter((item) => item.billingStatus === 2).length
+    }
+   // this.pendingCount = dataToCalculate.filter((item) => item.billingStatus === 1).length
     this.verifiedCount = dataToCalculate.filter((item) => item.billingStatus === 2).length
     this.approvedCount = dataToCalculate.filter((item) => item.billingStatus === 3).length
     this.rejectedCount = dataToCalculate.filter((item) => item.billingStatus === -2).length
-    this.sentBackCount = dataToCalculate.filter((item) => item.billingStatus === 4).length
+    this.sentBackCount = dataToCalculate.filter((item) => item.billingStatus === -3).length
 
     console.log("📊 Summary updated:", {
       total: this.totalRecords,
@@ -1291,7 +1437,12 @@ export class VerificationComponent implements OnInit {
       this.scheduleColumnResize()
     }, 100)
   }
-
+  onFilterTextBoxChanged() {
+    if (this.gridApi) {
+      const filterValue = (document.getElementById("filter-text-box") as HTMLInputElement)?.value || ""
+      this.gridApi.setGridOption("quickFilterText", filterValue)
+    }
+  }
   onSelectionChanged(event: any): void {
     if (this.gridApi && this.isGridReady) {
       const selectedRows = this.gridApi.getSelectedRows()

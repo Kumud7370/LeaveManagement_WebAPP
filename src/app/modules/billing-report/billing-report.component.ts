@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from "@angular/core"
 import { CommonModule } from "@angular/common"
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angular/forms"
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from "@angular/forms"
 import { Router, RouterModule } from "@angular/router"
 import { ICellRendererParams, RowClassParams, RowStyle } from "ag-grid-community"
 import { AgGridModule, AgGridAngular } from "ag-grid-angular"
@@ -17,6 +17,7 @@ import moment from "moment"
 import { BtnSearchViewCellRenderer } from "./viewSearch/buttonSearchView-cell-renderer.component"
 import { ViewSearchReportComponent } from "./viewSearch/viewsearchreport.component"
 import { MatDialog, MatDialogModule } from "@angular/material/dialog"
+import { CardModule, GridModule } from "@coreui/angular"
 
 
 interface BillingData {
@@ -68,7 +69,7 @@ interface VerificationResponse {
   templateUrl: "./billing-report.component.html",
   styleUrls: ["./billing-report.component.scss"],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, AgGridModule, ViewSearchReportComponent, BtnSearchViewCellRenderer, MatDialogModule,],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, AgGridModule, ViewSearchReportComponent, BtnSearchViewCellRenderer, MatDialogModule, FormsModule, CardModule, GridModule],
 })
 export class BillingReportComponent implements OnInit {
   @ViewChild("reportContainer") reportContainer!: ElementRef
@@ -85,8 +86,8 @@ export class BillingReportComponent implements OnInit {
   quickFilterForm!: FormGroup
 
   // Data
-  billableSearchData: BillingData[] = []
-  filteredData: BillingData[] = []
+  billableSearchData: any[] = []
+  filteredData: any[] = []
   selectedRowsCount = 0
 
   // Filter state
@@ -146,7 +147,7 @@ export class BillingReportComponent implements OnInit {
   userSiteName: any;
   userRole: number = 0
   userId: number = 0
-
+  activeFilter = 9
   getRowStyle = (params: RowClassParams): RowStyle | undefined => {
     const status = params.data?.billingStatus;
     console.log(params.data)
@@ -193,7 +194,7 @@ export class BillingReportComponent implements OnInit {
 
     return undefined;
   };
-
+  filterText: string = '';
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -299,37 +300,37 @@ export class BillingReportComponent implements OnInit {
         field: "billingStatusLabel",
         minWidth: 120,
         maxWidth: 180,
-        cellRenderer: (params: ICellRendererParams) => {
-          const status = params.data?.billingStatus
-          let statusText = "Pending"
-          let statusClass = "status-pending"
-          switch (status) {
-            case 1:
-              statusText = "Sent for Verification"
-              statusClass = "status-verification"
-              break
-            case 2:
-              statusText = "Verified"
-              statusClass = "status-verified"
-              break
-            case 3:
-              statusText = "Approved"
-              statusClass = "status-approved"
-              break
-            case -2:
-              statusText = "Rejected"
-              statusClass = "status-rejected"
-              break
-            case 4:
-              statusText = "Sent Back"
-              statusClass = "status-sent-back"
-              break
-            default:
-              statusText = "Pending"
-              statusClass = "status-pending"
-          }
-          return `<span class="${statusClass}">${statusText}</span>`
-        },
+        // cellRenderer: (params: ICellRendererParams) => {
+        //   const status = params.data?.billingStatus
+        //   let statusText = "Pending"
+        //   let statusClass = "status-pending"
+        //   switch (status) {
+        //     case 1:
+        //       statusText = "Sent for Verification"
+        //       statusClass = "status-verification"
+        //       break
+        //     case 2:
+        //       statusText = "Verified"
+        //       statusClass = "status-verified"
+        //       break
+        //     case 3:
+        //       statusText = "Approved"
+        //       statusClass = "status-approved"
+        //       break
+        //     case -2:
+        //       statusText = "Verification Rejected"
+        //       statusClass = "status-rejected"
+        //       break
+        //     case -3:
+        //       statusText = "Approve Rejected"
+        //       statusClass = "status-sent-back"
+        //       break
+        //     default:
+        //       statusText = "Pending"
+        //       statusClass = "status-pending"
+        //   }
+        //   return `<span class="${statusClass}">${statusText}</span>`
+        // },
       },
       {
         headerName: "Location",
@@ -345,10 +346,10 @@ export class BillingReportComponent implements OnInit {
         cellStyle: { "font-weight": "bold" },
       },
       {
-        headerName: "DC No",
+        headerName: "Logsheet No",
         field: "dC_No",
         minWidth: 100,
-        maxWidth: 130,
+        maxWidth: 150,
       },
 
       // {
@@ -375,13 +376,13 @@ export class BillingReportComponent implements OnInit {
         headerName: "Vehicle Type",
         field: "vehicleType",
         minWidth: 120,
-        maxWidth: 150,
+
       },
       {
         headerName: "Agency",
         field: "agency_Name",
         minWidth: 150,
-        maxWidth: 250,
+
       },
       {
         headerName: "Ward",
@@ -389,63 +390,132 @@ export class BillingReportComponent implements OnInit {
         minWidth: 100,
         maxWidth: 130,
       },
+      // {
+      //   headerName: "In Date",
+      //   field: "trans_Date",
+      //   minWidth: 120,
+      //   maxWidth: 150,
+      //   sortable: true,
+      // },
+      // {
+      //   headerName: "In Time",
+      //   field: "trans_Time",
+      //   minWidth: 100,
+      //   maxWidth: 120,
+      //   // valueGetter: (params: any) => {
+      //   //   if (params.data?.trans_Date) {
+      //   //     const date = new Date(params.data.trans_Date)
+      //   //     return this.months[date.getMonth()]?.name || ""
+      //   //   }
+      //   //   return ""
+      //   // },
+      //   sortable: true,
+      // },
       {
-        headerName: "In Date",
-        field: "trans_Date",
-        minWidth: 120,
-        maxWidth: 150,
+        headerName: "In Date & Time",
+        minWidth: 180,
         sortable: true,
+
+        // Used for sorting (returns Date object)
+        valueGetter: (params: any) => {
+          const dateStr = params.data?.trans_Date; // "24-11-2025"
+          const timeStr = params.data?.trans_Time; // "11:12"
+
+          if (!dateStr || !timeStr) return null;
+
+          const [day, month, year] = dateStr.split('-');
+          const [hour, minute] = timeStr.split(':');
+
+          return new Date(
+            Number(year),
+            Number(month) - 1,
+            Number(day),
+            Number(hour),
+            Number(minute)
+          );
+        },
+
+        // Used for display (your required format)
+        valueFormatter: (params: any) => {
+          if (!params.value) return '';
+
+          const d = params.value;
+          const pad = (n: number) => n.toString().padStart(2, '0');
+
+          return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
       },
       {
-        headerName: "In Time",
-        field: "trans_Time",
-        minWidth: 100,
-        maxWidth: 120,
-        // valueGetter: (params: any) => {
-        //   if (params.data?.trans_Date) {
-        //     const date = new Date(params.data.trans_Date)
-        //     return this.months[date.getMonth()]?.name || ""
-        //   }
-        //   return ""
-        // },
+        headerName: "Out Date & Time",
+        minWidth: 180,
         sortable: true,
+
+        // Used for sorting (returns Date object)
+        valueGetter: (params: any) => {
+          const dateStr = params.data?.trans_Date_UL; // "24-11-2025"
+          const timeStr = params.data?.trans_Time_UL; // "11:12"
+
+          if (!dateStr || !timeStr) return null;
+
+          const [day, month, year] = dateStr.split('-');
+          const [hour, minute] = timeStr.split(':');
+
+          return new Date(
+            Number(year),
+            Number(month) - 1,
+            Number(day),
+            Number(hour),
+            Number(minute)
+          );
+        },
+
+        // Used for display (your required format)
+        valueFormatter: (params: any) => {
+          if (!params.value) return '';
+
+          const d = params.value;
+          const pad = (n: number) => n.toString().padStart(2, '0');
+
+          return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
       },
+
       {
         headerName: "Gross Weight (Kg)",
         field: "gross_Weight",
-        minWidth: 140,
-        maxWidth: 180,
+        minWidth: 100,
+        maxWidth: 120,
         type: "numericColumn",
         valueFormatter: (params: any) => {
           return params.value ? Number(params.value).toLocaleString() : "0"
         },
       },
-      {
-        headerName: "Out Date",
-        field: "trans_Date_UL",
-        minWidth: 120,
-        maxWidth: 150,
-        sortable: true,
-      },
-      {
-        headerName: "Out Time",
-        field: "trans_Time_UL",
-        minWidth: 100,
-        maxWidth: 120,
-        // valueGetter: (params: any) => {
-        //   if (params.data?.trans_Date) {
-        //     const date = new Date(params.data.trans_Date)
-        //     return this.months[date.getMonth()]?.name || ""
-        //   }
-        //   return ""
-        // },
-        sortable: true,
-      },
+      // {
+      //   headerName: "Out Date",
+      //   field: "trans_Date_UL",
+      //   minWidth: 120,
+      //   maxWidth: 150,
+      //   sortable: true,
+      // },
+      // {
+      //   headerName: "Out Time",
+      //   field: "trans_Time_UL",
+      //   minWidth: 100,
+      //   maxWidth: 120,
+      //   // valueGetter: (params: any) => {
+      //   //   if (params.data?.trans_Date) {
+      //   //     const date = new Date(params.data.trans_Date)
+      //   //     return this.months[date.getMonth()]?.name || ""
+      //   //   }
+      //   //   return ""
+      //   // },
+      //   sortable: true,
+      // },
       {
         headerName: "Tare Weight",
         field: "unladen_Weight",
-        minWidth: 140,
-        maxWidth: 180,
+        minWidth: 100,
+        maxWidth: 120,
         type: "numericColumn",
         valueFormatter: (params: any) => {
           return params.value ? Number(params.value).toLocaleString() : "0"
@@ -454,8 +524,8 @@ export class BillingReportComponent implements OnInit {
       {
         headerName: "Net Weight (Kg)",
         field: "act_Net_Weight",
-        minWidth: 140,
-        maxWidth: 180,
+        minWidth: 100,
+        maxWidth: 120,
         type: "numericColumn",
         valueFormatter: (params: any) => {
           return params.value ? Number(params.value).toLocaleString() : "0"
@@ -463,13 +533,13 @@ export class BillingReportComponent implements OnInit {
       },
       {
         headerName: "Remark",
-        field: "remark",
+        field: "billingRemark",
         minWidth: 150,
         maxWidth: 300,
       },
     ]
 
- 
+
   }
 
   // Load default data (current month) on component initialization
@@ -1027,6 +1097,10 @@ export class BillingReportComponent implements OnInit {
     const dataToCheck = this.filteredData.length > 0 ? this.filteredData : this.billableSearchData
     return dataToCheck.filter((item) => item.billingStatus === 3).length
   }
+  getRejectedCount(): number {
+    const dataToCheck = this.filteredData.length > 0 ? this.filteredData : this.billableSearchData
+    return dataToCheck.filter((item) => item.billingStatus === -2 || item.billingStatus === -3).length
+  }
 
   getSelectedMonthYear(): string {
     const formValues = this.reportForm.value
@@ -1053,36 +1127,38 @@ export class BillingReportComponent implements OnInit {
       return
     }
 
-    const exportData = dataToExport.map((item) => ({
-      Location: item.weighbridge,
+    const exportData = dataToExport.map((item, i) => ({
+      // "Sr No": i + 1,
+      "Billing Status": item.billingStatusLabel,
+      Location: item.siteName,
       "Slip No": item.slipSrNo,
-      "DC No": item.dC_No,
-      "Trans Date": item.trans_Date,
-      Month: this.months[new Date(item.trans_Date).getMonth()]?.name || "",
-      Year: new Date(item.trans_Date).getFullYear(),
+      "Logsheet No": item.dC_No,
       Agency: item.agency_Name,
       "Vehicle No": item.vehicle_No,
       Ward: item.ward,
+      "In Date & Time": item.trans_Date + ' ' + item.trans_Time,
+      "Out Date & Time": item.trans_Date_UL + ' ' + item.trans_Time_UL,
       "Gross Weight (Kg)": Number(item.gross_Weight),
+      "Tare Weight (Kg)": Number(item.unladen_Weight),
       "Net Weight (Kg)": Number(item.act_Net_Weight),
-      "Billing Status": this.getBillingStatusText(item.billingStatus),
-      Remark: item.remark,
+      Remark: item.billingRemark,
     }))
 
     exportData.push({
-      Location: "SUMMARY",
+      //  "Sr No":
+      "Billing Status": "Total",
+      Location: "",
       "Slip No": "",
-      "DC No": "",
-      "Trans Date": "",
-      Month: "",
-      Year: 0,
+      "Logsheet No": "",
       Agency: "",
       "Vehicle No": "",
       Ward: "",
+      "In Date & Time": "",
+      "Out Date & Time": "",
       "Gross Weight (Kg)": this.totalGrossWeightInKG,
+      "Tare Weight (Kg)": this.totalTareWeightInKG,
       "Net Weight (Kg)": this.totalActualNetWeightInKG,
-      "Billing Status": "",
-      Remark: `Total Vehicles: ${this.totalNoOfVehicles}`,
+      Remark: ""  ,
     })
 
     const worksheet = XLSX.utils.json_to_sheet(exportData)
@@ -1091,11 +1167,18 @@ export class BillingReportComponent implements OnInit {
     const fileName = `Billing_Report_${this.getSelectedMonthYear().replace(/[^a-zA-Z0-9]/g, "_")}.xlsx`
     XLSX.writeFile(workbook, fileName)
   }
+
+
   getGridDataForPdf(): any[] {
     const rows: any[] = [];
 
     this.gridApi.forEachNodeAfterFilterAndSort((node: any) => {
-      rows.push(node.data);
+
+      if (node.data.billingStatus === 3) {
+        console.log("Adding row to PDF data:", node.data);
+        rows.push(node.data);
+      }
+
     });
 
     return rows;
@@ -1158,7 +1241,7 @@ export class BillingReportComponent implements OnInit {
     if (gridData && gridData.length > 0) {
       const tableBody = gridData.map((row: any) => [
         row.siteName || '',
-        this.getBillingStatusText(row.billingStatus),
+        row.billingStatusLabel || '',
         row.slipSrNo || '',
         row.dC_No || '',
         row.vehicle_No || '',
@@ -1166,19 +1249,19 @@ export class BillingReportComponent implements OnInit {
         row.agency_Name || '',
         row.ward || '',
         (row.trans_Date + ' ' + row.trans_Time) || '',
-        Number(row.gross_Weight).toLocaleString() || '0',
         (row.trans_Date_UL + ' ' + row.trans_Time_UL) || '',
+        Number(row.gross_Weight).toLocaleString() || '0',      
         Number(row.unladen_Weight).toLocaleString() || '0',
         Number(row.act_Net_Weight).toLocaleString() || '0',
-        row.remark || ''
+        row.billingRemark || ''
 
       ])
       // ✅ PUSH TOTAL ROW AT END
       tableBody.push([
         'TOTAL', '', '', '', '', '', '', '',
+        '',      
         '',
         totalGross.toLocaleString(),
-        '',
         totalTare.toLocaleString(),
         totalNet.toLocaleString(),
         ''
@@ -1186,13 +1269,12 @@ export class BillingReportComponent implements OnInit {
       autoTable(doc, {
         head: [[
           "Location", "Status", "Slip No", "DC No", "Vehicle No", "Vehicle Type", "Agency",
-          "Ward", "In Date Time", "Gross Wt (kg)",
-          "Out Date Time", "Tare Wt (kg)", "Net Wt (kg) ", "Remark"
+          "Ward", "In Date Time","Out Date Time", "Gross Wt (kg)","Tare Wt (kg)", "Net Wt (kg) ", "Remark"
         ]],
         body: tableBody,
         startY: doc.lastAutoTable.finalY + 5,
         theme: "grid",
-        tableWidth: "auto",
+        tableWidth: "auto", 
         margin: { left: 15, right: 15 },
         styles: {
           fontSize: 6,
@@ -1259,7 +1341,12 @@ export class BillingReportComponent implements OnInit {
     doc.save(`${fileName}.pdf`)
     console.log(`PDF generated: ${fileName}.pdf`)
   }
-
+  onFilterTextBoxChanged() {
+    if (this.gridApi) {
+      const filterValue = (document.getElementById("filter-text-box") as HTMLInputElement)?.value || ""
+      this.gridApi.setGridOption("quickFilterText", filterValue)
+    }
+  }
   // ...existing code...
   // ...existing code...
 
@@ -1351,5 +1438,27 @@ export class BillingReportComponent implements OnInit {
     setTimeout(() => {
       this.scheduleColumnResize()
     }, 200)
+  }
+
+  FilterData(id: number) {
+    this.activeFilter = id
+    console.log("Filtering data with id:", id, "Available records:", this.billableSearchData.length)
+    if (id === 9) {
+      // Show all data
+      this.filteredData = [...this.billableSearchData]
+
+    } else {
+      if (id === -3) {
+        this.filteredData = this.billableSearchData.filter((f: any) => f.billingStatus === -2 || f.billingStatus === -3)
+      }
+      else {
+        this.filteredData = this.billableSearchData.filter((f: any) => f.billingStatus === id)
+      }
+
+    }
+    // Force grid to refresh
+    if (this.gridApi) {
+      this.gridApi.setGridOption("rowData", this.filteredData)
+    }
   }
 }

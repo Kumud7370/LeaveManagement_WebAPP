@@ -89,9 +89,9 @@
   </div> -->
 
   <!-- Verification Content -->
-   <div class="verification-content" *ngIf="!isLoading">
+  <div class="verification-content" *ngIf="!isLoading">
 
-  <!--  <div class="status-filter-tabs">
+    <!--  <div class="status-filter-tabs">
       <button class="status-tab" [class.active]="currentStatusFilter === 'all'" (click)="filterByStatus('all')">
         All Records ({{ totalRecords }})
       </button>
@@ -148,7 +148,7 @@
 
     <!-- Verification Grid -->
     <div class="verification-grid-container">
-      <div class="grid-header">
+      <!-- <div class="grid-header">
         <h2>Verification Records</h2>
         <div class="grid-actions">
           <button class="btn-export" (click)="exportToExcel()" [disabled]="verificationData.length === 0">
@@ -158,34 +158,35 @@
             <i class="fas fa-print"></i> Print
           </button>
         </div>
-      </div>
+      </div> -->
 
       <!-- Grid Controls -->
       <div class="grid-controls">
         <div class="grid-controls-left">
-          <span class="grid-info">
-            Showing {{ (filteredData.length > 0 ? filteredData : verificationData).length }} records
-            <span *ngIf="selectedRowsCount > 0" class="selected-info">({{ selectedRowsCount }} selected)</span>
-          </span>
-        </div>
-        <div class="grid-controls-right">
-          <button class="btn-grid-control" (click)="autoSizeAllColumns()" title="Auto-size columns">
-            <i class="fas fa-expand-arrows-alt"></i> Auto Size
-          </button>
-          <button class="btn-grid-control" (click)="sizeColumnsToFit()" title="Fit to width">
-            <i class="fas fa-compress-arrows-alt"></i> Fit Width
-          </button>
+          <div class="grid-controls-right">
+            <div class="filter-controls">
+              <div class="quick-filter">
+                <label for="filter-text-box" class="visually-hidden">Quick Filter</label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                  </span>
+                  <input id="filter-text-box" class="form-control" placeholder="Search..."
+                    (input)="onFilterTextBoxChanged()" [(ngModel)]="filterText" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- AG Grid -->
       <div class="grid-wrapper">
-        <ag-grid-angular #agGrid style="width: 100%; height: 600px;" class="ag-theme-alpine"
-          [rowData]="filteredData.length > 0 ? filteredData : verificationData" [columnDefs]="columnDefs"
-          [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="20"
-          [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading" [rowSelection]="rowSelection"
-          [suppressColumnVirtualisation]="true" [suppressRowVirtualisation]="false" [animateRows]="false"
-          [enableCellTextSelection]="true" [suppressRowClickSelection]="true" [rowBuffer]="10"
+        <ag-grid-angular #agGrid style="width: 100%; height: 600px;" class="ag-theme-alpine" [rowData]="filteredData"
+          [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" [getRowStyle]="getRowStyle" [pagination]="true"
+          [paginationPageSize]="20" [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading"
+          [rowSelection]="rowSelection" [suppressColumnVirtualisation]="true" [suppressRowVirtualisation]="false"
+          [animateRows]="false" [enableCellTextSelection]="true" [suppressRowClickSelection]="true" [rowBuffer]="10"
           [suppressLoadingOverlay]="false" [suppressNoRowsOverlay]="false" (gridReady)="onGridReady($event)"
           (firstDataRendered)="onFirstDataRendered($event)" (selectionChanged)="onSelectionChanged($event)">
         </ag-grid-angular>
@@ -197,37 +198,38 @@
       <i class="fas fa-exclamation-circle"></i>
       <h3>No Verification Data Found</h3>
       <p>No records found that require verification. All records may already be processed.</p>
-      <div class="no-data-actions">
+      <!-- <div class="no-data-actions">
         <button class="btn-primary" (click)="navigateBack()">
           <i class="fas fa-arrow-left"></i> Back to Billing Report
         </button>
-      </div>
+      </div> -->
     </div>
 
     <!-- Summary Panel -->
     <div class="summary-panel" *ngIf="verificationData.length > 0">
       <h3>Verification Summary</h3>
       <div class="summary-grid">
+        <div class="summary-item approved">
+          <div class="summary-label">Selected Trips </div>
+          <div class="summary-value">{{ selectedRowsCount }}</div>
+        </div>
         <div class="summary-item total">
-          <div class="summary-label">Total Records</div>
+          <div class="summary-label">Total Trips</div>
           <div class="summary-value">{{ totalRecords }}</div>
         </div>
         <div class="summary-item pending">
-          <div class="summary-label">Pending Verification</div>
+          <div class="summary-label">{{ this.userRole === 4 ? "Pending Approval" : "Pending Verification" }}</div>
           <div class="summary-value">{{ pendingCount }}</div>
         </div>
-        <div class="summary-item verified">
+        <!-- <div class="summary-item verified">
           <div class="summary-label">Verified</div>
           <div class="summary-value">{{ verifiedCount }}</div>
         </div>
-        <div class="summary-item approved">
-          <div class="summary-label">Approved</div>
-          <div class="summary-value">{{ approvedCount }}</div>
-        </div>
+     
         <div class="summary-item rejected">
           <div class="summary-label">Rejected</div>
           <div class="summary-value">{{ rejectedCount }}</div>
-        </div>
+        </div> -->
         <!-- <div class="summary-item sent-back">
           <div class="summary-label">Sent Back</div>
           <div class="summary-value">{{ sentBackCount }}</div>
@@ -239,7 +241,7 @@
         <p><strong>Date:</strong> {{ getCurrentDateString() }}</p>
       </div>
     </div>
-  </div> -->
+  </div>
 
   <!-- Verification Detail Panel -->
   <div class="verification-detail-overlay" [class.show]="showVerificationPanel" (click)="closeVerificationPanel()">
@@ -253,7 +255,7 @@
     </div>
     <div class="detail-content" *ngIf="selectedRecord">
       <div class="detail-grid">
-           <div class="detail-item">
+        <div class="detail-item">
           <label>Location:</label>
           <span>{{ selectedRecord.siteName }}</span>
         </div>
@@ -265,7 +267,7 @@
           <label>DC No:</label>
           <span>{{ selectedRecord.dC_No }}</span>
         </div>
-      
+
         <div class="detail-item">
           <label>Agency:</label>
           <span>{{ selectedRecord.agency_Name }}</span>
@@ -278,11 +280,11 @@
           <label>Ward:</label>
           <span>{{ selectedRecord.ward }}</span>
         </div>
-          <div class="detail-item">
+        <div class="detail-item">
           <label>In Date Time:</label>
           <span>{{ selectedRecord.trans_Date | date }}:{{ selectedRecord.trans_Time }}</span>
         </div>
-         <div class="detail-item">
+        <div class="detail-item">
           <label>Out Date Time:</label>
           <span>{{ selectedRecord.trans_Date_UL | date }}:{{ selectedRecord.trans_Time_UL }}</span>
         </div>
@@ -290,7 +292,7 @@
           <label>Gross Weight:</label>
           <span>{{ selectedRecord.gross_Weight | number }} KG</span>
         </div>
-          <div class="detail-item">
+        <div class="detail-item">
           <label>Tare Weight:</label>
           <span>{{ selectedRecord.unladen_Weight | number }} KG</span>
         </div>

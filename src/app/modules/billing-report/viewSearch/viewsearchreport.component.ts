@@ -5,13 +5,15 @@ import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import moment from "moment"
 import { Inject } from '@angular/core';
+import { ButtonCloseDirective, ButtonDirective, ModalBodyComponent, ModalComponent, ModalFooterComponent, ModalHeaderComponent, ModalModule, ModalTitleDirective, ModalToggleDirective } from "@coreui/angular";
 
 @Component({
     selector: "app-viewsearchreport",
     templateUrl: "./viewsearchreport.component.html",
     styleUrls: ["./viewsearchreport.component.scss"],
     standalone: true,
-    imports: [CommonModule],
+    imports: [CommonModule,ModalModule, 
+   ],
 })
 export class ViewSearchReportComponent {
     searchData: any
@@ -28,7 +30,19 @@ export class ViewSearchReportComponent {
         console.log("Search Report View Dialog - Normalized data:", this.searchData)
     }
 
+isModalVisible = true;
 
+openModal() {
+  this.isModalVisible = true;
+}
+
+closeModal() {
+  this.isModalVisible = false;
+}
+
+onModalVisibleChange(value: boolean) {
+  this.isModalVisible = value;
+}
 
     // Format weight values - for UI display
     formatWeight(weight: string | number): string {
