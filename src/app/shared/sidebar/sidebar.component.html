@@ -1,10 +1,16 @@
-<div class="sidebar" (mouseenter)="onSidebarPointerEnter()" (mouseleave)="onSidebarPointerLeave()"
-  [class.expanded]="isExpanded" [class.mobile]="isMobile" [class.collapsed]="!isExpanded && !isMobile">
+<div 
+  class="sidebar" 
+  (mouseenter)="onSidebarPointerEnter()" 
+  (mouseleave)="onSidebarPointerLeave()"
+  [class.expanded]="isExpanded" 
+  [class.mobile]="isMobile" 
+  [class.collapsed]="!isExpanded">
+  
   <!-- Logo Section -->
   <div class="sidebar-header">
     <div class="logo-container">
       <div class="logo-icon">
-        <img src="assets/images/mcgmlogo.png" alt="Logo" class="logo-img" style="width: 32px; height: 32px;">
+        <img src="assets/images/mcgmlogo.png" alt="Logo" class="logo-img">
       </div>
       <div *ngIf="isExpanded" [@fadeInOut]="'in'" class="logo-text">
         <h1>SWM WMS</h1>
@@ -13,7 +19,7 @@
     </div>
   </div>
 
-  <!-- User Profile Section -->
+  <!-- User Profile Section - Expanded -->
   <div class="user-profile" *ngIf="isExpanded" [@fadeInOut]="'in'">
     <div class="user-avatar">
       <img [src]="userProfile.avatar" [alt]="userProfile.name" (error)="onImageError($event)">
@@ -26,13 +32,13 @@
     </div>
   </div>
 
-  <!-- Collapsed User Profile -->
-  <div class="user-profile-collapsed" *ngIf="!isExpanded" [@fadeInOut]="'in'">
+  <!-- User Profile Section - Collapsed -->
+  <div class="user-profile-collapsed" *ngIf="!isExpanded && !isMobile">
     <div class="user-avatar-small">
       <img [src]="userProfile.avatar" [alt]="userProfile.name" (error)="onImageError($event)">
       <div class="status-indicator" [class.online]="userProfile.isOnline"></div>
     </div>
-    <div class="tooltip user-tooltip">
+    <div class="user-tooltip">
       <strong>{{ userProfile.name }}</strong><br>
       <small>{{ userProfile.role }}</small>
     </div>
@@ -42,42 +48,52 @@
   <nav class="sidebar-nav">
     <ul class="nav-list">
       <li *ngFor="let item of menuItems; trackBy: trackByRoute" class="nav-item">
-        <!-- Parent Menu Item -->
-        <a *ngIf="!item.children" (click)="navigateTo(item.route!)" class="nav-link"
-          [class.active]="isActive(item.route!)" [matTooltip]="!isExpanded ? item.label : null"
+        
+        <!-- Simple Menu Item (No Children) -->
+        <a 
+          *ngIf="!item.children" 
+          (click)="navigateTo(item.route!)" 
+          class="nav-link"
+          [class.active]="isActive(item.route!)" 
+          [matTooltip]="!isExpanded && !isMobile ? item.label : null"
           matTooltipPosition="right">
           <i [class]="item.icon"></i>
-          <span *ngIf="isExpanded" [@fadeInOut]="'in'">{{ item.label }}</span>
-          <span *ngIf="item.badge && isExpanded" [@fadeInOut]="'in'" class="badge">{{ item.badge }}</span>
+          <span *ngIf="isExpanded">{{ item.label }}</span>
+          <span *ngIf="item.badge && isExpanded" class="badge">{{ item.badge }}</span>
         </a>
 
-
-        <!-- Parent Menu Item with Children -->
-        <a *ngIf="item.children" (click)="toggleSubmenu(item)" class="nav-link parent-link"
-          [class.active]="isParentActive(item)" [class.expanded]="item.expanded">
+        <!-- Parent Menu Item (With Children) -->
+        <a 
+          *ngIf="item.children" 
+          (click)="toggleSubmenu(item)" 
+          class="nav-link parent-link"
+          [class.active]="isParentActive(item)" 
+          [class.expanded]="item.expanded"
+          [matTooltip]="!isExpanded && !isMobile ? item.label : null"
+          matTooltipPosition="right">
           <i [class]="item.icon"></i>
-          <span *ngIf="isExpanded" [@fadeInOut]="'in'">{{ item.label }}</span>
-          <i *ngIf="isExpanded && item.children" [@fadeInOut]="'in'" class="fas fa-chevron-down submenu-arrow"
+          <span *ngIf="isExpanded">{{ item.label }}</span>
+          <i 
+            *ngIf="isExpanded && item.children" 
+            class="fas fa-chevron-down submenu-arrow"
             [class.rotated]="item.expanded"></i>
         </a>
 
         <!-- Submenu Items -->
-        <ul *ngIf="item.children && (isExpanded || item.expanded)" class="submenu"
+        <ul 
+          *ngIf="item.children && isExpanded" 
+          class="submenu"
           [@expandCollapse]="item.expanded ? 'expanded' : 'collapsed'">
           <li *ngFor="let child of item.children" class="submenu-item">
-            <a (click)="navigateTo(child.route!)" class="submenu-link" [class.active]="isActive(child.route!)"
-              [matTooltip]="!isExpanded ? child.label : null" matTooltipPosition="right">
+            <a 
+              (click)="navigateTo(child.route!)" 
+              class="submenu-link" 
+              [class.active]="isActive(child.route!)">
               <i [class]="child.icon"></i>
-              <span *ngIf="isExpanded">{{ child.label }}</span>
+              <span>{{ child.label }}</span>
             </a>
           </li>
         </ul>
-
-        <!-- Tooltip for collapsed state -->
-        <div *ngIf="!isExpanded" class="tooltip">
-          {{ item.label }}
-          <span *ngIf="item.badge" class="tooltip-badge">{{ item.badge }}</span>
-        </div>
       </li>
     </ul>
   </nav>
@@ -97,11 +113,19 @@
     <p class="copyright">&copy; 2025 SWM WMS</p>
   </div>
 
-  <!-- Mobile close button -->
-  <button *ngIf="isMobile && isExpanded" class="mobile-close" (click)="toggleSidebar()" [@fadeInOut]="'in'">
+  <!-- Mobile Close Button -->
+  <button 
+    *ngIf="isMobile && isExpanded" 
+    class="mobile-close" 
+    (click)="toggleSidebar()"
+    [@fadeInOut]="'in'"
+    aria-label="Close sidebar">
     <i class="fas fa-times"></i>
   </button>
 </div>
 
-<!-- Mobile overlay -->
-<div *ngIf="isMobile && isExpanded" class="sidebar-overlay" (click)="toggleSidebar()"></div>
+<!-- Mobile Overlay -->
+<div 
+  *ngIf="isMobile && isExpanded" 
+  class="sidebar-overlay" 
+  (click)="toggleSidebar()"></div>

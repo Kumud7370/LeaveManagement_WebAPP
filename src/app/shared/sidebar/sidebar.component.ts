@@ -46,10 +46,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private sidebarService = inject(SidebarService)
   private isBrowser: boolean
 
-  isExpanded = true
+  isExpanded = false
   isMobile = false
   activeRoute = ""
-  manualOpened = false
+  private isUserInteraction = false
+  private hoverTimeout: any
 
   userProfile: UserProfile = {
     name: sessionStorage.getItem('username') || 'Guest User',
@@ -63,7 +64,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
     { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
     { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
-    //{ label: "Export to Excel", route: "/export", icon: "fas fa-file-excel" },
     { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
     { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
     {
@@ -77,33 +77,24 @@ export class SidebarComponent implements OnInit, OnDestroy {
     },
     { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
     { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
-    // { label: "Remarks & Correction", route: "/remarks", icon: "fas fa-clipboard-check" },
-
-
     { label: "Billing Report", route: "/billing-report", icon: "fas fa-file-invoice-dollar" },
     { label: "Verification", route: "/verifications", icon: "fas fa-check-circle" },
   ]
 
   menuItems = this.navItems
-  private autoExpandedByHover = false
   private subscriptions: Subscription[] = [];
   userSiteName: any;
+
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
-  }
-  private getRoleName(roleId: string | number): string {
-    const roles: Record<string | number, string> = {
-      1: 'Admin',
-      2: 'General User',
-
-    };
-    return roles[roleId] || 'Unknown';
   }
 
   ngOnInit() {
     if (this.isBrowser) {
       this.checkScreenSize()
+      this.setupUserProfile()
+      this.setupMenuItems()
     }
 
     this.subscriptions.push(
@@ -117,25 +108,68 @@ export class SidebarComponent implements OnInit, OnDestroy {
         if (event instanceof NavigationEnd) {
           this.activeRoute = event.urlAfterRedirects
           this.updateExpandedStates()
+          
+          // Close mobile sidebar on navigation
+          if (this.isMobile && this.isExpanded) {
+            this.sidebarService.collapse()
+          }
         }
       }),
     );
 
+    this.activeRoute = this.router.url;
+    this.updateExpandedStates();
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach((sub) => sub.unsubscribe())
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout)
+    }
+  }
+
+  @HostListener("window:resize")
+  onResize() {
+    if (this.isBrowser) {
+      this.checkScreenSize()
+    }
+  }
+
+  private checkScreenSize() {
+    if (this.isBrowser && typeof window !== "undefined") {
+      const wasMobile = this.isMobile
+      this.isMobile = window.innerWidth < 768
+      
+      // Handle transition between mobile and desktop
+      if (wasMobile !== this.isMobile) {
+        if (this.isMobile) {
+          this.sidebarService.collapse()
+          this.isUserInteraction = false
+        } else {
+          // On desktop, start collapsed for hover-to-expand behavior
+          this.sidebarService.collapse()
+          this.isUserInteraction = false
+        }
+      }
+    }
+  }
+
+  private setupUserProfile() {
     const storedUsername = sessionStorage.getItem('username');
-    const storedRole = sessionStorage.getItem('role');
-    const uRoleName = sessionStorage.getItem('RoleName');
+    const storedRole = sessionStorage.getItem('RoleName');
 
     if (storedUsername) {
       this.userProfile.name = storedUsername;
     }
 
     if (storedRole) {
-      this.userProfile.role = sessionStorage.getItem('RoleName') || 'Genenral User';
+      this.userProfile.role = storedRole;
     }
+  }
 
-    this.activeRoute = this.router.url;
+  private setupMenuItems() {
+    const uRoleName = sessionStorage.getItem('RoleName');
 
-    // 🌟 Hide modules based on username
     if (uRoleName === 'SE' || uRoleName === 'AE') {
       this.menuItems = [
         { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
@@ -163,8 +197,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
         { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
       ]
-    }
-    else if (uRoleName?.toLowerCase() === 'admin') {
+    } else if (uRoleName?.toLowerCase() === 'admin') {
       this.menuItems = [
         { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
         { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
@@ -175,56 +208,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
         { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
       ]
-
-    }
-    else if (uRoleName?.toLowerCase() === 'jo') {
+    } else if (uRoleName?.toLowerCase() === 'jo') {
       this.menuItems = [
         { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
         { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
       ]
-
-    }
-    else {
+    } else {
       this.menuItems = this.navItems;
-    }
-
-    this.updateExpandedStates();
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach((sub) => sub.unsubscribe())
-  }
-
-  // @HostListener("window:resize")
-  // onResize() {
-  //   if (this.isBrowser) {
-  //     this.checkScreenSize()
-  //   }
-  // }
-  @HostListener("window:scroll", [])
-  onScroll() {
-    // only auto-expand on scroll if user hasn't manually opened it
-    if (!this.manualOpened && !this.isExpanded && this.isSidebarInView()) {
-      this.sidebarService.expand();
-      this.autoExpandedByHover = true; // so leaving/collapse logic can be consistent
-    }
-  }
-
-  private isSidebarInView(): boolean {
-    const sidebarEl = document.querySelector('.sidebar');
-    if (!sidebarEl) return false;
-    const rect = sidebarEl.getBoundingClientRect();
-    return rect.top < window.innerHeight && rect.bottom >= 0;
-  }
-
-  private checkScreenSize() {
-    if (this.isBrowser && typeof window !== "undefined") {
-      this.isMobile = window.innerWidth < 768
-      if (this.isMobile) {
-        this.sidebarService.collapse()
-      } else {
-        this.sidebarService.expand()
-      }
     }
   }
 
@@ -232,41 +222,39 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.menuItems.forEach((item) => {
       if (item.children) {
         const hasActiveChild = item.children.some((child) => child.route && this.activeRoute.startsWith(child.route));
-        // Only expand if current route is under the item
         item.expanded = hasActiveChild;
       }
     });
   }
 
-
-  // toggleSidebar() {
-  //   this.manualToggle = true;
-  //   this.sidebarService.toggle()
-  // }
   toggleSidebar() {
-    if (this.isExpanded) {
-      // user is closing (after toggle it will be closed) => allow hover auto-open again
-      this.manualOpened = false
-      this.autoExpandedByHover = false
-    } else {
-      // user is opening (after toggle it will be open) => disable hover auto-open
-      this.manualOpened = true
-      this.autoExpandedByHover = false
-    }
-    this.sidebarService.toggle();
+    this.isUserInteraction = true
+    this.sidebarService.toggle()
   }
+
   onSidebarPointerEnter() {
-    if (this.isMobile) return; // ignore mobile
-    if (!this.isExpanded && !this.manualOpened) {
-      this.autoExpandedByHover = true;
-      this.sidebarService.expand();
+    if (this.isMobile) return;
+    
+    // Clear any pending collapse
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout)
+    }
+    
+    // Only expand on hover if user hasn't manually interacted
+    if (!this.isExpanded && !this.isUserInteraction) {
+      this.sidebarService.expand()
     }
   }
+
   onSidebarPointerLeave() {
     if (this.isMobile) return;
-    if (this.autoExpandedByHover && this.isExpanded) {
-      this.sidebarService.collapse();
-      this.autoExpandedByHover = false;
+    
+    // Only collapse if user hasn't manually expanded
+    if (this.isExpanded && !this.isUserInteraction) {
+      // Add small delay to prevent flickering
+      this.hoverTimeout = setTimeout(() => {
+        this.sidebarService.collapse()
+      }, 300)
     }
   }
 
@@ -289,9 +277,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   navigateTo(route: string) {
     this.router.navigateByUrl(route)
-    if (this.isMobile) {
-      this.sidebarService.collapse()
-    }
   }
 
   trackByRoute(index: number, item: NavItem): string {
@@ -314,6 +299,5 @@ export class SidebarComponent implements OnInit, OnDestroy {
     sessionStorage.removeItem("token")
     sessionStorage.removeItem('deviceId');
     this.router.navigate(['/login']);
-
   }
 }
