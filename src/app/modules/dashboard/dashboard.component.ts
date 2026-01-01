@@ -1063,6 +1063,82 @@ export class DashboardComponent implements OnInit {
     })
   }
 
+  // processCumulativeChartData(data: any[]): void {
+  //   if (!data || data.length === 0) return
+
+  //   const wardNames: string[] = []
+  //   const cumulativeWeightData: number[] = []
+  //   const averageWeightData: number[] = []
+
+  //   data.forEach((item) => {
+  //     wardNames.push(item.ward)
+  //     cumulativeWeightData.push(Number(item.cumulativeNetWeight))
+  //     averageWeightData.push(Number(item.averageNetWeight))
+  //   })
+
+  //   const seriesData = [
+  //     {
+  //       name: "Cumulative Net Weight (MT)",
+  //       data: cumulativeWeightData,
+  //       type: "column" as const,
+  //     },
+  //     {
+  //       name: "Average Ward Weight (MT)",
+  //       data: averageWeightData,
+  //       type: "line" as const,
+  //     },
+  //   ]
+
+  //   this.wardChartOptions = {
+  //     ...this.wardChartOptions,
+  //     series: seriesData,
+  //     xaxis: {
+  //       ...this.wardChartOptions.xaxis,
+  //       categories: wardNames,
+  //       labels: {
+  //         ...this.wardChartOptions.xaxis.labels,
+  //         style: {
+  //           ...this.wardChartOptions.xaxis.labels?.style,
+  //           colors: Array(wardNames.length).fill(this.primaryColor),
+  //         },
+  //         rotate: -45,
+  //         rotateAlways: false,
+  //         hideOverlappingLabels: true,
+  //         trim: false,
+  //         maxHeight: 120,
+  //       },
+  //     },
+  //     stroke: {
+  //       width: [0, 3],
+  //       curve: "smooth",
+  //     },
+  //     markers: {
+  //       size: [0, 5],
+  //       colors: [this.successColor, this.primaryColor],
+  //       strokeColors: "#fff",
+  //       strokeWidth: 2,
+  //       hover: {
+  //         size: 7,
+  //       },
+  //     },
+  //   }
+
+  //   this.fullscreenChartOptions = {
+  //     ...this.fullscreenChartOptions,
+  //     series: seriesData,
+  //     xaxis: {
+  //       ...this.fullscreenChartOptions.xaxis,
+  //       categories: wardNames,
+  //       labels: {
+  //         ...this.fullscreenChartOptions.xaxis.labels,
+  //         style: {
+  //           ...this.fullscreenChartOptions.xaxis.labels?.style,
+  //           colors: Array(wardNames.length).fill(this.primaryColor),
+  //         },
+  //       },
+  //     },
+  //   }
+  // }
   processCumulativeChartData(data: any[]): void {
     if (!data || data.length === 0) return
 
@@ -1089,9 +1165,36 @@ export class DashboardComponent implements OnInit {
       },
     ]
 
+    // Determine chart configuration based on data count
+    const categoryCount = wardNames.length
+    const isLargeDataset = categoryCount > 30
+    const isMediumDataset = categoryCount > 15
+
+    // Calculate optimal chart height for desktop
+    const desktopHeight = isLargeDataset ? 500 : isMediumDataset ? 450 : 400
+
+    // Configure label rotation
+    let labelRotation = 0
+    if (categoryCount > 20) labelRotation = -45
+    else if (categoryCount > 10) labelRotation = -30
+
     this.wardChartOptions = {
       ...this.wardChartOptions,
       series: seriesData,
+      chart: {
+        ...this.wardChartOptions.chart,
+        height: this.isMobileView ? 420 : desktopHeight,
+      },
+      plotOptions: {
+        bar: {
+          horizontal: false,
+          columnWidth: categoryCount > 20 ? '75%' : categoryCount > 10 ? '65%' : '55%',
+          borderRadius: 4,
+          dataLabels: {
+            position: "top",
+          },
+        },
+      },
       xaxis: {
         ...this.wardChartOptions.xaxis,
         categories: wardNames,
@@ -1099,13 +1202,27 @@ export class DashboardComponent implements OnInit {
           ...this.wardChartOptions.xaxis.labels,
           style: {
             ...this.wardChartOptions.xaxis.labels?.style,
+            fontSize: categoryCount > 20 ? '10px' : '12px',
             colors: Array(wardNames.length).fill(this.primaryColor),
           },
-          rotate: -45,
-          rotateAlways: false,
+          rotate: labelRotation,
+          rotateAlways: categoryCount > 10,
           hideOverlappingLabels: true,
           trim: false,
           maxHeight: 120,
+        },
+      },
+      dataLabels: {
+        enabled: categoryCount <= 25, // Disable data labels for very large datasets
+        enabledOnSeries: [0],
+        formatter: (val: number) => {
+          return val.toFixed(1)
+        },
+        offsetY: -20,
+        style: {
+          fontSize: categoryCount > 20 ? '10px' : '11px',
+          fontWeight: "bold",
+          colors: [this.successColor],
         },
       },
       stroke: {
@@ -1113,7 +1230,7 @@ export class DashboardComponent implements OnInit {
         curve: "smooth",
       },
       markers: {
-        size: [0, 5],
+        size: [0, categoryCount > 25 ? 4 : 5],
         colors: [this.successColor, this.primaryColor],
         strokeColors: "#fff",
         strokeWidth: 2,
@@ -1138,6 +1255,9 @@ export class DashboardComponent implements OnInit {
         },
       },
     }
+
+    // Update chart width for scrolling if needed
+    this.updateChartWidth()
   }
 
   calculateLast30DaysSummary(wardData: WardData[]): void {
@@ -1484,14 +1604,42 @@ export class DashboardComponent implements OnInit {
     console.log("Opening news detail:", newsItem)
   }
 
+  // updateChartWidth(): void {
+  //   if (this.isMobileView) {
+  //     const categoryCount = this.wardChartOptions.xaxis?.categories?.length || 0
+  //     const barPadding = 80
+  //     const minWidth = Math.max(window.innerWidth - 40, categoryCount * barPadding)
+  //     this.chartWidth = `${minWidth}px`
+  //   } else {
+  //     this.chartWidth = "100%"
+  //   }
+  // }
+
   updateChartWidth(): void {
+    const categoryCount = this.wardChartOptions.xaxis?.categories?.length || 0
+
     if (this.isMobileView) {
-      const categoryCount = this.wardChartOptions.xaxis?.categories?.length || 0
+      // Mobile: Always enable horizontal scroll for better readability
       const barPadding = 80
       const minWidth = Math.max(window.innerWidth - 40, categoryCount * barPadding)
       this.chartWidth = `${minWidth}px`
     } else {
-      this.chartWidth = "100%"
+      // Desktop: Smart scrolling based on data density
+      if (categoryCount > 30) {
+        // Very large dataset: Enable horizontal scroll
+        const barWidth = 50 // Narrower bars for many categories
+        const minWidth = categoryCount * barWidth
+        this.chartWidth = `${Math.max(minWidth, 1000)}px`
+      } else if (categoryCount > 20) {
+        // Medium-large dataset: Slight scroll if needed
+        const barWidth = 55
+        const minWidth = categoryCount * barWidth
+        const containerWidth = this.chartContainer?.nativeElement?.offsetWidth || 1200
+        this.chartWidth = minWidth > containerWidth ? `${minWidth}px` : '100%'
+      } else {
+        // Small to medium dataset: No scroll, fit to container
+        this.chartWidth = "100%"
+      }
     }
   }
 }
