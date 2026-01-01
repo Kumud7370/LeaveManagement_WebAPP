@@ -843,23 +843,35 @@ export class DashboardComponent implements OnInit {
   openFullscreenChart(): void {
     this.showFullscreenChart = true
     this.zoomLevel = 100
-    this.updateFullscreenChartWidth() // Initialize dynamic width on open
 
-    this.fullscreenChartOptions = {
-      ...this.fullscreenChartOptions,
-      series: this.wardChartOptions.series,
-      xaxis: {
-        ...this.fullscreenChartOptions.xaxis,
-        categories: this.wardChartOptions.xaxis.categories || [],
-        labels: {
-          ...this.fullscreenChartOptions.xaxis.labels,
-          style: {
-            ...this.fullscreenChartOptions.xaxis.labels?.style,
-            colors: Array(this.wardChartOptions.xaxis.categories?.length || 0).fill(this.primaryColor),
+    // Force mobile view detection
+    this.checkMobileView()
+
+    // Wait for DOM to update, then set chart dimensions
+    setTimeout(() => {
+      this.updateFullscreenChartWidth()
+
+      this.fullscreenChartOptions = {
+        ...this.fullscreenChartOptions,
+        series: this.wardChartOptions.series,
+        chart: {
+          ...this.fullscreenChartOptions.chart,
+          height: this.isMobileView ? 450 : 600,
+        },
+        xaxis: {
+          ...this.fullscreenChartOptions.xaxis,
+          categories: this.wardChartOptions.xaxis.categories || [],
+          labels: {
+            ...this.fullscreenChartOptions.xaxis.labels,
+            style: {
+              ...this.fullscreenChartOptions.xaxis.labels?.style,
+              colors: Array(this.wardChartOptions.xaxis.categories?.length || 0).fill(this.primaryColor),
+            },
           },
         },
-      },
-    }
+      }
+    }, 100)
+
     document.body.style.overflow = "hidden"
   }
 
