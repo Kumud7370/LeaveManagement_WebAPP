@@ -1,9 +1,9 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from "@angular/core"
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { NgApexchartsModule } from "ng-apexcharts"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
-import { Subject, takeUntil, forkJoin, of, Observable } from "rxjs"
+import { Subject, takeUntil, forkJoin, of, type Observable } from "rxjs"
 import moment from "moment"
 import type {
   ApexAxisChartSeries,
@@ -56,7 +56,7 @@ export interface ComparisonData {
     avgDailyWeight: number
     efficiencyRate: number
     monthlyData: number[]
-    quarterlyData: number[]
+    quarterlyData: [number, number, number, number]
   }
   previousYear: {
     totalWeight: number
@@ -64,7 +64,7 @@ export interface ComparisonData {
     avgDailyWeight: number
     efficiencyRate: number
     monthlyData: number[]
-    quarterlyData: number[]
+    quarterlyData: [number, number, number, number]
   }
   changes: {
     weightChange: number
@@ -498,7 +498,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     },
   }
 
-  constructor(private dbCallingService: DbCallingService, private cdr: ChangeDetectorRef) { }
+  constructor(
+    private dbCallingService: DbCallingService,
+    private cdr: ChangeDetectorRef,
+  ) { }
 
   ngOnInit(): void {
     this.initializeAvailableYears()
@@ -506,12 +509,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadFiltersFromAPI()
     this.loadDashboardData()
     this.loadComparisonData()
-    //this.loadDashboardMetrics()
+    // this.loadDashboardMetrics() // Commented out as it's called within loadDashboardData
+    this.updateChartResponsiveness()
   }
 
   ngOnDestroy(): void {
     this.destroy$.next()
     this.destroy$.complete()
+  }
+
+  @HostListener("window:resize", ["$event"])
+  onResize(event: any) {
+    this.updateChartResponsiveness()
   }
 
   private initializeAvailableYears(): void {
@@ -682,12 +691,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
             this.comparisonData.siteWise.deonar.previousTrips = deonarPrevious.trips
 
             // percentage changes (deterministic, guarded)
-            this.comparisonData.changes.weightChange =
-              this.safePercentChange(this.comparisonData.currentYear.totalWeight, this.comparisonData.previousYear.totalWeight)
-            this.comparisonData.changes.tripsChange =
-              this.safePercentChange(this.comparisonData.currentYear.totalTrips, this.comparisonData.previousYear.totalTrips)
-            this.comparisonData.changes.avgDailyChange =
-              this.safePercentChange(this.comparisonData.currentYear.avgDailyWeight, this.comparisonData.previousYear.avgDailyWeight)
+            this.comparisonData.changes.weightChange = this.safePercentChange(
+              this.comparisonData.currentYear.totalWeight,
+              this.comparisonData.previousYear.totalWeight,
+            )
+            this.comparisonData.changes.tripsChange = this.safePercentChange(
+              this.comparisonData.currentYear.totalTrips,
+              this.comparisonData.previousYear.totalTrips,
+            )
+            this.comparisonData.changes.avgDailyChange = this.safePercentChange(
+              this.comparisonData.currentYear.avgDailyWeight,
+              this.comparisonData.previousYear.avgDailyWeight,
+            )
             this.comparisonData.changes.efficiencyChange =
               this.comparisonData.currentYear.efficiencyRate - this.comparisonData.previousYear.efficiencyRate
 
@@ -789,7 +804,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
           : []
   }
 
-  private aggregateByYearAndMonth(items: any[], year: number): { monthlyWeights: number[]; totalWeight: number; totalTrips: number } {
+  private aggregateByYearAndMonth(
+    items: any[],
+    year: number,
+  ): { monthlyWeights: number[]; totalWeight: number; totalTrips: number } {
     const monthlyWeights = Array(12).fill(0)
     let totalWeight = 0
     let totalTrips = 0
@@ -843,7 +861,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return null
   }
 
-  private monthsToQuarters(months: number[]): number[] {
+  private monthsToQuarters(months: number[]): [number, number, number, number] {
     const q1 = months.slice(0, 3).reduce((a, b) => a + b, 0)
     const q2 = months.slice(3, 6).reduce((a, b) => a + b, 0)
     const q3 = months.slice(6, 9).reduce((a, b) => a + b, 0)
@@ -860,7 +878,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const capacity = Number(it.vehicleCapacity ?? it.capacity ?? it.maxCapacity ?? 0)
       const vehicles = Number(it.vehicleCount ?? it.vehicles ?? 0)
       const estimatedCapacity = capacity > 0 ? capacity : vehicles * 6 // deterministic estimate if capacity absent
-      const actual = Number(it.actualWeight ?? it.actualWeightMT ?? it.totalNetWeight ?? it.netWeight ?? it.totalWeight ?? 0)
+      const actual = Number(
+        it.actualWeight ?? it.actualWeightMT ?? it.totalNetWeight ?? it.netWeight ?? it.totalWeight ?? 0,
+      )
 
       totalCapacity += isFinite(estimatedCapacity) ? estimatedCapacity : 0
       totalActual += isFinite(actual) ? actual : 0
@@ -888,7 +908,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private safePercentChange(current: number, previous: number): number {
     if (!previous || previous === 0) {
-      return previous === 0 && current === 0 ? 0 : 100 * (current - previous) / (previous === 0 ? 1 : previous)
+      return previous === 0 && current === 0 ? 0 : (100 * (current - previous)) / (previous === 0 ? 1 : previous)
     }
     return Number((((current - previous) / previous) * 100).toFixed(2))
   }
@@ -986,365 +1006,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return { fromDate, toDate }
   }
 
-  // loadDashboardData(): void {
-  //   this.isLoading = true
-  //   this.timeMetrics.today = moment().toDate()
-
-  //   const { fromDate, toDate } = this.getDateRange()
-  //   const userId = Number(sessionStorage.getItem("UserId")) || 0
-
-  //   const wbSummaryPayload = {
-  //     DateFrom: fromDate,
-  //     DateTo: toDate,
-  //     UserId: userId,
-  //     WardName: this.selectedWard || "",
-  //     Agency: this.selectedAgency || "",
-  //     VehicleType: this.selectedVehicleType || "",
-  //   }
-
-  //   const cumulativePayload = {
-  //     UserId: userId,
-  //     FromDate: fromDate,
-  //     ToDate: toDate,
-  //     SiteName: "SWM",
-  //     WardName: this.selectedWard || "",
-  //     Agency: this.selectedAgency || "",
-  //     VehicleType: this.selectedVehicleType || "",
-  //   }
-
-  //   const wardwisePayload = {
-  //     WeighBridge: "",
-  //     FromDate: fromDate,
-  //     ToDate: toDate,
-  //     FullDate: "",
-  //     WardName: this.selectedWard || "",
-  //     Act_Shift: "",
-  //     TransactionDate: fromDate,
-  //     Agency: this.selectedAgency || "",
-  //     VehicleType: this.selectedVehicleType || "",
-  //   }
-
-  //   const wb$ = this.safeCall(() => this.dbCallingService.GetWBTripSummary(wbSummaryPayload))
-  //   const cum$ = this.safeCall(() => this.dbCallingService.getCumulativeTripSummary(cumulativePayload))
-  //   const ward$ = this.safeCall(() => this.dbCallingService.getWardwiseReport(wardwisePayload))
-
-  //   forkJoin({ wbSummary: wb$, cumulative: cum$, wardwise: ward$ })
-  //     .pipe(takeUntil(this.destroy$))
-  //     .subscribe({
-  //       next: ({ wbSummary, cumulative, wardwise }) => {
-  //         try {
-  //           this.processWBTripSummary(wbSummary)
-  //         } catch (err) {
-  //           console.error("processWBTripSummary error:", err)
-  //         }
-
-  //         try {
-  //           this.processCumulativeSummary(cumulative)
-  //         } catch (err) {
-  //           console.error("processCumulativeSummary error:", err)
-  //         }
-
-  //         try {
-  //           this.processWardwiseReport(wardwise)
-  //         } catch (err) {
-  //           console.error("processWardwiseReport error:", err)
-  //         }
-
-  //         this.updateCharts()
-  //         this.isLoading = false
-  //         this.cdr.detectChanges()
-  //       },
-  //       error: (err) => {
-  //         console.error("forkJoin error:", err)
-  //         this.isLoading = false
-  //       },
-  //     })
-  // }
-  // Add this new method to your DashboardComponent class
-
-  /**
-   * Load dashboard metrics using the new API endpoint
-   * This replaces the need for processCumulativeSummary for time-based metrics
-   */
-  // private loadDashboardMetrics(): void {
-  //   const userId = Number(sessionStorage.getItem("UserId")) || 0;
-
-  //   const metricsPayload = {
-  //     userId: userId,
-  //     siteName: "SWM", // or "RTS" based on your needs
-  //     wardName: this.selectedWard || "",
-  //     agency: this.selectedAgency || "",
-  //     vehicleType: this.selectedVehicleType || ""
-  //   };
-
-  //   this.dbCallingService.getDashboardMetrics(metricsPayload)
-  //     .pipe(takeUntil(this.destroy$))
-  //     .subscribe({
-  //       next: (response) => {
-  //         if (response && response.status === "success" && response.data) {
-  //           const data = response.data;
-
-  //           // Map to timeMetrics
-  //           this.timeMetrics.todayWeight = Number(data.todayWeight || 0);
-  //           this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0);
-  //           this.timeMetrics.week = Number(data.thisWeekWeight || 0);
-  //           this.timeMetrics.month = Number(data.thisMonthWeight || 0);
-  //           this.timeMetrics.year = Number(data.thisYearWeight || 0);
-
-  //           // Map to last30DaysMetrics
-  //           this.last30DaysMetrics.cumulativeWeight = Number(data.last30DaysTotal || 0);
-  //           this.last30DaysMetrics.averageWardWeight = Number(data.last30DaysAvgWardWise || 0);
-
-  //           console.log("Dashboard metrics loaded successfully:", data);
-  //           this.cdr.detectChanges();
-  //         } else {
-  //           console.warn("Invalid dashboard metrics response:", response);
-  //         }
-  //       },
-  //       error: (err) => {
-  //         console.error("Error loading dashboard metrics:", err);
-  //       }
-  //     });
-  // }
-
-  // private loadDashboardMetrics(): void {
-  //   const userId = Number(sessionStorage.getItem("UserId")) || undefined
-  //   const payload = {
-  //     userId: userId || undefined,
-  //     siteName: "SWM",
-  //     wardName: this.selectedWard || undefined,
-  //     agency: this.selectedAgency || undefined,
-  //     vehicleType: this.selectedVehicleType || undefined,
-  //   }
-
-
-  //   this.dbCallingService
-  //     .getDashboardMetrics(payload)
-  //     .pipe(takeUntil(this.destroy$))
-  //     .subscribe({
-  //       next: (data) => {
-  //         if (!data) return
-
-  //         // Time metrics
-  //         this.timeMetrics.todayWeight = Number(data.todayWeight || 0)
-  //         this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0)
-  //         this.timeMetrics.week = Number(data.thisWeekWeight || 0)
-  //         this.timeMetrics.month = Number(data.thisMonthWeight || 0)
-  //         this.timeMetrics.year = Number(data.thisYearWeight || 0)
-
-  //         // Last 30 days metrics
-  //         this.last30DaysMetrics.cumulativeWeight =
-  //           Number(data.last30DaysTotal || 0)
-  //         this.last30DaysMetrics.averageWardWeight =
-  //           Number(data.last30DaysAvgWardWise || 0)
-
-  //         this.cdr.detectChanges()
-  //       },
-  //       error: (err) => {
-  //         console.error("Dashboard metrics API failed", err)
-  //       },
-  //     })
-  // }
-
-
-// private loadDashboardMetrics(): void {
-//   const userId = Number(sessionStorage.getItem("UserId")) || undefined
-//   const payload = {
-//     userId: userId || undefined,
-//     //siteName: this.selectedSite || undefined,  // ✅ Changed from "SWM" to dynamic
-//     wardName: this.selectedWard || undefined,
-//     agency: this.selectedAgency || undefined,
-//     vehicleType: this.selectedVehicleType || undefined,
-//   }
-
-//   this.dbCallingService
-//     .getDashboardMetrics(payload)
-//     .pipe(takeUntil(this.destroy$))
-//     .subscribe({
-//       next: (data) => {
-//         if (!data) return
-
-//         // Time metrics
-//         this.timeMetrics.todayWeight = Number(data.todayWeight || 0)
-//         this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0)
-//         this.timeMetrics.week = Number(data.thisWeekWeight || 0)
-//         this.timeMetrics.month = Number(data.thisMonthWeight || 0)
-//         this.timeMetrics.year = Number(data.thisYearWeight || 0)
-
-//         // Last 30 days metrics
-//         this.last30DaysMetrics.cumulativeWeight =
-//           Number(data.last30DaysTotal || 0)
-//         this.last30DaysMetrics.averageWardWeight =
-//           Number(data.last30DaysAvgWardWise || 0)
-
-//         this.cdr.detectChanges()
-//       },
-//       error: (err) => {
-//         console.error("Dashboard metrics API failed", err)
-//       },
-//     })
-// }
-// private loadDashboardMetrics(): void {
-//   const userId = Number(sessionStorage.getItem("UserId")) || undefined
-
-//  const payload = {
-//   userId,
-//   siteName: "Deonar",
-//   wardName: "A",
-//   agency: "BMC",
-//   vehicleType: "DUMPER",
-// }
-// private loadDashboardMetrics(): void {
-//   const userId = Number(sessionStorage.getItem("UserId")) || undefined
-//   const payload = {
-//     userId: userId || undefined,
-//     //siteName: this.selectedSite || undefined,  // ✅ Changed from "SWM" to dynamic
-//     wardName: this.selectedWard || undefined,
-//     agency: this.selectedAgency || undefined,
-//     vehicleType: this.selectedVehicleType || undefined,
-//   }
-
-//   this.dbCallingService
-//     .getDashboardMetrics(payload)
-//     .pipe(takeUntil(this.destroy$))
-//     .subscribe({
-//       next: (data) => {
-//         if (!data) return
-
-//         this.timeMetrics.todayWeight = Number(data.todayWeight || 0)
-//         this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0)
-//         this.timeMetrics.week = Number(data.thisWeekWeight || 0)
-//         this.timeMetrics.month = Number(data.thisMonthWeight || 0)
-//         this.timeMetrics.year = Number(data.thisYearWeight || 0)
-
-//         this.last30DaysMetrics.cumulativeWeight =
-//           Number(data.last30DaysTotal || 0)
-//         this.last30DaysMetrics.averageWardWeight =
-//           Number(data.last30DaysAvgWardWise || 0)
-
-//         this.cdr.detectChanges()
-//       },
-//       error: (err) => {
-//         console.error("Dashboard metrics API failed", err)
-//       },
-//     })
-// }
-private loadDashboardMetrics(): void {
-  const userId = Number(sessionStorage.getItem("UserId")) || undefined
-  const { fromDate, toDate } = this.getDateRange() // ✅ Use existing method
-  
-  const payload = {
-    userId: userId || undefined,
-    wardName: this.selectedWard || undefined,
-    agency: this.selectedAgency || undefined,
-    vehicleType: this.selectedVehicleType || undefined,
-    fromDate: fromDate,  // ✅ NEW
-    toDate: toDate       // ✅ NEW
-  }
-
-  this.dbCallingService
-    .getDashboardMetrics(payload)
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: (data) => {
-        if (!data) return
-
-        this.timeMetrics.todayWeight = Number(data.todayWeight || 0)
-        this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0)
-        this.timeMetrics.week = Number(data.thisWeekWeight || 0)
-        this.timeMetrics.month = Number(data.thisMonthWeight || 0)
-        this.timeMetrics.year = Number(data.thisYearWeight || 0)
-
-        this.last30DaysMetrics.cumulativeWeight =
-          Number(data.last30DaysTotal || 0)
-        this.last30DaysMetrics.averageWardWeight =
-          Number(data.last30DaysAvgWardWise || 0)
-
-        this.cdr.detectChanges()
-      },
-      error: (err) => {
-        console.error("Dashboard metrics API failed", err)
-      },
-    })
-}
-
-  /**
-   * Modified loadDashboardData to use the new metrics API
-   */
-  // loadDashboardData(): void {
-  //   this.isLoading = true;
-  //   this.timeMetrics.today = moment().toDate();
-
-  //   const { fromDate, toDate } = this.getDateRange();
-  //   const userId = Number(sessionStorage.getItem("UserId")) || 0;
-
-  //   const wbSummaryPayload = {
-  //     DateFrom: fromDate,
-  //     DateTo: toDate,
-  //     UserId: userId,
-  //     WardName: this.selectedWard || "",
-  //     Agency: this.selectedAgency || "",
-  //     VehicleType: this.selectedVehicleType || "",
-  //   };
-
-  //   const wardwisePayload = {
-  //     WeighBridge: "",
-  //     FromDate: fromDate,
-  //     ToDate: toDate,
-  //     FullDate: "",
-  //     WardName: this.selectedWard || "",
-  //     Act_Shift: "",
-  //     TransactionDate: fromDate,
-  //     Agency: this.selectedAgency || "",
-  //     VehicleType: this.selectedVehicleType || "",
-  //   };
-
-  //   // NEW: Add dashboard metrics call
-  //   const metricsPayload = {
-  //     userId: userId,
-  //     siteName: "SWM",
-  //     wardName: this.selectedWard || "",
-  //     agency: this.selectedAgency || "",
-  //     vehicleType: this.selectedVehicleType || ""
-  //   };
-
-  //   const wb$ = this.safeCall(() => this.dbCallingService.GetWBTripSummary(wbSummaryPayload));
-  //   const ward$ = this.safeCall(() => this.dbCallingService.getWardwiseReport(wardwisePayload));
-  //   const metrics$ = this.safeCall(() => this.dbCallingService.getDashboardMetrics(metricsPayload));
-
-  //   forkJoin({ wbSummary: wb$, wardwise: ward$, metrics: metrics$ })
-  //     .pipe(takeUntil(this.destroy$))
-  //     .subscribe({
-  //       next: ({ wbSummary, wardwise, metrics }) => {
-  //         try {
-  //           this.processWBTripSummary(wbSummary);
-  //         } catch (err) {
-  //           console.error("processWBTripSummary error:", err);
-  //         }
-
-  //         try {
-  //           this.processWardwiseReport(wardwise);
-  //         } catch (err) {
-  //           console.error("processWardwiseReport error:", err);
-  //         }
-
-  //         // NEW: Process dashboard metrics
-  //         try {
-  //           this.processDashboardMetrics(metrics);
-  //         } catch (err) {
-  //           console.error("processDashboardMetrics error:", err);
-  //         }
-
-  //         this.updateCharts();
-  //         this.isLoading = false;
-  //         this.cdr.detectChanges();
-  //       },
-  //       error: (err) => {
-  //         console.error("forkJoin error:", err);
-  //         this.isLoading = false;
-  //       },
-  //     });
-  // }
   loadDashboardData(): void {
     this.isLoading = true
     this.timeMetrics.today = moment().toDate()
@@ -1374,12 +1035,8 @@ private loadDashboardMetrics(): void {
     }
 
     // EXISTING CALLS
-    const wb$ = this.safeCall(() =>
-      this.dbCallingService.GetWBTripSummary(wbSummaryPayload),
-    )
-    const ward$ = this.safeCall(() =>
-      this.dbCallingService.getWardwiseReport(wardwisePayload),
-    )
+    const wb$ = this.safeCall(() => this.dbCallingService.GetWBTripSummary(wbSummaryPayload))
+    const ward$ = this.safeCall(() => this.dbCallingService.getWardwiseReport(wardwisePayload))
 
     // 🔴 NEW METRICS CALL
     const metrics$ = this.safeCall(() => {
@@ -1423,42 +1080,6 @@ private loadDashboardMetrics(): void {
   /**
    * Process the dashboard metrics response
    */
-  // private processDashboardMetrics(response: any): void {
-  //   if (!response) {
-  //     console.warn("No dashboard metrics response received");
-  //     return;
-  //   }
-
-  //   // Handle both direct data and wrapped response
-  //   const data = response.data || response;
-
-  //   if (!data) {
-  //     console.warn("No data in dashboard metrics response");
-  //     return;
-  //   }
-
-  //   // Map to timeMetrics with proper type conversion
-  //   this.timeMetrics.todayWeight = Number(data.todayWeight || 0);
-  //   this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0);
-  //   this.timeMetrics.week = Number(data.thisWeekWeight || 0);
-  //   this.timeMetrics.month = Number(data.thisMonthWeight || 0);
-  //   this.timeMetrics.year = Number(data.thisYearWeight || 0);
-
-  //   // Map to last30DaysMetrics with proper type conversion
-  //   this.last30DaysMetrics.cumulativeWeight = Number(data.last30DaysTotal || 0);
-  //   this.last30DaysMetrics.averageWardWeight = Number(data.last30DaysAvgWardWise || 0);
-
-  //   console.log("Dashboard metrics processed:", {
-  //     today: this.timeMetrics.todayWeight,
-  //     yesterday: this.timeMetrics.lastDay,
-  //     week: this.timeMetrics.week,
-  //     month: this.timeMetrics.month,
-  //     year: this.timeMetrics.year,
-  //     last30DaysTotal: this.last30DaysMetrics.cumulativeWeight,
-  //     avgWardWeight: this.last30DaysMetrics.averageWardWeight
-  //   });
-  // }
-
   private processDashboardMetrics(data: any): void {
     if (!data) return
 
@@ -1468,10 +1089,45 @@ private loadDashboardMetrics(): void {
     this.timeMetrics.month = Number(data.thisMonthWeight || 0)
     this.timeMetrics.year = Number(data.thisYearWeight || 0)
 
-    this.last30DaysMetrics.cumulativeWeight =
-      Number(data.last30DaysTotal || 0)
-    this.last30DaysMetrics.averageWardWeight =
-      Number(data.last30DaysAvgWardWise || 0)
+    this.last30DaysMetrics.cumulativeWeight = Number(data.last30DaysTotal || 0)
+    this.last30DaysMetrics.averageWardWeight = Number(data.last30DaysAvgWardWise || 0)
+  }
+
+  private loadDashboardMetrics(): void {
+    const userId = Number(sessionStorage.getItem("UserId")) || undefined
+    const { fromDate, toDate } = this.getDateRange()
+
+    const payload = {
+      userId: userId || undefined,
+      wardName: this.selectedWard || undefined,
+      agency: this.selectedAgency || undefined,
+      vehicleType: this.selectedVehicleType || undefined,
+      fromDate: fromDate,
+      toDate: toDate,
+    }
+
+    this.dbCallingService
+      .getDashboardMetrics(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          if (!data) return
+
+          this.timeMetrics.todayWeight = Number(data.todayWeight || 0)
+          this.timeMetrics.lastDay = Number(data.yesterdayWeight || 0)
+          this.timeMetrics.week = Number(data.thisWeekWeight || 0)
+          this.timeMetrics.month = Number(data.thisMonthWeight || 0)
+          this.timeMetrics.year = Number(data.thisYearWeight || 0)
+
+          this.last30DaysMetrics.cumulativeWeight = Number(data.last30DaysTotal || 0)
+          this.last30DaysMetrics.averageWardWeight = Number(data.last30DaysAvgWardWise || 0)
+
+          this.cdr.detectChanges()
+        },
+        error: (err) => {
+          console.error("Error loading metrics:", err)
+        },
+      })
   }
 
   private safeCall(fn: () => Observable<any> | null | undefined): Observable<any> {
@@ -1679,7 +1335,10 @@ private loadDashboardMetrics(): void {
       }
       this.wardChartOptions = {
         ...this.wardChartOptions,
-        series: [{ name: "Trips", data: [0] }, { name: "Weight (MT)", data: [0] }],
+        series: [
+          { name: "Trips", data: [0] },
+          { name: "Weight (MT)", data: [0] },
+        ],
         xaxis: { categories: ["No data"] },
       }
       return
@@ -1870,6 +1529,7 @@ private loadDashboardMetrics(): void {
 
   toggleFilters(): void {
     this.filtersCollapsed = !this.filtersCollapsed
+    setTimeout(() => window.dispatchEvent(new Event("resize")), 300)
   }
 
   clearAllFilters(): void {
@@ -1893,11 +1553,12 @@ private loadDashboardMetrics(): void {
 
   onGlobalFilterChange(): void {
     this.loadDashboardData()
-    this.loadDashboardMetrics()
+    this.loadDashboardMetrics() // This method is now correctly defined
   }
 
   toggleSidebar(): void {
     this.sidebarCollapsed = !this.sidebarCollapsed
+    setTimeout(() => window.dispatchEvent(new Event("resize")), 300)
   }
 
   switchSection(section: "overview" | "performance" | "analytics" | "reports"): void {
@@ -1916,5 +1577,31 @@ private loadDashboardMetrics(): void {
 
   drillDownMetric(metric: string): void {
     console.log("Drill down to:", metric)
+  }
+
+  private updateChartResponsiveness(): void {
+    const isMobile = window.innerWidth < 768
+
+    // Adjust Donut Chart
+    if (this.vehicleChartOptions.chart) {
+      this.vehicleChartOptions.chart.height = isMobile ? 300 : 350
+    }
+
+    // Adjust Bar Charts
+    const barCharts = [
+      this.capacityVsActualChartOptions,
+      this.monthlyComparisonChartOptions,
+      this.quarterlyComparisonChartOptions,
+      this.wardChartOptions,
+    ]
+
+    barCharts.forEach((opt) => {
+      if (opt.chart) opt.chart.height = isMobile ? 280 : 350
+      if (opt.plotOptions?.bar) {
+        opt.plotOptions.bar.columnWidth = isMobile ? "80%" : "60%"
+      }
+    })
+
+    this.cdr.detectChanges()
   }
 }

@@ -14,7 +14,7 @@
   overflow: hidden;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   position: relative;
-  z-index: 100;
+  z-index: 1100;
 
   &.expanded {
     width: 260px;
@@ -29,8 +29,22 @@
     width: 280px;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1000;
+    z-index: 1200;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+
+    // Mobile overlay
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 1150;
+      cursor: pointer;
+      animation: fadeIn 0.3s ease;
+    }
 
     &.expanded {
       transform: translateX(0);
@@ -258,7 +272,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0.5rem 0;
-  
+
   // Custom scrollbar
   &::-webkit-scrollbar {
     width: 6px;
@@ -581,6 +595,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }

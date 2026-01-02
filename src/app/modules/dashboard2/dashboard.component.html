@@ -6,12 +6,13 @@
                 <i class="fas fa-chart-bar"></i>
                 <h1>SWM/Refuse Report</h1>
             </div>
-            <div class="header-actions">
-                <button class="btn-header-action" (click)="exportAllData()" [disabled]="isExporting">
+            <!-- Added flex container for better mobile alignment of actions -->
+            <div class="header-actions flex flex-wrap gap-2 w-full sm:w-auto">
+                <button class="btn-header-action flex-1 sm:flex-none" (click)="exportAllData()" [disabled]="isExporting">
                     <i class="fas fa-download" [class.fa-spin]="isExporting"></i>
                     <span class="btn-text">Export All</span>
                 </button>
-                <button class="btn-header-action" (click)="refreshAllData()" [disabled]="isRefreshing">
+                <button class="btn-header-action flex-1 sm:flex-none" (click)="refreshAllData()" [disabled]="isRefreshing">
                     <i class="fas fa-sync-alt" [class.fa-spin]="isRefreshing"></i>
                     <span class="btn-text">Refresh</span>
                 </button>
@@ -34,6 +35,11 @@
                         {{ getActiveFiltersCount() }}
                     </div>
                 </div>
+                <!-- mobile toggle for filters -->
+                <!-- <button class="btn-mobile-filter-toggle sm:hidden flex items-center justify-center p-2 rounded-md bg-white border border-gray-200" (click)="toggleFilters()">
+                    <i class="fas" [class.fa-chevron-down]="filtersCollapsed" [class.fa-chevron-up]="!filtersCollapsed"></i>
+                    <span class="ml-2 text-sm font-medium">Filters</span>
+                </button> -->
                 <div class="filter-actions">
                     <button class="btn-filter-toggle" (click)="toggleFilters()" [class.active]="!filtersCollapsed">
                         <i class="fas" [class.fa-chevron-down]="filtersCollapsed"
@@ -162,8 +168,8 @@
                         <h3>Kanjur</h3>
                         <div class="card-metrics">
                             <div class="metric">
-                                <span class="value">{{ kanjurData.trips }}</span>
-                                <span class="label">Trips</span>
+                                <span class="value text-lg md:text-xl lg:text-2xl">{{ kanjurData.trips }}</span>
+                                <span class="label text-xs uppercase tracking-wider">Trips</span>
                             </div>
                             <div class="metric">
                                 <span class="value">{{ kanjurData.netWeight | number:'1.2-2' }}</span>
@@ -185,8 +191,8 @@
                         <h3>Deonar</h3>
                         <div class="card-metrics">
                             <div class="metric">
-                                <span class="value">{{ deonarData.trips }}</span>
-                                <span class="label">Trips</span>
+                                <span class="value text-lg md:text-xl lg:text-2xl">{{ deonarData.trips }}</span>
+                                <span class="label text-xs uppercase tracking-wider">Trips</span>
                             </div>
                             <div class="metric">
                                 <span class="value">{{ deonarData.netWeight | number:'1.2-2' }}</span>
