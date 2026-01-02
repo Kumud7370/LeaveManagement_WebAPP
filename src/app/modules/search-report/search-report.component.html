@@ -1,5 +1,3 @@
-
-
 <div class="logsheet-list-container">
   <!-- Header -->
   <div class="report-header">
@@ -12,10 +10,10 @@
         <button class="btn-filters" (click)="toggleFilters()" [class.active]="isFiltersOpen"
           aria-label="Toggle Filters">
           <i class="fas fa-filter"></i>
-          <span>Filters</span>
+          <span class="filter-text">Filters</span>
         </button>
         <button class="btn-back" (click)="back()">
-          <i class="fas fa-arrow-left"></i> Back to Dashboard
+          <i class="fas fa-arrow-left"></i> <span class="back-text">Back to Dashboard</span>
         </button>
       </div>
     </div>
@@ -25,8 +23,8 @@
   <div class="table-view">
     <div class="results-container">
       <div class="results-header">
-         <div class="filter-controls">
-          <div class=" quick-filter">
+        <div class="filter-controls">
+          <div class="quick-filter">
           <label for="filter-text-box" class="visually-hidden">Quick Filter</label>
           <div class="input-group">
             <span class="input-group-text">
@@ -38,7 +36,7 @@
         </div>
         <div class="results-actions">
           <button class="btn-export" (click)="exportToExcel()">
-            <i class="fas fa-file-excel"></i> Export to Excel
+            <i class="fas fa-file-excel"></i> <span class="export-text">Export to Excel</span>
           </button>
         </div>
       </div>
@@ -203,7 +201,7 @@
               <span *ngIf="isLoading">Searching...</span>
             </button>
             <button type="button" class="btn-secondary" (click)="resetForm()" [disabled]="isLoading">
-              <i class="fas fa-undo"></i> Reset
+              <i class="fas fa-undo"></i> <span>Reset</span>
             </button>
           </div>
         </form>

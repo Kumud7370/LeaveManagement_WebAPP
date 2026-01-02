@@ -28,6 +28,8 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   color: $text-color;
   font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 // Header styles
@@ -38,6 +40,8 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   box-shadow: $shadow-lg;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
   
   &::before {
     content: '';
@@ -59,49 +63,64 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     width: 100%;
     position: relative;
     z-index: 1;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
   }
   
   .header-title {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
     
     i {
-      font-size: 2rem;
+      font-size: 1.5rem;
       color: $accent-color;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+      flex-shrink: 0;
     }
     
     h1 {
       font-family: 'Orbitron', sans-serif;
-      font-size: 2rem;
+      font-size: 1.75rem;
       margin: 0;
       font-weight: 700;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      white-space: nowrap;
     }
   }
   
   .header-actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex: 1;
   }
   
-  .btn-filters {
+  .btn-filters,
+  .btn-back {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: $border-radius;
-    padding: 0.75rem 1.5rem;
-    font-size: 0.875rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     transition: all $transition-speed $transition-bounce;
     font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
     
     i {
-      margin-right: 0.5rem;
+      margin-right: 0.3rem;
+      flex-shrink: 0;
     }
     
     &:hover {
@@ -117,23 +136,6 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
   
   .btn-back {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: $border-radius;
-    padding: 0.75rem 1.5rem;
-    font-size: 0.875rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: all $transition-speed $transition-bounce;
-    font-weight: 500;
-    
-    i {
-      margin-right: 0.5rem;
-    }
-    
     &:hover {
       background: rgba(255, 255, 255, 0.25);
       transform: translateY(-2px);
@@ -144,28 +146,29 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
 // Report content
 .report-content {
-  padding: 0 2rem 2rem;
+  padding: 1rem;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
 }
 
 // Enhanced Summary cards with modern glassmorphism design
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
   
   .summary-card {
     background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: $border-radius-lg;
-    padding: 2rem;
+    padding: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
     box-shadow: $shadow-lg;
     transition: all $transition-speed $transition-bounce;
     position: relative;
@@ -192,12 +195,12 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 70px;
-      height: 70px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
       color: white;
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       flex-shrink: 0;
       box-shadow: $shadow-md;
       position: relative;
@@ -232,22 +235,25 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     
     .card-content {
       flex: 1;
+      min-width: 0;
       
       .card-value {
-        font-size: 1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: $primary-color;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.25rem;
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         font-family: 'Orbitron', monospace;
+        word-break: break-word;
       }
       
       .card-label {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         color: $text-muted;
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        line-height: 1.2;
       }
     }
   }
@@ -261,39 +267,47 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   box-shadow: $shadow-xl;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 100%;
+  box-sizing: border-box;
   
   .results-container {
+    width: 100%;
+    box-sizing: border-box;
+    
     .results-header {
       background: linear-gradient(135deg, rgba($primary-color, 0.05) 0%, rgba($secondary-color, 0.05) 100%);
-      padding: 1.5rem 2rem;
+      padding: 1rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 2px solid rgba($primary-color, 0.1);
+      flex-wrap: wrap;
+      gap: 1rem;
       
       h2 {
         margin: 0;
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         color: $primary-color;
         font-weight: 700;
       }
       
       .results-actions {
         .btn-export {
-          padding: 0.75rem 1.5rem;
+          padding: 0.6rem 1rem;
           background: linear-gradient(135deg, $success-color 0%, darken($success-color, 10%) 100%);
           color: white;
           border: none;
           border-radius: $border-radius;
-          font-size: 0.875rem;
+          font-size: 0.75rem;
           font-weight: 600;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.4rem;
           transition: all $transition-speed;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          white-space: nowrap;
           
           &:hover {
             transform: translateY(-2px);
@@ -303,20 +317,21 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       }
     }
     
-    // Filter Controls
     .filter-controls {
-      padding: 0rem 0rem;
+      padding: 0.75rem;
       background: rgba($background-color, 0.5);
       border-bottom: 1px solid rgba($border-color, 0.5);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 2rem;
+      gap: 0.75rem;
       flex-wrap: wrap;
+      width: 100%;
+      box-sizing: border-box;
       
       .quick-filter {
         flex: 1;
-        min-width: 300px;
+        min-width: 200px;
         
         .input-group {
           display: flex;
@@ -329,16 +344,20 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
             border: 1px solid rgba($border-color, 0.5);
             border-right: none;
             color: $primary-color;
-            padding: 0.75rem 1rem;
+            padding: 0.6rem 0.75rem;
             display: flex;
             align-items: center;
+            flex-shrink: 0;
+            font-size: 0.9rem;
           }
           
           .form-control {
             border: 1px solid rgba($border-color, 0.5);
             border-left: none;
-            padding: 0.75rem 1rem;
-            font-size: 0.875rem;
+            padding: 0.6rem 0.75rem;
+            font-size: 0.8rem;
+            flex: 1;
+            min-width: 0;
             
             &:focus {
               outline: none;
@@ -351,23 +370,26 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       
       .status-filters {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.3rem;
+        flex-wrap: wrap;
+        justify-content: center;
         
         .status-btn {
-          padding: 0.5rem 1rem;
+          padding: 0.4rem 0.75rem;
           border: 2px solid transparent;
           border-radius: $border-radius;
           background: rgba(255, 255, 255, 0.8);
           color: $text-color;
           cursor: pointer;
-          font-size: 0.75rem;
+          font-size: 0.65rem;
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.5px;
           transition: all $transition-speed;
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.3rem;
+          white-space: nowrap;
           
           &:hover {
             transform: translateY(-2px);
@@ -387,6 +409,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
           
           &.closed.active {
             background: $success-color;
+            color: white;
             border-color: $success-color;
           }
           
@@ -400,35 +423,41 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     
     // Enhanced AG Grid Styling
     .grid-container {
-      padding: 1.5rem;
+      padding: 1rem;
       background: white;
       border-radius: $border-radius;
       box-shadow: $shadow-sm;
+      width: 100%;
+      box-sizing: border-box;
+      overflow-x: auto;
       
       ag-grid-angular {
         display: block;
         width: 100%;
-        height: 500px;
+        min-height: 400px;
+        height: auto;
         
         .ag-theme-alpine {
           width: 100%;
-          height: 100%;
+          min-height: 400px;
+          height: auto;
           border: 1px solid $border-color;
           border-radius: $border-radius;
           overflow: hidden;
+          
           .ag-cell {
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            padding: 0.5rem !important;
+            font-size: 0.8rem;
             
-            // Specific styling for the View button column
             &:first-child {
               justify-content: center !important;
-              padding: 0 !important;
+              padding: 0.3rem !important;
             }
           }
           
-          // Fix for button cell renderer
           .ag-cell-wrapper {
             width: 100%;
             height: 100%;
@@ -437,7 +466,6 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
             justify-content: center;
           }
           
-          // Ensure grid is visible and properly sized
           .ag-root-wrapper {
             border: 1px solid $border-color;
             border-radius: $border-radius;
@@ -445,34 +473,162 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
           
           .ag-header-row {
             background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($secondary-color, 0.08) 100%);
+            font-size: 0.8rem;
           }
           
           .ag-header-cell {
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 0.75rem 0.5rem !important;
             
             .ag-header-cell-label {
               display: flex;
               align-items: center;
               justify-content: center;
               width: 100%;
+              overflow-wrap: break-word;
+              word-break: break-word;
             }
           }
           
-          // Fix row height and cell content alignment
           .ag-row {
             .ag-cell {
-              line-height: normal;
+              line-height: 1.4;
+              overflow-wrap: break-word;
+              word-break: break-word;
               
-              // Special handling for first column (View button)
               &:first-child {
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                padding: 4px !important;
+                padding: 0.3rem !important;
               }
             }
+          }
+          
+          // Pagination Footer Styles
+          .ag-paging-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, rgba($primary-color, 0.05) 0%, rgba($secondary-color, 0.05) 100%);
+            border-top: 1px solid $border-color;
+            flex-wrap: wrap;
+            gap: 1rem;
+            min-height: auto;
+            font-size: 0.8rem;
+          }
+          
+          .ag-paging-row-summary-panel {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            order: 1;
+            flex: 1;
+            min-width: 200px;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.4;
+          }
+          
+          .ag-paging-row-summary-panel-label {
+            font-weight: 500;
+            color: $text-color;
+            display: inline;
+          }
+          
+          .ag-paging-description {
+            order: 2;
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+            font-weight: 500;
+            color: $text-color;
+            white-space: normal;
+          }
+          
+          .ag-paging-page-size-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            order: 3;
+            flex-wrap: wrap;
+            justify-content: center;
+            
+            label {
+              font-weight: 500;
+              color: $text-color;
+              font-size: 0.75rem;
+              white-space: nowrap;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            
+            select {
+              padding: 0.4rem 0.5rem;
+              border: 1px solid $border-color;
+              border-radius: $border-radius-sm;
+              background-color: white;
+              color: $text-color;
+              font-size: 0.75rem;
+              cursor: pointer;
+              transition: all $transition-speed;
+              
+              &:focus {
+                outline: none;
+                border-color: $accent-color;
+                box-shadow: 0 0 0 3px rgba($accent-color, 0.1);
+              }
+            }
+          }
+          
+          .ag-paging-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid $border-color;
+            background: white;
+            color: $text-color;
+            border-radius: $border-radius-sm;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all $transition-speed;
+            text-transform: uppercase;
+            white-space: nowrap;
+            
+            &:hover:not(:disabled) {
+              background: rgba($primary-color, 0.1);
+              border-color: $primary-color;
+              transform: translateY(-1px);
+            }
+            
+            &:active:not(:disabled) {
+              transform: translateY(0);
+            }
+            
+            &:disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+            }
+            
+            i {
+              font-size: 0.8rem;
+            }
+          }
+          
+          .ag-paging-navigation {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            order: 4;
+            flex-wrap: wrap;
+            justify-content: center;
           }
         }
       }
@@ -486,31 +642,33 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem;
+  padding: 2rem 1rem;
   text-align: center;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border-radius: $border-radius-lg;
   box-shadow: $shadow-xl;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  margin-top: 2rem;
+  margin-top: 1rem;
+  width: 100%;
+  box-sizing: border-box;
   
   i {
-    font-size: 4rem;
+    font-size: 3rem;
     color: $warning-color;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
   }
   
   p {
-    margin: 0 0 2rem;
-    font-size: 1.25rem;
+    margin: 0 0 1.5rem;
+    font-size: 1rem;
     color: $text-muted;
     font-weight: 500;
   }
   
   button {
-    padding: 1rem 2rem;
+    padding: 0.75rem 1.5rem;
     border-radius: $border-radius;
     background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
     color: white;
@@ -520,6 +678,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     transition: all $transition-speed $transition-bounce;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-size: 0.8rem;
     
     &:hover {
       box-shadow: $shadow-xl;
@@ -551,7 +710,8 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   position: fixed;
   top: 0;
   right: 0;
-  width: 400px;
+  width: 100%;
+  max-width: 400px;
   height: 100vh;
   background-color: white;
   box-shadow: $shadow-lg;
@@ -569,12 +729,13 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.25rem 1.5rem;
+    padding: 1rem;
     background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
     color: white;
+    flex-shrink: 0;
     
     .offcanvas-title {
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       font-weight: 600;
       margin: 0;
     }
@@ -585,9 +746,13 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       color: white;
       font-size: 1.25rem;
       cursor: pointer;
-      padding: 0.5rem;
+      padding: 0.3rem;
       border-radius: $border-radius;
       transition: background-color $transition-speed;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       
       &:hover {
         background-color: rgba(255, 255, 255, 0.1);
@@ -599,6 +764,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     flex: 1;
     overflow-y: auto;
     padding: 0;
+    -webkit-overflow-scrolling: touch;
     
     &::-webkit-scrollbar {
       width: 6px;
@@ -616,18 +782,18 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .filters-content {
-  padding: 1.5rem;
+  padding: 1.25rem;
 }
 
 .filter-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   
   .filter-section-title {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: $primary-color;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
     border-bottom: 2px solid rgba($primary-color, 0.1);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -637,12 +803,12 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
   
   label {
     font-weight: 600;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: $text-color;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -650,13 +816,14 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   
   .form-control {
     width: 100%;
-    padding: 1rem 1.25rem;
+    padding: 0.75rem;
     border: 2px solid transparent;
     background: rgba(255, 255, 255, 0.8);
     border-radius: $border-radius;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     transition: all $transition-speed;
     backdrop-filter: blur(10px);
+    box-sizing: border-box;
     
     &:focus {
       outline: none;
@@ -669,8 +836,8 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   
   .error-message {
     color: $danger-color;
-    font-size: 0.75rem;
-    margin-top: 0.25rem;
+    font-size: 0.7rem;
+    margin-top: 0.2rem;
     font-weight: 500;
   }
 }
@@ -680,39 +847,41 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   
   i {
     position: absolute;
-    right: 1.25rem;
+    right: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
     color: $text-muted;
     pointer-events: none;
-    font-size: 1rem;
+    font-size: 0.9rem;
   }
 }
 
 .select-wrapper select {
   appearance: none;
-  padding-right: 3rem;
+  padding-right: 2.5rem;
 }
 
 .form-actions {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
   
   button {
-    padding: 1rem 2rem;
+    padding: 0.75rem 1.5rem;
     border-radius: $border-radius;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.75rem;
+    gap: 0.6rem;
     transition: all $transition-speed $transition-bounce;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
     
     &:disabled {
       opacity: 0.6;
@@ -752,112 +921,597 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
-// Responsive styles
+@media (max-width: 1400px) {
+  .report-content {
+    padding: 1rem;
+  }
+}
+
 @media (max-width: 1200px) {
   .summary-cards {
     grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .filters-offcanvas {
+    max-width: 380px;
+  }
+  
+  .ag-theme-alpine {
+    .ag-paging-panel {
+      gap: 0.75rem;
+      padding: 0.6rem 0.75rem;
+    }
   }
 }
 
 @media (max-width: 992px) {
+  .header-title {
+    h1 {
+      font-size: 1.4rem;
+    }
+  }
+  
   .filter-controls {
     flex-direction: column;
     align-items: stretch;
-    gap: 1rem;
+    gap: 0.75rem;
     
     .quick-filter {
       min-width: auto;
     }
     
     .status-filters {
-      justify-content: center;
+      justify-content: flex-start;
       flex-wrap: wrap;
+    }
+  }
+  
+  .filters-offcanvas {
+    max-width: 360px;
+  }
+  
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .ag-theme-alpine {
+    .ag-paging-panel {
+      padding: 0.6rem;
+      gap: 0.6rem;
+      
+      .ag-paging-row-summary-panel {
+        min-width: 100%;
+        order: 1;
+      }
+      
+      .ag-paging-page-size-selector {
+        min-width: 100%;
+        order: 3;
+      }
+      
+      .ag-paging-description {
+        min-width: 100%;
+        order: 2;
+      }
+      
+      .ag-paging-navigation {
+        min-width: 100%;
+        order: 4;
+      }
     }
   }
 }
 
 @media (max-width: 768px) {
-  .filters-offcanvas {
-    width: 100% !important;
-  }
-  
   .logsheet-list-container {
     background: $background-color;
   }
   
   .report-header {
-    padding: 1.5rem;
+    padding: 0.75rem;
+    
+    .header-content {
+      gap: 0.3rem;
+      padding: 0;
+    }
     
     .header-title {
+      flex-shrink: 1;
+      
       h1 {
-        font-size: 1.5rem;
+        font-size: 1.1rem;
       }
       
       i {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
       }
     }
     
     .header-actions {
-      .btn-filters span {
+      gap: 0.3rem;
+      flex: initial;
+    }
+    
+    .btn-filters,
+    .btn-back {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.7rem;
+      
+      .filter-text,
+      .back-text {
         display: none;
+      }
+      
+      i {
+        margin-right: 0;
       }
     }
   }
   
   .report-content {
-    padding: 0 1rem 1rem;
+    padding: 0.75rem;
   }
   
   .summary-cards {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
     
     .summary-card {
-      padding: 1.5rem;
+      padding: 1rem;
+      gap: 0.75rem;
       
       .card-icon {
-        width: 60px;
-        height: 60px;
-        font-size: 1.25rem;
+        width: 50px;
+        height: 50px;
+        font-size: 1rem;
       }
       
-      .card-content .card-value {
-        font-size: 0.5 rem;
+      .card-content {
+        .card-value {
+          font-size: 0.85rem;
+        }
+        
+        .card-label {
+          font-size: 0.6rem;
+        }
       }
     }
   }
   
-  .results-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
+  .table-view {
+    border-radius: $border-radius-sm;
     
-    .results-actions {
-      width: 100%;
+    .results-container {
+      .results-header {
+        padding: 0.75rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        
+        h2 {
+          font-size: 1rem;
+        }
+        
+        .results-actions {
+          width: 100%;
+          
+          .btn-export {
+            width: 100%;
+            justify-content: center;
+            padding: 0.6rem;
+            font-size: 0.7rem;
+            
+            .export-text {
+              display: none;
+            }
+            
+            i {
+              margin-right: 0.3rem;
+            }
+          }
+        }
+      }
       
-      .btn-export {
+      .filter-controls {
+        padding: 0.5rem;
+        gap: 0.5rem;
+        
+        .quick-filter {
+          min-width: auto;
+          
+          .input-group {
+            .input-group-text {
+              padding: 0.5rem;
+            }
+            
+            .form-control {
+              padding: 0.5rem;
+              font-size: 0.75rem;
+            }
+          }
+        }
+      }
+      
+      .grid-container {
+        padding: 0.5rem;
+        
+        ag-grid-angular {
+          min-height: 300px;
+          max-height: 500px;
+          
+          .ag-theme-alpine {
+            min-height: 300px;
+            max-height: 500px;
+            font-size: 0.7rem;
+            
+            .ag-cell {
+              padding: 0.4rem !important;
+            }
+            
+            .ag-header-cell {
+              padding: 0.5rem 0.25rem !important;
+              
+              .ag-header-cell-label {
+                font-size: 0.7rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .filters-offcanvas {
+    max-width: 100%;
+    width: 100%;
+    
+    .offcanvas-header {
+      padding: 0.75rem;
+      
+      .offcanvas-title {
+        font-size: 1rem;
+      }
+    }
+  }
+  
+  .filters-content {
+    padding: 1rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+    
+    label {
+      font-size: 0.75rem;
+    }
+    
+    .form-control {
+      padding: 0.6rem;
+      font-size: 0.75rem;
+    }
+  }
+  
+  .form-actions {
+    gap: 0.6rem;
+    margin-top: 1rem;
+    
+    button {
+      padding: 0.6rem 1rem;
+      font-size: 0.7rem;
+    }
+  }
+  
+  .no-data-message {
+    padding: 1.5rem 1rem;
+    margin-top: 0.75rem;
+    
+    i {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    p {
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    
+    button {
+      padding: 0.6rem 1.25rem;
+      font-size: 0.7rem;
+    }
+  }
+  
+  .ag-theme-alpine {
+    .ag-paging-panel {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      
+      .ag-paging-row-summary-panel {
+        flex: none;
         width: 100%;
+        order: 1;
         justify-content: center;
+      }
+      
+      .ag-paging-page-size-selector {
+        flex: none;
+        width: 100%;
+        order: 2;
+        justify-content: center;
+        gap: 0.4rem;
+        
+        label {
+          font-size: 0.7rem;
+        }
+        
+        select {
+          padding: 0.35rem 0.4rem;
+          font-size: 0.7rem;
+        }
+      }
+      
+      .ag-paging-description {
+        flex: none;
+        width: 100%;
+        order: 3;
+        font-size: 0.75rem;
+        padding: 0.3rem 0;
+      }
+      
+      .ag-paging-navigation {
+        flex: none;
+        width: 100%;
+        order: 4;
+        justify-content: center;
+        gap: 0.2rem;
+      }
+      
+      .ag-paging-button {
+        min-width: 28px;
+        height: 28px;
+        padding: 0.3rem 0.5rem;
+        font-size: 0.7rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .report-header {
+    padding: 0.5rem;
+    
+    .header-content {
+      gap: 0.2rem;
+    }
+    
+    .header-title {
+      h1 {
+        font-size: 1rem;
+      }
+      
+      i {
+        font-size: 1rem;
+      }
+    }
+    
+    .btn-filters,
+    .btn-back {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.65rem;
+    }
+  }
+  
+  .report-content {
+    padding: 0.5rem;
+  }
+  
+  .summary-cards {
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+    
+    .summary-card {
+      padding: 0.75rem;
+      gap: 0.6rem;
+      
+      .card-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 0.9rem;
+      }
+      
+      .card-content {
+        .card-value {
+          font-size: 0.75rem;
+        }
+        
+        .card-label {
+          font-size: 0.55rem;
+        }
+      }
+    }
+  }
+  
+  .table-view {
+    .results-container {
+      .results-header {
+        padding: 0.5rem;
+      }
+      
+      .filter-controls {
+        padding: 0.4rem;
+        gap: 0.4rem;
+        
+        .quick-filter {
+          .input-group {
+            .input-group-text {
+              padding: 0.4rem;
+              font-size: 0.8rem;
+            }
+            
+            .form-control {
+              padding: 0.4rem;
+              font-size: 0.7rem;
+            }
+          }
+        }
+      }
+      
+      .grid-container {
+        padding: 0.4rem;
+        
+        ag-grid-angular {
+          min-height: 250px;
+          max-height: 400px;
+          
+          .ag-theme-alpine {
+            min-height: 250px;
+            max-height: 400px;
+            font-size: 0.65rem;
+            
+            .ag-cell {
+              padding: 0.3rem !important;
+            }
+            
+            .ag-header-cell {
+              padding: 0.4rem 0.2rem !important;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .no-data-message {
+    padding: 1rem;
+    margin-top: 0.5rem;
+    
+    i {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 0.65rem;
+    }
+  }
+  
+  .ag-theme-alpine {
+    .ag-paging-panel {
+      padding: 0.4rem;
+      gap: 0.3rem;
+      
+      .ag-paging-row-summary-panel {
+        font-size: 0.65rem;
+      }
+      
+      .ag-paging-page-size-selector {
+        gap: 0.2rem;
+        
+        select {
+          font-size: 0.65rem;
+          padding: 0.25rem 0.3rem;
+          min-width: 50px;
+        }
+      }
+      
+      .ag-paging-description {
+        font-size: 0.7rem;
+        padding: 0.2rem 0;
+      }
+      
+      .ag-paging-button {
+        min-width: 24px;
+        height: 24px;
+        padding: 0.25rem 0.4rem;
+        font-size: 0.65rem;
+      }
+      
+      .ag-paging-navigation {
+        gap: 0.15rem;
       }
     }
   }
 }
 
 @media (max-width: 480px) {
-  .summary-cards .summary-card {
-    flex-direction: column;
-    text-align: center;
-    gap: 1rem;
+  .summary-cards {
+    .summary-card {
+      flex-direction: column;
+      text-align: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      
+      .card-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 0.85rem;
+      }
+    }
   }
   
   .ag-theme-alpine {
-    font-size: 0.75rem;
+    font-size: 0.6rem;
   }
   
-  .status-filters .status-btn {
-    font-size: 0.65rem;
-    padding: 0.4rem 0.8rem;
+  .filter-controls {
+    .status-filters {
+      .status-btn {
+        font-size: 0.6rem;
+        padding: 0.3rem 0.6rem;
+      }
+    }
+  }
+  
+  .filters-offcanvas {
+    .offcanvas-header {
+      padding: 0.6rem;
+      
+      .offcanvas-title {
+        font-size: 0.9rem;
+      }
+    }
+  }
+  
+  .ag-theme-alpine {
+    .ag-paging-panel {
+      padding: 0.35rem;
+      gap: 0.25rem;
+      
+      .ag-paging-row-summary-panel {
+        font-size: 0.6rem;
+      }
+      
+      .ag-paging-page-size-selector {
+        gap: 0.2rem;
+        
+        select {
+          font-size: 0.6rem;
+          padding: 0.2rem 0.3rem;
+          min-width: 45px;
+        }
+      }
+      
+      .ag-paging-description {
+        font-size: 0.65rem;
+        padding: 0.15rem 0;
+      }
+      
+      .ag-paging-button {
+        min-width: 20px;
+        height: 20px;
+        padding: 0.2rem 0.3rem;
+        font-size: 0.6rem;
+      }
+      
+      .ag-paging-navigation {
+        gap: 0.1rem;
+      }
+    }
   }
 }
 
@@ -875,6 +1529,5 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .report-spacing {
-  margin-top: 30px; 
+  margin-top: 30px;
 }
-
