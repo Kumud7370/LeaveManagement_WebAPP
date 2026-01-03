@@ -1,10 +1,9 @@
-
 import { Component, OnInit, ViewChild, ElementRef } from "@angular/core"
 import { CommonModule } from "@angular/common"
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angular/forms"
+import { FormBuilder, type FormGroup, Validators, ReactiveFormsModule } from "@angular/forms"
 import { Router, RouterModule } from "@angular/router"
 import { ICellRendererParams } from "ag-grid-community"
-import { AgGridModule, AgGridAngular } from "ag-grid-angular"
+import { AgGridModule, type AgGridAngular } from "ag-grid-angular"
 import * as XLSX from "xlsx"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
 
@@ -74,10 +73,10 @@ export class ShiftReportComponent implements OnInit {
       UserId: Number(this.userId),
       SiteName: this.userSiteName,
     }
-   // console.log("Loading initial data with params:", obj)
+    // console.log("Loading initial data with params:", obj)
     this.dbCallingService.GetSiteLocations(obj).subscribe({
       next: (response: any) => {
-       // console.log("response:", response)
+        // console.log("response:", response)
         if (response && response.data) {
           this.lstSiteNames = response.data
         }
@@ -121,7 +120,7 @@ export class ShiftReportComponent implements OnInit {
 
     this.dbCallingService.getShiftwiseReport(payload).subscribe({
       next: (response) => {
-      //  console.log("Initial API Response:", response)
+        //  console.log("Initial API Response:", response)
 
         if (
           response &&
@@ -132,9 +131,9 @@ export class ShiftReportComponent implements OnInit {
           this.shiftData = response.wardData
           this.processDataForGrid()
           this.calculateSummaryFromProcessedData()
-         // console.log("Initial processed data:", this.lstReportData)
+          // console.log("Initial processed data:", this.lstReportData)
         } else {
-        //  console.log("No initial data found")
+          //  console.log("No initial data found")
           this.resetData()
         }
         this.isLoading = false
@@ -212,25 +211,25 @@ export class ShiftReportComponent implements OnInit {
       UserId: this.userId,
     }
 
-   // console.log("Submitting with payload:", payload)
+    // console.log("Submitting with payload:", payload)
 
     this.dbCallingService.getShiftwiseReport(payload).subscribe({
       next: (response) => {
-       // console.log("API Response:", response)
+        // console.log("API Response:", response)
 
         if (
           response &&
           (response.serviceResponse === 1 || response.ServiceResponse === "Successful") &&
           response.wardData?.length
         ) {
-         // console.log("Processing ward data:", response.wardData)
+          // console.log("Processing ward data:", response.wardData)
           this.shiftData = response.wardData
           this.processDataForGrid()
           this.calculateSummaryFromProcessedData()
-         // console.log("Processed data:", this.lstReportData)
+          // console.log("Processed data:", this.lstReportData)
           alert("Data retrieved successfully!")
         } else {
-        //  console.log("No data found or invalid response")
+          //  console.log("No data found or invalid response")
           alert(response?.msg || "No data found")
           this.resetData()
         }
@@ -257,7 +256,7 @@ export class ShiftReportComponent implements OnInit {
     }
 
     if (dataArray && dataArray.length > 0) {
-    //  console.log("Processing data array:", dataArray)
+      //  console.log("Processing data array:", dataArray)
       this.shiftData = dataArray
       this.processDataForGrid()
       this.calculateSummaryFromProcessedData()
@@ -295,13 +294,13 @@ export class ShiftReportComponent implements OnInit {
       (ward) => ward && ward.trim() !== "",
     )
 
-   // console.log("Unique wards:", this.uniqueWards)
+    // console.log("Unique wards:", this.uniqueWards)
 
     this.uniqueShifts = Array.from(new Set(this.shiftData.map((d) => d.act_Shift))).filter(
       (shift) => shift && shift.trim() !== "",
     )
 
-   // console.log("Unique shifts:", this.uniqueShifts)
+    // console.log("Unique shifts:", this.uniqueShifts)
 
     this.flattenedData = this.uniqueWards.map((wardName) => {
       const row: any = { WardName: wardName }
@@ -310,7 +309,7 @@ export class ShiftReportComponent implements OnInit {
 
       this.uniqueShifts.forEach((shift) => {
         const shiftData = this.shiftData.filter((d) => d.wardName === wardName && d.act_Shift === shift)
-     //   console.log(`Data for ${wardName} - ${shift}:`, shiftData)
+        //   console.log(`Data for ${wardName} - ${shift}:`, shiftData)
         const vehicleCount = shiftData.reduce((sum, item) => sum + (item.vehicleCount || 0), 0)
         const netWeight = shiftData.reduce((sum, item) => sum + (item.totalNetWeight || 0), 0)
 
@@ -348,12 +347,12 @@ export class ShiftReportComponent implements OnInit {
     totalRow["TotalNetWeight"] = grandTotalWeight.toFixed(2)
     this.flattenedData.push(totalRow)
 
-   // console.log("Flattened data:", this.flattenedData)
+    // console.log("Flattened data:", this.flattenedData)
 
     this.setupDynamicColumns()
     this.lstReportData = [...this.flattenedData]
 
- //   console.log("Final lstReportData:", this.lstReportData)
+    //   console.log("Final lstReportData:", this.lstReportData)
   }
 
   setupDynamicColumns() {

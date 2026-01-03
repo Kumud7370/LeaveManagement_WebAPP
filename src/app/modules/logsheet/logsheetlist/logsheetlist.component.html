@@ -13,218 +13,215 @@
           <span>Filters</span>
         </button>
         <button class="btn-back" (click)="Back()">
-          <i class="fas fa-arrow-left"></i> Back to Dashboard
+          <i class="fas fa-arrow-left"></i>
+          <span class="back-text">Back to Dashboard</span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Table View -->
-  <div class="table-view">
-    <div class="results-container">
-      <div class="results-header">
-        <h2>Logsheet Data</h2>
-        <div class="results-actions">
-          <button class="btn-export" (click)="download()">
-            <i class="fas fa-file-excel"></i> Export to Excel
-          </button>
-        </div>
-      </div>
-
-      <!-- Quick Filter and Status Filters -->
-      <div class="filter-controls">
-        <div class="quick-filter">
-          <label for="filter-text-box" class="visually-hidden">Quick Filter</label>
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="fas fa-search"></i>
-            </span>
-            <input id="filter-text-box" class="form-control" placeholder="Search logsheets..."
-              (input)="onFilterTextBoxChanged()" [(ngModel)]="filterText" />
-          </div>
-        </div>
-
-        <div class="status-filters">
-          <button class="status-btn" [class.active]="activeFilter === 9" (click)="FilterData(9)">
-            <i class="fas fa-list"></i> All
-          </button>
-          <button class="status-btn open" [class.active]="activeFilter === 0" (click)="FilterData(0)">
-            <i class="fas fa-clock"></i> Open
-          </button>
-          <button class="status-btn closed" [class.active]="activeFilter === 1" (click)="FilterData(1)">
-            <i class="fas fa-check-circle"></i> Closed
-          </button>
-          <button class="status-btn cancelled" [class.active]="activeFilter === 2" (click)="FilterData(2)">
-            <i class="fas fa-ban"></i> Cancelled
-          </button>
-        </div>
-      </div>
-
-      <!-- AG Grid -->
-      <div class="grid-container">
-        <ag-grid-angular #agGrid style="width: 100%; height: 500px;" id="myGrid" class="ag-theme-alpine"
-          [columnDefs]="columnDefs" [rowData]="lstReportData" [animateRows]="true" [pagination]="true"
-          [paginationPageSize]="10" [paginationPageSizeSelector]="[10, 20, 50, 100]" [context]="context"
-          [enableCellTextSelection]="true" [suppressRowClickSelection]="true" [rowSelection]="rowSelection"
-          [defaultColDef]="defaultColDef" [components]="components" (gridReady)="OnGridReady($event)"
-          (firstDataRendered)="headerHeightSetter($event)" (columnResized)="headerHeightSetter($event)"
-          [getRowStyle]="getRowStyle">
-        </ag-grid-angular>
-        <div style="display: flex; gap: 20px; margin-bottom: 10px; font-family: Arial, sans-serif;">
-          <!-- <div style="display: flex; align-items: center; gap: 5px;">
-            <div style="width: 20px; height: 20px; background-color: #d4edda; border: 1px solid #ccc;"></div>
-            Verified
-          </div> -->
-            <div style="display: flex; align-items: center; gap: 5px;">
-            <div style="width: 20px; height: 20px; background-color: #ffe5b4; border: 1px solid #ccc;"></div>
-            Open 
-          </div>
-          <div style="display: flex; align-items: center; gap: 5px;">
-            <div style="width: 20px; height: 20px; background-color: #28a745; border: 1px solid #ccc;"></div>
-            Closed
-          </div>
-
-         
-
-          <div style="display: flex; align-items: center; gap: 5px;">
-            <div style="width: 20px; height: 20px; background-color: #f8d7da; border: 1px solid #ccc;"></div>
-            Cancelled
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-  <!-- No Data Message -->
-  <div class="no-data-message" *ngIf="lstReportData.length === 0">
-    <i class="fas fa-exclamation-circle"></i>
-    <p>No logsheet data available for the selected criteria.</p>
-    <button class="btn-primary" (click)="toggleFilters()">Adjust Filters</button>
-  </div>
-</div>
-
-<!-- Report Content -->
-<div class="report-content report-spacing">
-  <!-- Summary Cards -->
-  <div class="summary-cards">
-    <div class="summary-card">
-      <div class="card-icon">
-        <i class="fas fa-list-alt"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-value">{{ lstReportData?.length || 0 }}</div>
-        <div class="card-label">Total Logsheets</div>
-      </div>
-    </div>
-
-    <div class="summary-card">
-      <div class="card-icon">
-        <i class="fas fa-check-circle"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-value">{{ getStatusCount(1) }}</div>
-        <div class="card-label">Closed Logsheets</div>
-      </div>
-    </div>
-
-    <div class="summary-card">
-      <div class="card-icon">
-        <i class="fas fa-clock"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-value">{{ getStatusCount(0) }}</div>
-        <div class="card-label">Open Logsheets</div>
-      </div>
-    </div>
-
-    <div class="summary-card">
-      <div class="card-icon">
-        <i class="fas fa-ban"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-value">{{ getStatusCount(2) }}</div>
-        <div class="card-label">Cancelled Logsheets</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filters Offcanvas Panel -->
-  <div class="filters-offcanvas-overlay" [class.show]="isFiltersOpen" (click)="closeFilters()"></div>
-
-  <div class="filters-offcanvas" [class.show]="isFiltersOpen">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title">Logsheet Filters</h5>
-      <button class="btn-close" (click)="closeFilters()" aria-label="Close Filters">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    <div class="offcanvas-body">
-      <div class="filters-content">
-        <form [formGroup]="Form" (ngSubmit)="onSubmit()">
-          <div class="filter-section">
-            <h6 class="filter-section-title">Date Range</h6>
-
-            <div class="form-group">
-              <label for="fromdate">From Date</label>
-              <div class="input-wrapper">
-                <input type="date" id="fromdate" formControlName="fromdate" class="form-control">
-                <i class="fas fa-calendar-alt"></i>
-              </div>
-              <div *ngIf="f['fromdate'].touched && f['fromdate'].invalid" class="error-message">
-                <div *ngIf="f['fromdate'].errors?.['required']">From date is required</div>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="todate">To Date</label>
-              <div class="input-wrapper">
-                <input type="date" id="todate" formControlName="todate" class="form-control">
-                <i class="fas fa-calendar-alt"></i>
-              </div>
-              <div *ngIf="f['todate'].touched && f['todate'].invalid" class="error-message">
-                <div *ngIf="f['todate'].errors?.['required']">To date is required</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="filter-section">
-            <h6 class="filter-section-title">Location Filter</h6>
-            <div class="form-group">
-              <label for="ward">Location Name</label>
-              <div class="select-wrapper">
-                <select formControlName="sitename" id="sitename" class="form-control">
-                  <option value="">Select Site Name</option>
-                  <option *ngFor="let l of siteLocations" [value]="l.siteName">
-                    {{ l.siteDescription }}
-                  </option>
-                </select>
-                <i class="fas fa-chevron-down"></i>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="ward">Ward</label>
-              <div class="select-wrapper">
-                <select id="ward" formControlName="ward" class="form-control">
-                  <option value="">Select Ward Name</option>
-                  <option value=""  *ngIf="wardList.length> 1">All Wards</option>
-                  <option *ngFor="let v of wardList" [value]="v.wardName">{{v.wardName}}</option>
-                </select>
-                <i class="fas fa-chevron-down"></i>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn-primary">
-              <i class="fas fa-search"></i>
-              <span>Search Logsheets</span>
-            </button>
-            <button type="button" class="btn-secondary" (click)="resetFilters()">
-              <i class="fas fa-undo"></i> Reset
+  <!-- Report Content -->
+  <div class="report-content report-spacing">
+    <!-- Table View -->
+    <div class="table-view">
+      <div class="results-container">
+        <div class="results-header">
+          <h2>Logsheet Data</h2>
+          <div class="results-actions">
+            <button class="btn-export" (click)="download()">
+              <i class="fas fa-file-excel"></i>
+              <span class="export-text">Export to Excel</span>
             </button>
           </div>
-        </form>
+        </div>
+
+        <!-- Quick Filter and Status Filters -->
+        <div class="filter-controls">
+          <div class="quick-filter">
+            <label for="filter-text-box" class="visually-hidden">Quick Filter</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+              <input id="filter-text-box" class="form-control" placeholder="Search logsheets..."
+                (input)="onFilterTextBoxChanged()" [(ngModel)]="filterText" />
+            </div>
+          </div>
+
+          <div class="status-filters">
+            <button class="status-btn" [class.active]="activeFilter === 9" (click)="FilterData(9)">
+              <i class="fas fa-list"></i> <span>All</span>
+            </button>
+            <button class="status-btn open" [class.active]="activeFilter === 0" (click)="FilterData(0)">
+              <i class="fas fa-clock"></i> <span>Open</span>
+            </button>
+            <button class="status-btn closed" [class.active]="activeFilter === 1" (click)="FilterData(1)">
+              <i class="fas fa-check-circle"></i> <span>Closed</span>
+            </button>
+            <button class="status-btn cancelled" [class.active]="activeFilter === 2" (click)="FilterData(2)">
+              <i class="fas fa-ban"></i> <span>Cancelled</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- AG Grid -->
+        <div class="grid-container">
+          <ag-grid-angular #agGrid style="width: 100%; height: 500px;" id="myGrid" class="ag-theme-alpine"
+            [columnDefs]="columnDefs" [rowData]="lstReportData" [animateRows]="true" [pagination]="true"
+            [paginationPageSize]="10" [paginationPageSizeSelector]="[10, 20, 50, 100]" [context]="context"
+            [enableCellTextSelection]="true" [suppressRowClickSelection]="true" [rowSelection]="rowSelection"
+            [defaultColDef]="defaultColDef" [components]="components" (gridReady)="OnGridReady($event)"
+            (firstDataRendered)="headerHeightSetter($event)" (columnResized)="headerHeightSetter($event)"
+            [getRowStyle]="getRowStyle">
+          </ag-grid-angular>
+          <div class="legend-container">
+            <div class="legend-item">
+              <div class="legend-color open-color"></div>
+              <span>Open</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color closed-color"></div>
+              <span>Closed</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color cancelled-color"></div>
+              <span>Cancelled</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+
+      <!-- No Data Message -->
+      <div class="no-data-message" *ngIf="lstReportData.length === 0">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>No logsheet data available for the selected criteria.</p>
+        <button class="btn-primary" (click)="toggleFilters()">Adjust Filters</button>
+      </div>
+    </div>
+<!-- Summary Cards -->
+      <div class="summary-container">
+        <h3>Summary</h3>
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="card-icon">
+              <i class="fas fa-list-alt"></i>
+            </div>
+            <div class="card-content">
+              <div class="card-value">{{ lstReportData?.length || 0 }}</div>
+              <div class="card-label">Total Logsheets</div>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="card-content">
+              <div class="card-value">{{ getStatusCount(1) }}</div>
+              <div class="card-label">Closed Logsheets</div>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="card-content">
+              <div class="card-value">{{ getStatusCount(0) }}</div>
+              <div class="card-label">Open Logsheets</div>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="card-icon">
+              <i class="fas fa-ban"></i>
+            </div>
+            <div class="card-content">
+              <div class="card-value">{{ getStatusCount(2) }}</div>
+              <div class="card-label">Cancelled Logsheets</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <!-- Filters Offcanvas Panel -->
+    <div class="filters-offcanvas-overlay" [class.show]="isFiltersOpen" (click)="closeFilters()"></div>
+
+    <div class="filters-offcanvas" [class.show]="isFiltersOpen">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title">Logsheet Filters</h5>
+        <button class="btn-close" (click)="closeFilters()" aria-label="Close Filters">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="offcanvas-body">
+        <div class="filters-content">
+          <form [formGroup]="Form" (ngSubmit)="onSubmit()">
+            <div class="filter-section">
+              <h6 class="filter-section-title">Date Range</h6>
+
+              <div class="form-group">
+                <label for="fromdate">From Date</label>
+                <div class="input-wrapper">
+                  <input type="date" id="fromdate" formControlName="fromdate" class="form-control">
+                  <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div *ngIf="f['fromdate'].touched && f['fromdate'].invalid" class="error-message">
+                  <div *ngIf="f['fromdate'].errors?.['required']">From date is required</div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="todate">To Date</label>
+                <div class="input-wrapper">
+                  <input type="date" id="todate" formControlName="todate" class="form-control">
+                  <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div *ngIf="f['todate'].touched && f['todate'].invalid" class="error-message">
+                  <div *ngIf="f['todate'].errors?.['required']">To date is required</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-section">
+              <h6 class="filter-section-title">Location Filter</h6>
+              <div class="form-group">
+                <label for="sitename">Location Name</label>
+                <div class="select-wrapper">
+                  <select formControlName="sitename" id="sitename" class="form-control">
+                    <option value="">Select Site Name</option>
+                    <option *ngFor="let l of siteLocations" [value]="l.siteName">
+                      {{ l.siteDescription }}
+                    </option>
+                  </select>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="ward">Ward</label>
+                <div class="select-wrapper">
+                  <select id="ward" formControlName="ward" class="form-control">
+                    <option value="">Select Ward Name</option>
+                    <option value="" *ngIf="wardList.length > 1">All Wards</option>
+                    <option *ngFor="let v of wardList" [value]="v.wardName">{{v.wardName}}</option>
+                  </select>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">
+                <i class="fas fa-search"></i>
+                <span>Search Logsheets</span>
+              </button>
+              <button type="button" class="btn-secondary" (click)="resetFilters()">
+                <i class="fas fa-undo"></i> <span>Reset</span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
-</div>

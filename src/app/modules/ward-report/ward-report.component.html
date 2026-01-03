@@ -52,46 +52,6 @@
             [paginationPageSizeSelector]="[10, 20, 50, 100]" [loading]="isLoading">
           </ag-grid-angular>
         </div>
-
-        <!-- Summary Container -->
-        <div class="summary-container">
-          <h3>Summary</h3>
-          <div class="summary-grid" *ngIf="lstReportData && lstReportData.length > 0; else noDataSummary">
-            <div class="summary-item">
-              <div class="summary-label">Days with Data</div>
-              <div class="summary-value">{{ daysWithData }}</div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Highest Volume Ward</div>
-              <div class="summary-value">{{ topWard || 'N/A' }}</div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Total Weight</div>
-              <div class="summary-value">
-                {{ totalWeight | number:'1.2-2' }} KG
-                <span class="unit-conversion">({{ (totalWeight / 1000) | number:'1.2-2' }} Tons)</span>
-              </div>
-            </div>
-            <div class="summary-item">
-              <div class="summary-label">Total Vehicles</div>
-              <div class="summary-value">{{ totalVehicles }}</div>
-            </div>
-          </div>
-
-          <!-- Template for when no data is available -->
-          <ng-template #noDataSummary>
-            <div class="no-data-message">
-              <i class="fas fa-info-circle"></i>
-              <span *ngIf="isLoading">Loading data...</span>
-              <span *ngIf="!isLoading">No data available for the selected criteria.</span>
-            </div>
-          </ng-template>
-
-          <div class="summary-note" *ngIf="lstReportData && lstReportData.length > 0">
-            <i class="fas fa-info-circle"></i>
-            Note: Data is aggregated by ward and date
-          </div>
-        </div>
       </div>
     </div>
 
@@ -100,6 +60,63 @@
       <i class="fas fa-exclamation-circle"></i>
       <p>No data available for the selected criteria.</p>
       <button class="btn-primary" (click)="toggleFilters()">Change Filters</button>
+    </div>
+  </div>
+
+  <!-- Summary Container -->
+  <div class="summary-container">
+    <h3>Summary</h3>
+    <div class="summary-cards" *ngIf="lstReportData && lstReportData.length > 0; else noDataSummary">
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="fas fa-calendar-days"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ daysWithData }}</div>
+          <div class="card-label">Days with Data</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="fas fa-map"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ topWard || 'N/A' }}</div>
+          <div class="card-label">Highest Volume Ward</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="fas fa-weight"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ totalWeight | number:'1.2-2' }}</div>
+          <div class="card-label">Total Weight (KG)</div>
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="card-icon">
+          <i class="fas fa-car"></i>
+        </div>
+        <div class="card-content">
+          <div class="card-value">{{ totalVehicles }}</div>
+          <div class="card-label">Total Vehicles</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Template for when no data is available -->
+    <ng-template #noDataSummary>
+      <div class="no-data-message">
+        <i class="fas fa-info-circle"></i>
+        <span *ngIf="isLoading">Loading data...</span>
+        <span *ngIf="!isLoading">No data available for the selected criteria.</span>
+      </div>
+    </ng-template>
+
+    <div class="summary-note" *ngIf="lstReportData && lstReportData.length > 0">
+      <i class="fas fa-info-circle"></i>
+      Note: Data is aggregated by ward and date
     </div>
   </div>
 
