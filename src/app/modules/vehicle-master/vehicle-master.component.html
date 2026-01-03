@@ -12,18 +12,21 @@
           <span>Add Vehicle</span>
         </button>
         <button class="btn-back" (click)="Back()">
-          <i class="fas fa-arrow-left"></i> Back to Dashboard
+          <i class="fas fa-arrow-left"></i>
+          <span class="back-text">Back to Dashboard</span>
         </button>
       </div>
     </div>
   </div>
- <!-- Loading Indicator -->
+
+  <!-- Loading Indicator -->
   <div class="loading-overlay" *ngIf="loading">
     <div class="loading-spinner">
       <i class="fas fa-spinner fa-spin"></i>
       <span>Loading...</span>
     </div>
   </div>
+
   <!-- Add Vehicle Modal -->
   <div class="add-vehicle-modal-overlay" [class.show]="isAddModalOpen" (click)="closeAddModal()"></div>
   <div class="add-vehicle-modal" [class.show]="isAddModalOpen">
@@ -34,76 +37,52 @@
       </button>
     </div>
     <div class="modal-body">
-      <form [formGroup]="addVehicleForm" (ngSubmit)="onAddVehicleSubmit()">       
+      <form [formGroup]="addVehicleForm" (ngSubmit)="onAddVehicleSubmit()">
         <div class="form-row">
           <div class="form-group">
             <label for="siteName">Location Name</label>
-            <div class="input-wrapper">
+            <div class="select-wrapper">
               <select formControlName="siteName" id="siteName" class="form-control" (change)="OnLocationChange($event)">
                 <option value="">Select Site Name</option>
                 <option *ngFor="let l of siteLocations" [value]="l.siteName">
                   {{ l.siteDescription }}
                 </option>
               </select>
+              <i class="fas fa-chevron-down"></i>
             </div>
             <div *ngIf="addVehicleForm.get('siteName')?.touched && addVehicleForm.get('siteName')?.invalid"
-            class="error-message">
-            <div *ngIf="addVehicleForm.get('siteName')?.errors?.['required']">Agency Name is required</div>            
-          </div>
+              class="error-message">
+              <div *ngIf="addVehicleForm.get('siteName')?.errors?.['required']">Location Name is required</div>
+            </div>
           </div>
           <div class="form-group">
             <label for="ward">Ward</label>
-            <div class="input-wrapper">
+            <div class="select-wrapper">
               <select formControlName="ward" id="ward" class="form-control">
                 <option value="">Select Ward</option>
                 <option *ngFor="let l of wardListFiltered" [value]="l.wardName">
                   {{ l.wardName }}
                 </option>
               </select>
+              <i class="fas fa-chevron-down"></i>
             </div>
             <div *ngIf="addVehicleForm.get('ward')?.touched && addVehicleForm.get('ward')?.invalid"
-            class="error-message">
-            <div *ngIf="addVehicleForm.get('ward')?.errors?.['required']">Agency Name is required</div>            
+              class="error-message">
+              <div *ngIf="addVehicleForm.get('ward')?.errors?.['required']">Ward is required</div>
+            </div>
           </div>
-          </div>       
         </div>
-       
+
         <div class="form-row">
           <div class="form-group">
             <label for="vehicleNumber">Vehicle Number *</label>
             <div class="vehicle-number-container">
-              <!-- Toggle between manual entry and dropdown -->
-              <!-- <div class="input-toggle">
-                <button type="button" class="toggle-btn" 
-                        [class.active]="isManualVehicleEntry" 
-                        (click)="toggleVehicleEntryMode(true)">
-                  Manual Entry
-                </button>
-                <button type="button" class="toggle-btn" 
-                        [class.active]="!isManualVehicleEntry" 
-                        (click)="toggleVehicleEntryMode(false)">
-                  Select from List
-                </button> 
-              </div> -->
-
-              <!-- Manual Entry -->
               <div *ngIf="isManualVehicleEntry" class="input-wrapper">
                 <input type="text" id="vehicleNumber" formControlName="vehicleNumber" class="form-control"
                   placeholder="Enter Vehicle Number (e.g., MH01AB1234)" maxlength="10" minlength="9"
                   style="text-transform: uppercase;">
                 <i class="fas fa-truck"></i>
               </div>
-
-              <!-- Dropdown Selection -->
-              <!-- <div *ngIf="!isManualVehicleEntry" class="select-wrapper">
-                <select id="vehicleNumberSelect" formControlName="vehicleNumber" class="form-control">
-                  <option value="">Select Vehicle Number</option>
-                  <option *ngFor="let vehicle of matchVehiclesList" [value]="vehicle.Vehicle_NO">
-                    {{vehicle.Vehicle_NO}} - {{vehicle.Agency}}
-                  </option>
-                </select>
-                <i class="fas fa-chevron-down"></i>
-              </div> -->
             </div>
             <div *ngIf="addVehicleForm.get('vehicleNumber')?.touched && addVehicleForm.get('vehicleNumber')?.invalid"
               class="error-message">
@@ -116,29 +95,6 @@
           <div class="form-group">
             <label for="vehicleType">Vehicle Type *</label>
             <div class="vehicle-type-container">
-              <!-- Toggle between manual entry and dropdown -->
-              <!-- <div class="input-toggle">
-                <button type="button" class="toggle-btn" 
-                        [class.active]="isManualVehicleTypeEntry" 
-                        (click)="toggleVehicleTypeEntryMode(true)">
-                  Manual Entry
-                </button>
-                <button type="button" class="toggle-btn" 
-                        [class.active]="!isManualVehicleTypeEntry" 
-                        (click)="toggleVehicleTypeEntryMode(false)">
-                  Select from List
-                </button>
-              </div> -->
-
-              <!-- Manual Entry -->
-              <!-- <div *ngIf="isManualVehicleTypeEntry" class="input-wrapper">
-                <input type="text" id="vehicleTypeManual" formControlName="vehicleTypeManual" 
-                       class="form-control" placeholder="Enter Vehicle Type (e.g., MINI COMPACTOR)" 
-                       maxlength="100" style="text-transform: uppercase;">
-                <i class="fas fa-cogs"></i>
-              </div> -->
-
-              <!-- Dropdown Selection -->
               <div *ngIf="!isManualVehicleTypeEntry" class="select-wrapper">
                 <select id="vehicleType" formControlName="vehicleType" class="form-control">
                   <option value="">Select Vehicle Type</option>
@@ -148,14 +104,6 @@
                 </select>
                 <i class="fas fa-chevron-down"></i>
               </div>
-
-              <!-- Debug info (remove in production) -->
-              <!-- <div *ngIf="!isManualVehicleTypeEntry && vehicleTypesList.length === 0" class="debug-info">
-                <small style="color: #666;">Loading vehicle types...</small>
-              </div>
-              <div *ngIf="!isManualVehicleTypeEntry && vehicleTypesList.length > 0" class="debug-info">
-                <small style="color: #666;">{{vehicleTypesList.length}} vehicle types available</small>
-              </div> -->
             </div>
             <div *ngIf="getVehicleTypeControl()?.touched && getVehicleTypeControl()?.invalid" class="error-message">
               <div *ngIf="getVehicleTypeControl()?.errors?.['required']">Vehicle Type is required</div>
@@ -166,17 +114,18 @@
         <div class="form-row">
           <div class="form-group">
             <label for="agencyNo">Agency Name *</label>
-            <div class="input-wrapper">
+            <div class="select-wrapper">
               <select formControlName="agencyNo" id="agencyNo" class="form-control">
                 <option value="">Select Agency Name</option>
                 <option *ngFor="let l of agencyList" [value]="l.agencyNo">
                   {{ l.agencyName }}
                 </option>
               </select>
+              <i class="fas fa-chevron-down"></i>
             </div>
             <div *ngIf="addVehicleForm.get('agencyNo')?.touched && addVehicleForm.get('agencyNo')?.invalid"
               class="error-message">
-              <div *ngIf="addVehicleForm.get('agencyNo')?.errors?.['required']">Agency Name is required</div>            
+              <div *ngIf="addVehicleForm.get('agencyNo')?.errors?.['required']">Agency Name is required</div>
             </div>
           </div>
           <div class="form-group">
@@ -189,6 +138,9 @@
               <i class="fas fa-chevron-down"></i>
             </div>
           </div>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
             <label for="grossWeight">Gross Weight (kg) (as per RC book)</label>
             <div class="input-wrapper">
@@ -198,7 +150,7 @@
             </div>
             <div *ngIf="addVehicleForm.get('grossWeight')?.touched && addVehicleForm.get('grossWeight')?.invalid"
               class="error-message">
-              <div *ngIf="addVehicleForm.get('grossWeight')?.errors?.['required']">Gross Weight is required</div>            
+              <div *ngIf="addVehicleForm.get('grossWeight')?.errors?.['required']">Gross Weight is required</div>
             </div>
           </div>
 
@@ -211,14 +163,11 @@
             </div>
             <div *ngIf="addVehicleForm.get('tareWeight')?.touched && addVehicleForm.get('tareWeight')?.invalid"
               class="error-message">
-              <div *ngIf="addVehicleForm.get('tareWeight')?.errors?.['required']">Tare Weight is required</div>            
+              <div *ngIf="addVehicleForm.get('tareWeight')?.errors?.['required']">Tare Weight is required</div>
             </div>
-          </div>  
+          </div>
         </div>
 
-        <div class="form-row">
-                 
-        </div>
         <div class="form-group">
           <label for="remark">Remark</label>
           <div class="input-wrapper">
@@ -234,114 +183,107 @@
             <span>{{isSubmitting ? 'Saving...' : 'Save Vehicle'}}</span>
           </button>
           <button type="button" class="btn-secondary" (click)="resetAddForm()">
-            <i class="fas fa-undo"></i> Reset
+            <i class="fas fa-undo"></i> <span>Reset</span>
           </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Table View -->
-  <div class="table-view">
-    <div class="results-container">
-      <div class="results-header">
-        <h2>Vehicle Data</h2>
-        <div class="results-actions">
-          <button class="btn-export" (click)="download()">
-            <i class="fas fa-file-excel"></i> Export to Excel
-          </button>
-        </div>
-      </div>
-
-      <!-- Quick Filter and Status Filters -->
-      <div class="filter-controls">
-        <div class="quick-filter">
-          <label for="filter-text-box" class="visually-hidden">Quick Filter</label>
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="fas fa-search"></i>
-            </span>
-            <input id="filter-text-box" class="form-control" placeholder="Search vehicles..."
-              (input)="onFilterTextBoxChanged()" [(ngModel)]="filterText" />
+  <!-- Report Content -->
+  <div class="report-content report-spacing">
+    <!-- Table View -->
+    <div class="table-view">
+      <div class="results-container">
+        <div class="results-header">
+          <h2>Vehicle Data</h2>
+          <div class="results-actions">
+            <button class="btn-export" (click)="download()">
+              <i class="fas fa-file-excel"></i>
+              <span class="export-text">Export to Excel</span>
+            </button>
           </div>
         </div>
 
-        <div class="status-filters">
-          <button class="status-btn" [class.active]="activeFilter === 9" (click)="FilterData(9)">
-            <i class="fas fa-list"></i> All
-          </button>
-          <button class="status-btn open" [class.active]="activeFilter === 0" (click)="FilterData(0)">
-            <i class="fas fa-times-circle"></i> Inactive
-          </button>
-          <button class="status-btn closed" [class.active]="activeFilter === 1" (click)="FilterData(1)">
-            <i class="fas fa-check-circle"></i> Active
-          </button>
+        <!-- Quick Filter and Status Filters -->
+        <div class="filter-controls">
+          <div class="quick-filter">
+            <label for="filter-text-box" class="visually-hidden">Quick Filter</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+              <input id="filter-text-box" class="form-control" placeholder="Search vehicles..."
+                (input)="onFilterTextBoxChanged()" [(ngModel)]="filterText" />
+            </div>
+          </div>
+
+          <div class="status-filters">
+            <button class="status-btn" [class.active]="activeFilter === 9" (click)="FilterData(9)">
+              <i class="fas fa-list"></i> <span>All</span>
+            </button>
+            <button class="status-btn open" [class.active]="activeFilter === 0" (click)="FilterData(0)">
+              <i class="fas fa-times-circle"></i> <span>Inactive</span>
+            </button>
+            <button class="status-btn closed" [class.active]="activeFilter === 1" (click)="FilterData(1)">
+              <i class="fas fa-check-circle"></i> <span>Active</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- AG Grid -->
+        <div class="grid-container">
+          <ag-grid-angular #agGrid style="width: 100%; height: 500px;" id="myGrid" class="ag-theme-alpine"
+            [columnDefs]="columnDefs" [rowData]="lstReportData" [animateRows]="true" [pagination]="true"
+            [paginationPageSize]="10" [paginationPageSizeSelector]="[10, 20, 50, 100]" [context]="context"
+            [enableCellTextSelection]="true" [suppressRowClickSelection]="true" [rowSelection]="rowSelection"
+            [defaultColDef]="defaultColDef" [components]="components" (gridReady)="OnGridReady($event)"
+            (firstDataRendered)="headerHeightSetter($event)" (columnResized)="headerHeightSetter($event)">
+          </ag-grid-angular>
         </div>
       </div>
 
-      <!-- AG Grid -->
-      <div class="grid-container">
-        <ag-grid-angular #agGrid style="width: 100%; height: 500px;" id="myGrid" class="ag-theme-alpine"
-          [columnDefs]="columnDefs" [rowData]="lstReportData" [animateRows]="true" [pagination]="true"
-          [context]="context" [enableCellTextSelection]="true" [suppressRowClickSelection]="true"
-          [rowSelection]="rowSelection" [defaultColDef]="defaultColDef" [components]="components"
-          (gridReady)="OnGridReady($event)" (firstDataRendered)="headerHeightSetter($event)"
-          (columnResized)="headerHeightSetter($event)">
-        </ag-grid-angular>
+      <!-- No Data Message -->
+      <div class="no-data-message" *ngIf="lstReportData.length === 0">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>No vehicle data available.</p>
+        <button class="btn-primary" (click)="openAddVehicleModal()">Add New Vehicle</button>
       </div>
     </div>
-  </div>
+    <!-- Summary Cards -->
+    <div class="summary-container">
+      <h3>Summary</h3>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="card-icon">
+            <i class="fas fa-truck"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ lstReportData?.length || 0 }}</div>
+            <div class="card-label">Total Vehicles</div>
+          </div>
+        </div>
 
-  <!-- No Data Message -->
-  <div class="no-data-message" *ngIf="lstReportData.length === 0">
-    <i class="fas fa-exclamation-circle"></i>
-    <p>No vehicle data available.</p>
-    <button class="btn-primary" (click)="openAddVehicleModal()">Add New Vehicle</button>
-  </div>
-</div>
+        <div class="summary-card">
+          <div class="card-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ getStatusCount(1) }}</div>
+            <div class="card-label">Active Vehicles</div>
+          </div>
+        </div>
 
-<!-- Report Content -->
-<div class="report-content report-spacing">
-  <!-- Summary Cards -->
-  <div class="summary-cards">
-    <div class="summary-card">
-      <div class="card-icon">
-        <i class="fas fa-truck"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-value">{{ lstReportData?.length || 0 }}</div>
-        <div class="card-label">Total Vehicles</div>
+        <div class="summary-card">
+          <div class="card-icon">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ getStatusCount(0) }}</div>
+            <div class="card-label">Inactive Vehicles</div>
+          </div>
+        </div>
       </div>
     </div>
-
-    <div class="summary-card">
-      <div class="card-icon">
-        <i class="fas fa-check-circle"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-value">{{ getStatusCount(1) }}</div>
-        <div class="card-label">Active Vehicles</div>
-      </div>
-    </div>
-
-    <div class="summary-card">
-      <div class="card-icon">
-        <i class="fas fa-times-circle"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-value">{{ getStatusCount(0) }}</div>
-        <div class="card-label">Inactive Vehicles</div>
-      </div>
-    </div>
-
-    <!-- <div class="summary-card">
-      <div class="card-icon">
-        <i class="fas fa-tools"></i>
-      </div>
-      <div class="card-content">
-        <div class="card-value">{{ vehicleTypesList?.length || 0 }}</div>
-        <div class="card-label">Vehicle Types</div>
-      </div>
-    </div> -->
   </div>
 </div>
