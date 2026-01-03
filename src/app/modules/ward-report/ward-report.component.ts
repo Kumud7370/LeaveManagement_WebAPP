@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, HostListener } from "@angular/core"
+import { Component, OnInit, ViewChild, ElementRef } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angular/forms"
 import { Router, RouterModule } from "@angular/router"
@@ -56,7 +56,6 @@ export class WardReportComponent implements OnInit {
   userId = 0
   userSiteName = ""
   lstSiteNames: any[] = []
-  isMobileView = false
 
   constructor(
     private fb: FormBuilder,
@@ -83,24 +82,10 @@ export class WardReportComponent implements OnInit {
     })
   }
 
-  @HostListener('window:resize', ['$event'])
-  onResize(event: any) {
-    this.checkMobileView()
-    this.setupColumnDefs()
-    if (this.agGrid && this.agGrid.api) {
-      this.agGrid.api.sizeColumnsToFit()
-    }
-  }
-
   ngOnInit() {
-    this.checkMobileView()
     this.initForm()
     this.setupColumnDefs()
     this.loadInitialData()
-  }
-
-  checkMobileView() {
-    this.isMobileView = window.innerWidth <= 768
   }
 
   loadInitialData() {
@@ -161,23 +146,19 @@ export class WardReportComponent implements OnInit {
   }
 
   setupColumnDefs() {
-    // Check if mobile view
-    const isMobile = window.innerWidth <= 768
+    // Check if mobile view (screen width <= 768px)
+    const isMobile = window.innerWidth <= 768;
 
     this.columnDefs = [
       {
         headerName: "Ward Name",
         field: "wardName",
         pinned: isMobile ? null : "left", // Remove pinned on mobile
-        width: 150,
-        minWidth: 120,
-        flex: isMobile ? 1 : 0,
+        width: isMobile ? 120 : 150,
+        minWidth: isMobile ? 120 : 150,
+        maxWidth: isMobile ? 120 : 150,
+        flex: 0,
         cellRenderer: (params: any) => `<strong>${params.value || "N/A"}</strong>`,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
       },
     ]
   }
@@ -192,7 +173,7 @@ export class WardReportComponent implements OnInit {
     const fromDate = `${formValues.month}-01`
 
     const payload = {
-      WeighBridge: this.reportForm.value.weighBridge,
+      WeighBridge: this.reportForm.value.weighBridge || "ALLWB",
       FromDate: fromDate,
       ToDate: "",
       FullDate: "",
@@ -218,17 +199,14 @@ export class WardReportComponent implements OnInit {
           this.processDataForGrid()
           this.calculateSummaryFromProcessedData()
           console.log("Wardwise processed data:", this.lstReportData)
-          alert("Wardwise data retrieved successfully!")
         } else {
           console.log("No wardwise data found or invalid response")
-          alert(response?.msg || "No wardwise data found")
           this.resetData()
         }
         this.isLoading = false
       },
       error: (error) => {
         console.error("Wardwise API Error:", error)
-        alert("Failed to fetch wardwise data")
         this.resetData()
         this.isLoading = false
       },
@@ -287,22 +265,18 @@ export class WardReportComponent implements OnInit {
   }
 
   setupDynamicColumns() {
-    const isMobile = window.innerWidth <= 768
+    const isMobile = window.innerWidth <= 768;
 
     this.columnDefs = [
       {
         headerName: "Ward Name",
         field: "wardName",
         pinned: isMobile ? null : "left",
-        width: 150,
-        minWidth: 120,
-        flex: isMobile ? 1 : 0,
+        width: isMobile ? 120 : 150,
+        minWidth: isMobile ? 120 : 150,
+        maxWidth: isMobile ? 120 : 150,
+        flex: 0,
         cellRenderer: (params: any) => `<strong>${params.value}</strong>`,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-        },
       },
     ]
 
@@ -311,24 +285,14 @@ export class WardReportComponent implements OnInit {
         {
           headerName: `${date} - Vehicles`,
           field: `${date}_VehicleCount`,
-          width: 120,
-          minWidth: 100,
-          cellStyle: {
-            display: "flex",
-            alignItems: "center",
-            paddingLeft: "12px",
-          },
+          width: isMobile ? 100 : 120,
+          minWidth: isMobile ? 100 : 120
         },
         {
           headerName: `${date} - Weight`,
           field: `${date}_TotalNetWeight`,
-          width: 120,
-          minWidth: 100,
-          cellStyle: {
-            display: "flex",
-            alignItems: "center",
-            paddingLeft: "12px",
-          },
+          width: isMobile ? 100 : 120,
+          minWidth: isMobile ? 100 : 120
         },
       )
     })
@@ -337,26 +301,14 @@ export class WardReportComponent implements OnInit {
       {
         headerName: "Total Vehicles",
         field: "TotalVehicleCount",
-        width: 130,
-        minWidth: 110,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-          fontWeight: "600",
-        },
+        width: isMobile ? 110 : 130,
+        minWidth: isMobile ? 110 : 130
       },
       {
         headerName: "Total Weight",
         field: "TotalNetWeight",
-        width: 130,
-        minWidth: 110,
-        cellStyle: {
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: "12px",
-          fontWeight: "600",
-        },
+        width: isMobile ? 110 : 130,
+        minWidth: isMobile ? 110 : 130
       },
     )
   }

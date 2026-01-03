@@ -13,8 +13,7 @@
           <span>Filters</span>
         </button>
         <button class="btn-back" (click)="navigateBack()">
-          <i class="fas fa-arrow-left"></i>
-          <span class="back-text">Back to Dashboard</span>
+          <i class="fas fa-arrow-left"></i> <span class="back-text">Back to Dashboard</span>
         </button>
       </div>
     </div>
@@ -41,8 +40,7 @@
           <div class="report-actions">
             <button class="btn-export" (click)="exportToExcel()"
               [disabled]="!lstReportData || lstReportData.length === 0">
-              <i class="fas fa-file-excel"></i>
-              <span class="export-text">Export to Excel</span>
+              <i class="fas fa-file-excel"></i> <span class="export-text">Export to Excel</span>
             </button>
           </div>
         </div>
@@ -135,7 +133,7 @@
       <div class="filters-content">
         <form [formGroup]="reportForm" (ngSubmit)="onSubmit()">
           <div class="filter-section">
-            <h6 class="filter-section-title">Report Parameters</h6>
+            <h6 class="filter-section-title">Location & Date</h6>
 
             <div class="form-group">
               <label for="weighBridge">Select Location</label>
@@ -169,8 +167,7 @@
               <span *ngIf="isLoading">Generating...</span>
             </button>
             <button type="button" class="btn-secondary" (click)="reportForm.reset()" [disabled]="isLoading">
-              <i class="fas fa-undo"></i>
-              <span>Reset</span>
+              <i class="fas fa-undo"></i> <span>Reset</span>
             </button>
           </div>
         </form>

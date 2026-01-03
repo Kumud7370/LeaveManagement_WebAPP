@@ -61,13 +61,14 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     position: relative;
     z-index: 1;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
   }
 
   .header-title {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
     flex: 1;
     min-width: 0;
 
@@ -90,7 +91,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
   .header-actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
     justify-content: flex-end;
     flex: 1;
@@ -128,6 +129,14 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     &.active {
       background-color: rgba($accent-color, 0.3);
       color: $accent-color;
+    }
+  }
+
+  .btn-back {
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
   }
 }
@@ -184,43 +193,29 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .report-title-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 
   h2 {
-    font-size: 1.5rem;
     color: $primary-color;
+    font-size: 1.5rem;
     font-weight: 700;
-    text-align: center;
+    margin: 0;
   }
 }
 
 // Enhanced Summary cards with modern glassmorphism design
 .summary-container {
+  padding: 0 2rem 2rem;
   max-width: 1400px;
-  margin: 2rem auto;
-  padding: 0 2rem;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 
   h3 {
-    font-size: 1.25rem;
     color: $primary-color;
+    font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-  }
-
-  .summary-note {
-    margin-top: 1.5rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: $border-radius;
-    font-size: 0.875rem;
-    color: $text-muted;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-
-    i {
-      color: $primary-color;
-    }
   }
 }
 
@@ -329,6 +324,19 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
+.summary-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: $text-muted;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+
+  i {
+    color: $primary-color;
+  }
+}
+
 // Table view - responsive container with better mobile styling
 .table-view {
   background: rgba(255, 255, 255, 0.95);
@@ -337,7 +345,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   box-shadow: $shadow-xl;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 
   .results-container {
     .results-header {
@@ -356,12 +364,12 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         color: $primary-color;
         font-weight: 700;
         flex: 1;
-        min-width: 200px;
+        min-width: 150px;
       }
 
       .report-actions {
         display: flex;
-        gap: 0.75rem;
+        gap: 0.5rem;
         flex-wrap: wrap;
 
         .btn-export {
@@ -619,8 +627,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
   }
 
-  p,
-  span {
+  p {
     margin: 0 0 2rem;
     font-size: 1.25rem;
     color: $text-muted;
@@ -871,34 +878,11 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
-// Print styles
-@media print {
-
-  .report-header,
-  .filters-offcanvas,
-  .filters-offcanvas-overlay {
-    display: none !important;
-  }
-
-  .ward-report-container {
-    background: white !important;
-  }
-
-  .report-content {
-    padding: 0;
-  }
-
-  .table-view,
-  .summary-cards {
-    background: white !important;
-    box-shadow: none !important;
-    border: 1px solid #ddd !important;
-  }
-}
-
 // ============================================
 // RESPONSIVE BREAKPOINTS
 // ============================================
+
+// Large Desktop (1400px and up) - Already covered by default styles
 
 // Desktop (1200px - 1399px)
 @media (max-width: 1399px) {
@@ -1009,12 +993,6 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     padding: 0 1.25rem 1.25rem;
   }
 
-  .report-title-section {
-    h2 {
-      font-size: 1.25rem;
-    }
-  }
-
   .summary-cards {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.25rem;
@@ -1031,16 +1009,13 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
         h2 {
           text-align: center;
-          font-size: 1.125rem;
         }
 
         .report-actions {
           width: 100%;
-          justify-content: center;
 
           .btn-export {
             width: 100%;
-            max-width: 300px;
             justify-content: center;
           }
         }
@@ -1102,24 +1077,8 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     padding: 0 1rem 1rem;
   }
 
-  .report-title-section {
-    margin-bottom: 1.5rem;
-
-    h2 {
-      font-size: 1.125rem;
-    }
-  }
-
-  .summary-container {
-    h3 {
-      font-size: 1.125rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .summary-note {
-      padding: 0.875rem;
-      font-size: 0.8rem;
-    }
+  .report-spacing {
+    margin-top: 20px;
   }
 
   .summary-cards {
@@ -1155,17 +1114,15 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         padding: 1rem;
 
         h2 {
-          font-size: 1rem;
+          font-size: 1.1rem;
         }
 
-        .report-actions {
-          .btn-export {
-            padding: 0.625rem 1rem;
-            font-size: 0.8rem;
+        .btn-export {
+          padding: 0.625rem 1rem;
+          font-size: 0.8rem;
 
-            .export-text {
-              display: none;
-            }
+          .export-text {
+            display: none;
           }
         }
       }
@@ -1190,8 +1147,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       margin-bottom: 1rem;
     }
 
-    p,
-    span {
+    p {
       font-size: 1rem;
       margin-bottom: 1.5rem;
     }
@@ -1267,18 +1223,6 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
   }
 
-  .report-title-section {
-    h2 {
-      font-size: 1rem;
-    }
-  }
-
-  .summary-container {
-    h3 {
-      font-size: 1rem;
-    }
-  }
-
   .summary-cards {
     .summary-card {
       padding: 1rem;
@@ -1307,14 +1251,12 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         padding: 0.875rem;
 
         h2 {
-          font-size: 0.95rem;
+          font-size: 1rem;
         }
 
-        .report-actions {
-          .btn-export {
-            padding: 0.5rem 0.875rem;
-            font-size: 0.75rem;
-          }
+        .btn-export {
+          padding: 0.5rem 0.875rem;
+          font-size: 0.75rem;
         }
       }
 
@@ -1336,8 +1278,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       font-size: 2.5rem;
     }
 
-    p,
-    span {
+    p {
       font-size: 0.95rem;
     }
 
@@ -1414,23 +1355,6 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     padding: 0 0.875rem 0.875rem;
   }
 
-  .report-title-section {
-    h2 {
-      font-size: 0.95rem;
-    }
-  }
-
-  .summary-container {
-    h3 {
-      font-size: 0.95rem;
-    }
-
-    .summary-note {
-      padding: 0.75rem;
-      font-size: 0.75rem;
-    }
-  }
-
   .summary-cards {
     gap: 0.875rem;
 
@@ -1463,15 +1387,13 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         padding: 0.75rem;
 
         h2 {
-          font-size: 0.9rem;
+          font-size: 0.95rem;
         }
 
-        .report-actions {
-          .btn-export {
-            padding: 0.5rem 0.75rem;
-            font-size: 0.7rem;
-            gap: 0.375rem;
-          }
+        .btn-export {
+          padding: 0.5rem 0.75rem;
+          font-size: 0.7rem;
+          gap: 0.375rem;
         }
       }
 
@@ -1495,8 +1417,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       margin-bottom: 0.875rem;
     }
 
-    p,
-    span {
+    p {
       font-size: 0.9rem;
       margin-bottom: 1.25rem;
     }
@@ -1604,23 +1525,6 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     padding: 0 0.75rem 0.75rem;
   }
 
-  .report-title-section {
-    h2 {
-      font-size: 0.875rem;
-    }
-  }
-
-  .summary-container {
-    h3 {
-      font-size: 0.875rem;
-    }
-
-    .summary-note {
-      padding: 0.625rem;
-      font-size: 0.7rem;
-    }
-  }
-
   .summary-cards {
     gap: 0.75rem;
 
@@ -1652,17 +1556,15 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         gap: 0.75rem;
 
         h2 {
-          font-size: 0.85rem;
+          font-size: 0.9rem;
         }
 
-        .report-actions {
-          .btn-export {
-            padding: 0.425rem 0.625rem;
-            font-size: 0.65rem;
+        .btn-export {
+          padding: 0.425rem 0.625rem;
+          font-size: 0.65rem;
 
-            i {
-              font-size: 0.875rem;
-            }
+          i {
+            font-size: 0.875rem;
           }
         }
       }
@@ -1687,8 +1589,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       margin-bottom: 0.75rem;
     }
 
-    p,
-    span {
+    p {
       font-size: 0.85rem;
       margin-bottom: 1rem;
     }
@@ -1855,5 +1756,31 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         padding: 0.5rem 0.875rem;
       }
     }
+  }
+}
+
+// Print styles
+@media print {
+
+  .report-header,
+  .filters-offcanvas,
+  .filters-offcanvas-overlay {
+    display: none !important;
+  }
+
+  .ward-report-container {
+    background: white !important;
+  }
+
+  .report-content,
+  .summary-container {
+    padding: 0;
+  }
+
+  .table-view,
+  .summary-cards {
+    background: white !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
   }
 }
