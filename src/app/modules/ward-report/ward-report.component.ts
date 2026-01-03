@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from "@angular/core"
+import { Component, OnInit, ViewChild, ElementRef, HostListener } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angular/forms"
 import { Router, RouterModule } from "@angular/router"
@@ -56,6 +56,7 @@ export class WardReportComponent implements OnInit {
   userId = 0
   userSiteName = ""
   lstSiteNames: any[] = []
+  isMobileView = false
 
   constructor(
     private fb: FormBuilder,
@@ -82,10 +83,24 @@ export class WardReportComponent implements OnInit {
     })
   }
 
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    this.checkMobileView()
+    this.setupColumnDefs()
+    if (this.agGrid && this.agGrid.api) {
+      this.agGrid.api.sizeColumnsToFit()
+    }
+  }
+
   ngOnInit() {
+    this.checkMobileView()
     this.initForm()
     this.setupColumnDefs()
     this.loadInitialData()
+  }
+
+  checkMobileView() {
+    this.isMobileView = window.innerWidth <= 768
   }
 
   loadInitialData() {
@@ -145,30 +160,24 @@ export class WardReportComponent implements OnInit {
     })
   }
 
-  // setupColumnDefs() {
-  //   this.columnDefs = [
-  //     {
-  //       headerName: "Ward Name",
-  //       field: "wardName",
-  //       pinned: "left",
-  //       width: 150,
-  //       flex: 0,
-  //       cellRenderer: (params: any) => `<strong>${params.value || "N/A"}</strong>`,
-  //     },
-  //   ]
-  // }
   setupColumnDefs() {
     // Check if mobile view
-    const isMobile = window.innerWidth <= 768;
-    
+    const isMobile = window.innerWidth <= 768
+
     this.columnDefs = [
       {
         headerName: "Ward Name",
         field: "wardName",
         pinned: isMobile ? null : "left", // Remove pinned on mobile
         width: 150,
-        flex: 0,
+        minWidth: 120,
+        flex: isMobile ? 1 : 0,
         cellRenderer: (params: any) => `<strong>${params.value || "N/A"}</strong>`,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
       },
     ]
   }
@@ -183,13 +192,15 @@ export class WardReportComponent implements OnInit {
     const fromDate = `${formValues.month}-01`
 
     const payload = {
-      WeighBridge: this.reportForm.value,
+      WeighBridge: this.reportForm.value.weighBridge,
       FromDate: fromDate,
       ToDate: "",
       FullDate: "",
       WardName: "",
       Act_Shift: "",
       TransactionDate: fromDate,
+      UserId: this.userId,
+      SiteName: this.userSiteName,
     }
 
     console.log("Submitting wardwise with payload:", payload)
@@ -276,27 +287,77 @@ export class WardReportComponent implements OnInit {
   }
 
   setupDynamicColumns() {
+    const isMobile = window.innerWidth <= 768
+
     this.columnDefs = [
       {
         headerName: "Ward Name",
         field: "wardName",
-        pinned: "left",
+        pinned: isMobile ? null : "left",
         width: 150,
-        flex: 0,
+        minWidth: 120,
+        flex: isMobile ? 1 : 0,
         cellRenderer: (params: any) => `<strong>${params.value}</strong>`,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+        },
       },
     ]
 
     this.uniqueDates.forEach((date) => {
       this.columnDefs.push(
-        { headerName: `${date} - Vehicles`, field: `${date}_VehicleCount`, width: 120 },
-        { headerName: `${date} - Weight`, field: `${date}_TotalNetWeight`, width: 120 },
+        {
+          headerName: `${date} - Vehicles`,
+          field: `${date}_VehicleCount`,
+          width: 120,
+          minWidth: 100,
+          cellStyle: {
+            display: "flex",
+            alignItems: "center",
+            paddingLeft: "12px",
+          },
+        },
+        {
+          headerName: `${date} - Weight`,
+          field: `${date}_TotalNetWeight`,
+          width: 120,
+          minWidth: 100,
+          cellStyle: {
+            display: "flex",
+            alignItems: "center",
+            paddingLeft: "12px",
+          },
+        },
       )
     })
 
     this.columnDefs.push(
-      { headerName: "Total Vehicles", field: "TotalVehicleCount", width: 130 },
-      { headerName: "Total Weight", field: "TotalNetWeight", width: 130 },
+      {
+        headerName: "Total Vehicles",
+        field: "TotalVehicleCount",
+        width: 130,
+        minWidth: 110,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+          fontWeight: "600",
+        },
+      },
+      {
+        headerName: "Total Weight",
+        field: "TotalNetWeight",
+        width: 130,
+        minWidth: 110,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: "12px",
+          fontWeight: "600",
+        },
+      },
     )
   }
 
@@ -346,12 +407,15 @@ export class WardReportComponent implements OnInit {
   toggleFilters() {
     this.isFiltersOpen = !this.isFiltersOpen
   }
+
   closeFilters() {
     this.isFiltersOpen = false
   }
+
   navigateBack() {
     this.router.navigateByUrl("/dashboard")
   }
+
   printReport() {
     window.print()
   }
