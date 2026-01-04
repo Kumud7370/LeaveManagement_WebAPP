@@ -154,12 +154,12 @@
         </div>
 
         <!-- Enhanced Location Cards Grid -->
-        <div class="location-cards-grid">
+        <!-- <div class="location-cards-grid">
 
-            <!-- Primary Locations -->
+          
             <div class="primary-locations">
 
-                <!-- Kanjur -->
+           
                 <div class="location-card kanjur-card" (click)="scrollToSection('kanjur')">
                     <div class="card-icon">
                         <i class="fas fa-truck"></i>
@@ -182,7 +182,7 @@
                     </div>
                 </div>
 
-                <!-- Deonar -->
+              
                 <div class="location-card deonar-card" (click)="scrollToSection('deonar')">
                     <div class="card-icon">
                         <i class="fas fa-truck"></i>
@@ -207,10 +207,10 @@
 
             </div>
 
-            <!-- Secondary Locations -->
+          
             <div class="secondary-locations">
 
-                <!-- VRTS -->
+              
                 <div class="location-card vrts-card compact">
                     <div class="card-header">
                         <h4>VRTS</h4>
@@ -221,7 +221,7 @@
                     </div>
                 </div>
 
-                <!-- MRTS -->
+               
                 <div class="location-card mrts-card compact">
                     <div class="card-header">
                         <h4>MRTS</h4>
@@ -232,7 +232,7 @@
                     </div>
                 </div>
 
-                <!-- GRTS -->
+             
                 <div class="location-card grts-card compact">
                     <div class="card-header">
                         <h4>GRTS</h4>
@@ -243,7 +243,7 @@
                     </div>
                 </div>
 
-                <!-- Total -->
+             
                 <div class="location-card total-card compact highlight">
                     <div class="card-header">
                         <h4>Total</h4>
@@ -256,9 +256,9 @@
                 </div>
 
             </div>
-        </div>
+        </div> -->
 
-        <!-- Main Dashboard Layout -->
+         <!-- Main Dashboard Layout -->
         <div class="dashboard-layout">
 
             <!-- Sidebar Navigation -->
@@ -306,616 +306,94 @@
                 <!-- Overview Section -->
                 <div class="dashboard-section" *ngIf="activeSection === 'overview'">
 
-                    <!-- Last 30 Days Metrics - Dynamic -->
-                    <div class="time-metrics-compact">
-                        <div class="metrics-row">
-                            <div class="metric-item">
-                                <div class="metric-icon month">
-                                    <i class="fas fa-calendar-alt"></i>
-                                </div>
-                                <div class="metric-info">
-                                    <span class="metric-label">Last 30 Days Total</span>
-                                    <span class="metric-value">{{ last30DaysMetrics.cumulativeWeight | number:'1.2-2' }} MT</span>
-                                </div>
-                            </div>
-                            <div class="metric-item">
-                                <div class="metric-icon week">
-                                    <i class="fas fa-chart-area"></i>
-                                </div>
-                                <div class="metric-info">
-                                    <span class="metric-label">30 Days Avg (Ward-wise)</span>
-                                    <span class="metric-value">{{ last30DaysMetrics.averageWardWeight | number:'1.2-2' }} MT</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Today / Last Day / Week / Month / Year - Dynamic -->
-                    <div class="time-metrics-compact">
-                        <div class="metrics-row">
-                            <div class="metric-item" (click)="drillDownMetric('today')">
-                                <div class="metric-icon day">
-                                    <i class="fas fa-calendar-day"></i>
-                                </div>
-                                <div class="metric-info">
-                                    <span class="metric-label">Today</span>
-                                    <span class="metric-value">{{ timeMetrics.todayWeight | number:'1.2-2' }} MT</span>
-                                </div>
-                            </div>
 
-                            <div class="metric-item" (click)="drillDownMetric('lastDay')">
-                                <div class="metric-icon day">
-                                    <i class="fas fa-history"></i>
-                                </div>
-                                <div class="metric-info">
-                                    <span class="metric-label">Yesterday</span>
-                                    <span class="metric-value">{{ timeMetrics.lastDay | number:'1.2-2' }} MT</span>
-                                </div>
-                            </div>
-
-                            <div class="metric-item" (click)="drillDownMetric('week')">
-                                <div class="metric-icon week">
-                                    <i class="fas fa-calendar-week"></i>
-                                </div>
-                                <div class="metric-info">
-                                    <span class="metric-label">This Week</span>
-                                    <span class="metric-value">{{ timeMetrics.week | number:'1.2-2' }} MT</span>
-                                </div>
-                            </div>
-
-                            <div class="metric-item" (click)="drillDownMetric('month')">
-                                <div class="metric-icon month">
-                                    <i class="fas fa-calendar-alt"></i>
-                                </div>
-                                <div class="metric-info">
-                                    <span class="metric-label">This Month</span>
-                                    <span class="metric-value">{{ timeMetrics.month | number:'1.2-2' }} MT</span>
-                                </div>
-                            </div>
-
-                            <div class="metric-item" (click)="drillDownMetric('year')">
-                                <div class="metric-icon year">
-                                    <i class="fas fa-calendar"></i>
-                                </div>
-                                <div class="metric-info">
-                                    <span class="metric-label">This Year</span>
-                                    <span class="metric-value">{{ timeMetrics.year | number:'1.2-2' }} MT</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dynamic Ward Analytics Section for Deonar and Kanjur -->
-                    <div class="ward-analytics-section" *ngIf="deonarAnalytics.length > 0 || kanjurAnalytics.length > 0">
-                        <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> Ward-Level Analytics</h3>
-                        
-                        <div class="ward-analytics-grid">
-                            <!-- Deonar Analytics -->
-                            <div class="ward-analytics-card deonar" *ngIf="deonarAnalytics.length > 0">
-                                <div class="analytics-header">
-                                    <h4><i class="fas fa-map-marker-alt"></i> Deonar Ward Analytics</h4>
-                                    <span class="total-badge">{{ deonarData.trips }} Total Trips | {{ deonarData.netWeight | number:'1.2-2' }} MT</span>
-                                </div>
-                                <div class="analytics-body">
-                                    <div class="analytics-item" *ngFor="let ward of deonarAnalytics">
-                                        <div class="ward-name">{{ ward.wardName }}</div>
-                                        <div class="ward-stats">
-                                            <span><strong>{{ ward.trips }}</strong> trips</span>
-                                            <span><strong>{{ ward.netWeight | number:'1.2-2' }}</strong> MT</span>
-                                            <span class="utilization" [class.good]="ward.utilization >= 70" [class.warning]="ward.utilization >= 50 && ward.utilization < 70" [class.poor]="ward.utilization < 50">
-                                                {{ ward.utilization | number:'1.1-1' }}% util
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Kanjur Analytics -->
-                            <div class="ward-analytics-card kanjur" *ngIf="kanjurAnalytics.length > 0">
-                                <div class="analytics-header">
-                                    <h4><i class="fas fa-map-marker-alt"></i> Kanjur Ward Analytics</h4>
-                                    <span class="total-badge">{{ kanjurData.trips }} Total Trips | {{ kanjurData.netWeight | number:'1.2-2' }} MT</span>
-                                </div>
-                                <div class="analytics-body">
-                                    <div class="analytics-item" *ngFor="let ward of kanjurAnalytics">
-                                        <div class="ward-name">{{ ward.wardName }}</div>
-                                        <div class="ward-stats">
-                                            <span><strong>{{ ward.trips }}</strong> trips</span>
-                                            <span><strong>{{ ward.netWeight | number:'1.2-2' }}</strong> MT</span>
-                                            <span class="utilization" [class.good]="ward.utilization >= 70" [class.warning]="ward.utilization >= 50 && ward.utilization < 70" [class.poor]="ward.utilization < 50">
-                                                {{ ward.utilization | number:'1.1-1' }}% util
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Overall Totals -->
-                        <div class="overall-totals">
-                            <div class="total-item">
-                                <i class="fas fa-truck"></i>
-                                <span class="total-label">Total Trips</span>
-                                <span class="total-value">{{ overallAnalytics.totalTrips | number }}</span>
-                            </div>
-                            <div class="total-item">
-                                <i class="fas fa-weight-hanging"></i>
-                                <span class="total-label">Total Weight</span>
-                                <span class="total-value">{{ overallAnalytics.totalWeight | number:'1.2-2' }} MT</span>
-                            </div>
-                            <div class="total-item">
-                                <i class="fas fa-chart-bar"></i>
-                                <span class="total-label">Avg Daily Weight</span>
-                                <span class="total-value">{{ overallAnalytics.avgDailyWeight | number:'1.2-2' }} MT</span>
-                            </div>
-                            <div class="total-item">
-                                <i class="fas fa-tachometer-alt"></i>
-                                <span class="total-label">Capacity Utilization</span>
-                                <span class="total-value">{{ overallAnalytics.capacityUtilization | number:'1.1-1' }}%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Chart Sections -->
-                    <div class="charts-grid">
-
-                        <!-- Vehicle Capacity vs Actual - Dynamic -->
-                        <div class="enhanced-chart-card full-width">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Vehicle Capacity vs Actual Weight Carried</h3>
-                                    <span class="chart-subtitle">Comparison of capacity utilization by ward</span>
-                                </div>
-                            </div>
-                            <div class="chart-container">
-                                <apx-chart 
-                                    [series]="capacityVsActualChartOptions.series"
-                                    [chart]="capacityVsActualChartOptions.chart"
-                                    [xaxis]="capacityVsActualChartOptions.xaxis"
-                                    [yaxis]="capacityVsActualChartOptions.yaxis"
-                                    [plotOptions]="capacityVsActualChartOptions.plotOptions"
-                                    [dataLabels]="capacityVsActualChartOptions.dataLabels"
-                                    [stroke]="capacityVsActualChartOptions.stroke || {}"
-                                    [colors]="capacityVsActualChartOptions.colors"
-                                    [grid]="capacityVsActualChartOptions.grid"
-                                    [legend]="capacityVsActualChartOptions.legend">
-                                </apx-chart>
-                            </div>
-                        </div>
-
-                        <!-- Trip Distribution -->
-                        <div id="kanjur-section" class="enhanced-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Kanjur vs Deonar</h3>
-                                    <span class="chart-subtitle">Trip Distribution</span>
-                                </div>
-                            </div>
-                            <div class="chart-container">
-                                <apx-chart 
-                                    [series]="vehicleChartOptions.series"
-                                    [chart]="vehicleChartOptions.chart"
-                                    [labels]="vehicleChartOptions.labels"
-                                    [colors]="vehicleChartOptions.colors"
-                                    [legend]="vehicleChartOptions.legend"
-                                    [plotOptions]="vehicleChartOptions.plotOptions"
-                                    [dataLabels]="vehicleChartOptions.dataLabels"
-                                    [responsive]="vehicleChartOptions.responsive">
-                                </apx-chart>
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-                <!-- Overview Section End -->
-
-                <!-- Performance Comparison Section -->
-                <div class="dashboard-section" *ngIf="activeSection === 'performance'">
-                    
-                    <!-- Performance Header -->
-                    <div class="performance-header">
-                        <div class="performance-title">
-                            <h2><i class="fas fa-chart-line"></i> Performance Comparison</h2>
-                            <p>Compare current year performance with previous years</p>
-                        </div>
-                        <div class="performance-controls">
-                            <div class="year-selector">
-                                <label>Select Year:</label>
-                                <select [(ngModel)]="selectedComparisonYear" (change)="onComparisonYearChange()">
-                                    <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
-                                </select>
-                            </div>
-                            <button class="btn-refresh-comparison" (click)="loadComparisonData()" [disabled]="isLoadingComparison">
-                                <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingComparison"></i>
-                                <span class="btn-text">Refresh Data</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Loading State for Comparison -->
-                    <div class="comparison-loading" *ngIf="isLoadingComparison">
-                        <div class="spinner-small"></div>
-                        <span>Loading comparison data...</span>
-                    </div>
-
-                    <!-- Comparison Summary Cards -->
-                    <div class="comparison-summary-grid" *ngIf="!isLoadingComparison">
-                        
-                        <!-- Total Weight Comparison Card -->
-                        <div class="comparison-card">
-                            <div class="comparison-card-header">
-                                <div class="comparison-icon weight-icon">
-                                    <i class="fas fa-weight-hanging"></i>
-                                </div>
-                                <h4>Total Weight (MT)</h4>
-                            </div>
-                            <div class="comparison-card-body">
-                                <div class="comparison-values">
-                                    <div class="current-value">
-                                        <span class="label">{{ selectedComparisonYear }}</span>
-                                        <span class="value">{{ comparisonData.currentYear.totalWeight | number:'1.2-2' }}</span>
-                                    </div>
-                                    <div class="vs-divider">
-                                        <span>vs</span>
-                                    </div>
-                                    <div class="previous-value">
-                                        <span class="label">{{ selectedComparisonYear - 1 }}</span>
-                                        <span class="value">{{ comparisonData.previousYear.totalWeight | number:'1.2-2' }}</span>
-                                    </div>
-                                </div>
-                                <div class="comparison-change" [class.positive]="comparisonData.changes.weightChange >= 0" [class.negative]="comparisonData.changes.weightChange < 0">
-                                    <i class="fas" [class.fa-arrow-up]="comparisonData.changes.weightChange >= 0" [class.fa-arrow-down]="comparisonData.changes.weightChange < 0"></i>
-                                    <span>{{ comparisonData.changes.weightChange | number:'1.2-2' }}%</span>
-                                    <span class="change-label">{{ comparisonData.changes.weightChange >= 0 ? 'Increase' : 'Decrease' }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Total Trips Comparison Card -->
-                        <div class="comparison-card">
-                            <div class="comparison-card-header">
-                                <div class="comparison-icon trips-icon">
-                                    <i class="fas fa-truck"></i>
-                                </div>
-                                <h4>Total Trips</h4>
-                            </div>
-                            <div class="comparison-card-body">
-                                <div class="comparison-values">
-                                    <div class="current-value">
-                                        <span class="label">{{ selectedComparisonYear }}</span>
-                                        <span class="value">{{ comparisonData.currentYear.totalTrips | number }}</span>
-                                    </div>
-                                    <div class="vs-divider">
-                                        <span>vs</span>
-                                    </div>
-                                    <div class="previous-value">
-                                        <span class="label">{{ selectedComparisonYear - 1 }}</span>
-                                        <span class="value">{{ comparisonData.previousYear.totalTrips | number }}</span>
-                                    </div>
-                                </div>
-                                <div class="comparison-change" [class.positive]="comparisonData.changes.tripsChange >= 0" [class.negative]="comparisonData.changes.tripsChange < 0">
-                                    <i class="fas" [class.fa-arrow-up]="comparisonData.changes.tripsChange >= 0" [class.fa-arrow-down]="comparisonData.changes.tripsChange < 0"></i>
-                                    <span>{{ comparisonData.changes.tripsChange | number:'1.2-2' }}%</span>
-                                    <span class="change-label">{{ comparisonData.changes.tripsChange >= 0 ? 'Increase' : 'Decrease' }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Average Daily Weight Card -->
-                        <div class="comparison-card">
-                            <div class="comparison-card-header">
-                                <div class="comparison-icon avg-icon">
-                                    <i class="fas fa-chart-bar"></i>
-                                </div>
-                                <h4>Avg Daily Weight (MT)</h4>
-                            </div>
-                            <div class="comparison-card-body">
-                                <div class="comparison-values">
-                                    <div class="current-value">
-                                        <span class="label">{{ selectedComparisonYear }}</span>
-                                        <span class="value">{{ comparisonData.currentYear.avgDailyWeight | number:'1.2-2' }}</span>
-                                    </div>
-                                    <div class="vs-divider">
-                                        <span>vs</span>
-                                    </div>
-                                    <div class="previous-value">
-                                        <span class="label">{{ selectedComparisonYear - 1 }}</span>
-                                        <span class="value">{{ comparisonData.previousYear.avgDailyWeight | number:'1.2-2' }}</span>
-                                    </div>
-                                </div>
-                                <div class="comparison-change" [class.positive]="comparisonData.changes.avgDailyChange >= 0" [class.negative]="comparisonData.changes.avgDailyChange < 0">
-                                    <i class="fas" [class.fa-arrow-up]="comparisonData.changes.avgDailyChange >= 0" [class.fa-arrow-down]="comparisonData.changes.avgDailyChange < 0"></i>
-                                    <span>{{ comparisonData.changes.avgDailyChange | number:'1.2-2' }}%</span>
-                                    <span class="change-label">{{ comparisonData.changes.avgDailyChange >= 0 ? 'Increase' : 'Decrease' }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Efficiency Rate Card -->
-                        <div class="comparison-card">
-                            <div class="comparison-card-header">
-                                <div class="comparison-icon efficiency-icon">
-                                    <i class="fas fa-tachometer-alt"></i>
-                                </div>
-                                <h4>Efficiency Rate</h4>
-                            </div>
-                            <div class="comparison-card-body">
-                                <div class="comparison-values">
-                                    <div class="current-value">
-                                        <span class="label">{{ selectedComparisonYear }}</span>
-                                        <span class="value">{{ comparisonData.currentYear.efficiencyRate | number:'1.1-1' }}%</span>
-                                    </div>
-                                    <div class="vs-divider">
-                                        <span>vs</span>
-                                    </div>
-                                    <div class="previous-value">
-                                        <span class="label">{{ selectedComparisonYear - 1 }}</span>
-                                        <span class="value">{{ comparisonData.previousYear.efficiencyRate | number:'1.1-1' }}%</span>
-                                    </div>
-                                </div>
-                                <div class="comparison-change" [class.positive]="comparisonData.changes.efficiencyChange >= 0" [class.negative]="comparisonData.changes.efficiencyChange < 0">
-                                    <i class="fas" [class.fa-arrow-up]="comparisonData.changes.efficiencyChange >= 0" [class.fa-arrow-down]="comparisonData.changes.efficiencyChange < 0"></i>
-                                    <span>{{ comparisonData.changes.efficiencyChange | number:'1.2-2' }}%</span>
-                                    <span class="change-label">{{ comparisonData.changes.efficiencyChange >= 0 ? 'Improvement' : 'Decline' }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Monthly Comparison Chart -->
-                    <div class="charts-grid" *ngIf="!isLoadingComparison">
-                        <div class="enhanced-chart-card full-width">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Monthly Weight Comparison</h3>
-                                    <span class="chart-subtitle">{{ selectedComparisonYear }} vs {{ selectedComparisonYear - 1 }} - Weight in MT</span>
-                                </div>
-                            </div>
-                            <div class="chart-container">
-                                <apx-chart 
-                                    [series]="monthlyComparisonChartOptions.series"
-                                    [chart]="monthlyComparisonChartOptions.chart"
-                                    [xaxis]="monthlyComparisonChartOptions.xaxis"
-                                    [yaxis]="monthlyComparisonChartOptions.yaxis"
-                                    [plotOptions]="monthlyComparisonChartOptions.plotOptions"
-                                    [dataLabels]="monthlyComparisonChartOptions.dataLabels"
-                                    [stroke]="monthlyComparisonChartOptions.stroke || {}"
-                                    [colors]="monthlyComparisonChartOptions.colors"
-                                    [grid]="monthlyComparisonChartOptions.grid"
-                                    [legend]="monthlyComparisonChartOptions.legend"
-                                    [tooltip]="monthlyComparisonChartOptions.tooltip || {}">
-                                </apx-chart>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Site-wise Comparison -->
-                    <div class="site-comparison-section" *ngIf="!isLoadingComparison">
-                        <h3 class="section-title"><i class="fas fa-map-marker-alt"></i> Site-wise Year Comparison</h3>
-                        
-                        <div class="site-comparison-grid">
-                            <!-- Kanjur Comparison -->
-                            <div class="site-comparison-card kanjur">
-                                <div class="site-header">
-                                    <h4>Kanjur</h4>
-                                    <div class="site-badge">SWM</div>
-                                </div>
-                                <div class="site-metrics">
-                                    <div class="site-metric-row">
-                                        <span class="metric-label">Weight (MT)</span>
-                                        <div class="metric-comparison">
-                                            <span class="current">{{ comparisonData.siteWise.kanjur.currentWeight | number:'1.2-2' }}</span>
-                                            <span class="separator">→</span>
-                                            <span class="previous">{{ comparisonData.siteWise.kanjur.previousWeight | number:'1.2-2' }}</span>
-                                            <span class="change" [class.positive]="comparisonData.siteWise.kanjur.weightChange >= 0" [class.negative]="comparisonData.siteWise.kanjur.weightChange < 0">
-                                                {{ comparisonData.siteWise.kanjur.weightChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.kanjur.weightChange | number:'1.1-1' }}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="site-metric-row">
-                                        <span class="metric-label">Trips</span>
-                                        <div class="metric-comparison">
-                                            <span class="current">{{ comparisonData.siteWise.kanjur.currentTrips | number }}</span>
-                                            <span class="separator">→</span>
-                                            <span class="previous">{{ comparisonData.siteWise.kanjur.previousTrips | number }}</span>
-                                            <span class="change" [class.positive]="comparisonData.siteWise.kanjur.tripsChange >= 0" [class.negative]="comparisonData.siteWise.kanjur.tripsChange < 0">
-                                                {{ comparisonData.siteWise.kanjur.tripsChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.kanjur.tripsChange | number:'1.1-1' }}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="site-progress">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill kanjur-fill" [style.width.%]="getProgressWidth(comparisonData.siteWise.kanjur.currentWeight, comparisonData.siteWise.kanjur.previousWeight)"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Deonar Comparison -->
-                            <div class="site-comparison-card deonar">
-                                <div class="site-header">
-                                    <h4>Deonar</h4>
-                                    <div class="site-badge">SWM</div>
-                                </div>
-                                <div class="site-metrics">
-                                    <div class="site-metric-row">
-                                        <span class="metric-label">Weight (MT)</span>
-                                        <div class="metric-comparison">
-                                            <span class="current">{{ comparisonData.siteWise.deonar.currentWeight | number:'1.2-2' }}</span>
-                                            <span class="separator">→</span>
-                                            <span class="previous">{{ comparisonData.siteWise.deonar.previousWeight | number:'1.2-2' }}</span>
-                                            <span class="change" [class.positive]="comparisonData.siteWise.deonar.weightChange >= 0" [class.negative]="comparisonData.siteWise.deonar.weightChange < 0">
-                                                {{ comparisonData.siteWise.deonar.weightChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.deonar.weightChange | number:'1.1-1' }}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="site-metric-row">
-                                        <span class="metric-label">Trips</span>
-                                        <div class="metric-comparison">
-                                            <span class="current">{{ comparisonData.siteWise.deonar.currentTrips | number }}</span>
-                                            <span class="separator">→</span>
-                                            <span class="previous">{{ comparisonData.siteWise.deonar.previousTrips | number }}</span>
-                                            <span class="change" [class.positive]="comparisonData.siteWise.deonar.tripsChange >= 0" [class.negative]="comparisonData.siteWise.deonar.tripsChange < 0">
-                                                {{ comparisonData.siteWise.deonar.tripsChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.deonar.tripsChange | number:'1.1-1' }}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="site-progress">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill deonar-fill" [style.width.%]="getProgressWidth(comparisonData.siteWise.deonar.currentWeight, comparisonData.siteWise.deonar.previousWeight)"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quarterly Trend Chart -->
-                    <div class="charts-grid" *ngIf="!isLoadingComparison">
-                        <div class="enhanced-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Quarterly Trips Trend</h3>
-                                    <span class="chart-subtitle">Trips comparison by quarter</span>
-                                </div>
-                            </div>
-                            <div class="chart-container">
-                                <apx-chart 
-                                    [series]="quarterlyComparisonChartOptions.series"
-                                    [chart]="quarterlyComparisonChartOptions.chart"
-                                    [xaxis]="quarterlyComparisonChartOptions.xaxis"
-                                    [yaxis]="quarterlyComparisonChartOptions.yaxis"
-                                    [plotOptions]="quarterlyComparisonChartOptions.plotOptions"
-                                    [dataLabels]="quarterlyComparisonChartOptions.dataLabels"
-                                    [colors]="quarterlyComparisonChartOptions.colors"
-                                    [grid]="quarterlyComparisonChartOptions.grid"
-                                    [legend]="quarterlyComparisonChartOptions.legend">
-                                </apx-chart>
-                            </div>
-                        </div>
-
-                        <!-- Year Over Year Growth Chart -->
-                        <div class="enhanced-chart-card">
-                            <div class="chart-header">
-                                <div class="chart-title">
-                                    <h3>Year-Over-Year Growth</h3>
-                                    <span class="chart-subtitle">Performance growth trend</span>
-                                </div>
-                            </div>
-                            <div class="chart-container">
-                                <apx-chart 
-                                    [series]="yoyGrowthChartOptions.series"
-                                    [chart]="yoyGrowthChartOptions.chart"
-                                    [xaxis]="yoyGrowthChartOptions.xaxis"
-                                    [yaxis]="yoyGrowthChartOptions.yaxis"
-                                    [plotOptions]="yoyGrowthChartOptions.plotOptions"
-                                    [dataLabels]="yoyGrowthChartOptions.dataLabels"
-                                    [colors]="yoyGrowthChartOptions.colors"
-                                    [grid]="yoyGrowthChartOptions.grid"
-                                    [legend]="yoyGrowthChartOptions.legend">
-                                </apx-chart>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Historical Data Table -->
-                    <div class="historical-table-section" *ngIf="!isLoadingComparison">
-                        <h3 class="section-title"><i class="fas fa-table"></i> Historical Performance Data</h3>
-                        <div class="table-container">
-                            <table class="comparison-table">
-                                <thead>
-                                    <tr>
-                                        <th>Year</th>
-                                        <th>Total Weight (MT)</th>
-                                        <th>Total Trips</th>
-                                        <th>Avg Daily (MT)</th>
-                                        <th>Efficiency</th>
-                                        <th>YoY Change</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr *ngFor="let record of historicalData" [class.current-year]="record.year === selectedComparisonYear">
-                                        <td class="year-cell">
-                                            <span class="year-badge" [class.active]="record.year === selectedComparisonYear">{{ record.year }}</span>
-                                        </td>
-                                        <td>{{ record.totalWeight | number:'1.2-2' }}</td>
-                                        <td>{{ record.totalTrips | number }}</td>
-                                        <td>{{ record.avgDaily | number:'1.2-2' }}</td>
-                                        <td>
-                                            <span class="efficiency-badge">{{ record.efficiency | number:'1.1-1' }}%</span>
-                                        </td>
-                                        <td>
-                                            <span class="yoy-change" [class.positive]="record.yoyChange >= 0" [class.negative]="record.yoyChange < 0">
-                                                <i class="fas" [class.fa-arrow-up]="record.yoyChange >= 0" [class.fa-arrow-down]="record.yoyChange < 0"></i>
-                                                {{ record.yoyChange | number:'1.2-2' }}%
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                </div>
-                <!-- End of Performance Section -->
-
-                <!-- Added Analytics Section UI -->
-                <!-- Analytics Section -->
-                <div class="dashboard-section" *ngIf="activeSection === 'analytics'">
-                    
-                    <!-- Analytics Header -->
-                    <div class="analytics-header">
-                        <h2><i class="fas fa-chart-pie"></i> Analytics Dashboard</h2>
-                        <p>Comprehensive analytics and insights for waste management operations</p>
-                    </div>
-
-                    <!-- Overall Analytics Cards -->
-                    <div class="analytics-overview-grid">
-                        <div class="analytics-card total-trips">
-                            <div class="card-icon">
-                                <i class="fas fa-truck"></i>
-                            </div>
-                            <div class="card-content">
-                                <h4>Total Trips</h4>
-                                <span class="value">{{ overallAnalytics.totalTrips | number }}</span>
-                            </div>
-                        </div>
-                        <div class="analytics-card total-weight">
-                            <div class="card-icon">
-                                <i class="fas fa-weight-hanging"></i>
-                            </div>
-                            <div class="card-content">
-                                <h4>Total Weight</h4>
-                                <span class="value">{{ overallAnalytics.totalWeight | number:'1.2-2' }} MT</span>
-                            </div>
-                        </div>
-                        <div class="analytics-card avg-daily">
-                            <div class="card-icon">
-                                <i class="fas fa-chart-bar"></i>
-                            </div>
-                            <div class="card-content">
-                                <h4>Avg Daily Weight</h4>
-                                <span class="value">{{ overallAnalytics.avgDailyWeight | number:'1.2-2' }} MT</span>
-                            </div>
-                        </div>
-                        <div class="analytics-card capacity-util">
-                            <div class="card-icon">
-                                <i class="fas fa-tachometer-alt"></i>
-                            </div>
-                            <div class="card-content">
-                                <h4>Capacity Utilization</h4>
-                                <span class="value">{{ overallAnalytics.capacityUtilization | number:'1.1-1' }}%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Site-wise Analytics Section -->
                     <div class="site-analytics-section">
-                        <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> Site-wise Analytics</h3>
-                        
+                        <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> SWM</h3>
+                        <div class="time-metrics-compact" *ngIf="swmOverallKpis!=null">
+                            <div class="metrics-row">
+                                <div class="metric-item">
+                                    <div class="metric-icon month">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">Last 30 Days Total</span>
+                                        <span class="metric-value">{{ swmOverallKpis?.last30DaysTotal| number:'1.2-2' }}
+                                            MT</span>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-icon week">
+                                        <i class="fas fa-chart-area"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">30 Days Avg </span>
+                                        <span class="metric-value">{{ swmOverallKpis.last30DaysAvg | number:'1.2-2'}} MT</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Today / Last Day / Week / Month / Year - Dynamic -->
+                        <div class="time-metrics-compact">
+                            <div class="metrics-row">
+                                <div class="metric-item" (click)="drillDownMetric('today')">
+                                    <div class="metric-icon day">
+                                        <i class="fas fa-calendar-day"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">Today</span>
+                                        <span class="metric-value">{{ swmOverallKpis.todayTotal | number:'1.2-2' }}
+                                            MT</span>
+                                    </div>
+                                </div>
+
+                                <div class="metric-item" (click)="drillDownMetric('lastDay')">
+                                    <div class="metric-icon day">
+                                        <i class="fas fa-history"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">Yesterday</span>
+                                        <span class="metric-value">{{ swmOverallKpis.yesterdayTotal | number:'1.2-2' }}
+                                            MT</span>
+                                    </div>
+                                </div>
+
+                                <div class="metric-item" (click)="drillDownMetric('week')">
+                                    <div class="metric-icon week">
+                                        <i class="fas fa-calendar-week"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">This Week</span>
+                                        <span class="metric-value">{{ swmOverallKpis.thisWeekTotal | number:'1.2-2' }}
+                                            MT</span>
+                                    </div>
+                                </div>
+
+                                <div class="metric-item" (click)="drillDownMetric('month')">
+                                    <div class="metric-icon month">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">This Month</span>
+                                        <span class="metric-value">{{ swmOverallKpis.thisMonthTotal | number:'1.2-2' }}
+                                            MT</span>
+                                    </div>
+                                </div>
+
+                                <div class="metric-item" (click)="drillDownMetric('year')">
+                                    <div class="metric-icon year">
+                                        <i class="fas fa-calendar"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">This Year</span>
+                                        <span class="metric-value">{{ swmOverallKpis.thisYearTotal | number:'1.2-2' }}
+                                            MT</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="site-analytics-grid">
-                            <!-- Kanjur Site Analytics -->
                             <div class="site-analytics-card kanjur">
                                 <div class="site-header">
                                     <div class="site-icon">
@@ -937,11 +415,13 @@
                                     </div>
                                     <div class="stat-item">
                                         <span class="stat-label">Avg per Trip</span>
-                                        <span class="stat-value">{{ kanjurData.trips > 0 ? (kanjurData.netWeight / kanjurData.trips | number:'1.2-2') : '0' }} MT</span>
+                                        <span class="stat-value">{{ kanjurData.trips > 0 ? (kanjurData.netWeight /
+                                            kanjurData.trips |
+                                            number:'1.2-2') : '0' }} MT</span>
                                     </div>
                                 </div>
-                                <!-- Ward-level breakdown for Kanjur -->
-                                <div class="ward-breakdown" *ngIf="kanjurAnalytics.length > 0">
+
+                                <!-- <div class="ward-breakdown" *ngIf="kanjurAnalytics.length > 0">
                                     <h5>Ward Breakdown</h5>
                                     <div class="ward-list">
                                         <div class="ward-item" *ngFor="let ward of kanjurAnalytics">
@@ -955,10 +435,10 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
 
-                            <!-- Deonar Site Analytics -->
+
                             <div class="site-analytics-card deonar">
                                 <div class="site-header">
                                     <div class="site-icon">
@@ -980,11 +460,13 @@
                                     </div>
                                     <div class="stat-item">
                                         <span class="stat-label">Avg per Trip</span>
-                                        <span class="stat-value">{{ deonarData.trips > 0 ? (deonarData.netWeight / deonarData.trips | number:'1.2-2') : '0' }} MT</span>
+                                        <span class="stat-value">{{ deonarData.trips > 0 ? (deonarData.netWeight /
+                                            deonarData.trips |
+                                            number:'1.2-2') : '0' }} MT</span>
                                     </div>
                                 </div>
-                                <!-- Ward-level breakdown for Deonar -->
-                                <div class="ward-breakdown" *ngIf="deonarAnalytics.length > 0">
+
+                                <!-- <div class="ward-breakdown" *ngIf="deonarAnalytics.length > 0">
                                     <h5>Ward Breakdown</h5>
                                     <div class="ward-list">
                                         <div class="ward-item" *ngFor="let ward of deonarAnalytics">
@@ -998,72 +480,437 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div> -->
+                            </div>
+
+                            <div class="site-analytics-card total">
+                                <div class="site-header">
+                                    <div class="site-icon">
+                                        <i class="fas fa-industry"></i>
+                                    </div>
+                                    <div class="site-info">
+                                        <h4>Total </h4>
+                                        <span class="site-badge">SWM</span>
+                                    </div>
                                 </div>
+                                <div class="site-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Total Trips</span>
+                                        <span class="stat-value">{{ totalData.trips | number }}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Net Weight</span>
+                                        <span class="stat-value">{{ totalData.netWeight | number:'1.2-2' }} MT</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Avg per Trip</span>
+                                        <span class="stat-value">{{ totalData.trips > 0 ? (totalData.netWeight /
+                                            totalData.trips |
+                                            number:'1.2-2') : '0' }} MT</span>
+                                    </div>
+                                </div>
+
+                                <!-- <div class="ward-breakdown" *ngIf="deonarAnalytics.length > 0">
+                                    <h5>Ward Breakdown</h5>
+                                    <div class="ward-list">
+                                        <div class="ward-item" *ngFor="let ward of deonarAnalytics">
+                                            <span class="ward-name">{{ ward.wardName }}</span>
+                                            <div class="ward-stats">
+                                                <span>{{ ward.trips }} trips</span>
+                                                <span>{{ ward.netWeight | number:'1.2-2' }} MT</span>
+                                                <span class="utilization-badge" [class.good]="ward.utilization >= 70" [class.warning]="ward.utilization >= 50 && ward.utilization < 70" [class.poor]="ward.utilization < 50">
+                                                    {{ ward.utilization | number:'1.1-1' }}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>
 
-                    <!-- RTS Analytics -->
-                    <div class="rts-analytics-section">
-                        <h3 class="section-title"><i class="fas fa-warehouse"></i> RTS Analytics</h3>
-                        <div class="rts-cards-grid">
-                            <div class="rts-card vrts">
-                                <div class="rts-header">
-                                    <h4>VRTS</h4>
-                                    <i class="fas fa-recycle"></i>
+                    <!-- Dynamic Ward Analytics Section for Deonar and Kanjur -->
+                    <!-- <div class="ward-analytics-section"
+                        *ngIf="deonarAnalytics.length > 0 || kanjurAnalytics.length > 0">
+                        <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> Ward-Level Analytics</h3>
+
+                        <div class="ward-analytics-grid">
+                          
+                            <div class="ward-analytics-card deonar" *ngIf="deonarAnalytics.length > 0">
+                                <div class="analytics-header">
+                                    <h4><i class="fas fa-map-marker-alt"></i> Deonar Ward Analytics</h4>
+                                    <span class="total-badge">{{ deonarData.trips }} Total Trips | {{
+                                        deonarData.netWeight | number:'1.2-2' }} MT</span>
                                 </div>
-                                <div class="rts-value">{{ unifiedData.vrts | number:'1.2-2' }} MT</div>
+                                <div class="analytics-body">
+                                    <div class="analytics-item" *ngFor="let ward of deonarAnalytics">
+                                        <div class="ward-name">{{ ward.wardName }}</div>
+                                        <div class="ward-stats">
+                                            <span><strong>{{ ward.trips }}</strong> trips</span>
+                                            <span><strong>{{ ward.netWeight | number:'1.2-2' }}</strong> MT</span>
+                                            <span class="utilization" [class.good]="ward.utilization >= 70"
+                                                [class.warning]="ward.utilization >= 50 && ward.utilization < 70"
+                                                [class.poor]="ward.utilization < 50">
+                                                {{ ward.utilization | number:'1.1-1' }}% util
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="rts-card mrts">
-                                <div class="rts-header">
-                                    <h4>MRTS</h4>
-                                    <i class="fas fa-recycle"></i>
+
+                         
+                            <div class="ward-analytics-card kanjur" *ngIf="kanjurAnalytics.length > 0">
+                                <div class="analytics-header">
+                                    <h4><i class="fas fa-map-marker-alt"></i> Kanjur Ward Analytics</h4>
+                                    <span class="total-badge">{{ kanjurData.trips }} Total Trips | {{
+                                        kanjurData.netWeight | number:'1.2-2' }} MT</span>
                                 </div>
-                                <div class="rts-value">{{ unifiedData.mrts | number:'1.2-2' }} MT</div>
+                                <div class="analytics-body">
+                                    <div class="analytics-item" *ngFor="let ward of kanjurAnalytics">
+                                        <div class="ward-name">{{ ward.wardName }}</div>
+                                        <div class="ward-stats">
+                                            <span><strong>{{ ward.trips }}</strong> trips</span>
+                                            <span><strong>{{ ward.netWeight | number:'1.2-2' }}</strong> MT</span>
+                                            <span class="utilization" [class.good]="ward.utilization >= 70"
+                                                [class.warning]="ward.utilization >= 50 && ward.utilization < 70"
+                                                [class.poor]="ward.utilization < 50">
+                                                {{ ward.utilization | number:'1.1-1' }}% util
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="rts-card grts">
-                                <div class="rts-header">
-                                    <h4>GRTS</h4>
-                                    <i class="fas fa-recycle"></i>
-                                </div>
-                                <div class="rts-value">{{ unifiedData.grts | number:'1.2-2' }} MT</div>
+                        </div>
+
+                     
+                        <div class="overall-totals">
+                            <div class="total-item">
+                                <i class="fas fa-truck"></i>
+                                <span class="total-label">Total Trips</span>
+                                <span class="total-value">{{ overallAnalytics.totalTrips | number }}</span>
+                            </div>
+                            <div class="total-item">
+                                <i class="fas fa-weight-hanging"></i>
+                                <span class="total-label">Total Weight</span>
+                                <span class="total-value">{{ overallAnalytics.totalWeight | number:'1.2-2' }} MT</span>
+                            </div>
+                            <div class="total-item">
+                                <i class="fas fa-chart-bar"></i>
+                                <span class="total-label">Avg Daily Weight</span>
+                                <span class="total-value">{{ overallAnalytics.avgDailyWeight | number:'1.2-2' }}
+                                    MT</span>
+                            </div>
+                            <div class="total-item">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span class="total-label">Capacity Utilization</span>
+                                <span class="total-value">{{ overallAnalytics.capacityUtilization | number:'1.1-1'
+                                    }}%</span>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Analytics Charts -->
-                    <div class="charts-grid">
-                        <div class="enhanced-chart-card">
+                     -->
+                    <!-- <div class="charts-grid">                    
+                        <div class="enhanced-chart-card full-width">
                             <div class="chart-header">
                                 <div class="chart-title">
-                                    <h3>Trip Distribution</h3>
-                                    <span class="chart-subtitle">Kanjur vs Deonar</span>
+                                    <h3>Vehicle Capacity vs Actual Weight Carried</h3>
+                                    <span class="chart-subtitle">Comparison of capacity utilization by ward</span>
                                 </div>
                             </div>
-                            <div class="chart-container">
-                                <apx-chart 
-                                    [series]="vehicleChartOptions.series"
-                                    [chart]="vehicleChartOptions.chart"
-                                    [labels]="vehicleChartOptions.labels"
-                                    [colors]="vehicleChartOptions.colors"
-                                    [legend]="vehicleChartOptions.legend"
-                                    [plotOptions]="vehicleChartOptions.plotOptions"
-                                    [dataLabels]="vehicleChartOptions.dataLabels"
-                                    [responsive]="vehicleChartOptions.responsive">
+                            <div class="chart-container" *ngIf="wardwiseChartOptions?.series.length>0">
+                                <apx-chart [series]="wardwiseChartOptions?.series" [chart]="wardwiseChartOptions.chart"
+                                    [xaxis]="wardwiseChartOptions.xaxis"
+                                    [plotOptions]="wardwiseChartOptions.plotOptions"
+                                    [dataLabels]="wardwiseChartOptions.dataLabels"
+                                    [tooltip]="wardwiseChartOptions.tooltip">
                                 </apx-chart>
                             </div>
                         </div>
+                    </div> -->
 
-                        <div class="enhanced-chart-card">
+
+                    <div class="site-analytics-wardsection">
+                        <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> RTS-WARD </h3>
+
+                        <div class="time-metrics-compact">
+                            <div class="metrics-row">
+                                <div class="metric-item">
+                                    <div class="metric-icon month">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">Last 30 Days Total</span>
+                                        <span class="metric-value">{{ rtsWardOverallKpis?.last30DaysTotal|
+                                            number:'1.2-2' }}
+                                            MT</span>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-icon week">
+                                        <i class="fas fa-chart-area"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">30 Days Avg </span>
+                                        <span class="metric-value">{{ rtsWardOverallKpis?.last30DaysAvg | number:'1.2-2'
+                                            }} MT</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Today / Last Day / Week / Month / Year - Dynamic -->
+                        <div class="time-metrics-compact">
+                            <div class="metrics-row">
+                                <div class="metric-item" (click)="drillDownMetric('today')">
+                                    <div class="metric-icon day">
+                                        <i class="fas fa-calendar-day"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">Today</span>
+                                        <span class="metric-value">{{ rtsWardOverallKpis.todayTotal | number:'1.2-2' }}
+                                            MT</span>
+                                    </div>
+                                </div>
+
+                                <div class="metric-item" (click)="drillDownMetric('lastDay')">
+                                    <div class="metric-icon day">
+                                        <i class="fas fa-history"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">Yesterday</span>
+                                        <span class="metric-value">{{ rtsWardOverallKpis.yesterdayTotal | number:'1.2-2'
+                                            }} MT</span>
+                                    </div>
+                                </div>
+
+                                <div class="metric-item" (click)="drillDownMetric('week')">
+                                    <div class="metric-icon week">
+                                        <i class="fas fa-calendar-week"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">This Week</span>
+                                        <span class="metric-value">{{ rtsWardOverallKpis.thisWeekTotal | number:'1.2-2'
+                                            }} MT</span>
+                                    </div>
+                                </div>
+
+                                <div class="metric-item" (click)="drillDownMetric('month')">
+                                    <div class="metric-icon month">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">This Month</span>
+                                        <span class="metric-value">{{ rtsWardOverallKpis.thisMonthTotal | number:'1.2-2'
+                                            }} MT</span>
+                                    </div>
+                                </div>
+
+                                <div class="metric-item" (click)="drillDownMetric('year')">
+                                    <div class="metric-icon year">
+                                        <i class="fas fa-calendar"></i>
+                                    </div>
+                                    <div class="metric-info">
+                                        <span class="metric-label">This Year</span>
+                                        <span class="metric-value">{{ rtsWardOverallKpis.thisYearTotal | number:'1.2-2'
+                                            }} MT</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="site-analytics-grid">
+
+                            <div class="site-analytics-card mrtsward">
+                                <div class="site-header">
+                                    <div class="site-icon">
+                                        <i class="fas fa-industry"></i>
+                                    </div>
+                                    <div class="site-info">
+                                        <h4>MRTS-WARD</h4>
+                                        <span class="site-badge">RTS</span>
+                                    </div>
+                                </div>
+                                <div class="site-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Total Trips</span>
+                                        <span class="stat-value">{{ mrtswardData.trips | number }}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Net Weight</span>
+                                        <span class="stat-value">{{ mrtswardData.netWeight | number:'1.2-2' }} MT</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Avg per Trip</span>
+                                        <span class="stat-value">{{ mrtswardData.trips > 0 ? (mrtswardData.netWeight /
+                                            mrtswardData.trips |
+                                            number:'1.2-2') : '0' }} MT</span>
+                                    </div>
+                                </div>
+
+                                <!-- <div class="ward-breakdown" *ngIf="kanjurAnalytics.length > 0">
+                                    <h5>Ward Breakdown</h5>
+                                    <div class="ward-list">
+                                        <div class="ward-item" *ngFor="let ward of kanjurAnalytics">
+                                            <span class="ward-name">{{ ward.wardName }}</span>
+                                            <div class="ward-stats">
+                                                <span>{{ ward.trips }} trips</span>
+                                                <span>{{ ward.netWeight | number:'1.2-2' }} MT</span>
+                                                <span class="utilization-badge" [class.good]="ward.utilization >= 70" [class.warning]="ward.utilization >= 50 && ward.utilization < 70" [class.poor]="ward.utilization < 50">
+                                                    {{ ward.utilization | number:'1.1-1' }}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> -->
+                            </div>
+
+
+                            <div class="site-analytics-card grtsward">
+                                <div class="site-header">
+                                    <div class="site-icon">
+                                        <i class="fas fa-industry"></i>
+                                    </div>
+                                    <div class="site-info">
+                                        <h4>GRTS-WARD</h4>
+                                        <span class="site-badge">RTS</span>
+                                    </div>
+                                </div>
+                                <div class="site-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Total Trips</span>
+                                        <span class="stat-value">{{ grtswardData.trips | number }}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Net Weight</span>
+                                        <span class="stat-value">{{ grtswardData.netWeight | number:'1.2-2' }} MT</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Avg per Trip</span>
+                                        <span class="stat-value">{{ grtswardData.trips > 0 ? (grtswardData.netWeight /
+                                            grtswardData.trips |
+                                            number:'1.2-2') : '0' }} MT</span>
+                                    </div>
+                                </div>
+
+                                <!-- <div class="ward-breakdown" *ngIf="deonarAnalytics.length > 0">
+                                    <h5>Ward Breakdown</h5>
+                                    <div class="ward-list">
+                                        <div class="ward-item" *ngFor="let ward of deonarAnalytics">
+                                            <span class="ward-name">{{ ward.wardName }}</span>
+                                            <div class="ward-stats">
+                                                <span>{{ ward.trips }} trips</span>
+                                                <span>{{ ward.netWeight | number:'1.2-2' }} MT</span>
+                                                <span class="utilization-badge" [class.good]="ward.utilization >= 70" [class.warning]="ward.utilization >= 50 && ward.utilization < 70" [class.poor]="ward.utilization < 50">
+                                                    {{ ward.utilization | number:'1.1-1' }}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> -->
+                            </div>
+                            <div class="site-analytics-card vrtsward">
+                                <div class="site-header">
+                                    <div class="site-icon">
+                                        <i class="fas fa-industry"></i>
+                                    </div>
+                                    <div class="site-info">
+                                        <h4>VRTS-WARD</h4>
+                                        <span class="site-badge">RTS</span>
+                                    </div>
+                                </div>
+                                <div class="site-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Total Trips</span>
+                                        <span class="stat-value">{{ vrtswardData.trips | number }}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Net Weight</span>
+                                        <span class="stat-value">{{ vrtswardData.netWeight | number:'1.2-2' }} MT</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Avg per Trip</span>
+                                        <span class="stat-value">{{ vrtswardData.trips > 0 ? (vrtswardData.netWeight /
+                                            vrtswardData.trips |
+                                            number:'1.2-2') : '0' }} MT</span>
+                                    </div>
+                                </div>
+
+                                <!-- <div class="ward-breakdown" *ngIf="deonarAnalytics.length > 0">
+                                    <h5>Ward Breakdown</h5>
+                                    <div class="ward-list">
+                                        <div class="ward-item" *ngFor="let ward of deonarAnalytics">
+                                            <span class="ward-name">{{ ward.wardName }}</span>
+                                            <div class="ward-stats">
+                                                <span>{{ ward.trips }} trips</span>
+                                                <span>{{ ward.netWeight | number:'1.2-2' }} MT</span>
+                                                <span class="utilization-badge" [class.good]="ward.utilization >= 70" [class.warning]="ward.utilization >= 50 && ward.utilization < 70" [class.poor]="ward.utilization < 50">
+                                                    {{ ward.utilization | number:'1.1-1' }}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> -->
+                            </div>
+                            <div class="site-analytics-card total">
+                                <div class="site-header">
+                                    <div class="site-icon">
+                                        <i class="fas fa-industry"></i>
+                                    </div>
+                                    <div class="site-info">
+                                        <h4>Total</h4>
+                                        <span class="site-badge">RTS</span>
+                                    </div>
+                                </div>
+                                <div class="site-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Total Trips</span>
+                                        <span class="stat-value">{{ wardTotalData.trips | number }}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Net Weight</span>
+                                        <span class="stat-value">{{ wardTotalData.netWeight | number:'1.2-2' }}
+                                            MT</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Avg per Trip</span>
+                                        <span class="stat-value">{{ wardTotalData.trips > 0 ? (wardTotalData.netWeight /
+                                            wardTotalData.trips |
+                                            number:'1.2-2') : '0' }} MT</span>
+                                    </div>
+                                </div>
+
+                                <!-- <div class="ward-breakdown" *ngIf="deonarAnalytics.length > 0">
+                                    <h5>Ward Breakdown</h5>
+                                    <div class="ward-list">
+                                        <div class="ward-item" *ngFor="let ward of deonarAnalytics">
+                                            <span class="ward-name">{{ ward.wardName }}</span>
+                                            <div class="ward-stats">
+                                                <span>{{ ward.trips }} trips</span>
+                                                <span>{{ ward.netWeight | number:'1.2-2' }} MT</span>
+                                                <span class="utilization-badge" [class.good]="ward.utilization >= 70" [class.warning]="ward.utilization >= 50 && ward.utilization < 70" [class.poor]="ward.utilization < 50">
+                                                    {{ ward.utilization | number:'1.1-1' }}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> -->
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Chart Sections -->
+                    <!-- <div class="charts-grid">
+
+                       
+                        <div class="enhanced-chart-card full-width">
                             <div class="chart-header">
                                 <div class="chart-title">
-                                    <h3>Capacity vs Actual</h3>
-                                    <span class="chart-subtitle">Weight Analysis</span>
+                                    <h3>Vehicle Capacity vs Actual Weight Carried</h3>
+                                    <span class="chart-subtitle">Comparison of capacity utilization by ward</span>
                                 </div>
                             </div>
                             <div class="chart-container">
-                                <apx-chart 
-                                    [series]="capacityVsActualChartOptions.series"
+                                <apx-chart [series]="capacityVsActualChartOptions.series"
                                     [chart]="capacityVsActualChartOptions.chart"
                                     [xaxis]="capacityVsActualChartOptions.xaxis"
                                     [yaxis]="capacityVsActualChartOptions.yaxis"
@@ -1076,7 +923,46 @@
                                 </apx-chart>
                             </div>
                         </div>
-                    </div>
+
+                    
+                        <div id="kanjur-section" class="enhanced-chart-card">
+                            <div class="chart-header">
+                                <div class="chart-title">
+                                    <h3>Kanjur vs Deonar</h3>
+                                    <span class="chart-subtitle">Trip Distribution</span>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <apx-chart [series]="vehicleChartOptions.series" [chart]="vehicleChartOptions.chart"
+                                    [labels]="vehicleChartOptions.labels" [colors]="vehicleChartOptions.colors"
+                                    [legend]="vehicleChartOptions.legend"
+                                    [plotOptions]="vehicleChartOptions.plotOptions"
+                                    [dataLabels]="vehicleChartOptions.dataLabels"
+                                    [responsive]="vehicleChartOptions.responsive">
+                                </apx-chart>
+                            </div>
+                        </div>
+
+                    </div> -->
+
+                </div>
+                <!-- Overview Section End -->
+
+                <!-- Performance Comparison Section -->
+                <div class="dashboard-section" *ngIf="activeSection === 'performance'">
+
+                    <app-dashboard-comparison></app-dashboard-comparison>
+
+
+
+                </div>
+                <!-- End of Performance Section -->
+
+                <!-- Added Analytics Section UI -->
+                <!-- Analytics Section -->
+                <div class="dashboard-section" *ngIf="activeSection === 'analytics'">
+
+                    <app-dashboard-analytics [data]=" this.analyticsData"></app-dashboard-analytics>
 
                 </div>
                 <!-- End of Analytics Section -->
