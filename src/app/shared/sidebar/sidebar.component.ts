@@ -62,9 +62,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   navItems: NavItem[] = [
     { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-    { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
+    { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
     { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
-    { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
+    { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marked-alt" },
     { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
     {
       label: "Logsheet",
@@ -76,7 +76,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       ],
     },
     { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
-    { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
+    { label: "Agency", route: "/agencylist", icon: "fas fa-building" },
     { label: "Billing Report", route: "/billing-report", icon: "fas fa-file-invoice-dollar" },
     { label: "Verification", route: "/verifications", icon: "fas fa-check-circle" },
   ]
@@ -195,7 +195,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           ],
         },
         { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
-        { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
+        { label: "Agency", route: "/agencylist", icon: "fas fa-building" },
       ]
     } else if (uRoleName?.toLowerCase() === 'admin') {
       this.menuItems = [
