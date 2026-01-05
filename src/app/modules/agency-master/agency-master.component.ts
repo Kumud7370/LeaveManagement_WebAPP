@@ -69,7 +69,6 @@ export class AgencyMasterComponent {
   initForm() {
     this.agencyForm = this.fb.group({
       agencyNo: [null], // 🆕 keep for edit
-      //  vehicleType: ['', Validators.required],
       agencyName: ['', [Validators.required, Validators.maxLength(500)]],
       isPaid: [false],
       siteName: ['', Validators.required],
@@ -80,6 +79,53 @@ export class AgencyMasterComponent {
   getAGGridReady() {
     this.columnDefs = [
       {
+        headerName: "Actions",
+        width: 100,
+        minWidth: 100,
+        maxWidth: 100,
+        suppressSizeToFit: true,
+        pinned: 'left',
+        lockPosition: true,
+        cellRenderer: (params: any) => {
+          return `
+            <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
+              <button class="btn-view-agency" data-action="edit" style="
+                background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 0.375rem 0.75rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.375rem;
+                font-size: 0.75rem;
+                font-weight: 600;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                min-width: 70px;
+                height: auto;
+                white-space: nowrap;
+              ">
+                <i class="fa fa-edit" style="font-size: 0.875rem;"></i>
+                <span>Edit</span>
+              </button>
+            </div>`
+        },
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "8px"
+        },
+        onCellClicked: (params: any) => {
+          if (params.event.target.dataset.action === "edit" || params.event.target.closest("button")?.dataset.action === "edit") {
+            this.openEditModal(params.data)
+          }
+        }
+      },
+      {
         headerName: 'Status', field: 'isActive',
         valueFormatter: (p: any) => p.value === 1 ? 'Active' : 'Inactive',
         cellStyle: (params: any) => {
@@ -87,27 +133,61 @@ export class AgencyMasterComponent {
           if (params.value === 0) return { ...baseStyle, color: "#f59e0b" }
           if (params.value === 1) return { ...baseStyle, color: "#10b981" }
           return { ...baseStyle, color: "#6b7280", fontWeight: "normal" }
-        }, maxWidth: 120
+        },
+        width: 100,
+        minWidth: 100,
+        maxWidth: 120,
+        suppressSizeToFit: true,
       },
-      { headerName: 'Location', field: 'siteName', maxWidth: 200 },
+      { 
+        headerName: 'Location', 
+        field: 'siteName', 
+        width: 150,
+        minWidth: 150,
+        suppressSizeToFit: true,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          padding: "0 12px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis"
+        }
+      },
       { headerName: 'Agency No', field: 'agencyNo', hide: true },
-      { headerName: 'Agency Name', field: 'agencyName', minWidth: 300 },
-      // { headerName: 'Vehicle Type', field: 'vehicleType', sortable: true, filter: true },
-      { headerName: 'Is Paid', field: 'isPaid', valueFormatter: (p: any) => p.value ? 'Yes' : 'No', maxWidth: 100 },
-      {
-        headerName: 'Actions', maxWidth: 120,
-        cellRenderer: () => `
-          <div class="cell-button-container">
-            <button class="btn-view">
-              <i class="fa fa-edit"></i>
-              <span>Edit</span>
-            </button>
-          </div>
-        `,
-        onCellClicked: (params) => this.openEditModal(params.data)
+      { 
+        headerName: 'Agency Name', 
+        field: 'agencyName', 
+        minWidth: 250,
+        suppressSizeToFit: true,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          padding: "0 12px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis"
+        },
+        tooltipField: "agencyName"
+      },
+      { 
+        headerName: 'Is Paid', 
+        field: 'isPaid', 
+        valueFormatter: (p: any) => p.value ? 'Yes' : 'No', 
+        width: 100,
+        minWidth: 100,
+        maxWidth: 120,
+        suppressSizeToFit: true,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 12px"
+        }
       }
     ];
 
+    this.context = { componentParent: this }
     this.defaultColDef = {
       sortable: true,
       filter: true,
@@ -116,12 +196,14 @@ export class AgencyMasterComponent {
       cellStyle: {
         display: "flex",
         alignItems: "center",
-        padding: "0 12px"
+        justifyContent: "flex-start",
+        padding: "0 12px",
+        lineHeight: "normal"
       },
-      wrapText: true,
-      autoHeight: true,   // Add this
+      wrapText: false,
+      autoHeight: false,
       wrapHeaderText: true,
-      flex: 1
+      tooltipValueGetter: (params: any) => params.value
     }
   }
 
@@ -130,7 +212,6 @@ export class AgencyMasterComponent {
       UserId: this.userId,
       SiteName: this.userSiteName,
     }
-
 
     this.agencyService.GetSiteLocations(obj).subscribe({
       next: (response: any) => {
@@ -152,7 +233,7 @@ export class AgencyMasterComponent {
         }
       }
     });
-       this.loading = true;
+    this.loading = true;
     this.agencyService.GetAgencies(obj).subscribe({
       next: (res) => {
         this.lstAgencyData = res?.data || [];
@@ -169,7 +250,11 @@ export class AgencyMasterComponent {
 
   OnGridReady(params: GridReadyEvent) {
     this.gridApi = params.api
-    this.gridApi.sizeColumnsToFit()
+    
+    // Don't use sizeColumnsToFit on mobile - let columns have their fixed widths for horizontal scrolling
+    if (window.innerWidth > 768) {
+      this.gridApi.sizeColumnsToFit()
+    }
   }
 
   // ---------- MODAL ----------
@@ -190,7 +275,6 @@ export class AgencyMasterComponent {
     this.agencyForm.patchValue({
       agencyNo: row.agencyNo,
       agencyName: row.agencyName,
-      // vehicleType: row.vehicleType,
       isPaid: row.isPaid ?? false,
       siteName: row.siteName,
       isActive: row.isActive ?? 1
@@ -268,10 +352,10 @@ export class AgencyMasterComponent {
 
     // Update grid
     if (this.gridApi) {
-      // Cast to 'any' if TS complains
       (this.gridApi as any).setRowData(this.lstAgencyDataFiltered);
     }
   }
+  
   getStatusCount(status: number): number {
     return this.lstAgencyData.filter(a => a.isActive === status).length;
   }
@@ -282,6 +366,7 @@ export class AgencyMasterComponent {
       Status: v.isActive === 0 ? "Inactive" : "Active",
       "Agency Name": v.agencyName || "N/A",
       Location: v.siteName || "N/A",
+      "Is Paid": v.isPaid ? "Yes" : "No",
       "Created On": v.createdOn || "N/A",
       "Created By": v.createdby || "N/A",
     }))
@@ -293,6 +378,7 @@ export class AgencyMasterComponent {
   }
 
   Back() { this.router.navigate(["/dashboard"]) }
+  
   headerHeightSetter(params: any) {
     var padding = 20
     var height = headerHeightGetter() + padding
@@ -301,6 +387,7 @@ export class AgencyMasterComponent {
       this.gridApi.resetRowHeights()
     }
   }
+  
   onFilterTextBoxChanged() {
     if (this.gridApi) {
       const filterValue = (document.getElementById("filter-text-box") as HTMLInputElement)?.value || ""
@@ -308,6 +395,7 @@ export class AgencyMasterComponent {
     }
   }
 }
+
 function headerHeightGetter(): number {
   var columnHeaderTexts = document.querySelectorAll(".ag-header-cell-text")
   var columnHeaderTextsArray: HTMLElement[] = []
@@ -316,4 +404,3 @@ function headerHeightGetter(): number {
   var tallestHeaderTextHeight = Math.max(...clientHeights)
   return tallestHeaderTextHeight
 }
-
