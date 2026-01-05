@@ -10,7 +10,7 @@ describe('AgencyMasterComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AgencyMasterComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(AgencyMasterComponent);
     component = fixture.componentInstance;

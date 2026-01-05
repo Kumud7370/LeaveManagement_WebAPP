@@ -139,9 +139,9 @@ export class AgencyMasterComponent {
         maxWidth: 120,
         suppressSizeToFit: true,
       },
-      { 
-        headerName: 'Location', 
-        field: 'siteName', 
+      {
+        headerName: 'Location',
+        field: 'siteName',
         width: 150,
         minWidth: 150,
         suppressSizeToFit: true,
@@ -155,9 +155,9 @@ export class AgencyMasterComponent {
         }
       },
       { headerName: 'Agency No', field: 'agencyNo', hide: true },
-      { 
-        headerName: 'Agency Name', 
-        field: 'agencyName', 
+      {
+        headerName: 'Agency Name',
+        field: 'agencyName',
         minWidth: 250,
         suppressSizeToFit: true,
         cellStyle: {
@@ -170,10 +170,10 @@ export class AgencyMasterComponent {
         },
         tooltipField: "agencyName"
       },
-      { 
-        headerName: 'Is Paid', 
-        field: 'isPaid', 
-        valueFormatter: (p: any) => p.value ? 'Yes' : 'No', 
+      {
+        headerName: 'Is Paid',
+        field: 'isPaid',
+        valueFormatter: (p: any) => p.value ? 'Yes' : 'No',
         width: 100,
         minWidth: 100,
         maxWidth: 120,
@@ -250,7 +250,7 @@ export class AgencyMasterComponent {
 
   OnGridReady(params: GridReadyEvent) {
     this.gridApi = params.api
-    
+
     // Don't use sizeColumnsToFit on mobile - let columns have their fixed widths for horizontal scrolling
     if (window.innerWidth > 768) {
       this.gridApi.sizeColumnsToFit()
@@ -270,14 +270,31 @@ export class AgencyMasterComponent {
     this.isEditMode = true;
     this.modalTitle = `Update Agency #${row.agencyName}`;
     this.editAgencyData = row;
-    console.log(row);
+
+    // 🔍 MAPPING EXPLANATION - Selected Row Data to Form Fields:
+    console.log("=== EDIT MODE - FIELD MAPPING ===");
+    console.log("Selected Row Data:", row);
+    console.log("Field Mappings:");
+    console.log("1. agencyNo (Hidden ID):", row.agencyNo, "→ Form: agencyNo");
+    console.log("2. Agency Name:", row.agencyName, "→ Form: agencyName");
+    console.log("3. Location:", row.siteName, "→ Form: siteName");
+    console.log("4. Is Paid:", row.isPaid, "→ Form: isPaid");
+    console.log("5. Status:", row.isActive, "→ Form: isActive");
+    console.log("================================");
+
     // Patch values into form
+    // FIELD → TABLE COLUMN MAPPING:
+    // agencyNo (hidden) ← "Agency No" column (hidden in grid)
+    // agencyName ← "Agency Name" column
+    // siteName ← "Location" column
+    // isPaid ← "Is Paid" column
+    // isActive ← "Status" column
     this.agencyForm.patchValue({
-      agencyNo: row.agencyNo,
-      agencyName: row.agencyName,
-      isPaid: row.isPaid ?? false,
-      siteName: row.siteName,
-      isActive: row.isActive ?? 1
+      agencyNo: row.agencyNo,           // Hidden ID field for update
+      agencyName: row.agencyName,       // "Agency Name" column
+      isPaid: row.isPaid ?? false,      // "Is Paid" column
+      siteName: row.siteName,           // "Location" column
+      isActive: row.isActive ?? 1       // "Status" column
     });
 
     this.isAddModalOpen = true;
@@ -355,7 +372,7 @@ export class AgencyMasterComponent {
       (this.gridApi as any).setRowData(this.lstAgencyDataFiltered);
     }
   }
-  
+
   getStatusCount(status: number): number {
     return this.lstAgencyData.filter(a => a.isActive === status).length;
   }
@@ -378,7 +395,7 @@ export class AgencyMasterComponent {
   }
 
   Back() { this.router.navigate(["/dashboard"]) }
-  
+
   headerHeightSetter(params: any) {
     var padding = 20
     var height = headerHeightGetter() + padding
@@ -387,7 +404,7 @@ export class AgencyMasterComponent {
       this.gridApi.resetRowHeights()
     }
   }
-  
+
   onFilterTextBoxChanged() {
     if (this.gridApi) {
       const filterValue = (document.getElementById("filter-text-box") as HTMLInputElement)?.value || ""

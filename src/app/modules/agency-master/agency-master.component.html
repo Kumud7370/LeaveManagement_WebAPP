@@ -37,12 +37,22 @@
       </button>
     </div>
     <div class="modal-body">
+      <!-- 🔍 FIELD MAPPING GUIDE (shown only in edit mode) -->
+      <div class="field-mapping-info" *ngIf="isEditMode">
+        <div class="info-badge">
+          <i class="fas fa-info-circle"></i>
+          <span>Editing record from table row</span>
+        </div>
+      </div>
+
       <form [formGroup]="agencyForm" (ngSubmit)="onSubmit()">
         <!-- Row 1: Agency Name & Location -->
         <div class="form-row">
           <div class="form-group">
-            <label for="agencyName">Agency Name <span class="required">*</span></label>
-            <div class="input-wrapper">
+            <label for="agencyName">
+              Agency Name <span class="required">*</span>
+            </label>
+            <div class="input-wrapper" [class.highlight-field]="isEditMode">
               <input type="text" id="agencyName" formControlName="agencyName" class="form-control"
                 placeholder="Enter Agency Name" maxlength="100">
               <i class="fas fa-building"></i>
@@ -54,8 +64,10 @@
           </div>
 
           <div class="form-group">
-            <label for="siteName">Location Name <span class="required">*</span></label>
-            <div class="select-wrapper">
+            <label for="siteName">
+              Location Name <span class="required">*</span>
+            </label>
+            <div class="select-wrapper" [class.highlight-field]="isEditMode">
               <select formControlName="siteName" id="siteName" class="form-control">
                 <option value="">Select Location</option>
                 <option *ngFor="let l of siteLocations" [value]="l.siteName">
@@ -74,8 +86,10 @@
         <!-- Row 2: Is Paid & Status -->
         <div class="form-row">
           <div class="form-group">
-            <label for="isPaid">Is Paid <span class="required">*</span></label>
-            <div class="select-wrapper">
+            <label for="isPaid">
+              Is Paid <span class="required">*</span>
+            </label>
+            <div class="select-wrapper" [class.highlight-field]="isEditMode">
               <select id="isPaid" formControlName="isPaid" class="form-control">
                 <option [value]="true">Yes</option>
                 <option [value]="false">No</option>
@@ -85,8 +99,10 @@
           </div>
 
           <div class="form-group">
-            <label for="isActive">Status <span class="required">*</span></label>
-            <div class="select-wrapper">
+            <label for="isActive">
+              Status <span class="required">*</span>
+            </label>
+            <div class="select-wrapper" [class.highlight-field]="isEditMode">
               <select id="isActive" formControlName="isActive" class="form-control">
                 <option value="1">Active</option>
                 <option value="0">Inactive</option>
