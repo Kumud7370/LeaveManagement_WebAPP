@@ -108,7 +108,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         if (event instanceof NavigationEnd) {
           this.activeRoute = event.urlAfterRedirects
           this.updateExpandedStates()
-          
+
           // Close mobile sidebar on navigation
           if (this.isMobile && this.isExpanded) {
             this.sidebarService.collapse()
@@ -139,7 +139,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     if (this.isBrowser && typeof window !== "undefined") {
       const wasMobile = this.isMobile
       this.isMobile = window.innerWidth < 768
-      
+
       // Handle transition between mobile and desktop
       if (wasMobile !== this.isMobile) {
         if (this.isMobile) {
@@ -200,13 +200,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
     } else if (uRoleName?.toLowerCase() === 'admin') {
       this.menuItems = [
         { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-        { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-tachometer-alt" },
+        { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
         { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
-        { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marker-alt" },
+        { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marked-alt" },
         { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
-        { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
+        { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-clipboard-list" },
         { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
-        { label: "Agency", route: "/agencylist", icon: "fas fa-truck" },
+        { label: "Agency", route: "/agencylist", icon: "fas fa-building" },
       ]
     } else if (uRoleName?.toLowerCase() === 'jo') {
       this.menuItems = [
@@ -234,12 +234,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   onSidebarPointerEnter() {
     if (this.isMobile) return;
-    
+
     // Clear any pending collapse
     if (this.hoverTimeout) {
       clearTimeout(this.hoverTimeout)
     }
-    
+
     // Only expand on hover if user hasn't manually interacted
     if (!this.isExpanded && !this.isUserInteraction) {
       this.sidebarService.expand()
@@ -248,7 +248,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   onSidebarPointerLeave() {
     if (this.isMobile) return;
-    
+
     // Only collapse if user hasn't manually expanded
     if (this.isExpanded && !this.isUserInteraction) {
       // Add small delay to prevent flickering
