@@ -271,7 +271,7 @@ export class VehicleMasterComponent implements OnInit {
       SiteName: this.userSiteName,
       VehicleType: null,
     }
-
+    
     this.loading = true
 
     this.dbcallingService.getVehiclemasterData(searchParams).subscribe({
@@ -384,6 +384,53 @@ export class VehicleMasterComponent implements OnInit {
   getAGGridReady() {
     this.columnDefs = [
       {
+        headerName: "Actions",
+        width: 100,
+        minWidth: 100,
+        maxWidth: 100,
+        suppressSizeToFit: true,
+        pinned: 'left',
+        lockPosition: true,
+        cellRenderer: (params: any) => {
+          return `
+            <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
+              <button class="btn-view-vehicle" data-action="edit" style="
+                background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 0.375rem 0.75rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.375rem;
+                font-size: 0.75rem;
+                font-weight: 600;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                min-width: 70px;
+                height: auto;
+                white-space: nowrap;
+              ">
+                <i class="fa fa-edit" style="font-size: 0.875rem;"></i>
+                <span>Edit</span>
+              </button>
+            </div>`
+        },
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "8px"
+        },
+        onCellClicked: (params: any) => {
+          if (params.event.target.dataset.action === "edit" || params.event.target.closest("button")?.dataset.action === "edit") {
+            this.openEditVehicleModal(params.data)
+          }
+        }
+      },
+      {
         headerName: "Status",
         field: "isActive",
         valueFormatter: (params) => (Number(params.value) === 0 ? "Inactive" : "Active"),
@@ -393,6 +440,7 @@ export class VehicleMasterComponent implements OnInit {
             alignItems: "center",
             justifyContent: "center",
             fontWeight: "bold",
+            padding: "0 8px"
           }
           if (params.value === 0) {
             return { ...baseStyle, color: "#f59e0b" }
@@ -403,37 +451,71 @@ export class VehicleMasterComponent implements OnInit {
         },
         width: 100,
         minWidth: 100,
-        suppressSizeToFit: false,
+        maxWidth: 120,
+        suppressSizeToFit: true,
       },
       {
         headerName: "Location",
         field: "siteName",
-        width: 120,
-        minWidth: 120,
-        suppressSizeToFit: false,
+        width: 150,
+        minWidth: 150,
+        suppressSizeToFit: true,
         valueFormatter: (params) => params.value || "N/A",
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          padding: "0 12px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis"
+        }
       },
       {
         headerName: "Ward",
         field: "ward",
         width: 120,
         minWidth: 120,
-        suppressSizeToFit: false,
+        suppressSizeToFit: true,
         valueFormatter: (params) => params.value || "N/A",
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          padding: "0 12px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis"
+        }
       },
       {
         headerName: "Vehicle Number",
         field: "vehicleNumber",
-        width: 140,
-        minWidth: 140,
-        suppressSizeToFit: false,
+        width: 150,
+        minWidth: 150,
+        suppressSizeToFit: true,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          padding: "0 12px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis"
+        }
       },
       {
         headerName: "Vehicle Type",
         field: "vehicleType",
-        width: 200,
-        minWidth: 200,
-        suppressSizeToFit: false,
+        width: 280,
+        minWidth: 280,
+        suppressSizeToFit: true,
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          padding: "0 12px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis"
+        },
+        tooltipField: "vehicleType"
       },
       {
         headerName: "Agency Number",
@@ -441,31 +523,54 @@ export class VehicleMasterComponent implements OnInit {
         width: 20,
         minWidth: 20,
         hide: true,
-        suppressSizeToFit: false,
+        suppressSizeToFit: true,
       },
       {
         headerName: "Agency Name",
         field: "agencyName",
-        width: 200,
-        minWidth: 200,
-        suppressSizeToFit: false,
+        width: 250,
+        minWidth: 250,
+        suppressSizeToFit: true,
         valueFormatter: (params) => params.value || "N/A",
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          padding: "0 12px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis"
+        },
+        tooltipField: "agencyName"
       },
       {
         headerName: "Gross Weight (kg)",
         field: "grossWeight",
-        width: 150,
-        minWidth: 150,
-        suppressSizeToFit: false,
+        width: 160,
+        minWidth: 160,
+        suppressSizeToFit: true,
         valueFormatter: (params) => (params.value ? `${params.value} kg` : "N/A"),
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          padding: "0 12px",
+          whiteSpace: "nowrap"
+        }
       },
       {
         headerName: "Tare Weight (kg)",
         field: "tareWeight",
-        width: 150,
-        minWidth: 150,
-        suppressSizeToFit: false,
+        width: 160,
+        minWidth: 160,
+        suppressSizeToFit: true,
         valueFormatter: (params) => (params.value ? `${params.value} kg` : "N/A"),
+        cellStyle: {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          padding: "0 12px",
+          whiteSpace: "nowrap"
+        }
       },
       {
         headerName: "Vehicle ID",
@@ -473,27 +578,7 @@ export class VehicleMasterComponent implements OnInit {
         width: 100,
         minWidth: 100,
         hide: true,
-        suppressSizeToFit: false,
-      },
-      {
-        headerName: "Actions",
-        width: 100,
-        minWidth: 100,
-        suppressSizeToFit: false,
-        cellRenderer: (params: any) => {
-          return `
-            <div class="cell-button-container">
-              <button class="btn-view" data-action="edit">
-                <i class="fa fa-edit"></i>
-                <span>Edit</span>
-              </button>
-            </div>`
-        },
-        onCellClicked: (params: any) => {
-          if (params.event.target.dataset.action === "edit" || params.event.target.closest("button")?.dataset.action === "edit") {
-            this.openEditVehicleModal(params.data)
-          }
-        }
+        suppressSizeToFit: true,
       }
     ]
 
@@ -507,17 +592,19 @@ export class VehicleMasterComponent implements OnInit {
         display: "flex",
         alignItems: "center",
         justifyContent: "flex-start",
-        padding: "0 12px"
+        padding: "0 12px",
+        lineHeight: "normal"
       },
       wrapText: false,
       autoHeight: false,
       wrapHeaderText: true,
+      tooltipValueGetter: (params: any) => params.value
     }
   }
 
   OnGridReady(params: GridReadyEvent) {
     this.gridApi = params.api
-
+    
     // Don't use sizeColumnsToFit on mobile - let columns have their fixed widths for horizontal scrolling
     if (window.innerWidth > 768) {
       this.gridApi.sizeColumnsToFit()
