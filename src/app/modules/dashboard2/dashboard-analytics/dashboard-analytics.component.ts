@@ -104,7 +104,7 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
       this.loadPieChart()
       this.loadVehicleTypePie();
       this.prepareWardwiseChart();
-          this.updateChartResponsiveness()
+      this.updateChartResponsiveness()
     }
   }
 
@@ -115,14 +115,14 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
     const kanjurTotal = swmData
       .filter((x: any) => x.siteName === 'Kanjur')
       .reduce((sum: number, cur: any) => sum + (cur.totalNetWeight || 0), 0);
-       const kanjurTotalTrips = swmData
+    const kanjurTotalTrips = swmData
       .filter((x: any) => x.siteName === 'Kanjur')
       .length;
 
     const deonarTotal = swmData
       .filter((x: any) => x.siteName === 'Deonar')
       .reduce((sum: number, cur: any) => sum + (cur.totalNetWeight || 0), 0);
-      
+
     const deonarTotalTrips = swmData
       .filter((x: any) => x.siteName === 'Deonar')
       .length;
@@ -181,7 +181,7 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
   }
 
   loadVehicleTypePie() {
-    const swmVehcleTypeData =  this.data
+    const swmVehcleTypeData = this.data
       .filter((x: any) => x.siteName === 'Kanjur' || x.siteName === 'Deonar');
 
     // 🔹 Group by VehicleType
@@ -233,30 +233,104 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
     };
   }
 
-  prepareWardwiseChart() {
+  // prepareWardwiseChart() {
 
-    // 🔹 Group by Ward and sum TotalNetWeight
-        const swmWardwiseChartData =  this.data
-      .filter((x: any) => x.siteName === 'Kanjur' || x.siteName === 'Deonar');
+  //   // 🔹 Group by Ward and sum TotalNetWeight
+  //       const swmWardwiseChartData =  this.data
+  //     .filter((x: any) => x.siteName === 'Kanjur' || x.siteName === 'Deonar');
+
+  //   const grouped = swmWardwiseChartData.reduce((acc: any, cur: any) => {
+  //     acc[cur.ward] = (acc[cur.ward] || 0) + cur.totalNetWeight;
+  //     return acc;
+  //   }, {});
+
+  //   const wards = Object.keys(grouped);
+  //   const values = Object.values(grouped) as number[];
+
+  //   this.wardwiseChartOptions = {
+  //     series: [
+  //       {
+  //         name: 'Total Net Weight (MT)',
+  //         data: values
+  //       }
+  //     ],
+  //     chart: {
+  //       type: 'bar',
+  //       height: 320
+  //     },
+  //     plotOptions: {
+  //       bar: {
+  //         columnWidth: '45%',
+  //         borderRadius: 6
+  //       }
+  //     },
+  //     dataLabels: {
+  //       enabled: false
+  //     },
+  //     xaxis: {
+  //       categories: wards
+  //     },
+  //     tooltip: {
+  //       y: {
+  //         formatter: (val: number) => `${val.toFixed(2)} MT`
+  //       }
+  //     }
+  //   };
+
+  //   this.isLoading = false;
+  // }
+  prepareWardwiseChart(): void {
+
+    const swmWardwiseChartData = this.data.filter(
+      (x: any) => x.siteName === 'Kanjur' || x.siteName === 'Deonar'
+    );
 
     const grouped = swmWardwiseChartData.reduce((acc: any, cur: any) => {
-      acc[cur.ward] = (acc[cur.ward] || 0) + cur.totalNetWeight;
+
+      if (!acc[cur.ward]) {
+        acc[cur.ward] = {
+          totalNetWeight: 0,
+          avgNetWeightPerDay: 0
+        };
+      }
+
+      acc[cur.ward].totalNetWeight += cur.totalNetWeight || 0;
+      acc[cur.ward].avgNetWeightPerDay += cur.avgNetWeightPerDay || 0;
+
       return acc;
     }, {});
 
     const wards = Object.keys(grouped);
-    const values = Object.values(grouped) as number[];
+
+    const totalValues = wards.map(w =>
+      +grouped[w].totalNetWeight.toFixed(2)
+    );
+
+    const avgLineData = wards.map(w =>
+      +grouped[w].avgNetWeightPerDay.toFixed(2)
+    );
 
     this.wardwiseChartOptions = {
       series: [
         {
           name: 'Total Net Weight (MT)',
-          data: values
+          type: 'bar',
+          data: totalValues
+        },
+        {
+          name: 'Avg Net Weight / Day (MT)',
+          type: 'line',
+          data: avgLineData
         }
       ],
       chart: {
-        type: 'bar',
-        height: 320
+        type: 'line',
+        height: 360,
+        toolbar: { show: false }
+      },
+      stroke: {
+        width: [0, 3],
+        curve: 'smooth'
       },
       plotOptions: {
         bar: {
@@ -270,10 +344,33 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
       xaxis: {
         categories: wards
       },
+
+      /* 🔥 TWO Y-AXES (IMPORTANT FIX) */
+      yaxis: [
+        {
+          title: { text: 'Total Net Weight (MT)' },
+          labels: {
+            formatter: (val: number) => val.toFixed(2)
+          }
+        },
+        {
+          opposite: true,
+          title: { text: 'Avg Net Weight / Day (MT)' },
+          labels: {
+            formatter: (val: number) => val.toFixed(2)
+          }
+        }
+      ],
+
       tooltip: {
+        shared: true,
         y: {
           formatter: (val: number) => `${val.toFixed(2)} MT`
         }
+      },
+
+      legend: {
+        position: 'bottom'
       }
     };
 
@@ -283,19 +380,19 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
   onResize(event: any) {
     this.updateChartResponsiveness()
   }
- private updateChartResponsiveness(): void {
+  private updateChartResponsiveness(): void {
     const isMobile = window.innerWidth < 768
 
     // Adjust Donut Chart
     if (this.pieChartOptionsSWMVehicleType.chart) {
       this.pieChartOptionsSWMVehicleType.chart.height = isMobile ? 300 : 350
     }
-   if (this.pieChartOptionsSWMWeightDistribution.chart) {
+    if (this.pieChartOptionsSWMWeightDistribution.chart) {
       this.pieChartOptionsSWMWeightDistribution.chart.height = isMobile ? 300 : 350
     }
     // Adjust Bar Charts
     const barCharts = [
-   
+
       this.wardwiseChartOptions,
     ]
 

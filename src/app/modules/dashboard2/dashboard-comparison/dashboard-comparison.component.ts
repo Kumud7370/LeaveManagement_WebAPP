@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from "@angular/core"
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener, Input, OnChanges } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { NgApexchartsModule } from "ng-apexcharts"
@@ -56,7 +56,7 @@ export interface HistoricalRecord {
   templateUrl: './dashboard-comparison.component.html',
   styleUrl: './dashboard-comparison.component.scss'
 })
-export class DashboardComparisonComponent implements OnInit, OnDestroy {
+export class DashboardComparisonComponent implements OnChanges, OnDestroy {
 
   selectedYear = 2023;
   previousYear = 2022;
@@ -115,24 +115,22 @@ export class DashboardComparisonComponent implements OnInit, OnDestroy {
   historicalData: HistoricalRecord[] = []
 
   constructor(private dashboardService: DbCallingService, private cdr: ChangeDetectorRef) { }
-
-    @HostListener("window:resize", ["$event"])
+  @Input() searchParams: any;
+  @HostListener("window:resize", ["$event"])
   onResize(event: any) {
     this.updateChartResponsiveness()
   }
-  ngOnDestroy(): void {
-    // Clean up subscriptions to avoid memory leaks
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-  ngOnInit(): void {
+
+
+ ngOnChanges (): void {
+    console.log('Received searchParams:', this.searchParams);
     this.initializeAvailableYears();
     this.loadDashboard();
 
     // Default selection
     this.selectedYear = Math.max(...this.availableYears);
     this.updatePreviousYearOptions();
-        this.updateChartResponsiveness()
+    this.updateChartResponsiveness()
   }
   private initializeAvailableYears(): void {
     const currentYear = new Date().getFullYear()
@@ -182,15 +180,15 @@ export class DashboardComparisonComponent implements OnInit, OnDestroy {
   }
   loadDashboard() {
     const filters = {
-      UserId: 1,
-      SiteName: null,
-      WardName: null,
-      Agency: null,
-      VehicleType: null,
-      FromDate: '2022-01-01',
-      ToDate: '2025-12-31'
+      UserId: this.searchParams?.UserId || null,
+      SiteName: this.searchParams?.SiteName || null,
+      WardName: this.searchParams?.WardName || null,
+      Agency: this.searchParams?.Agency || null,
+      VehicleType: this.searchParams?.VehicleType || null,
+      FromDate: `${this.previousYear}-01-01`,
+      ToDate: `${this.selectedYear}-12-31`
     };
-
+    console.log('Loading dashboard with filters:', filters);
     this.dashboardService.getDashboardMonthlySummary(filters)
       .subscribe(res => {
         console.log('Dashboard Monthly Summary Data:', res);
@@ -202,7 +200,6 @@ export class DashboardComparisonComponent implements OnInit, OnDestroy {
         this.prepareTableData();
         this.isLoadingComparison = false;
         this.cdr.detectChanges();
-
       });
   }
   prepareKPIs() {
@@ -212,7 +209,7 @@ export class DashboardComparisonComponent implements OnInit, OnDestroy {
 
     const sumWeight = (arr: any[]) =>
       arr.reduce((a, b) => a + b.totalNetWeight, 0);
-    
+
     const sumTrips = (arr: any[]) =>
       arr.reduce((a, b) => a + b.tripsCount, 0);
 
@@ -421,7 +418,7 @@ export class DashboardComparisonComponent implements OnInit, OnDestroy {
     this.historicalData = yearlyStats.reverse(); // latest year on top
     console.log('Prepared Historical Data:', this.historicalData);
   }
- private updateChartResponsiveness(): void {
+  private updateChartResponsiveness(): void {
     const isMobile = window.innerWidth < 768
 
     // Adjust Donut Chart
@@ -431,7 +428,7 @@ export class DashboardComparisonComponent implements OnInit, OnDestroy {
 
     // Adjust Bar Charts
     const barCharts = [
-     // this.capacityVsActualChartOptions,
+      // this.capacityVsActualChartOptions,
       this.monthlyComparisonChartOptions,
       this.quarterlyComparisonChartOptions,
       this.yoyGrowthChartOptions,
@@ -446,6 +443,10 @@ export class DashboardComparisonComponent implements OnInit, OnDestroy {
 
     this.cdr.detectChanges()
   }
-
+  ngOnDestroy(): void {
+    // Clean up subscriptions to avoid memory leaks
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 }
 

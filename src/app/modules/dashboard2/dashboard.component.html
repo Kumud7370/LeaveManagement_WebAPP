@@ -959,7 +959,9 @@
                 <!-- Performance Comparison Section -->
                 <div class="dashboard-section" *ngIf="activeSection === 'performance'">
 
-                    <app-dashboard-comparison></app-dashboard-comparison>
+                 <app-dashboard-comparison [searchParams]="this.searchParams"></app-dashboard-comparison>
+
+
 
 
 

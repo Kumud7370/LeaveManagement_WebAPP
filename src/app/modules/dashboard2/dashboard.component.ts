@@ -33,11 +33,11 @@ import { DashboardComparisonComponent } from "./dashboard-comparison/dashboard-c
   templateUrl: "./dashboard.component.html",
   styleUrls: ["./dashboard.component.scss"],
   standalone: true,
-  imports: [CommonModule, NgApexchartsModule, FormsModule,DashboardAnalyticsComponent,DashboardComparisonComponent],
+  imports: [CommonModule, NgApexchartsModule, FormsModule, DashboardAnalyticsComponent, DashboardComparisonComponent],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>()
-
+  searchParams: any;
   isLoading = true
   isRefreshing = false
   isExporting = false
@@ -47,15 +47,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   sidebarCollapsed = false
 
   globalTimeRange = "day"
-
+  selectedWard = ""
+  selectedVehicleType = ""
   selectedAgency = ""
   availableAgencies: string[] = []
 
   availableWards: string[] = []
   availableVehicleTypes: string[] = []
-
-  selectedWard = ""
-  selectedVehicleType = ""
 
   customDateFrom = ""
   customDateTo = ""
@@ -657,46 +655,50 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const { fromDate, toDate } = this.getDateRange()
     const userId = Number(sessionStorage.getItem("UserId")) || 0
-
-    const wbSummaryPayload = {
-      DateFrom: fromDate,
-      DateTo: toDate,
-      UserId: userId,
-      WardName: this.selectedWard || "",
-      Agency: this.selectedAgency || "",
-      VehicleType: this.selectedVehicleType || "",
-    }
-
-    const wardwisePayload = {
-      WeighBridge: "",
+    // NEW: Fetch analytics data
+    let analyticsPayload = {
+      UserId: userId || null,
+      SiteName: "SWM",
+      WardName: this.selectedWard || null,
+      Agency: this.selectedAgency || null,
+      VehicleType: this.selectedVehicleType || null,
       FromDate: fromDate,
-      ToDate: toDate,
-      FullDate: "",
-      WardName: this.selectedWard || "",
-      Act_Shift: "",
-      TransactionDate: fromDate,
-      Agency: this.selectedAgency || "",
-      VehicleType: this.selectedVehicleType || "",
+      ToDate: toDate
     }
+    console.log("dashboard Payload:", analyticsPayload);
+    this.searchParams = analyticsPayload;
+    // const wbSummaryPayload = {
+    //   DateFrom: fromDate,
+    //   DateTo: toDate,
+    //   UserId: userId,
+    //   WardName: this.selectedWard || "",
+    //   Agency: this.selectedAgency || "",
+    //   VehicleType: this.selectedVehicleType || "",
+    // }
+
+    // const wardwisePayload = {
+    //   WeighBridge: "",
+    //   FromDate: fromDate,
+    //   ToDate: toDate,
+    //   FullDate: "",
+    //   WardName: this.selectedWard || "",
+    //   Act_Shift: "",
+    //   TransactionDate: fromDate,
+    //   Agency: this.selectedAgency || "",
+    //   VehicleType: this.selectedVehicleType || "",
+    // }
 
     this.dbCallingService.getDashboardOverallKpis().subscribe({
       next: (res) => {
-        console.log("Overall KPIs response:", res);
+        //console.log("Overall KPIs response:", res);
         const data = res.data;
         this.swmOverallKpis = data.find((kpi: any) => kpi.siteName === 'SWM') || {};
-        console.log("SWM Overall KPIs:", this.swmOverallKpis);
+        //  console.log("SWM Overall KPIs:", this.swmOverallKpis);
         this.rtsWardOverallKpis = data.find((kpi: any) => kpi.siteName === 'RTS-WARD') || {};
-        console.log("RTS-WARD Overall KPIs:", this.rtsWardOverallKpis);
+        //  console.log("RTS-WARD Overall KPIs:", this.rtsWardOverallKpis);
       }
     });
-    // NEW: Fetch analytics data
-    let analyticsPayload = {
-      userId: userId || null,
-      siteName: "SWM",
-      wardName: this.selectedWard || null,
-      agency: this.selectedAgency || null,
-      vehicleType: this.selectedVehicleType || null,
-    }
+
     this.dbCallingService.getDashboardAnalyticsSummary(analyticsPayload).subscribe({
       next: (res) => {
         this.analyticsData = res.data;
@@ -761,12 +763,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     });
     // EXISTING CALLS
-    const wb$ = this.safeCall(() =>
-      this.dbCallingService.GetWBTripSummary(wbSummaryPayload),
-    )
-    const ward$ = this.safeCall(() =>
-      this.dbCallingService.getWardwiseReport(wardwisePayload),
-    )
+    // const wb$ = this.safeCall(() =>
+    //   this.dbCallingService.GetWBTripSummary(wbSummaryPayload),
+    // )
+    // const ward$ = this.safeCall(() =>
+    //   this.dbCallingService.getWardwiseReport(wardwisePayload),
+    // )
 
     // 🔴 NEW METRICS CALL
     // const metrics$ = this.safeCall(() => {
@@ -968,124 +970,124 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  private processWBTripSummary(response: any): void {
-    if (!response || !response.data) {
-      console.warn("No WB Trip Summary data received")
-      return
-    }
+  // private processWBTripSummary(response: any): void {
+  //   if (!response || !response.data) {
+  //     console.warn("No WB Trip Summary data received")
+  //     return
+  //   }
 
-    const data = response.data
+  //   const data = response.data
 
-    this.swmSites = Array.isArray(data.swmSites) ? data.swmSites : []
-    this.rtsSites = Array.isArray(data.rtsSites) ? data.rtsSites : []
+  //   this.swmSites = Array.isArray(data.swmSites) ? data.swmSites : []
+  //   this.rtsSites = Array.isArray(data.rtsSites) ? data.rtsSites : []
 
-    let kanjurTrips = 0
-    let kanjurWeight = 0
-    let deonarTrips = 0
-    let deonarWeight = 0
+  //   let kanjurTrips = 0
+  //   let kanjurWeight = 0
+  //   let deonarTrips = 0
+  //   let deonarWeight = 0
 
-    const filterSite = (site: any): boolean => {
-      if (
-        this.selectedWard &&
-        site.wardName &&
-        !site.wardName.toLowerCase().includes(this.selectedWard.toLowerCase())
-      ) {
-        return false
-      }
-      if (
-        this.selectedAgency &&
-        site.agency &&
-        !site.agency.toLowerCase().includes(this.selectedAgency.toLowerCase())
-      ) {
-        return false
-      }
-      if (
-        this.selectedVehicleType &&
-        site.vehicleType &&
-        !site.vehicleType.toLowerCase().includes(this.selectedVehicleType.toLowerCase())
-      ) {
-        return false
-      }
-      return true
-    }
+  //   const filterSite = (site: any): boolean => {
+  //     if (
+  //       this.selectedWard &&
+  //       site.wardName &&
+  //       !site.wardName.toLowerCase().includes(this.selectedWard.toLowerCase())
+  //     ) {
+  //       return false
+  //     }
+  //     if (
+  //       this.selectedAgency &&
+  //       site.agency &&
+  //       !site.agency.toLowerCase().includes(this.selectedAgency.toLowerCase())
+  //     ) {
+  //       return false
+  //     }
+  //     if (
+  //       this.selectedVehicleType &&
+  //       site.vehicleType &&
+  //       !site.vehicleType.toLowerCase().includes(this.selectedVehicleType.toLowerCase())
+  //     ) {
+  //       return false
+  //     }
+  //     return true
+  //   }
 
-    this.swmSites.filter(filterSite).forEach((site) => {
-      const siteName = (site.siteName || "").toLowerCase()
-      const trips = Number(site.vehicleCount || 0)
-      const weight = Number(site.netWeight || 0)
+  //   this.swmSites.filter(filterSite).forEach((site) => {
+  //     const siteName = (site.siteName || "").toLowerCase()
+  //     const trips = Number(site.vehicleCount || 0)
+  //     const weight = Number(site.netWeight || 0)
 
-      if (siteName.includes("kanjur")) {
-        kanjurTrips += trips
-        kanjurWeight += weight
-      } else if (siteName.includes("deonar")) {
-        deonarTrips += trips
-        deonarWeight += weight
-      }
-    })
+  //     if (siteName.includes("kanjur")) {
+  //       kanjurTrips += trips
+  //       kanjurWeight += weight
+  //     } else if (siteName.includes("deonar")) {
+  //       deonarTrips += trips
+  //       deonarWeight += weight
+  //     }
+  //   })
 
-    this.rtsSites.filter(filterSite).forEach((site) => {
-      const siteName = (site.siteName || "").toLowerCase()
-      const trips = Number(site.vehicleCount || 0)
-      const weight = Number(site.netWeight || 0)
+  //   this.rtsSites.filter(filterSite).forEach((site) => {
+  //     const siteName = (site.siteName || "").toLowerCase()
+  //     const trips = Number(site.vehicleCount || 0)
+  //     const weight = Number(site.netWeight || 0)
 
-      if (siteName.includes("kanjur")) {
-        kanjurTrips += trips
-        kanjurWeight += weight
-      } else if (siteName.includes("deonar")) {
-        deonarTrips += trips
-        deonarWeight += weight
-      }
-    })
+  //     if (siteName.includes("kanjur")) {
+  //       kanjurTrips += trips
+  //       kanjurWeight += weight
+  //     } else if (siteName.includes("deonar")) {
+  //       deonarTrips += trips
+  //       deonarWeight += weight
+  //     }
+  //   })
 
-    this.kanjurData = {
-      trips: Math.round(kanjurTrips),
-      netWeight: Number(kanjurWeight.toFixed(2)),
-    }
+  //   this.kanjurData = {
+  //     trips: Math.round(kanjurTrips),
+  //     netWeight: Number(kanjurWeight.toFixed(2)),
+  //   }
 
-    this.deonarData = {
-      trips: Math.round(deonarTrips),
-      netWeight: Number(deonarWeight.toFixed(2)),
-    }
+  //   this.deonarData = {
+  //     trips: Math.round(deonarTrips),
+  //     netWeight: Number(deonarWeight.toFixed(2)),
+  //   }
 
-    let vrtsWeight = 0
-    let mrtsWeight = 0
-    let grtsWeight = 0
+  //   let vrtsWeight = 0
+  //   let mrtsWeight = 0
+  //   let grtsWeight = 0
 
-    this.rtsSites.filter(filterSite).forEach((site) => {
-      const siteName = (site.siteName || "").toLowerCase()
-      const weight = Number(site.netWeight || 0)
+  //   this.rtsSites.filter(filterSite).forEach((site) => {
+  //     const siteName = (site.siteName || "").toLowerCase()
+  //     const weight = Number(site.netWeight || 0)
 
-      if (siteName.includes("vrts") || siteName.includes("v-rts")) {
-        vrtsWeight += weight
-      } else if (siteName.includes("mrts") || siteName.includes("m-rts")) {
-        mrtsWeight += weight
-      } else if (siteName.includes("grts") || siteName.includes("g-rts")) {
-        grtsWeight += weight
-      }
-    })
+  //     if (siteName.includes("vrts") || siteName.includes("v-rts")) {
+  //       vrtsWeight += weight
+  //     } else if (siteName.includes("mrts") || siteName.includes("m-rts")) {
+  //       mrtsWeight += weight
+  //     } else if (siteName.includes("grts") || siteName.includes("g-rts")) {
+  //       grtsWeight += weight
+  //     }
+  //   })
 
-    this.unifiedData = {
-      vrts: Number(vrtsWeight.toFixed(2)),
-      mrts: Number(mrtsWeight.toFixed(2)),
-      grts: Number(grtsWeight.toFixed(2)),
-    }
+  //   this.unifiedData = {
+  //     vrts: Number(vrtsWeight.toFixed(2)),
+  //     mrts: Number(mrtsWeight.toFixed(2)),
+  //     grts: Number(grtsWeight.toFixed(2)),
+  //   }
 
-    const allSites = [...this.swmSites, ...this.rtsSites].filter(filterSite)
-    const totalTrips = allSites.reduce((sum, site) => sum + Number(site.vehicleCount || 0), 0)
-    const totalWeight = allSites.reduce((sum, site) => sum + Number(site.netWeight || 0), 0)
+  //   const allSites = [...this.swmSites, ...this.rtsSites].filter(filterSite)
+  //   const totalTrips = allSites.reduce((sum, site) => sum + Number(site.vehicleCount || 0), 0)
+  //   const totalWeight = allSites.reduce((sum, site) => sum + Number(site.netWeight || 0), 0)
 
-    this.totalData = {
-      trips: Math.round(totalTrips),
-      netWeight: Number(totalWeight.toFixed(2)),
-    }
+  //   this.totalData = {
+  //     trips: Math.round(totalTrips),
+  //     netWeight: Number(totalWeight.toFixed(2)),
+  //   }
 
-    this.overallAnalytics = {
-      totalTrips: Math.round(totalTrips),
-      totalWeight: Number(totalWeight.toFixed(2)),
-      avgDailyWeight: Number((totalWeight / 30).toFixed(2)),
-      capacityUtilization: this.calculateCapacityUtilization(allSites),
-    }
-  }
+  //   this.overallAnalytics = {
+  //     totalTrips: Math.round(totalTrips),
+  //     totalWeight: Number(totalWeight.toFixed(2)),
+  //     avgDailyWeight: Number((totalWeight / 30).toFixed(2)),
+  //     capacityUtilization: this.calculateCapacityUtilization(allSites),
+  //   }
+  // }
 
   private calculateCapacityUtilization(sites: any[]): number {
     const totalCapacity = sites.reduce((sum, site) => sum + Number(site.vehicleCapacity || site.capacity || 0), 0)
@@ -1342,7 +1344,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isRefreshing = true
     this.loadFiltersFromAPI()
     this.loadDashboardData()
-   // this.loadComparisonData()
+    // this.loadComparisonData()
     setTimeout(() => {
       this.isRefreshing = false
     }, 800)
@@ -1380,8 +1382,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   onGlobalFilterChange(): void {
+    console.log("Global filters changed",this.selectedWard,this.selectedAgency,this.selectedVehicleType); 
+
+
     this.loadDashboardData()
-   // this.loadDashboardMetrics() // This method is now correctly defined
+    // this.loadDashboardMetrics() // This method is now correctly defined
   }
 
   toggleSidebar(): void {
@@ -1392,7 +1397,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   switchSection(section: "overview" | "performance" | "analytics" | "reports"): void {
     this.activeSection = section
     if (section === "performance" && this.historicalData.length === 0) {
-     // this.loadComparisonData()
+      // this.loadComparisonData()
     }
   }
 
