@@ -39,7 +39,7 @@ $transition-speed: 0.2s;
     display: flex;
     justify-content: space-between;
     align-items: center;
-  //  max-width: 1400px;
+    //  max-width: 1400px;
     margin: 0 auto;
     width: 100%;
   }
@@ -107,33 +107,118 @@ $transition-speed: 0.2s;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in;
 
-  .spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid rgba($primary-color, 0.1);
-    border-radius: 50%;
-    border-top-color: $accent-color;
-    animation: spin 1s ease-in-out infinite;
-    margin-bottom: 1rem;
-  }
+  .loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    position: relative;
 
-  .loading-text {
-    font-size: 1.125rem;
-    font-weight: 500;
-    color: $primary-color;
+    .logo-container {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .loading-logo {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        z-index: 2;
+        animation: pulse 2s ease-in-out infinite;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+      }
+
+      .loading-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 3px solid transparent;
+        border-top-color: $primary-color;
+        border-right-color: $secondary-color;
+        border-radius: 50%;
+        animation: rotate 1.5s linear infinite;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: -3px;
+          left: -3px;
+          right: -3px;
+          bottom: -3px;
+          border: 3px solid transparent;
+          border-bottom-color: $accent-color;
+          border-radius: 50%;
+          animation: rotate 2s linear infinite reverse;
+        }
+      }
+    }
+
+    .loading-text {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: white;
+      letter-spacing: 0.5px;
+      animation: fadeInOut 2s ease-in-out infinite;
+      text-transform: uppercase;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
   }
 }
 
-@keyframes spin {
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes fadeInOut {
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
   }
 }
 
@@ -144,7 +229,7 @@ $transition-speed: 0.2s;
   border-radius: $border-radius;
   padding: 1rem;
   margin: 1rem 1.5rem;
- // max-width: 1400px;
+  // max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
 
@@ -162,7 +247,7 @@ $transition-speed: 0.2s;
   border-radius: $border-radius;
   padding: 1rem;
   margin: 0 1.5rem 1.5rem;
- // max-width: 1400px;
+  // max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
 
@@ -186,7 +271,7 @@ $transition-speed: 0.2s;
   border-radius: $border-radius;
   padding: 1.5rem;
   margin: 0 1.5rem 1.5rem;
- // max-width: 1400px;
+  // max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
   box-shadow: $shadow-sm;
@@ -319,7 +404,7 @@ $transition-speed: 0.2s;
 // Verification content
 .verification-content {
   padding: 0 1.5rem 1.5rem;
- // max-width: 1400px;
+  // max-width: 1400px;
   margin: 0 auto;
   width: 100%;
 }
@@ -1470,98 +1555,98 @@ $transition-speed: 0.2s;
   }
 }
 
-    // Filter Controls
-    .filter-controls {
-      padding: 0rem 0rem;
-      background: rgba($background-color, 0.5);
-      border-bottom: 1px solid rgba($border-color, 0.5);
+// Filter Controls
+.filter-controls {
+  padding: 0rem 0rem;
+  background: rgba($background-color, 0.5);
+  border-bottom: 1px solid rgba($border-color, 0.5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+
+  .quick-filter {
+    flex: 1;
+    min-width: 300px;
+
+    .input-group {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 2rem;
-      flex-wrap: wrap;
+      border-radius: $border-radius;
+      overflow: hidden;
+      box-shadow: $shadow-sm;
 
-      .quick-filter {
-        flex: 1;
-        min-width: 300px;
-
-        .input-group {
-          display: flex;
-          border-radius: $border-radius;
-          overflow: hidden;
-          box-shadow: $shadow-sm;
-
-          .input-group-text {
-            background: rgba($primary-color, 0.1);
-            border: 1px solid rgba($border-color, 0.5);
-            border-right: none;
-            color: $primary-color;
-            padding: 0.75rem 1rem;
-            display: flex;
-            align-items: center;
-          }
-
-          .form-control {
-            border: 1px solid rgba($border-color, 0.5);
-            border-left: none;
-            padding: 0.75rem 1rem;
-            font-size: 0.875rem;
-
-            &:focus {
-              outline: none;
-              border-color: $accent-color;
-              box-shadow: 0 0 0 3px rgba($accent-color, 0.1);
-            }
-          }
-        }
+      .input-group-text {
+        background: rgba($primary-color, 0.1);
+        border: 1px solid rgba($border-color, 0.5);
+        border-right: none;
+        color: $primary-color;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
       }
 
-      .status-filters {
-        display: flex;
-        gap: 0.5rem;
+      .form-control {
+        border: 1px solid rgba($border-color, 0.5);
+        border-left: none;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
 
-        .status-btn {
-          padding: 0.5rem 1rem;
-          border: 2px solid transparent;
-          border-radius: $border-radius;
-          background: rgba(255, 255, 255, 0.8);
-          color: $text-color;
-          cursor: pointer;
-          font-size: 0.75rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          transition: all $transition-speed;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-
-          &:hover {
-            transform: translateY(-2px);
-            box-shadow: $shadow-md;
-          }
-
-          &.active {
-            background: $primary-color;
-            color: white;
-            border-color: $primary-color;
-          }
-
-          &.open.active {
-            background: $warning-color;
-            border-color: $warning-color;
-          }
-
-          &.closed.active {
-            background: $success-color;
-            border-color: $success-color;
-          }
-
-          &.cancelled.active {
-            background: $danger-color;
-            border-color: $danger-color;
-          }
-       
+        &:focus {
+          outline: none;
+          border-color: $accent-color;
+          box-shadow: 0 0 0 3px rgba($accent-color, 0.1);
         }
       }
     }
+  }
+
+  .status-filters {
+    display: flex;
+    gap: 0.5rem;
+
+    .status-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid transparent;
+      border-radius: $border-radius;
+      background: rgba(255, 255, 255, 0.8);
+      color: $text-color;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all $transition-speed;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: $shadow-md;
+      }
+
+      &.active {
+        background: $primary-color;
+        color: white;
+        border-color: $primary-color;
+      }
+
+      &.open.active {
+        background: $warning-color;
+        border-color: $warning-color;
+      }
+
+      &.closed.active {
+        background: $success-color;
+        border-color: $success-color;
+      }
+
+      &.cancelled.active {
+        background: $danger-color;
+        border-color: $danger-color;
+      }
+
+    }
+  }
+}

@@ -14,10 +14,15 @@
     </div>
   </div>
 
-  <!-- Loading Indicator -->
+  <!-- Loading Indicator with BMC Logo -->
   <div class="loading-overlay" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <div class="loading-text">Loading verification data...</div>
+    <div class="loading-spinner">
+      <div class="logo-container">
+        <img src="assets/images/mcgmlogo.png" alt="BMC Logo" class="loading-logo">
+        <div class="loading-ring"></div>
+      </div>
+      <span class="loading-text">Loading verification records...</span>
+    </div>
   </div>
 
   <!-- Route Info -->
