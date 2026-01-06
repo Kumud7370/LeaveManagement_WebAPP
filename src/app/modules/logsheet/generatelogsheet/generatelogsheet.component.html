@@ -3,12 +3,13 @@
   <div class="report-header">
     <div class="header-content">
       <div class="header-title">
-        <i class="fas fa-clipboard-list"></i>
+        <i class="fas fa-file-alt"></i>
         <h1>Vehicle Logsheet Generation</h1>
       </div>
       <div class="header-actions">
         <button class="btn-back" (click)="Back()">
-          <i class="fas fa-arrow-left"></i> Back to Logsheet List
+          <i class="fas fa-arrow-left"></i> 
+          <span class="back-text">Back to Logsheet List</span>
         </button>
       </div>
     </div>
@@ -69,11 +70,11 @@
             </div>
             
             <div class="form-group">
-              <label for="drivername">Cleaner Name <span class="required">*</span></label>
+              <label for="cleanername">Cleaner Name <span class="required">*</span></label>
               <div class="input-field-container">
                 <div class="input-wrapper">
                   <input formControlName="cleanername" id="cleanername" type="text" class="form-control"
-                    placeholder="Enter driver name" />
+                    placeholder="Enter cleaner name" />
                   <i class="fas fa-user input-icon"></i>
                 </div>
               </div>
@@ -82,8 +83,9 @@
                 <span *ngIf="f['cleanername'].errors?.['required']">Cleaner Name is required.</span>
               </div>
             </div>
+
             <div class="form-group">
-              <label for="vehicleno">Dumping Site<span class="required">*</span></label>
+              <label for="dumpingsite">Dumping Site<span class="required">*</span></label>
               <div class="input-field-container">
                 <div class="select-wrapper">
                   <select formControlName="dumpingsite" id="dumpingsite" class="form-control">
@@ -172,11 +174,12 @@
             <span>{{ loading ? 'Generating...' : 'Generate Logsheet' }}</span>
           </button>
           <button type="button" class="btn-secondary" (click)="Form.reset()" [disabled]="loading">
-            <i class="fas fa-undo"></i> Reset
+            <i class="fas fa-undo"></i> <span>Reset</span>
           </button>
         </div>
       </form>
     </div>
+
     <!-- Summary Cards -->
     <!-- <div class="summary-cards">
       <div class="summary-card" *ngFor="let card of [
@@ -194,6 +197,7 @@
         </div>
       </div>
     </div> -->
+
     <!-- Success Message -->
     <div class="success-message" *ngIf="showSuccessMessage">
       <i class="fas fa-check-circle"></i>
