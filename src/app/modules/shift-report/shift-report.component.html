@@ -20,12 +20,16 @@
     </div>
   </div>
 
-  <!-- Loading Indicator  -->
+  <!-- Loading Indicator with BMC Logo -->
   <div class="loading-overlay" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <div class="loading-text">Generating Report...</div>
+    <div class="loading-spinner">
+      <div class="logo-container">
+        <img src="assets/images/mcgmlogo.png" alt="BMC Logo" class="loading-logo">
+        <div class="loading-ring"></div>
+      </div>
+      <span class="loading-text">Loading shift-wise report...</span>
+    </div>
   </div>
-
 
   <div class="report-content report-spacing" *ngIf="showReport && !isLoading" #reportContainer>
     <!-- Report Header  -->
