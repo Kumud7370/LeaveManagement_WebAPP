@@ -1,4 +1,15 @@
 <div class="logsheet-list-container">
+  <!-- BMC Logo Loading Indicator -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <div class="logo-container">
+        <img src="assets/images/mcgmlogo.png" alt="BMC Logo" class="loading-logo">
+        <div class="loading-ring"></div>
+      </div>
+      <span class="loading-text">Loading...</span>
+    </div>
+  </div>
+
   <!-- Header -->
   <div class="report-header">
     <div class="header-content">

@@ -32,6 +32,120 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   box-sizing: border-box;
 }
 
+// ================= BMC LOGO LOADING OVERLAY (NO WHITE BACKGROUND) =================
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in;
+
+  .loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    position: relative;
+
+    .logo-container {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .loading-logo {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        z-index: 2;
+        animation: pulse 2s ease-in-out infinite;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+      }
+
+      .loading-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 3px solid transparent;
+        border-top-color: $primary-color;
+        border-right-color: $secondary-color;
+        border-radius: 50%;
+        animation: rotate 1.5s linear infinite;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: -3px;
+          left: -3px;
+          right: -3px;
+          bottom: -3px;
+          border: 3px solid transparent;
+          border-bottom-color: $accent-color;
+          border-radius: 50%;
+          animation: rotate 2s linear infinite reverse;
+        }
+      }
+    }
+
+    .loading-text {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: white;
+      letter-spacing: 0.5px;
+      animation: fadeInOut 2s ease-in-out infinite;
+      text-transform: uppercase;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 // Header styles
 .report-header {
   background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
@@ -847,6 +961,24 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   .summary-cards {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .loading-overlay {
+    .loading-spinner {
+      .logo-container {
+        width: 130px;
+        height: 130px;
+
+        .loading-logo {
+          width: 110px;
+          height: 110px;
+        }
+      }
+
+      .loading-text {
+        font-size: 1rem;
+      }
+    }
+  }
 }
 
 // Laptop/Tablet Landscape (992px - 1199px)
@@ -916,6 +1048,24 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
   .filters-offcanvas {
     max-width: 380px;
+  }
+
+  .loading-overlay {
+    .loading-spinner {
+      .logo-container {
+        width: 120px;
+        height: 120px;
+
+        .loading-logo {
+          width: 100px;
+          height: 100px;
+        }
+      }
+
+      .loading-text {
+        font-size: 0.95rem;
+      }
+    }
   }
 }
 
@@ -1010,6 +1160,26 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   .summary-container {
     h3 {
       font-size: 1.25rem;
+    }
+  }
+
+  .loading-overlay {
+    .loading-spinner {
+      gap: 1.25rem;
+
+      .logo-container {
+        width: 110px;
+        height: 110px;
+
+        .loading-logo {
+          width: 90px;
+          height: 90px;
+        }
+      }
+
+      .loading-text {
+        font-size: 0.9rem;
+      }
     }
   }
 }
@@ -1184,6 +1354,34 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       font-size: 1.15rem;
     }
   }
+
+  .loading-overlay {
+    .loading-spinner {
+      gap: 1rem;
+
+      .logo-container {
+        width: 100px;
+        height: 100px;
+
+        .loading-logo {
+          width: 80px;
+          height: 80px;
+        }
+
+        .loading-ring {
+          border-width: 2.5px;
+
+          &::before {
+            border-width: 2.5px;
+          }
+        }
+      }
+
+      .loading-text {
+        font-size: 0.85rem;
+      }
+    }
+  }
 }
 
 // Mobile Portrait (481px - 575px)
@@ -1342,6 +1540,34 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   .summary-container {
     h3 {
       font-size: 1.05rem;
+    }
+  }
+
+  .loading-overlay {
+    .loading-spinner {
+      gap: 0.875rem;
+
+      .logo-container {
+        width: 90px;
+        height: 90px;
+
+        .loading-logo {
+          width: 70px;
+          height: 70px;
+        }
+
+        .loading-ring {
+          border-width: 2px;
+
+          &::before {
+            border-width: 2px;
+          }
+        }
+      }
+
+      .loading-text {
+        font-size: 0.8rem;
+      }
     }
   }
 }
@@ -1560,6 +1786,34 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     h3 {
       font-size: 1rem;
       margin-bottom: 1rem;
+    }
+  }
+
+  .loading-overlay {
+    .loading-spinner {
+      gap: 0.75rem;
+
+      .logo-container {
+        width: 80px;
+        height: 80px;
+
+        .loading-logo {
+          width: 60px;
+          height: 60px;
+        }
+
+        .loading-ring {
+          border-width: 2px;
+
+          &::before {
+            border-width: 2px;
+          }
+        }
+      }
+
+      .loading-text {
+        font-size: 0.75rem;
+      }
     }
   }
 }
@@ -1787,6 +2041,34 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       margin-bottom: 0.875rem;
     }
   }
+
+  .loading-overlay {
+    .loading-spinner {
+      gap: 0.625rem;
+
+      .logo-container {
+        width: 70px;
+        height: 70px;
+
+        .loading-logo {
+          width: 55px;
+          height: 55px;
+        }
+
+        .loading-ring {
+          border-width: 2px;
+
+          &::before {
+            border-width: 2px;
+          }
+        }
+      }
+
+      .loading-text {
+        font-size: 0.7rem;
+      }
+    }
+  }
 }
 
 // Landscape orientation adjustments for mobile devices
@@ -1886,6 +2168,26 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
       button {
         padding: 0.5rem 0.875rem;
+      }
+    }
+  }
+
+  .loading-overlay {
+    .loading-spinner {
+      gap: 0.75rem;
+
+      .logo-container {
+        width: 80px;
+        height: 80px;
+
+        .loading-logo {
+          width: 65px;
+          height: 65px;
+        }
+      }
+
+      .loading-text {
+        font-size: 0.75rem;
       }
     }
   }
