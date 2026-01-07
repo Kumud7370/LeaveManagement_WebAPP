@@ -30,6 +30,128 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   position: relative;
 }
 
+// Loading overlay with BMC Logo (Same as Dashboard)
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in;
+
+  .loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    position: relative;
+
+    .logo-container {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .loading-logo {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        z-index: 2;
+        animation: pulse 2s ease-in-out infinite;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+      }
+
+      .loading-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 3px solid transparent;
+        border-top-color: $primary-color;
+        border-right-color: $secondary-color;
+        border-radius: 50%;
+        animation: rotate 1.5s linear infinite;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: -3px;
+          left: -3px;
+          right: -3px;
+          bottom: -3px;
+          border: 3px solid transparent;
+          border-bottom-color: $accent-color;
+          border-radius: 50%;
+          animation: rotate 2s linear infinite reverse;
+        }
+      }
+    }
+
+    .loading-text {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: white;
+      letter-spacing: 0.5px;
+      animation: fadeInOut 2s ease-in-out infinite;
+      text-transform: uppercase;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+@keyframes fadeInOut {
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
 // Header styles
 .report-header {
   background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
@@ -38,7 +160,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   box-shadow: $shadow-lg;
   position: relative;
   overflow: hidden;
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -49,7 +171,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
     opacity: 0.3;
   }
-  
+
   .header-content {
     display: flex;
     justify-content: space-between;
@@ -60,18 +182,18 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     position: relative;
     z-index: 1;
   }
-  
+
   .header-title {
     display: flex;
     align-items: center;
     gap: 1rem;
-    
+
     i {
       font-size: 2rem;
       color: $accent-color;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     }
-    
+
     h1 {
       font-family: 'Orbitron', sans-serif;
       font-size: 2rem;
@@ -80,12 +202,12 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     }
   }
-  
+
   .header-actions {
     display: flex;
     gap: 1rem;
   }
-  
+
   .btn-filters {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
@@ -99,23 +221,23 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     align-items: center;
     transition: all $transition-speed $transition-bounce;
     font-weight: 500;
-    
+
     i {
       margin-right: 0.5rem;
     }
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.25);
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
-    
+
     &.active {
       background-color: rgba($accent-color, 0.3);
       color: $accent-color;
     }
   }
-  
+
   .btn-back {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
@@ -129,11 +251,11 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     align-items: center;
     transition: all $transition-speed $transition-bounce;
     font-weight: 500;
-    
+
     i {
       margin-right: 0.5rem;
     }
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.25);
       transform: translateY(-2px);
@@ -156,7 +278,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
   margin-bottom: 3rem;
-  
+
   .summary-card {
     background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(20px);
@@ -170,7 +292,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     transition: all $transition-speed $transition-bounce;
     position: relative;
     overflow: hidden;
-    
+
     &::before {
       content: '';
       position: absolute;
@@ -180,14 +302,14 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       height: 4px;
       background: linear-gradient(90deg, $primary-color 0%, $accent-color 50%, $secondary-color 100%);
     }
-    
+
     &:hover {
       transform: translateY(-8px) scale(1.02);
       box-shadow: $shadow-xl;
       background: rgba(255, 255, 255, 0.4);
       border-color: rgba(255, 255, 255, 0.5);
     }
-    
+
     .card-icon {
       display: flex;
       align-items: center;
@@ -201,7 +323,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       flex-shrink: 0;
       box-shadow: $shadow-md;
       position: relative;
-      
+
       &::after {
         content: '';
         position: absolute;
@@ -213,26 +335,26 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         transition: opacity $transition-speed;
       }
     }
-    
+
     &:hover .card-icon::after {
       opacity: 1;
     }
-    
+
     &:nth-child(2) .card-icon {
       background: linear-gradient(135deg, $success-color 0%, darken($success-color, 10%) 100%);
     }
-    
+
     &:nth-child(3) .card-icon {
       background: linear-gradient(135deg, $warning-color 0%, darken($warning-color, 10%) 100%);
     }
-    
+
     &:nth-child(4) .card-icon {
       background: linear-gradient(135deg, $danger-color 0%, darken($danger-color, 10%) 100%);
     }
-    
+
     .card-content {
       flex: 1;
-      
+
       .card-value {
         font-size: 2rem;
         font-weight: 800;
@@ -241,7 +363,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         font-family: 'Orbitron', monospace;
       }
-      
+
       .card-label {
         font-size: 0.875rem;
         color: $text-muted;
@@ -261,7 +383,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   box-shadow: $shadow-xl;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  
+
   .results-container {
     .results-header {
       background: linear-gradient(135deg, rgba($primary-color, 0.05) 0%, rgba($secondary-color, 0.05) 100%);
@@ -270,14 +392,14 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       justify-content: space-between;
       align-items: center;
       border-bottom: 2px solid rgba($primary-color, 0.1);
-      
+
       h2 {
         margin: 0;
         font-size: 1.5rem;
         color: $primary-color;
         font-weight: 700;
       }
-      
+
       .results-actions {
         .btn-export {
           padding: 0.75rem 1.5rem;
@@ -294,7 +416,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
           transition: all $transition-speed;
           text-transform: uppercase;
           letter-spacing: 0.5px;
-          
+
           &:hover {
             transform: translateY(-2px);
             box-shadow: $shadow-md;
@@ -302,7 +424,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
       }
     }
-    
+
     // Filter Controls
     .filter-controls {
       padding: 1.5rem 2rem;
@@ -313,17 +435,17 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       align-items: center;
       gap: 2rem;
       flex-wrap: wrap;
-      
+
       .quick-filter {
         flex: 1;
         min-width: 300px;
-        
+
         .input-group {
           display: flex;
           border-radius: $border-radius;
           overflow: hidden;
           box-shadow: $shadow-sm;
-          
+
           .input-group-text {
             background: rgba($primary-color, 0.1);
             border: 1px solid rgba($border-color, 0.5);
@@ -333,13 +455,13 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
             display: flex;
             align-items: center;
           }
-          
+
           .form-control {
             border: 1px solid rgba($border-color, 0.5);
             border-left: none;
             padding: 0.75rem 1rem;
             font-size: 0.875rem;
-            
+
             &:focus {
               outline: none;
               border-color: $accent-color;
@@ -348,12 +470,12 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
           }
         }
       }
-      
+
       .status-filters {
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
-        
+
         .status-btn {
           padding: 0.5rem 1rem;
           border: 2px solid transparent;
@@ -369,28 +491,28 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
           display: flex;
           align-items: center;
           gap: 0.5rem;
-          
+
           &:hover {
             transform: translateY(-2px);
             box-shadow: $shadow-md;
           }
-          
+
           &.active {
             background: $primary-color;
             color: white;
             border-color: $primary-color;
           }
-          
+
           &.open.active {
             background: $warning-color;
             border-color: $warning-color;
           }
-          
+
           &.closed.active {
             background: $success-color;
             border-color: $success-color;
           }
-          
+
           &.cancelled.active {
             background: $danger-color;
             border-color: $danger-color;
@@ -398,37 +520,37 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
       }
     }
-    
+
     // Enhanced AG Grid Styling
     .grid-container {
       padding: 1.5rem;
       background: white;
       border-radius: $border-radius;
       box-shadow: $shadow-sm;
-      
+
       ag-grid-angular {
         display: block;
         width: 100%;
         height: 500px;
-        
+
         .ag-theme-alpine {
           width: 100%;
           height: 100%;
           border: 1px solid $border-color;
           border-radius: $border-radius;
           overflow: hidden;
-          
+
           .ag-cell {
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            
+
             &:first-child {
               justify-content: center !important;
               padding: 0 !important;
             }
           }
-          
+
           .ag-cell-wrapper {
             width: 100%;
             height: 100%;
@@ -436,21 +558,21 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
             align-items: center;
             justify-content: center;
           }
-          
+
           .ag-root-wrapper {
             border: 1px solid $border-color;
             border-radius: $border-radius;
           }
-          
+
           .ag-header-row {
             background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($secondary-color, 0.08) 100%);
           }
-          
+
           .ag-header-cell {
             display: flex;
             align-items: center;
             justify-content: center;
-            
+
             .ag-header-cell-label {
               display: flex;
               align-items: center;
@@ -458,11 +580,11 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
               width: 100%;
             }
           }
-          
+
           .ag-row {
             .ag-cell {
               line-height: normal;
-              
+
               &:first-child {
                 display: flex !important;
                 align-items: center !important;
@@ -524,21 +646,21 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   box-shadow: $shadow-xl;
   border: 1px solid rgba(255, 255, 255, 0.2);
   margin-top: 2rem;
-  
+
   i {
     font-size: 4rem;
     color: $warning-color;
     margin-bottom: 1.5rem;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
   }
-  
+
   p {
     margin: 0 0 2rem;
     font-size: 1.25rem;
     color: $text-muted;
     font-weight: 500;
   }
-  
+
   button {
     padding: 1rem 2rem;
     border-radius: $border-radius;
@@ -550,7 +672,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     transition: all $transition-speed $transition-bounce;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    
+
     &:hover {
       box-shadow: $shadow-xl;
       transform: translateY(-3px);
@@ -570,7 +692,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   opacity: 0;
   visibility: hidden;
   transition: all $transition-speed;
-  
+
   &.show {
     opacity: 1;
     visibility: visible;
@@ -590,11 +712,11 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   transition: transform $transition-speed;
   display: flex;
   flex-direction: column;
-  
+
   &.show {
     transform: translateX(0);
   }
-  
+
   .offcanvas-header {
     display: flex;
     justify-content: space-between;
@@ -602,13 +724,13 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     padding: 1.25rem 1.5rem;
     background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
     color: white;
-    
+
     .offcanvas-title {
       font-size: 1.25rem;
       font-weight: 600;
       margin: 0;
     }
-    
+
     .btn-close {
       background: none;
       border: none;
@@ -618,26 +740,26 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       padding: 0.5rem;
       border-radius: $border-radius;
       transition: background-color $transition-speed;
-      
+
       &:hover {
         background-color: rgba(255, 255, 255, 0.1);
       }
     }
   }
-  
+
   .offcanvas-body {
     flex: 1;
     overflow-y: auto;
     padding: 0;
-    
+
     &::-webkit-scrollbar {
       width: 6px;
     }
-    
+
     &::-webkit-scrollbar-track {
       background: transparent;
     }
-    
+
     &::-webkit-scrollbar-thumb {
       background: $border-color;
       border-radius: 3px;
@@ -651,7 +773,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
 .filter-section {
   margin-bottom: 2rem;
-  
+
   .filter-section-title {
     font-size: 1rem;
     font-weight: 600;
@@ -669,7 +791,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   flex-direction: column;
   gap: 0.75rem;
   margin-bottom: 1.5rem;
-  
+
   label {
     font-weight: 600;
     font-size: 0.875rem;
@@ -677,7 +799,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  
+
   .form-control {
     width: 100%;
     padding: 1rem 1.25rem;
@@ -687,7 +809,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     font-size: 0.875rem;
     transition: all $transition-speed;
     backdrop-filter: blur(10px);
-    
+
     &:focus {
       outline: none;
       border-color: $accent-color;
@@ -696,7 +818,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       transform: translateY(-1px);
     }
   }
-  
+
   .error-message {
     color: $danger-color;
     font-size: 0.75rem;
@@ -705,9 +827,10 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
-.select-wrapper, .input-wrapper {
+.select-wrapper,
+.input-wrapper {
   position: relative;
-  
+
   i {
     position: absolute;
     right: 1.25rem;
@@ -729,7 +852,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   flex-direction: column;
   gap: 1rem;
   margin-top: 2rem;
-  
+
   button {
     padding: 1rem 2rem;
     border-radius: $border-radius;
@@ -743,36 +866,36 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-size: 0.875rem;
-    
+
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
       transform: none !important;
     }
   }
-  
+
   .btn-primary {
     background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
     color: white;
     border: none;
     box-shadow: $shadow-md;
-    
+
     &:hover:not(:disabled) {
       box-shadow: $shadow-xl;
       transform: translateY(-3px);
     }
-    
+
     &:active:not(:disabled) {
       transform: translateY(-1px);
     }
   }
-  
+
   .btn-secondary {
     background: rgba(255, 255, 255, 0.9);
     color: $text-color;
     border: 2px solid $border-color;
     backdrop-filter: blur(10px);
-    
+
     &:hover:not(:disabled) {
       background: white;
       border-color: $primary-color;
@@ -796,21 +919,19 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .report-spacing {
-  margin-top: 30px; 
+  margin-top: 30px;
 }
 
 // ============================================
-// RESPONSIVE BREAKPOINTS
+// RESPONSIVE BREAKPOINTS (keeping all existing responsive code)
 // ============================================
 
-// Large Desktop (1400px and up) - Already covered by default styles
-
-// Desktop (1200px - 1399px)
+// Large Desktop (1400px and up)
 @media (max-width: 1399px) {
   .report-content {
     max-width: 1200px;
   }
-  
+
   .summary-cards {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -823,60 +944,60 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       h1 {
         font-size: 1.75rem;
       }
-      
+
       i {
         font-size: 1.75rem;
       }
     }
   }
-  
+
   .report-content {
     padding: 0 1.5rem 1.5rem;
   }
-  
+
   .summary-cards {
     gap: 1.5rem;
-    
+
     .summary-card {
       padding: 1.5rem;
-      
+
       .card-icon {
         width: 60px;
         height: 60px;
         font-size: 1.25rem;
       }
-      
+
       .card-content {
         .card-value {
           font-size: 1.75rem;
         }
-        
+
         .card-label {
           font-size: 0.8rem;
         }
       }
     }
   }
-  
+
   .table-view {
     .results-container {
       .results-header {
         padding: 1.25rem 1.5rem;
-        
+
         h2 {
           font-size: 1.25rem;
         }
       }
-      
+
       .filter-controls {
         padding: 1.25rem 1.5rem;
         gap: 1.5rem;
-        
+
         .quick-filter {
           min-width: 250px;
         }
       }
-      
+
       .grid-container {
         padding: 1.25rem;
       }
@@ -892,35 +1013,35 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       gap: 1rem;
       align-items: stretch;
     }
-    
+
     .header-title {
       justify-content: center;
-      
+
       h1 {
         font-size: 1.5rem;
       }
-      
+
       i {
         font-size: 1.5rem;
       }
     }
-    
+
     .header-actions {
       justify-content: center;
       flex-wrap: wrap;
     }
   }
-  
+
   .report-content {
     padding: 0 1.25rem 1.25rem;
   }
-  
+
   .summary-cards {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.25rem;
     margin-bottom: 2rem;
   }
-  
+
   .table-view {
     .results-container {
       .results-header {
@@ -928,48 +1049,48 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         gap: 1rem;
         align-items: stretch;
         padding: 1rem 1.25rem;
-        
+
         h2 {
           text-align: center;
         }
-        
+
         .results-actions {
           width: 100%;
-          
+
           .btn-export {
             width: 100%;
             justify-content: center;
           }
         }
       }
-      
+
       .filter-controls {
         flex-direction: column;
         align-items: stretch;
         gap: 1rem;
         padding: 1rem 1.25rem;
-        
+
         .quick-filter {
           min-width: auto;
           width: 100%;
         }
-        
+
         .status-filters {
           justify-content: center;
           flex-wrap: wrap;
         }
       }
-      
+
       .grid-container {
         padding: 1rem;
-        
+
         ag-grid-angular {
           height: 400px;
         }
       }
     }
   }
-  
+
   .filters-offcanvas {
     width: 350px;
   }
@@ -979,116 +1100,116 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 @media (max-width: 767px) {
   .report-header {
     padding: 1rem 0.75rem;
-    
+
     .header-title {
       gap: 0.75rem;
-      
+
       h1 {
         font-size: 1.25rem;
       }
-      
+
       i {
         font-size: 1.25rem;
       }
     }
-    
+
     .header-actions {
       gap: 0.75rem;
-      
+
       .btn-filters,
       .btn-back {
         padding: 0.625rem 1rem;
         font-size: 0.8rem;
-        
+
         i {
           margin-right: 0.375rem;
         }
       }
-      
+
       .back-text {
         display: none;
       }
     }
   }
-  
+
   .report-content {
     padding: 0 1rem 1rem;
   }
-  
+
   .summary-cards {
     grid-template-columns: 1fr;
     gap: 1rem;
     margin-bottom: 1.5rem;
-    
+
     .summary-card {
       padding: 1.25rem;
       gap: 1rem;
-      
+
       .card-icon {
         width: 55px;
         height: 55px;
         font-size: 1.1rem;
       }
-      
+
       .card-content {
         .card-value {
           font-size: 1.5rem;
         }
-        
+
         .card-label {
           font-size: 0.75rem;
         }
       }
     }
   }
-  
+
   .table-view {
     .results-container {
       .results-header {
         padding: 1rem;
-        
+
         h2 {
           font-size: 1.1rem;
         }
-        
+
         .btn-export {
           padding: 0.625rem 1rem;
           font-size: 0.8rem;
-          
+
           .export-text {
             display: none;
           }
         }
       }
-      
+
       .filter-controls {
         padding: 1rem;
-        
+
         .status-filters {
           .status-btn {
             padding: 0.45rem 0.85rem;
             font-size: 0.7rem;
-            
+
             span {
               display: none;
             }
           }
         }
       }
-      
+
       .grid-container {
         padding: 0.875rem;
         overflow-x: auto;
-        
+
         ag-grid-angular {
           height: 350px;
           min-width: 600px;
         }
-        
+
         .legend-container {
           gap: 15px;
           font-size: 0.85rem;
-          
+
           .legend-item {
             .legend-color {
               width: 18px;
@@ -1099,57 +1220,57 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       }
     }
   }
-  
+
   .no-data-message {
     padding: 3rem 1.5rem;
-    
+
     i {
       font-size: 3rem;
       margin-bottom: 1rem;
     }
-    
+
     p {
       font-size: 1rem;
       margin-bottom: 1.5rem;
     }
-    
+
     button {
       padding: 0.875rem 1.5rem;
       font-size: 0.8rem;
     }
   }
-  
+
   .filters-offcanvas {
     width: 100%;
-    
+
     .offcanvas-header {
       padding: 1rem 1.25rem;
-      
+
       .offcanvas-title {
         font-size: 1.1rem;
       }
     }
-    
+
     .filters-content {
       padding: 1.25rem;
     }
-    
+
     .filter-section {
       margin-bottom: 1.5rem;
-      
+
       .filter-section-title {
         font-size: 0.9rem;
       }
     }
-    
+
     .form-group {
       margin-bottom: 1.25rem;
-      
+
       .form-control {
         padding: 0.875rem 1rem;
       }
     }
-    
+
     .form-actions {
       button {
         padding: 0.875rem 1.5rem;
@@ -1165,66 +1286,68 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       h1 {
         font-size: 1.1rem;
       }
-      
+
       i {
         font-size: 1.1rem;
       }
     }
-    
+
     .header-actions {
+
       .btn-filters,
       .btn-back {
         padding: 0.5rem 0.875rem;
-        
+
         span {
           display: none;
         }
       }
     }
   }
-  
+
   .summary-cards {
     .summary-card {
       padding: 1rem;
-      
+
       .card-icon {
         width: 50px;
         height: 50px;
         font-size: 1rem;
       }
-      
+
       .card-content {
         .card-value {
           font-size: 1.35rem;
         }
-        
+
         .card-label {
           font-size: 0.7rem;
         }
       }
     }
   }
-  
+
   .table-view {
     .results-container {
       .results-header {
         padding: 0.875rem;
-        
+
         h2 {
           font-size: 1rem;
         }
-        
+
         .btn-export {
           padding: 0.5rem 0.875rem;
           font-size: 0.75rem;
         }
       }
-      
+
       .filter-controls {
         padding: 0.875rem;
-        
+
         .quick-filter {
           .input-group {
+
             .input-group-text,
             .form-control {
               padding: 0.625rem 0.875rem;
@@ -1232,29 +1355,29 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
             }
           }
         }
-        
+
         .status-filters {
           gap: 0.375rem;
-          
+
           .status-btn {
             padding: 0.4rem 0.75rem;
             font-size: 0.65rem;
           }
         }
       }
-      
+
       .grid-container {
         padding: 0.75rem;
-        
+
         ag-grid-angular {
           height: 300px;
           min-width: 550px;
         }
-        
+
         .legend-container {
           gap: 12px;
           font-size: 0.8rem;
-          
+
           .legend-item {
             .legend-color {
               width: 16px;
@@ -1265,46 +1388,46 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       }
     }
   }
-  
+
   .no-data-message {
     padding: 2.5rem 1rem;
-    
+
     i {
       font-size: 2.5rem;
     }
-    
+
     p {
       font-size: 0.95rem;
     }
-    
+
     button {
       padding: 0.75rem 1.25rem;
       font-size: 0.75rem;
     }
   }
-  
+
   .filters-offcanvas {
     .filters-content {
       padding: 1rem;
     }
-    
+
     .form-group {
       gap: 0.5rem;
       margin-bottom: 1rem;
-      
+
       label {
         font-size: 0.8rem;
       }
-      
+
       .form-control {
         padding: 0.75rem 0.875rem;
         font-size: 0.8rem;
       }
     }
-    
+
     .form-actions {
       margin-top: 1.5rem;
-      
+
       button {
         padding: 0.75rem 1.25rem;
         font-size: 0.8rem;
@@ -1317,26 +1440,26 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 @media (max-width: 480px) {
   .report-header {
     padding: 0.875rem 0.625rem;
-    
+
     .header-content {
       gap: 0.75rem;
     }
-    
+
     .header-title {
       gap: 0.625rem;
-      
+
       h1 {
         font-size: 1rem;
       }
-      
+
       i {
         font-size: 1rem;
       }
     }
-    
+
     .header-actions {
       gap: 0.5rem;
-      
+
       .btn-filters,
       .btn-back {
         padding: 0.5rem 0.75rem;
@@ -1344,58 +1467,59 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       }
     }
   }
-  
+
   .report-content {
     padding: 0 0.875rem 0.875rem;
   }
-  
+
   .summary-cards {
     gap: 0.875rem;
-    
+
     .summary-card {
       flex-direction: column;
       text-align: center;
       padding: 0.875rem;
-      
+
       .card-icon {
         width: 45px;
         height: 45px;
         font-size: 0.95rem;
       }
-      
+
       .card-content {
         .card-value {
           font-size: 1.25rem;
         }
-        
+
         .card-label {
           font-size: 0.7rem;
         }
       }
     }
   }
-  
+
   .table-view {
     .results-container {
       .results-header {
         padding: 0.75rem;
-        
+
         h2 {
           font-size: 0.95rem;
         }
-        
+
         .btn-export {
           padding: 0.5rem 0.75rem;
           font-size: 0.7rem;
           gap: 0.375rem;
         }
       }
-      
+
       .filter-controls {
         padding: 0.75rem;
-        
+
         .quick-filter {
           .input-group {
+
             .input-group-text,
             .form-control {
               padding: 0.5rem 0.75rem;
@@ -1403,38 +1527,38 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
             }
           }
         }
-        
+
         .status-filters {
           gap: 0.325rem;
-          
+
           .status-btn {
             padding: 0.375rem 0.625rem;
             font-size: 0.625rem;
-            
+
             i {
               font-size: 0.875rem;
             }
           }
         }
       }
-      
+
       .grid-container {
         padding: 0.625rem;
-        
+
         ag-grid-angular {
           height: 280px;
           min-width: 500px;
           font-size: 0.75rem;
         }
-        
+
         .legend-container {
           gap: 10px;
           font-size: 0.75rem;
           margin-top: 8px;
-          
+
           .legend-item {
             gap: 4px;
-            
+
             .legend-color {
               width: 15px;
               height: 15px;
@@ -1444,68 +1568,68 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       }
     }
   }
-  
+
   .no-data-message {
     padding: 2rem 0.875rem;
-    
+
     i {
       font-size: 2.25rem;
       margin-bottom: 0.875rem;
     }
-    
+
     p {
       font-size: 0.9rem;
       margin-bottom: 1.25rem;
     }
-    
+
     button {
       padding: 0.625rem 1rem;
       font-size: 0.7rem;
     }
   }
-  
+
   .filters-offcanvas {
     .offcanvas-header {
       padding: 0.875rem 1rem;
-      
+
       .offcanvas-title {
         font-size: 1rem;
       }
-      
+
       .btn-close {
         font-size: 1.1rem;
         padding: 0.375rem;
       }
     }
-    
+
     .filters-content {
       padding: 0.875rem;
     }
-    
+
     .filter-section {
       margin-bottom: 1.25rem;
-      
+
       .filter-section-title {
         font-size: 0.85rem;
         margin-bottom: 0.75rem;
         padding-bottom: 0.375rem;
       }
     }
-    
+
     .form-group {
       gap: 0.5rem;
       margin-bottom: 0.875rem;
-      
+
       label {
         font-size: 0.75rem;
       }
-      
+
       .form-control {
         padding: 0.625rem 0.75rem;
         font-size: 0.75rem;
       }
     }
-    
+
     .select-wrapper,
     .input-wrapper {
       i {
@@ -1513,11 +1637,11 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         font-size: 0.875rem;
       }
     }
-    
+
     .form-actions {
       gap: 0.75rem;
       margin-top: 1.25rem;
-      
+
       button {
         padding: 0.625rem 1rem;
         font-size: 0.75rem;
@@ -1531,130 +1655,131 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 @media (max-width: 375px) {
   .report-header {
     padding: 0.75rem 0.5rem;
-    
+
     .header-title {
       h1 {
         font-size: 0.9rem;
       }
-      
+
       i {
         font-size: 0.9rem;
       }
     }
-    
+
     .header-actions {
+
       .btn-filters,
       .btn-back {
         padding: 0.425rem 0.625rem;
         font-size: 0.7rem;
-        
+
         i {
           font-size: 0.875rem;
         }
       }
     }
   }
-  
+
   .report-content {
     padding: 0 0.75rem 0.75rem;
   }
-  
+
   .summary-cards {
     gap: 0.75rem;
-    
+
     .summary-card {
       padding: 0.75rem;
-      
+
       .card-icon {
         width: 42px;
         height: 42px;
         font-size: 0.9rem;
       }
-      
+
       .card-content {
         .card-value {
           font-size: 1.15rem;
         }
-        
+
         .card-label {
           font-size: 0.65rem;
         }
       }
     }
   }
-  
+
   .table-view {
     .results-container {
       .results-header {
         padding: 0.625rem;
         gap: 0.75rem;
-        
+
         h2 {
           font-size: 0.9rem;
         }
-        
+
         .btn-export {
           padding: 0.425rem 0.625rem;
           font-size: 0.65rem;
-          
+
           i {
             font-size: 0.875rem;
           }
         }
       }
-      
+
       .filter-controls {
         padding: 0.625rem;
         gap: 0.75rem;
-        
+
         .quick-filter {
           .input-group {
             .input-group-text {
               padding: 0.5rem 0.625rem;
-              
+
               i {
                 font-size: 0.875rem;
               }
             }
-            
+
             .form-control {
               padding: 0.5rem 0.625rem;
               font-size: 0.7rem;
             }
           }
         }
-        
+
         .status-filters {
           gap: 0.3rem;
-          
+
           .status-btn {
             padding: 0.35rem 0.55rem;
             font-size: 0.6rem;
-            
+
             i {
               font-size: 0.8rem;
             }
           }
         }
       }
-      
+
       .grid-container {
         padding: 0.5rem;
-        
+
         ag-grid-angular {
           height: 260px;
           min-width: 480px;
           font-size: 0.7rem;
         }
-        
+
         .legend-container {
           gap: 8px;
           font-size: 0.7rem;
           margin-top: 6px;
-          
+
           .legend-item {
             gap: 3px;
-            
+
             .legend-color {
               width: 14px;
               height: 14px;
@@ -1664,62 +1789,62 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       }
     }
   }
-  
+
   .no-data-message {
     padding: 1.75rem 0.75rem;
-    
+
     i {
       font-size: 2rem;
       margin-bottom: 0.75rem;
     }
-    
+
     p {
       font-size: 0.85rem;
       margin-bottom: 1rem;
     }
-    
+
     button {
       padding: 0.5rem 0.875rem;
       font-size: 0.65rem;
     }
   }
-  
+
   .filters-offcanvas {
     .offcanvas-header {
       padding: 0.75rem 0.875rem;
-      
+
       .offcanvas-title {
         font-size: 0.95rem;
       }
     }
-    
+
     .filters-content {
       padding: 0.75rem;
     }
-    
+
     .filter-section {
       margin-bottom: 1rem;
-      
+
       .filter-section-title {
         font-size: 0.8rem;
         margin-bottom: 0.625rem;
       }
     }
-    
+
     .form-group {
       gap: 0.45rem;
       margin-bottom: 0.75rem;
-      
+
       label {
         font-size: 0.7rem;
       }
-      
+
       .form-control {
         padding: 0.5rem 0.625rem;
         font-size: 0.7rem;
       }
     }
-    
+
     .select-wrapper,
     .input-wrapper {
       i {
@@ -1727,11 +1852,11 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
         font-size: 0.8rem;
       }
     }
-    
+
     .form-actions {
       gap: 0.625rem;
       margin-top: 1rem;
-      
+
       button {
         padding: 0.5rem 0.875rem;
         font-size: 0.7rem;
@@ -1745,23 +1870,24 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 @media (max-height: 500px) and (orientation: landscape) {
   .report-header {
     padding: 0.5rem;
-    
+
     .header-content {
       flex-direction: row;
       gap: 0.5rem;
     }
-    
+
     .header-title {
       h1 {
         font-size: 0.9rem;
       }
-      
+
       i {
         font-size: 0.9rem;
       }
     }
-    
+
     .header-actions {
+
       .btn-filters,
       .btn-back {
         padding: 0.375rem 0.625rem;
@@ -1769,36 +1895,36 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       }
     }
   }
-  
+
   .summary-cards {
     grid-template-columns: repeat(4, 1fr);
     gap: 0.625rem;
     margin-bottom: 1rem;
-    
+
     .summary-card {
       padding: 0.625rem;
       flex-direction: row;
-      
+
       .card-icon {
         width: 38px;
         height: 38px;
         font-size: 0.85rem;
       }
-      
+
       .card-content {
         text-align: left;
-        
+
         .card-value {
           font-size: 1.1rem;
         }
-        
+
         .card-label {
           font-size: 0.6rem;
         }
       }
     }
   }
-  
+
   .table-view {
     .results-container {
       .grid-container {
@@ -1808,33 +1934,33 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
       }
     }
   }
-  
+
   .filters-offcanvas {
     width: 320px;
-    
+
     .offcanvas-header {
       padding: 0.625rem 0.875rem;
     }
-    
+
     .filters-content {
       padding: 0.75rem;
     }
-    
+
     .filter-section {
       margin-bottom: 0.875rem;
     }
-    
+
     .form-group {
       margin-bottom: 0.625rem;
-      
+
       .form-control {
         padding: 0.5rem 0.625rem;
       }
     }
-    
+
     .form-actions {
       margin-top: 0.875rem;
-      
+
       button {
         padding: 0.5rem 0.875rem;
       }

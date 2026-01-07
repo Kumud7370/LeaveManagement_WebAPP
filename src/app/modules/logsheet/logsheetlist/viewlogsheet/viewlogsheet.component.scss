@@ -162,7 +162,6 @@ $transition-speed: 0.3s;
       }
     }
 
-    // Trip Details Message Section
     .trip-details-message {
       margin-bottom: 1.5rem;
 
@@ -241,7 +240,6 @@ $transition-speed: 0.3s;
       }
     }
 
-    // PDF-style table formatting (matches PDF exactly)
     .pdf-table-container {
       margin-bottom: 1.5rem;
       border-radius: 8px;
@@ -252,6 +250,11 @@ $transition-speed: 0.3s;
         margin-bottom: 1.5rem;
       }
 
+      .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
       .pdf-table {
         width: 100%;
         border-collapse: collapse;
@@ -259,7 +262,6 @@ $transition-speed: 0.3s;
         font-family: 'Arial', sans-serif;
         font-size: 10px;
 
-        // Main information table cells
         .label-cell {
           padding: 8px 12px;
           border: 1px solid #000;
@@ -277,6 +279,7 @@ $transition-speed: 0.3s;
           text-align: left;
           vertical-align: middle;
           width: 25.9%;
+          word-break: break-word;
         }
 
         .merged-cell {
@@ -292,25 +295,33 @@ $transition-speed: 0.3s;
           text-align: left;
           vertical-align: middle;
           width: 73.8%;
+          word-break: break-word;
         }
 
-        // Transaction table specific styling
         &.transaction-table {
+          .section-header {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: left; // Keep section headers (Trip Details at RTS/Dumping Ground) left-aligned
+            padding: 8px 12px;
+            border: 1px solid #000;
+            font-size: 12px;
+          }
+
           .transaction-header {
             padding: 8px 12px;
             border: 1px solid #000;
             background-color: #f0f0f0;
             font-weight: bold;
-            text-align: center;
+            text-align: center; // All other headers remain center-aligned
             vertical-align: middle;
-            width: 16.67%; // Adjusted for 6 columns
+            width: 16.67%;
             font-size: 10px;
 
-            // Special styling for Trip Details column
             &.trip-details-header {
               background-color: #f0f0f0;
               vertical-align: middle;
-              text-align: center;
+              text-align: center; // Trip Details column header remains center-aligned
               font-weight: bold;
             }
           }
@@ -320,13 +331,13 @@ $transition-speed: 0.3s;
             border: 1px solid #000;
             text-align: center;
             vertical-align: middle;
-            width: 16.67%; // Adjusted for 6 columns
+            width: 16.67%;
             font-size: 10px;
             font-family: 'Courier New', monospace;
+            word-break: break-word;
           }
         }
 
-        // Status styling
         .status-text {
           font-weight: bold;
 
@@ -347,8 +358,52 @@ $transition-speed: 0.3s;
   }
 }
 
-// Responsive design
-@media (max-width: 768px) {
+// ============================================
+// RESPONSIVE BREAKPOINTS
+// ============================================
+
+// Large Desktop (1200px and up) - Default styles applied above
+
+// Desktop/Laptop (992px - 1199px)
+@media (max-width: 1199px) {
+  .logsheet-card {
+    margin: 15px;
+
+    .card-header {
+      .header-content {
+        padding: 1.25rem 1.5rem;
+
+        .header-title {
+          font-size: 1.35rem;
+
+          i {
+            font-size: 1.15rem;
+          }
+        }
+      }
+    }
+
+    .card-body {
+      padding: 1.75rem;
+
+      .title-section {
+        padding: 1.25rem;
+
+        .main-title {
+          font-size: 1.75rem;
+          letter-spacing: 1.5px;
+        }
+
+        .sub-title {
+          font-size: 1.15rem;
+        }
+      }
+    }
+  }
+}
+
+// Tablet Landscape (768px - 991px)
+@media (max-width: 991px) {
   .logsheet-container {
     padding: 10px;
   }
@@ -357,55 +412,600 @@ $transition-speed: 0.3s;
     margin: 10px;
     max-height: 95vh;
 
+    .card-header {
+      .header-content {
+        padding: 1rem 1.25rem;
+
+        .header-title {
+          font-size: 1.25rem;
+
+          i {
+            font-size: 1.1rem;
+          }
+        }
+
+        .header-actions {
+          .close-btn {
+            padding: 0.625rem 1.25rem;
+            font-size: 0.85rem;
+          }
+        }
+      }
+    }
+
     .card-body {
-      padding: 1rem;
+      padding: 1.5rem;
+
+      .title-section {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+
+        .main-title {
+          font-size: 1.5rem;
+          letter-spacing: 1px;
+        }
+
+        .sub-title {
+          font-size: 1rem;
+          letter-spacing: 0.5px;
+        }
+      }
+
+      .trip-details-message {
+        margin-bottom: 1.25rem;
+
+        .info-card {
+          padding: 1.25rem;
+
+          .info-icon {
+            width: 42px;
+            height: 42px;
+            font-size: 1.15rem;
+          }
+
+          .info-content {
+            h4 {
+              font-size: 1rem;
+            }
+
+            p {
+              font-size: 0.9rem;
+            }
+          }
+        }
+      }
+
+      .pdf-table-container {
+        margin-bottom: 1.25rem;
+
+        .pdf-table {
+          font-size: 9px;
+
+          .label-cell,
+          .value-cell,
+          .value-cell-full {
+            padding: 7px 10px;
+            font-size: 9px;
+          }
+
+          &.transaction-table {
+            .section-header {
+              font-size: 10px;
+              padding: 7px 10px;
+            }
+
+            .transaction-header,
+            .transaction-cell {
+              padding: 7px 10px;
+              font-size: 9px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Tablet Portrait (576px - 767px)
+@media (max-width: 767px) {
+  .logsheet-container {
+    padding: 8px;
+  }
+
+  .logsheet-card {
+    margin: 8px;
+    border-radius: 10px;
+
+    .card-header {
+      .header-content {
+        flex-direction: column;
+        gap: 0.875rem;
+        padding: 1rem;
+        text-align: center;
+
+        .header-title {
+          justify-content: center;
+          font-size: 1.15rem;
+
+          i {
+            font-size: 1rem;
+          }
+        }
+
+        .header-actions {
+          width: 100%;
+          justify-content: center;
+
+          .close-btn {
+            flex: 1;
+            max-width: 200px;
+            justify-content: center;
+            padding: 0.625rem 1rem;
+            font-size: 0.8rem;
+          }
+        }
+      }
+    }
+
+    .card-body {
+      padding: 1.25rem;
+
+      .title-section {
+        padding: 0.875rem;
+        margin-bottom: 1.25rem;
+
+        .main-title {
+          font-size: 1.25rem;
+          letter-spacing: 0.5px;
+          line-height: 1.3;
+        }
+
+        .sub-title {
+          font-size: 0.95rem;
+          letter-spacing: 0.25px;
+        }
+      }
 
       .trip-details-message {
         .info-card {
           flex-direction: column;
           text-align: center;
+          padding: 1rem;
 
           .info-icon {
             align-self: center;
+            width: 40px;
+            height: 40px;
+            font-size: 1.1rem;
+          }
+
+          .info-content {
+            h4 {
+              font-size: 0.95rem;
+            }
+
+            p {
+              font-size: 0.85rem;
+
+              &.current-status {
+                justify-content: center;
+                flex-wrap: wrap;
+              }
+            }
           }
         }
       }
 
       .pdf-table-container {
         overflow-x: auto;
+        margin-bottom: 1rem;
+
+        .table-wrapper {
+          min-width: 100%;
+        }
 
         .pdf-table {
-          min-width: 700px; // Increased for 6 columns
-          font-size: 9px;
+          min-width: 700px;
+          font-size: 8px;
 
-          .label-cell,
-          .value-cell,
-          .value-cell-full,
-          .transaction-header,
-          .transaction-cell {
+          .label-cell {
             padding: 6px 8px;
-            font-size: 9px;
+            font-size: 8px;
+            white-space: normal;
+          }
+
+          .value-cell,
+          .value-cell-full {
+            padding: 6px 8px;
+            font-size: 8px;
+          }
+
+          &.transaction-table {
+            min-width: 800px;
+
+            .section-header {
+              font-size: 9px;
+              padding: 6px 8px;
+            }
+
+            .transaction-header,
+            .transaction-cell {
+              padding: 6px 8px;
+              font-size: 8px;
+            }
           }
         }
       }
     }
   }
+}
 
-  .header-content {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
+// Mobile Landscape / Large Phone (481px - 575px)
+@media (max-width: 575px) {
+  .logsheet-card {
+    margin: 5px;
+    border-radius: 8px;
 
-    .header-actions {
-      width: 100%;
-      justify-content: center;
-      flex-wrap: wrap;
+    .card-header {
+      .header-content {
+        padding: 0.875rem;
 
-      .action-btn,
-      .close-btn {
-        flex: 1;
-        min-width: 80px;
-        justify-content: center;
+        .header-title {
+          font-size: 1.05rem;
+
+          i {
+            font-size: 0.95rem;
+          }
+        }
+
+        .header-actions {
+          .close-btn {
+            padding: 0.5rem 0.875rem;
+            font-size: 0.75rem;
+
+            .close-text {
+              display: none;
+            }
+          }
+        }
+      }
+    }
+
+    .card-body {
+      padding: 1rem;
+
+      .title-section {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+
+        .main-title {
+          font-size: 1.1rem;
+          letter-spacing: 0.25px;
+          line-height: 1.25;
+        }
+
+        .sub-title {
+          font-size: 0.85rem;
+          letter-spacing: 0.15px;
+        }
+      }
+
+      .trip-details-message {
+        margin-bottom: 1rem;
+
+        .info-card {
+          padding: 0.875rem;
+
+          .info-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+          }
+
+          .info-content {
+            h4 {
+              font-size: 0.9rem;
+            }
+
+            p {
+              font-size: 0.8rem;
+            }
+
+            .status-badge {
+              padding: 0.2rem 0.625rem;
+              font-size: 0.7rem;
+            }
+          }
+        }
+      }
+
+      .pdf-table-container {
+        .pdf-table {
+          min-width: 650px;
+          font-size: 7.5px;
+
+          .label-cell,
+          .value-cell,
+          .value-cell-full {
+            padding: 5px 7px;
+            font-size: 7.5px;
+          }
+
+          &.transaction-table {
+            min-width: 750px;
+
+            .section-header {
+              font-size: 8.5px;
+              padding: 5px 7px;
+            }
+
+            .transaction-header,
+            .transaction-cell {
+              padding: 5px 7px;
+              font-size: 7.5px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Mobile Portrait (376px - 480px)
+@media (max-width: 480px) {
+  .logsheet-card {
+    .card-header {
+      .header-content {
+        padding: 0.75rem;
+        gap: 0.75rem;
+
+        .header-title {
+          font-size: 1rem;
+
+          i {
+            font-size: 0.9rem;
+          }
+        }
+
+        .header-actions {
+          .close-btn {
+            padding: 0.5rem 0.75rem;
+          }
+        }
+      }
+    }
+
+    .card-body {
+      padding: 0.875rem;
+
+      .title-section {
+        padding: 0.625rem;
+
+        .main-title {
+          font-size: 1rem;
+          letter-spacing: 0.15px;
+        }
+
+        .sub-title {
+          font-size: 0.8rem;
+        }
+      }
+
+      .trip-details-message {
+        .info-card {
+          padding: 0.75rem;
+
+          .info-icon {
+            width: 34px;
+            height: 34px;
+            font-size: 0.95rem;
+          }
+
+          .info-content {
+            h4 {
+              font-size: 0.85rem;
+            }
+
+            p {
+              font-size: 0.75rem;
+            }
+          }
+        }
+      }
+
+      .pdf-table-container {
+        .pdf-table {
+          min-width: 600px;
+          font-size: 7px;
+
+          .label-cell,
+          .value-cell,
+          .value-cell-full {
+            padding: 5px 6px;
+            font-size: 7px;
+          }
+
+          &.transaction-table {
+            min-width: 700px;
+
+            .section-header {
+              font-size: 8px;
+              padding: 5px 6px;
+            }
+
+            .transaction-header,
+            .transaction-cell {
+              padding: 5px 6px;
+              font-size: 7px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Small Mobile (320px - 375px)
+@media (max-width: 375px) {
+  .logsheet-card {
+    margin: 3px;
+
+    .card-header {
+      .header-content {
+        padding: 0.625rem;
+        gap: 0.625rem;
+
+        .header-title {
+          font-size: 0.95rem;
+
+          i {
+            font-size: 0.85rem;
+          }
+        }
+
+        .header-actions {
+          .close-btn {
+            padding: 0.45rem 0.625rem;
+            font-size: 0.7rem;
+          }
+        }
+      }
+    }
+
+    .card-body {
+      padding: 0.75rem;
+
+      .title-section {
+        padding: 0.5rem;
+
+        .main-title {
+          font-size: 0.9rem;
+          letter-spacing: 0.1px;
+        }
+
+        .sub-title {
+          font-size: 0.75rem;
+        }
+      }
+
+      .trip-details-message {
+        .info-card {
+          padding: 0.625rem;
+
+          .info-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 0.9rem;
+          }
+
+          .info-content {
+            h4 {
+              font-size: 0.8rem;
+            }
+
+            p {
+              font-size: 0.7rem;
+            }
+
+            .status-badge {
+              padding: 0.15rem 0.5rem;
+              font-size: 0.65rem;
+            }
+          }
+        }
+      }
+
+      .pdf-table-container {
+        .pdf-table {
+          min-width: 550px;
+          font-size: 6.5px;
+
+          .label-cell,
+          .value-cell,
+          .value-cell-full {
+            padding: 4px 5px;
+            font-size: 6.5px;
+          }
+
+          &.transaction-table {
+            min-width: 650px;
+
+            .section-header {
+              font-size: 7.5px;
+              padding: 4px 5px;
+            }
+
+            .transaction-header,
+            .transaction-cell {
+              padding: 4px 5px;
+              font-size: 6.5px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Landscape orientation adjustments for mobile devices
+@media (max-height: 500px) and (orientation: landscape) {
+  .logsheet-card {
+    max-height: 98vh;
+
+    .card-header {
+      .header-content {
+        padding: 0.625rem 1rem;
+
+        .header-title {
+          font-size: 0.95rem;
+        }
+
+        .header-actions {
+          .close-btn {
+            padding: 0.45rem 0.875rem;
+            font-size: 0.75rem;
+          }
+        }
+      }
+    }
+
+    .card-body {
+      padding: 0.875rem;
+
+      .title-section {
+        padding: 0.5rem;
+        margin-bottom: 0.875rem;
+
+        .main-title {
+          font-size: 1rem;
+        }
+
+        .sub-title {
+          font-size: 0.8rem;
+        }
+      }
+
+      .pdf-table-container {
+        margin-bottom: 0.875rem;
+
+        .pdf-table {
+          font-size: 7.5px;
+
+          .label-cell,
+          .value-cell,
+          .value-cell-full {
+            padding: 4px 6px;
+          }
+
+          &.transaction-table {
+
+            .section-header,
+            .transaction-header,
+            .transaction-cell {
+              padding: 4px 6px;
+            }
+          }
+        }
       }
     }
   }
@@ -441,21 +1041,29 @@ $transition-speed: 0.3s;
   }
 
   .trip-details-message {
-    display: none !important; // Hide message when printing
+    display: none !important;
   }
 
   .pdf-table-container {
     box-shadow: none !important;
     margin-bottom: 15px !important;
+    overflow: visible !important;
+
+    .table-wrapper {
+      overflow: visible !important;
+    }
   }
 
   .pdf-table {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     page-break-inside: avoid;
+    min-width: 100% !important;
+    font-size: 10px !important;
 
     .label-cell,
-    .transaction-header {
+    .transaction-header,
+    .section-header {
       background-color: #f0f0f0 !important;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -483,5 +1091,23 @@ $transition-speed: 0.3s;
     padding: 0 !important;
     margin: 0 !important;
     max-height: none !important;
+  }
+
+  // Responsive dialog adjustments
+  @media (max-width: 767px) {
+    .mat-dialog-container {
+      max-width: 98vw !important;
+      max-height: 95vh !important;
+      border-radius: 8px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .mat-dialog-container {
+      max-width: 100vw !important;
+      max-height: 98vh !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+    }
   }
 }

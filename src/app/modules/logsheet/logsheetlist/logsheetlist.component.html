@@ -1,4 +1,14 @@
 <div class="logsheet-list-container">
+  <div class="loading-overlay" *ngIf="isLoadingWardData">
+    <div class="loading-spinner">
+      <div class="logo-container">
+        <img src="assets/images/mcgmlogo.png" alt="BMC Logo" class="loading-logo">
+        <div class="loading-ring"></div>
+      </div>
+      <span class="loading-text">{{ loadingMessage }}</span>
+    </div>
+  </div>
+
   <!-- Header -->
   <div class="report-header">
     <div class="header-content">
@@ -21,7 +31,7 @@
   </div>
 
   <!-- Report Content -->
-  <div class="report-content report-spacing">
+  <div class="report-content report-spacing" *ngIf="!isLoadingWardData">
     <!-- Table View -->
     <div class="table-view">
       <div class="results-container">
@@ -91,8 +101,6 @@
         </div>
       </div>
 
-      
-
       <!-- No Data Message -->
       <div class="no-data-message" *ngIf="lstReportData.length === 0">
         <i class="fas fa-exclamation-circle"></i>
@@ -100,51 +108,53 @@
         <button class="btn-primary" (click)="toggleFilters()">Adjust Filters</button>
       </div>
     </div>
-<!-- Summary Cards -->
-      <div class="summary-container">
-        <h3>Summary</h3>
-        <div class="summary-cards">
-          <div class="summary-card">
-            <div class="card-icon">
-              <i class="fas fa-list-alt"></i>
-            </div>
-            <div class="card-content">
-              <div class="card-value">{{ lstReportData?.length || 0 }}</div>
-              <div class="card-label">Total Logsheets</div>
-            </div>
-          </div>
 
-          <div class="summary-card">
-            <div class="card-icon">
-              <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="card-content">
-              <div class="card-value">{{ getStatusCount(1) }}</div>
-              <div class="card-label">Closed Logsheets</div>
-            </div>
+    <!-- Summary Cards -->
+    <div class="summary-container">
+      <h3>Summary</h3>
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="card-icon">
+            <i class="fas fa-list-alt"></i>
           </div>
-
-          <div class="summary-card">
-            <div class="card-icon">
-              <i class="fas fa-clock"></i>
-            </div>
-            <div class="card-content">
-              <div class="card-value">{{ getStatusCount(0) }}</div>
-              <div class="card-label">Open Logsheets</div>
-            </div>
+          <div class="card-content">
+            <div class="card-value">{{ lstReportData?.length || 0 }}</div>
+            <div class="card-label">Total Logsheets</div>
           </div>
+        </div>
 
-          <div class="summary-card">
-            <div class="card-icon">
-              <i class="fas fa-ban"></i>
-            </div>
-            <div class="card-content">
-              <div class="card-value">{{ getStatusCount(2) }}</div>
-              <div class="card-label">Cancelled Logsheets</div>
-            </div>
+        <div class="summary-card">
+          <div class="card-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ getStatusCount(1) }}</div>
+            <div class="card-label">Closed Logsheets</div>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="card-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ getStatusCount(0) }}</div>
+            <div class="card-label">Open Logsheets</div>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="card-icon">
+            <i class="fas fa-ban"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-value">{{ getStatusCount(2) }}</div>
+            <div class="card-label">Cancelled Logsheets</div>
           </div>
         </div>
       </div>
+    </div>
+
     <!-- Filters Offcanvas Panel -->
     <div class="filters-offcanvas-overlay" [class.show]="isFiltersOpen" (click)="closeFilters()"></div>
 
@@ -225,3 +235,4 @@
       </div>
     </div>
   </div>
+</div>

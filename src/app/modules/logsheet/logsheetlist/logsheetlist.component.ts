@@ -11,17 +11,18 @@ import Swal from "sweetalert2"
 import moment from "moment"
 import * as XLSX from "xlsx"
 import jsPDF from "jspdf"
-import autoTable from "jspdf-autotable" // Import autoTable as a function
-import { GState } from "jspdf" // Import GState for type reference
-import { CellHookData } from "jspdf-autotable" // Import types for autotable hooks
+import autoTable from "jspdf-autotable"
+import { GState } from "jspdf"
+import { CellHookData } from "jspdf-autotable"
 import { BtnLogsheetViewCellRenderer } from "src/app/modules/logsheet/logsheetlist/viewlogsheet/buttonLogsheetView-cell-renderer.component"
 import { ViewlogsheetComponent } from "src/app/modules/logsheet/logsheetlist/viewlogsheet/viewlogsheet.component"
-import { HttpClientModule, HttpClient } from "@angular/common/http" // Changed to regular import
+import { HttpClientModule, HttpClient } from "@angular/common/http"
 import { environment } from "src/environments/environment"
 import { BtnPdfCellRenderer } from "src/app/modules/logsheet/logsheetlist/pdf/buttonPdf-cell-renderer.component"
 import { DbCallingService } from "src/app/core/services/db-calling.service"
 
 import { RowStyle, RowClassParams } from 'ag-grid-community';
+
 interface LogsheetData {
   id: number
   IsClosed: number
@@ -37,7 +38,6 @@ interface LogsheetData {
   ClosedDestination: string | null
   ClosedOn: string | null
   Remark?: string
-  // NEW: Transaction fields
   Trans_Date?: string
   Trans_Time?: string
   Trans_Date_UL?: string
@@ -45,7 +45,6 @@ interface LogsheetData {
   Gross_Weight?: string
   Unladen_Weight?: string
   Act_Net_Weight?: string
-  // API response fields (lowercase)
   logsheetID?: number
   isClosed?: number
   logsheetNumber?: string
@@ -61,7 +60,6 @@ interface LogsheetData {
   closedOn?: string | null
   fromdate?: string
   todate?: string
-  // NEW: Transaction fields (lowercase)
   trans_Date?: string
   trans_Time?: string
   trans_Date_UL?: string
@@ -107,7 +105,9 @@ interface LogsheetResponse {
 export class LogsheetlistComponent implements OnInit {
   @ViewChild("agGrid", { static: false }) agGrid!: AgGridAngular
   @ViewChild("excelexporttable") excelexporttable!: ElementRef
-  // Offcanvas state
+
+  isLoadingWardData = false
+  loadingMessage = "Loading logsheet data..."
   isFiltersOpen = false
   activeFilter = 9
   filterText = ""
@@ -135,25 +135,21 @@ export class LogsheetlistComponent implements OnInit {
   userType = 0
   userId = 0;
   userSiteName = "";
+
   get f() {
     return this.Form.controls
   }
+
   refreshFlag = false;
+
   getRowStyle = (params: RowClassParams): RowStyle | undefined => {
     if (params.data?.IsClosed === 2) {
-      // Cancelled → light red
       return { backgroundColor: '#f8d7da', color: '#721c24' };
     }
     if (params.data?.IsClosed === 1) {
-      // Closed → dark green
       return { backgroundColor: '#28a745', color: 'white' };
     }
-    // if (params.data?.VerifyStatus === 1) {
-    //   // Verified → light green
-    //   return { backgroundColor: '#d4edda' };
-    // }
     if (params.data?.IsClosed === 0) {
-      // Open & not verified → light orange  && params.data?.VerifyStatus === 0
       return { backgroundColor: '#ffe5b4' };
     }
     return undefined;
@@ -162,8 +158,9 @@ export class LogsheetlistComponent implements OnInit {
   constructor(
     private router: Router,
     private fb: FormBuilder,
-    private dialog: MatDialog, private dbService: DbCallingService,
-    private http: HttpClient, // Changed to regular import
+    private dialog: MatDialog,
+    private dbService: DbCallingService,
+    private http: HttpClient,
   ) {
     this.uRole = Number(sessionStorage.getItem("Role")) || 0
     this.userType = Number(sessionStorage.getItem("UserType")) || 0
@@ -185,15 +182,17 @@ export class LogsheetlistComponent implements OnInit {
       ward: [""],
     })
 
+    this.isLoadingWardData = true
+
     let obj = {
       UserId: this.userId,
       SiteName: this.userSiteName,
     }
+
     this.dbService.GetSiteLocations(obj).subscribe({
       next: (response: any) => {
         if (response && response.data) {
           this.siteLocations = response.data;
-
         }
       },
       error: (error: any) => {
@@ -206,7 +205,6 @@ export class LogsheetlistComponent implements OnInit {
         if (response && response.data) {
           console.log("Ward data loaded:", response.data);
           this.wardList = response.data;
-
         }
       },
       error: (error: any) => {
@@ -222,8 +220,10 @@ export class LogsheetlistComponent implements OnInit {
     if (!this.Form.valid) {
       return
     }
+
+    this.isLoadingWardData = true
+
     const roleName = sessionStorage.getItem("RoleName") || null;
-    // Format dates in YYYY-MM-DD
     const formatDate = (date: any): string => {
       if (!date) return ""
       const d = new Date(date)
@@ -237,14 +237,12 @@ export class LogsheetlistComponent implements OnInit {
       SiteName: (roleName === "GENERATOR") ? sessionStorage.getItem("SiteName") : this.Form.value.sitename || null,
       UserId: Number(sessionStorage.getItem("UserId")) || null,
     }
-   // console.log("Sending payload:", payload)
+
     this.dbService.GetLogsheetReport(payload).subscribe({
       next: (response) => {
         console.log("API response received:", response)
         if (response && response.data) {
-          // Normalize the data to ensure consistent property names
           const normalizedData = response.data.map((item: any) => ({
-            // Map API response fields to component expected fields
             id: item.logsheetID,
             IsClosed: item.isClosed,
             LogsheetNumber: item.logsheetNumber,
@@ -266,28 +264,27 @@ export class LogsheetlistComponent implements OnInit {
             VerifiedOn: item.verifiedOn,
             Remark: item.remark,
             AgencyName: item.agencyName,
-
           }))
-          // IMPORTANT: Set both arrays to ensure filtering works correctly
-          this.lstSearchResults = [...normalizedData] // Master copy for filtering
-          this.lstReportData = [...normalizedData] // Display copy
-          // Reset active filter to "All" when new data is loaded
+          this.lstSearchResults = [...normalizedData]
+          this.lstReportData = [...normalizedData]
           this.activeFilter = 9
           console.log("Data loaded successfully:", this.lstSearchResults)
         } else {
           this.lstReportData = []
           this.lstSearchResults = []
         }
+
+        this.isLoadingWardData = false
       },
       error: (error) => {
         console.error("Error fetching Logsheet data:", error)
         this.lstReportData = []
         this.lstSearchResults = []
+        this.isLoadingWardData = false
       },
     })
   }
 
-  // Helper to get base64 image from assets
   private getBase64ImageFromAssets(path: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image()
@@ -310,84 +307,62 @@ export class LogsheetlistComponent implements OnInit {
     })
   }
 
-  // NEW: Method to fetch transaction details and generate PDF (same as View button logic)
   downloadLogsheetPDF(data: LogsheetData) {
-    //  console.log("PDF download method called with data:", data)
     const logsheetNumber = data.LogsheetNumber
 
-    // Show loading indicator
-    Swal.fire({
-      title: "Generating PDF...",
-      text: "Fetching transaction details",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading()
-      },
-    })
+    this.loadingMessage = "Generating PDF..."
+    this.isLoadingWardData = true
+
     let obj = { LogsheetNumber: logsheetNumber }
     this.dbService.GetTripDetails(obj).subscribe({
       next: async (res) => {
         console.log("Transaction details fetched for PDF:", res)
-        // Made async to await getBase64ImageFromAssets
-        Swal.close() // Close loading indicator
+        this.isLoadingWardData = false
+        this.loadingMessage = "Loading logsheet data..."
+
         let mergedData: LogsheetData
         if (res && res.data && res.data.length > 0) {
-          // Merge original data with transaction details
           let RTSData = res.data[0].rtsData;
           let DumpingData = res.data[0].dumpingData;
           mergedData = {
-            ...data, // original row data
-            ...res.data[0], // transaction details from API
-            // Ensure transaction fields are properly mapped
-            // Trans_Date: res.data[0].trans_Date || res.data[0].Trans_Date,
-            // Trans_Time: res.data[0].trans_Time || res.data[0].Trans_Time,
-            // Trans_Date_UL: res.data[0].trans_Date_UL || res.data[0].Trans_Date_UL,
-            // Trans_Time_UL: res.data[0].trans_Time_UL || res.data[0].Trans_Time_UL,
-            // Gross_Weight: res.data[0].gross_Weight || res.data[0].Gross_Weight,
-            // Unladen_Weight: res.data[0].unladen_Weight || res.data[0].Unladen_Weight,
-            // Act_Net_Weight: res.data[0].act_Net_Weight || res.data[0].Act_Net_Weight,
+            ...data,
+            ...res.data[0],
           }
           console.log("Merged data with transaction details for PDF:", mergedData)
         } else {
-          // No transaction data found, use original data
           console.log("No transaction data found, using original data for PDF")
           mergedData = data
         }
-        // Generate PDF with the merged data
         await this.generatePDFWithData(mergedData)
       },
       error: async (err) => {
-        // Made async to await getBase64ImageFromAssets
-        Swal.close() // Close loading indicator
+        this.isLoadingWardData = false
+        this.loadingMessage = "Loading logsheet data..."
         console.error("Error fetching transaction data for PDF:", err)
-        // Show error and generate PDF with available data
+
         Swal.fire({
           title: "Warning",
           text: "Could not fetch transaction details. Generating PDF with available data.",
           icon: "warning",
-          timer: 3000,
+          timer: 2000,
+          showConfirmButton: false,
         })
-        // Generate PDF with original data even if API fails
         await this.generatePDFWithData(data)
       },
     })
   }
 
-  // NEW: Method to generate PDF with complete data (extracted from ViewlogsheetComponent)
   async generatePDFWithData(data: LogsheetData) {
-    // Normalize data exactly like ViewlogsheetComponent does
     const normalizedData = this.normalizeDataForPDF(data)
     console.log("Generating PDF with normalized data:", normalizedData)
     const doc = new jsPDF("landscape")
     const fileName = `Logsheet_${normalizedData.LogsheetNumber || "Unknown"}_${moment().format("DDMMYYYY_HHmmss")}`
     const logoBase64 = await this.getBase64ImageFromAssets("assets/images/mcgmlogo.png")
 
-    // Header table with logo and text
     autoTable(doc, {
-      // Use autoTable as a function
       body: [
         [
-          { content: "", rowSpan: 3, styles: { cellWidth: 30, minCellHeight: 30, fillColor: [255, 255, 255] } }, // Placeholder for logo
+          { content: "", rowSpan: 3, styles: { cellWidth: 30, minCellHeight: 30, fillColor: [255, 255, 255] } },
           {
             content: "MUNICIPAL CORPORATION OF GREATER MUMBAI",
             colSpan: 5,
@@ -409,23 +384,20 @@ export class LogsheetlistComponent implements OnInit {
         textColor: 0,
         lineColor: [0, 0, 0],
       },
-      margin: { top: 10, left: 15, right: 15 }, // Consistent margins
+      margin: { top: 10, left: 15, right: 15 },
       didDrawCell: (hookData: CellHookData) => {
-        // Explicitly type hookData
         if (hookData.row.index === 0 && hookData.column.index === 0 && logoBase64) {
-          doc.addImage(logoBase64, "PNG", hookData.cell.x + 2, hookData.cell.y + 2, 25, 25) // Adjust position and size within cell
+          doc.addImage(logoBase64, "PNG", hookData.cell.x + 2, hookData.cell.y + 2, 25, 25)
         }
       },
     })
 
-    // Section 1: Main information table
     autoTable(doc, {
-      // Use autoTable as a function
       body: [
         [
           { content: "Logsheet Number :", styles: { fontStyle: "bold" } },
           normalizedData.LogsheetNumber || "N/A",
-          { content: "", rowSpan: 6 }, // merged vertical cell
+          { content: "", rowSpan: 6 },
           { content: "Date & Time :", styles: { fontStyle: "bold" } },
           normalizedData.CreatedOn || "N/A",
         ],
@@ -434,7 +406,6 @@ export class LogsheetlistComponent implements OnInit {
           normalizedData.VehicleNumber || "N/A",
           { content: "Name of Ward :", styles: { fontStyle: "bold" } },
           normalizedData.Ward || "N/A",
-
         ],
         [
           { content: "Driver's Name :", styles: { fontStyle: "bold" } },
@@ -460,7 +431,6 @@ export class LogsheetlistComponent implements OnInit {
           { content: "Status :", styles: { fontStyle: "bold" } },
           normalizedData.IsClosed === 0 ? "Open" : normalizedData.IsClosed === 2 ? "Cancelled" : "Closed",
         ],
-
       ],
       theme: "grid",
       startY: doc.lastAutoTable.finalY + 2,
@@ -479,16 +449,12 @@ export class LogsheetlistComponent implements OnInit {
       },
     })
 
-    // UPDATED: Trip Details Table - ALWAYS show in PDF, but display N/A for non-closed logsheets (same as ViewlogsheetComponent)
-
     autoTable(doc, {
-      // Use autoTable as a function
-
       head: [
         [
           {
             content: "Trip Details at RTS",
-            colSpan: 7, // ✅ Span across all 6 columns
+            colSpan: 7,
             styles: {
               fontStyle: "bold",
               halign: "left",
@@ -543,22 +509,22 @@ export class LogsheetlistComponent implements OnInit {
         fontStyle: "bold",
       },
       columnStyles: {
-        0: { cellWidth: 24 }, // Trip Details column
-        1: { cellWidth: 40.83 }, // In Time of Transact
-        2: { cellWidth: 40.83 }, // Out Time of Transact
-        3: { cellWidth: 40.83 }, // Gross Weight
-        4: { cellWidth: 40.83 }, // Unladen Weight
-        5: { cellWidth: 40.83 }, // Actual Net Weight
-        6: { cellWidth: 40.83 }, // Actual Net Weight
+        0: { cellWidth: 24 },
+        1: { cellWidth: 40.83 },
+        2: { cellWidth: 40.83 },
+        3: { cellWidth: 40.83 },
+        4: { cellWidth: 40.83 },
+        5: { cellWidth: 40.83 },
+        6: { cellWidth: 40.83 },
       },
     })
+
     autoTable(doc, {
-      // Use autoTable as a function
       head: [
         [
           {
             content: "Trip Details at Dumping Ground",
-            colSpan: 7, // ✅ Span across all 6 columns
+            colSpan: 7,
             styles: {
               fontStyle: "bold",
               halign: "left",
@@ -613,18 +579,17 @@ export class LogsheetlistComponent implements OnInit {
         fontStyle: "bold",
       },
       columnStyles: {
-        0: { cellWidth: 24 }, // Trip Details column
-        1: { cellWidth: 40.83 }, // In Time of Transact
-        2: { cellWidth: 40.83 }, // Out Time of Transact
-        3: { cellWidth: 40.83 }, // Gross Weight
-        4: { cellWidth: 40.83 }, // Unladen Weight
-        5: { cellWidth: 40.83 }, // Actual Net Weight
-        6: { cellWidth: 40.83 }, // Actual Net Weight
+        0: { cellWidth: 24 },
+        1: { cellWidth: 40.83 },
+        2: { cellWidth: 40.83 },
+        3: { cellWidth: 40.83 },
+        4: { cellWidth: 40.83 },
+        5: { cellWidth: 40.83 },
+        6: { cellWidth: 40.83 },
       },
     })
-    // Section 3: Closure information table
+
     autoTable(doc, {
-      // Use autoTable as a function
       body: [
         [
           { content: "Logsheet Closed Date & Time :", styles: { fontStyle: "bold" } },
@@ -642,14 +607,6 @@ export class LogsheetlistComponent implements OnInit {
           { content: "Remark :", styles: { fontStyle: "bold" } },
           { content: normalizedData.Remark || "N/A" }
         ],
-        // [
-        //   { content: "Verification :", styles: { fontStyle: "bold" } },
-        //   { content: normalizedData.VerifyStatus === 1 ? "Verified" : "Pending" },
-        //   { content: "Verified By :", styles: { fontStyle: "bold" } },
-        //   { content: normalizedData.VerifiedBy || "N/A" },
-        //   { content: "Verified Date :", styles: { fontStyle: "bold" } },
-        //   { content: normalizedData.VerifiedOn || "N/A" }
-        // ]
       ],
       theme: "grid",
       styles: {
@@ -665,16 +622,14 @@ export class LogsheetlistComponent implements OnInit {
       startY: doc.lastAutoTable.finalY + 5,
     })
 
-    // Add watermark after all content
-    doc.setGState(new GState({ opacity: 0.1 })) // Set opacity to 10% for a slightly darker watermark
-    const watermarkWidth = 150 // Larger size for landscape
-    const watermarkHeight = 150 // Larger size for landscape
+    doc.setGState(new GState({ opacity: 0.1 }))
+    const watermarkWidth = 150
+    const watermarkHeight = 150
     const centerX = (doc.internal.pageSize.getWidth() - watermarkWidth) / 2
     const centerY = (doc.internal.pageSize.getHeight() - watermarkHeight) / 2
     doc.addImage(logoBase64, "PNG", centerX, centerY, watermarkWidth, watermarkHeight)
-    doc.setGState(new GState({ opacity: 1 })) // Reset opacity
+    doc.setGState(new GState({ opacity: 1 }))
 
-    // Footer
     const pageHeight = doc.internal.pageSize.getHeight()
     const pageWidth = doc.internal.pageSize.getWidth()
     doc.setFontSize(8)
@@ -684,10 +639,8 @@ export class LogsheetlistComponent implements OnInit {
     console.log(`PDF generated: ${fileName}.pdf`)
   }
 
-  // Helper methods for PDF generation (copied from ViewlogsheetComponent)
   private normalizeDataForPDF(data: any): any {
     if (!data) return {}
-    // Create a standardized object with expected property names
     return {
       LogsheetNumber: data.logsheetNumber || data.LogsheetNumber || "",
       VehicleNumber: data.vehicleNumber || data.VehicleNumber || "",
@@ -711,14 +664,6 @@ export class LogsheetlistComponent implements OnInit {
       VerifyStatus: data.verifyStatus || data.VerifyStatus,
       VerifiedBy: data.verifiedBy || data.VerifiedBy,
       VerifiedOn: data.verifiedOn || data.VerifiedOn,
-      // Transaction fields
-      // Trans_Date: data.trans_Date || data.Trans_Date || "",
-      // Trans_Time: data.trans_Time || data.Trans_Time || "",
-      // Trans_Date_UL: data.trans_Date_UL || data.Trans_Date_UL || "",
-      // Trans_Time_UL: data.trans_Time_UL || data.Trans_Time_UL || "",
-      // Gross_Weight: data.gross_Weight || data.Gross_Weight || "",
-      // Unladen_Weight: data.unladen_Weight || data.Unladen_Weight || "",
-      // Act_Net_Weight: data.act_Net_Weight || data.Act_Net_Weight || "",
     }
   }
 
@@ -726,7 +671,6 @@ export class LogsheetlistComponent implements OnInit {
     return data.IsClosed === 1
   }
 
-  // UPDATED: PDF-specific methods that match ViewlogsheetComponent exactly
   private getPdfInTimeOfTransactForPDF(data: any): string {
     if (data.IsClosed !== 1) {
       return "N/A"
@@ -754,15 +698,12 @@ export class LogsheetlistComponent implements OnInit {
     if (!weight || weight === "N/A" || weight === "" || weight === null || weight === undefined) {
       return "N/A"
     }
-    // If it's already formatted with 'kg', return as is
     if (typeof weight === "string" && weight.includes("kg")) {
       return weight
     }
-    // Otherwise, add 'kg' suffix
     return `${weight} kg`
   }
 
-  // Offcanvas methods
   toggleFilters() {
     this.isFiltersOpen = !this.isFiltersOpen
   }
@@ -771,7 +712,6 @@ export class LogsheetlistComponent implements OnInit {
     this.isFiltersOpen = false
   }
 
-  // Get status count for summary cards - use lstSearchResults for accurate counts
   getStatusCount(status: number): number {
     return this.lstSearchResults.filter((item: LogsheetData) => item.IsClosed === status).length
   }
@@ -789,9 +729,8 @@ export class LogsheetlistComponent implements OnInit {
       this.Form.markAllAsTouched()
       return
     }
-    this.closeFilters() // Close filters panel after submission
-   // console.log("Form submitted with values:", this.Form.value)
-    // Fetch new data based on form values
+    this.closeFilters()
+    this.isLoadingWardData = true
     this.fetchLogsheetData()
   }
 
@@ -803,8 +742,6 @@ export class LogsheetlistComponent implements OnInit {
       todate: tDt,
       ward: "",
     })
-
-    // Reset results and summary
     this.lstReportData = []
     this.lstSearchResults = []
   }
@@ -1091,7 +1028,6 @@ export class LogsheetlistComponent implements OnInit {
       wrapText: true,
       autoHeight: true,
       wrapHeaderText: true,
-
     }
   }
 
@@ -1106,21 +1042,17 @@ export class LogsheetlistComponent implements OnInit {
     this.activeFilter = id
     console.log("Filtering data with id:", id, "Available records:", this.lstSearchResults.length)
     if (id === 9) {
-      // Show all data
       this.lstReportData = [...this.lstSearchResults]
       console.log("Showing all records:", this.lstReportData.length)
     } else {
-      // Filter by status
       this.lstReportData = this.lstSearchResults.filter((f: LogsheetData) => f.IsClosed === id)
       console.log("Filtered records for status", id, ":", this.lstReportData.length)
     }
-    // Force grid to refresh
     if (this.gridApi) {
       this.gridApi.setGridOption("rowData", this.lstReportData)
     }
   }
 
-  // UPDATED: Method to open ViewLogsheet dialog with transaction data
   viewLogsheet(data: LogsheetData) {
     const dialogRef = this.dialog.open(ViewlogsheetComponent, {
       width: "80%",
@@ -1151,7 +1083,6 @@ export class LogsheetlistComponent implements OnInit {
       "Closed By": v.ClosedBy,
       "Closed Destination": v.ClosedDestination,
       "Closed On": v.ClosedOn,
-      // NEW: Include transaction data in Excel export
       "In Time of Transact": v.Trans_Date && v.Trans_Time ? `${v.Trans_Date} ${v.Trans_Time}` : "N/A",
       "Out Time of Transact": v.Trans_Date_UL && v.Trans_Time_UL ? `${v.Trans_Date_UL} ${v.Trans_Time_UL}` : "N/A",
       "Gross Weight": v.Gross_Weight || "N/A",
@@ -1165,38 +1096,30 @@ export class LogsheetlistComponent implements OnInit {
     XLSX.writeFile(wb, fileName)
   }
 
-  // UPDATED: Method to fetch transaction details and then open dialog
   viewLogsheetDetails(data: LogsheetData) {
-    // console.log("View method called with data:", data)
     const logsheetNumber = data.LogsheetNumber
 
-    // Show loading indicator
-    Swal.fire({
-      title: "Loading...",
-      text: "Fetching transaction details",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading()
-      },
-    })
+    this.loadingMessage = "Loading logsheet details..."
+    this.isLoadingWardData = true
+
     let obj = { LogsheetNumber: logsheetNumber }
     this.dbService.GetTripDetails(obj).subscribe({
       next: (res) => {
-        Swal.close() // Close loading indicator
-        if (res && res.data && res.data.length > 0) {
-          // Merge original data with transaction details
-          const mergedData = {
-            ...data, // original row data
-            ...res.data[0], // transaction details from API
+        this.isLoadingWardData = false
+        this.loadingMessage = "Loading logsheet data..."
 
+        if (res && res.data && res.data.length > 0) {
+          const mergedData = {
+            ...data,
+            ...res.data[0],
           }
           console.log("Merged data with transaction details:", mergedData)
-          // Open dialog with merged data
+
           const dialogRef = this.dialog.open(ViewlogsheetComponent, {
             width: "90%",
             maxWidth: "1200px",
             height: "90%",
-            data: mergedData, // Pass merged data instead of original data
+            data: mergedData,
             disableClose: false,
             panelClass: "custom-dialog-container",
           })
@@ -1205,7 +1128,6 @@ export class LogsheetlistComponent implements OnInit {
             this.fetchLogsheetData();
           })
         } else {
-          // No transaction data found, open dialog with original data
           console.log("No transaction data found, opening with original data")
           const dialogRef = this.dialog.open(ViewlogsheetComponent, {
             width: "90%",
@@ -1222,16 +1144,18 @@ export class LogsheetlistComponent implements OnInit {
         }
       },
       error: (err) => {
-        Swal.close() // Close loading indicator
+        this.isLoadingWardData = false
+        this.loadingMessage = "Loading logsheet data..."
         console.error("Error fetching transaction data:", err)
-        // Show error and open dialog with original data
+
         Swal.fire({
           title: "Warning",
           text: "Could not fetch transaction details. Showing basic logsheet information.",
           icon: "warning",
-          timer: 3000,
+          timer: 2000,
+          showConfirmButton: false,
         })
-        // Open dialog with original data even if API fails
+
         const dialogRef = this.dialog.open(ViewlogsheetComponent, {
           width: "90%",
           maxWidth: "1200px",
@@ -1247,8 +1171,6 @@ export class LogsheetlistComponent implements OnInit {
       },
     })
   }
-
-
 }
 
 function dateComparator(date1: string, date2: string): number {
@@ -1266,7 +1188,6 @@ function dateComparator(date1: string, date2: string): number {
   return date1Number - date2Number
 }
 
-// HELPER FOR DATE COMPARISON
 function _monthToNum(date: string): number | null {
   if (date === undefined || date === null || date.length !== 10) {
     return null
@@ -1275,7 +1196,6 @@ function _monthToNum(date: string): number | null {
   var monthNumber = date.substring(3, 5)
   var dayNumber = date.substring(0, 2)
   var result = Number(yearNumber) * 10000 + Number(monthNumber) * 100 + Number(dayNumber)
-  // 29/08/2004 => 20040829
   return result
 }
 

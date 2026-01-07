@@ -8,17 +8,9 @@
           <span>Logsheet Details</span>
         </div>
         <div class="header-actions">
-          <!-- <button type="button" class="action-btn print-btn" (click)="printLogsheet()">
-            <i class="fas fa-print"></i>
-            Print
-          </button>
-          <button type="button" class="action-btn pdf-btn" (click)="downloadPDF()">
-            <i class="fas fa-file-pdf"></i>
-            PDF
-          </button> -->
           <button type="button" class="close-btn" (click)="Close()">
             <i class="fas fa-times"></i>
-            Close
+            <span class="close-text">Close</span>
           </button>
         </div>
       </div>
@@ -29,210 +21,172 @@
       <!-- Title Section -->
       <div class="title-section">
         <h2 class="main-title">MUNICIPAL CORPORATION OF GREATER MUMBAI</h2>
-        <h3 class="sub-title"> SOLID WASTE MANAGEMENT </h3>
+        <h3 class="sub-title">SOLID WASTE MANAGEMENT</h3>
         <h3 class="sub-title">VEHICLE LOGSHEET</h3>
       </div>
 
-      <!-- Primary Information Table (matching PDF format exactly) -->
       <div class="pdf-table-container">
-        <table class="pdf-table">
-          <tbody>
-            <tr>
-              <td class="label-cell">Logsheet Number :</td>
-              <td class="value-cell">{{ lstFilterData.LogsheetNumber || 'N/A' }}</td>
-              <td class="merged-cell" rowspan="6"></td>
-              <td class="label-cell">Date & Time :</td>
-              <td class="value-cell">{{ lstFilterData.CreatedOn || 'N/A' }}</td>
-            </tr>
-            <tr>
-              <td class="label-cell">Vehicle Number :</td>
-              <td class="value-cell">{{ lstFilterData.VehicleNumber || 'N/A' }}</td>
-              <td class="label-cell">Name of Ward :</td>
-              <td class="value-cell">{{ lstFilterData.Ward || 'N/A' }}</td>
-            </tr>
-            <tr>
-              <td class="label-cell">Driver's Name :</td>
-              <td class="value-cell">{{ lstFilterData.DriverName || 'N/A' }}</td>
-              <td class="label-cell">Type Of Waste :</td>
-              <td class="value-cell">{{ lstFilterData.TypeOfWaste || 'N/A' }}</td>
-
-            </tr>
-            <tr>
-              <td class="label-cell">Cleaner's Name :</td>
-              <td class="value-cell">{{ lstFilterData.CleanerName || 'N/A' }}</td>
-              <td class="label-cell">Route Number :</td>
-              <td class="value-cell">{{ lstFilterData.RouteNumber || 'N/A' }}</td>
-            </tr>
-            <tr>
-              <td class="label-cell">Agency Name :</td>
-              <td class="value-cell">{{ lstFilterData.AgencyName || 'N/A' }}</td>
-              <td class="label-cell">Tare Weight (RC Book) (KG):</td>
-              <td class="value-cell">{{ lstFilterData.RCBookTareWeight || 'N/A' }}</td>
-            </tr>
-            <tr>
-              <td class="label-cell">Created By :</td>
-              <td class="value-cell">{{ lstFilterData.CreatedBy || 'N/A' }}</td>
-              <td class="label-cell">Status :</td>
-              <td class="value-cell">
-                <span class="status-text" [ngClass]="{
-                  'status-open': lstFilterData.IsClosed === 0,
-                  'status-closed': lstFilterData.IsClosed === 1,
-                  'status-cancelled': lstFilterData.IsClosed === 2
-                }">
-                  {{ lstFilterData.IsClosed === 0 ? 'Open' : lstFilterData.IsClosed === 2 ? 'Cancelled' : 'Closed' }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Trip Details Table - CONDITIONAL: Only show when status is 1 (Closed) -->
-      <!-- <div *ngIf="isLogsheetClosed()" class="pdf-table-container transaction-table-section"> -->
-      <div class="pdf-table-container transaction-table-section">
-        <table class="pdf-table transaction-table">
-          <thead>
-            <tr>
-              <th class="transaction-header">Trip Details at RTS </th>
-            </tr>
-            <tr>
-              <th class="transaction-header trip-details-header" rowspan="2">Trip Details</th>
-              <th class="transaction-header">Slip Number</th>
-              <th class="transaction-header">In Time of Transact</th>
-              <th class="transaction-header">Out Time of Transact</th>
-              <th class="transaction-header">Gross Weight (KG)</th>
-              <th class="transaction-header">Unladen Weight (KG)</th>
-              <th class="transaction-header">Actual Net Weight (KG)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="transaction-cell" rowspan="2">Trip Details</td>
-                <td class="transaction-cell">{{ (lstFilterData?.RTSData?.slipSrNo)?lstFilterData?.RTSData?.slipSrNo:'N/A' }}</td>
-              <td class="transaction-cell">
-                {{ lstFilterData?.RTSData?.trans_Date && lstFilterData?.RTSData?.trans_Time
-                ? lstFilterData.RTSData.trans_Date + ' ' + lstFilterData.RTSData.trans_Time
-                : 'N/A' }}
-              </td>
-
-              <td class="transaction-cell">
-                {{ lstFilterData?.RTSData?.trans_Date_UL && lstFilterData?.RTSData?.trans_Time_UL
-                ? lstFilterData.RTSData.trans_Date_UL + ' ' + lstFilterData.RTSData.trans_Time_UL
-                : 'N/A' }}
-              </td>
-              <td class="transaction-cell">{{ lstFilterData?.RTSData?.gross_Weight || 'N/A' }}</td>
-              <td class="transaction-cell">{{ lstFilterData?.RTSData?.unladen_Weight || 'N/A'}}</td>
-              <td class="transaction-cell">{{ lstFilterData?.RTSData?.act_Net_Weight || 'N/A'}}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="pdf-table-container transaction-table-section">
-        <table class="pdf-table transaction-table">
-          <thead>
-            <tr>
-              <th class="transaction-header">Trip Details at Dumping Ground</th>
-            </tr>
-            <tr>
-              <th class="transaction-header trip-details-header" rowspan="2">Trip Details</th>
-               <th class="transaction-header">Slip Number</th>
-              <th class="transaction-header">In Time of Transact</th>
-              <th class="transaction-header">Out Time of Transact</th>
-              <th class="transaction-header">Gross Weight (KG)</th>
-              <th class="transaction-header">Unladen Weight (KG)</th>
-              <th class="transaction-header">Actual Net Weight (KG)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="transaction-cell" rowspan="2">Trip Details</td>
-                <td class="transaction-cell">{{ lstFilterData?.DumpingData?.slipSrNo?lstFilterData?.DumpingData?.slipSrNo:"N/A"}}</td>
-              <td class="transaction-cell">
-                {{ lstFilterData?.DumpingData?.trans_Date && lstFilterData?.DumpingData?.trans_Time
-                ? lstFilterData.DumpingData.trans_Date + ' ' + lstFilterData.DumpingData.trans_Time
-                : 'N/A' }}
-              </td>
-
-              <td class="transaction-cell">
-                {{ lstFilterData?.DumpingData?.trans_Date_UL && lstFilterData?.DumpingData?.trans_Time_UL
-                ? lstFilterData.DumpingData.trans_Date_UL + ' ' + lstFilterData.DumpingData.trans_Time_UL
-                : 'N/A' }}
-              </td>
-              <td class="transaction-cell">{{ lstFilterData?.DumpingData?.gross_Weight || 'N/A' }}</td>
-              <td class="transaction-cell">{{ lstFilterData?.DumpingData?.unladen_Weight || 'N/A' }}</td>
-              <td class="transaction-cell">{{ lstFilterData?.DumpingData?.act_Net_Weight || 'N/A' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Message when Trip Details are not available -->
-      <!-- <div *ngIf="!isLogsheetClosed()" class="trip-details-message">
-        <div class="info-card">
-          <div class="info-icon">
-            <i class="fas fa-info-circle"></i>
-          </div>
-          <div class="info-content">
-            <h4>Trip Details Not Available</h4>
-            <p>Trip details are only available for closed logsheets (Status: Closed).</p>
-            <p class="current-status">
-              Current Status: 
-              <span class="status-badge" [ngClass]="{
-                'badge-open': lstFilterData.IsClosed === 0,
-                'badge-cancelled': lstFilterData.IsClosed === 2
-              }">
-                {{ lstFilterData.IsClosed === 0 ? 'Open' : 'Cancelled' }}
-              </span>
-            </p>
-          </div>
+        <div class="table-wrapper">
+          <table class="pdf-table">
+            <tbody>
+              <tr>
+                <td class="label-cell">Logsheet Number :</td>
+                <td class="value-cell">{{ lstFilterData.LogsheetNumber || 'N/A' }}</td>
+                <td class="merged-cell" rowspan="6"></td>
+                <td class="label-cell">Date & Time :</td>
+                <td class="value-cell">{{ lstFilterData.CreatedOn || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Vehicle Number :</td>
+                <td class="value-cell">{{ lstFilterData.VehicleNumber || 'N/A' }}</td>
+                <td class="label-cell">Name of Ward :</td>
+                <td class="value-cell">{{ lstFilterData.Ward || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Driver's Name :</td>
+                <td class="value-cell">{{ lstFilterData.DriverName || 'N/A' }}</td>
+                <td class="label-cell">Type Of Waste :</td>
+                <td class="value-cell">{{ lstFilterData.TypeOfWaste || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Cleaner's Name :</td>
+                <td class="value-cell">{{ lstFilterData.CleanerName || 'N/A' }}</td>
+                <td class="label-cell">Route Number :</td>
+                <td class="value-cell">{{ lstFilterData.RouteNumber || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Agency Name :</td>
+                <td class="value-cell">{{ lstFilterData.AgencyName || 'N/A' }}</td>
+                <td class="label-cell">Tare Weight (RC Book) (KG):</td>
+                <td class="value-cell">{{ lstFilterData.RCBookTareWeight || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Created By :</td>
+                <td class="value-cell">{{ lstFilterData.CreatedBy || 'N/A' }}</td>
+                <td class="label-cell">Status :</td>
+                <td class="value-cell">
+                  <span class="status-text" [ngClass]="{
+                    'status-open': lstFilterData.IsClosed === 0,
+                    'status-closed': lstFilterData.IsClosed === 1,
+                    'status-cancelled': lstFilterData.IsClosed === 2
+                  }">
+                    {{ lstFilterData.IsClosed === 0 ? 'Open' : lstFilterData.IsClosed === 2 ? 'Cancelled' : 'Closed' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </div> -->
+      </div>
 
-      <!-- Closure Information Table (matching PDF format exactly) -->
+      <!-- Trip Details Table at RTS -->
+      <div class="pdf-table-container transaction-table-section">
+        <div class="table-wrapper">
+          <table class="pdf-table transaction-table">
+            <thead>
+              <tr>
+                <th class="section-header" colspan="7">Trip Details at RTS</th>
+              </tr>
+              <tr>
+                <th class="transaction-header trip-details-header">Trip Details</th>
+                <th class="transaction-header">Slip Number</th>
+                <th class="transaction-header">In Time of Transact</th>
+                <th class="transaction-header">Out Time of Transact</th>
+                <th class="transaction-header">Gross Weight (KG)</th>
+                <th class="transaction-header">Unladen Weight (KG)</th>
+                <th class="transaction-header">Actual Net Weight (KG)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="transaction-cell">Trip Details</td>
+                <td class="transaction-cell">{{ (lstFilterData?.RTSData?.slipSrNo) ? lstFilterData?.RTSData?.slipSrNo :
+                  'N/A' }}</td>
+                <td class="transaction-cell">
+                  {{ lstFilterData?.RTSData?.trans_Date && lstFilterData?.RTSData?.trans_Time
+                  ? lstFilterData.RTSData.trans_Date + ' ' + lstFilterData.RTSData.trans_Time
+                  : 'N/A' }}
+                </td>
+                <td class="transaction-cell">
+                  {{ lstFilterData?.RTSData?.trans_Date_UL && lstFilterData?.RTSData?.trans_Time_UL
+                  ? lstFilterData.RTSData.trans_Date_UL + ' ' + lstFilterData.RTSData.trans_Time_UL
+                  : 'N/A' }}
+                </td>
+                <td class="transaction-cell">{{ lstFilterData?.RTSData?.gross_Weight || 'N/A' }}</td>
+                <td class="transaction-cell">{{ lstFilterData?.RTSData?.unladen_Weight || 'N/A'}}</td>
+                <td class="transaction-cell">{{ lstFilterData?.RTSData?.act_Net_Weight || 'N/A'}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Trip Details Table at Dumping Ground -->
+      <div class="pdf-table-container transaction-table-section">
+        <div class="table-wrapper">
+          <table class="pdf-table transaction-table">
+            <thead>
+              <tr>
+                <th class="section-header" colspan="7">Trip Details at Dumping Ground</th>
+              </tr>
+              <tr>
+                <th class="transaction-header trip-details-header">Trip Details</th>
+                <th class="transaction-header">Slip Number</th>
+                <th class="transaction-header">In Time of Transact</th>
+                <th class="transaction-header">Out Time of Transact</th>
+                <th class="transaction-header">Gross Weight (KG)</th>
+                <th class="transaction-header">Unladen Weight (KG)</th>
+                <th class="transaction-header">Actual Net Weight (KG)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="transaction-cell">Trip Details</td>
+                <td class="transaction-cell">{{ lstFilterData?.DumpingData?.slipSrNo ?
+                  lstFilterData?.DumpingData?.slipSrNo : "N/A"}}</td>
+                <td class="transaction-cell">
+                  {{ lstFilterData?.DumpingData?.trans_Date && lstFilterData?.DumpingData?.trans_Time
+                  ? lstFilterData.DumpingData.trans_Date + ' ' + lstFilterData.DumpingData.trans_Time
+                  : 'N/A' }}
+                </td>
+                <td class="transaction-cell">
+                  {{ lstFilterData?.DumpingData?.trans_Date_UL && lstFilterData?.DumpingData?.trans_Time_UL
+                  ? lstFilterData.DumpingData.trans_Date_UL + ' ' + lstFilterData.DumpingData.trans_Time_UL
+                  : 'N/A' }}
+                </td>
+                <td class="transaction-cell">{{ lstFilterData?.DumpingData?.gross_Weight || 'N/A' }}</td>
+                <td class="transaction-cell">{{ lstFilterData?.DumpingData?.unladen_Weight || 'N/A' }}</td>
+                <td class="transaction-cell">{{ lstFilterData?.DumpingData?.act_Net_Weight || 'N/A' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="pdf-table-container">
-        <table class="pdf-table">
-          <tbody>
-            <tr>
-              <td class="label-cell">Logsheet Closed Date & Time :</td>
-              <td class="value-cell-full" colspan="5">{{ lstFilterData.ClosedOn || 'N/A' }}</td>
-            </tr>
-            <tr>
-              <td class="label-cell">Waste Processing Plant:</td>
-              <td class="value-cell-full" colspan="5">{{ lstFilterData.ClosedDestination || 'N/A' }}</td>
-            </tr>
-            <tr>
-              <td class="label-cell">Signature & Stamp :</td>
-              <td class="value-cell-full" colspan="5">{{ lstFilterData.ClosedBy || 'N/A' }}</td>
-            </tr>
-            <tr>
-              <td class="label-cell">Remark :</td>
-              <td class="value-cell-full" colspan="5">{{ lstFilterData.Remark || 'N/A' }}</td>
-            </tr>
-            <!-- <tr *ngIf="userRole==='JO' && lstFilterData.IsClosed===0 && lstFilterData.VerifyStatus===0">
-              <td class="label-cell">Verification :</td>
-              <td class="value-cell-full" colspan="5">
-                <ag-grid-angular class="ag-theme-alpine" style="width: 100%; height: 400px;" [rowData]="lstPenaltyData"
-                  [columnDefs]="columnDefs" rowSelection="multiple" (gridReady)="onGridReady($event)">
-                </ag-grid-angular>
-                <button (click)="onVerify()" style="margin-bottom:10px; padding:6px 12px">
-                  Verify
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="lstFilterData.VerifyStatus===1">
-              <td class="label-cell" style="width: 150px;">Verify :</td>
-              <td class="value-cell">Verified</td>
-              <td class="label-cell">VerifiedBy :</td>
-              <td class="value-cell">{{ lstFilterData.VerifiedBy || 'N/A' }}</td>
-              <td class="label-cell" style="width: 150px;">VerifiedOn :</td>
-              <td class="value-cell" style="width: 150px;">{{ lstFilterData.VerifiedOn || 'N/A' }}</td>
-            </tr> -->
-          </tbody>
-        </table>
+        <div class="table-wrapper">
+          <table class="pdf-table">
+            <tbody>
+              <tr>
+                <td class="label-cell">Logsheet Closed Date & Time :</td>
+                <td class="value-cell-full" colspan="5">{{ lstFilterData.ClosedOn || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Waste Processing Plant:</td>
+                <td class="value-cell-full" colspan="5">{{ lstFilterData.ClosedDestination || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Signature & Stamp :</td>
+                <td class="value-cell-full" colspan="5">{{ lstFilterData.ClosedBy || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <td class="label-cell">Remark :</td>
+                <td class="value-cell-full" colspan="5">{{ lstFilterData.Remark || 'N/A' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-
-
 </div>
