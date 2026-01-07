@@ -221,7 +221,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private updateExpandedStates() {
     this.menuItems.forEach((item) => {
       if (item.children) {
-        const hasActiveChild = item.children.some((child) => child.route && this.activeRoute.startsWith(child.route));
+        const hasActiveChild = item.children.some((child) => child.route && this.isActive(child.route));
         item.expanded = hasActiveChild;
       }
     });
@@ -264,13 +264,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
   }
 
+  // UPDATED METHOD: Fixed to match exact routes only
   isActive(route: string): boolean {
-    return this.activeRoute.startsWith(route)
+    // Remove trailing slashes for comparison
+    const currentRoute = this.activeRoute.replace(/\/$/, '');
+    const compareRoute = route.replace(/\/$/, '');
+    
+    // Exact match for the route
+    return currentRoute === compareRoute;
   }
 
   isParentActive(item: NavItem): boolean {
     if (item.children) {
-      return item.children.some((child) => child.route && this.activeRoute.startsWith(child.route))
+      return item.children.some((child) => child.route && this.isActive(child.route))
     }
     return false
   }
