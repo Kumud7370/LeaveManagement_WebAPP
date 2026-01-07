@@ -38,25 +38,31 @@
     </div>
     <div class="modal-body">
       <form [formGroup]="addVehicleForm" (ngSubmit)="onAddVehicleSubmit()">
+        <!-- Row 1: Location Name & Ward -->
         <div class="form-row">
           <div class="form-group">
-            <label for="siteName">Location Name</label>
+            <label for="siteName">
+              Location Name <span class="required">*</span>
+            </label>
             <div class="select-wrapper">
               <select formControlName="siteName" id="siteName" class="form-control" (change)="OnLocationChange($event)">
-                <option value="">Select Site Name</option>
+                <option value="">Select Location</option>
                 <option *ngFor="let l of siteLocations" [value]="l.siteName">
                   {{ l.siteDescription }}
                 </option>
               </select>
-              <i class="fas fa-chevron-down"></i>
+              <i class="fas fa-map-marker-alt"></i>
             </div>
             <div *ngIf="addVehicleForm.get('siteName')?.touched && addVehicleForm.get('siteName')?.invalid"
               class="error-message">
               <div *ngIf="addVehicleForm.get('siteName')?.errors?.['required']">Location Name is required</div>
             </div>
           </div>
+
           <div class="form-group">
-            <label for="ward">Ward</label>
+            <label for="ward">
+              Ward <span class="required">*</span>
+            </label>
             <div class="select-wrapper">
               <select formControlName="ward" id="ward" class="form-control">
                 <option value="">Select Ward</option>
@@ -64,7 +70,7 @@
                   {{ l.wardName }}
                 </option>
               </select>
-              <i class="fas fa-chevron-down"></i>
+              <i class="fas fa-map"></i>
             </div>
             <div *ngIf="addVehicleForm.get('ward')?.touched && addVehicleForm.get('ward')?.invalid"
               class="error-message">
@@ -73,47 +79,52 @@
           </div>
         </div>
 
+        <!-- Row 2: Vehicle Number & Vehicle Type -->
         <div class="form-row">
           <div class="form-group">
-            <label for="vehicleNumber">Vehicle Number *</label>
-            <div class="vehicle-number-container">
-              <div *ngIf="isManualVehicleEntry" class="input-wrapper">
-                <input type="text" id="vehicleNumber" formControlName="vehicleNumber" class="form-control"
-                  placeholder="Enter Vehicle Number (e.g., MH01AB1234)" maxlength="10" minlength="9"
-                  style="text-transform: uppercase;">
-                <i class="fas fa-truck"></i>
-              </div>
+            <label for="vehicleNumber">
+              Vehicle Number <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="text" id="vehicleNumber" formControlName="vehicleNumber" class="form-control"
+                placeholder="Enter Vehicle Number (e.g., MH01AB1234)" maxlength="10" minlength="9"
+                style="text-transform: uppercase;">
+              <i class="fas fa-truck"></i>
             </div>
             <div *ngIf="addVehicleForm.get('vehicleNumber')?.touched && addVehicleForm.get('vehicleNumber')?.invalid"
               class="error-message">
               <div *ngIf="addVehicleForm.get('vehicleNumber')?.errors?.['required']">Vehicle Number is required</div>
-              <div *ngIf="addVehicleForm.get('vehicleNumber')?.errors?.['pattern'] && isManualVehicleEntry">Please enter
-                a valid vehicle number format</div>
+              <div *ngIf="addVehicleForm.get('vehicleNumber')?.errors?.['pattern']">Please enter a valid vehicle number
+                format</div>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="vehicleType">Vehicle Type *</label>
-            <div class="vehicle-type-container">
-              <div *ngIf="!isManualVehicleTypeEntry" class="select-wrapper">
-                <select id="vehicleType" formControlName="vehicleType" class="form-control">
-                  <option value="">Select Vehicle Type</option>
-                  <option *ngFor="let type of vehicleTypesList" [value]="type.vehicleType">
-                    {{type.vehicleType}}
-                  </option>
-                </select>
-                <i class="fas fa-chevron-down"></i>
-              </div>
+            <label for="vehicleType">
+              Vehicle Type <span class="required">*</span>
+            </label>
+            <div class="select-wrapper">
+              <select id="vehicleType" formControlName="vehicleType" class="form-control">
+                <option value="">Select Vehicle Type</option>
+                <option *ngFor="let type of vehicleTypesList" [value]="type.vehicleType">
+                  {{type.vehicleType}}
+                </option>
+              </select>
+              <i class="fas fa-truck-moving"></i>
             </div>
-            <div *ngIf="getVehicleTypeControl()?.touched && getVehicleTypeControl()?.invalid" class="error-message">
-              <div *ngIf="getVehicleTypeControl()?.errors?.['required']">Vehicle Type is required</div>
+            <div *ngIf="addVehicleForm.get('vehicleType')?.touched && addVehicleForm.get('vehicleType')?.invalid"
+              class="error-message">
+              <div *ngIf="addVehicleForm.get('vehicleType')?.errors?.['required']">Vehicle Type is required</div>
             </div>
           </div>
         </div>
 
+        <!-- Row 3: Agency Name & Status -->
         <div class="form-row">
           <div class="form-group">
-            <label for="agencyNo">Agency Name *</label>
+            <label for="agencyNo">
+              Agency Name <span class="required">*</span>
+            </label>
             <div class="select-wrapper">
               <select formControlName="agencyNo" id="agencyNo" class="form-control">
                 <option value="">Select Agency Name</option>
@@ -121,28 +132,34 @@
                   {{ l.agencyName }}
                 </option>
               </select>
-              <i class="fas fa-chevron-down"></i>
+              <i class="fas fa-building"></i>
             </div>
             <div *ngIf="addVehicleForm.get('agencyNo')?.touched && addVehicleForm.get('agencyNo')?.invalid"
               class="error-message">
               <div *ngIf="addVehicleForm.get('agencyNo')?.errors?.['required']">Agency Name is required</div>
             </div>
           </div>
+
           <div class="form-group">
-            <label for="isActive">Status *</label>
+            <label for="isActive">
+              Status <span class="required">*</span>
+            </label>
             <div class="select-wrapper">
               <select id="isActive" formControlName="isActive" class="form-control">
                 <option value="1">Active</option>
                 <option value="0">Inactive</option>
               </select>
-              <i class="fas fa-chevron-down"></i>
+              <i class="fas fa-toggle-on"></i>
             </div>
           </div>
         </div>
 
+        <!-- Row 4: Gross Weight & Tare Weight -->
         <div class="form-row">
           <div class="form-group">
-            <label for="grossWeight">Gross Weight (kg) (as per RC book)</label>
+            <label for="grossWeight">
+              Gross Weight (kg) <span class="required">*</span>
+            </label>
             <div class="input-wrapper">
               <input type="number" id="grossWeight" formControlName="grossWeight" class="form-control"
                 placeholder="Enter Gross Weight" step="0.01" min="0">
@@ -155,7 +172,9 @@
           </div>
 
           <div class="form-group">
-            <label for="tareWeight">Tare Weight (kg) (as per RC book)</label>
+            <label for="tareWeight">
+              Tare Weight (kg) <span class="required">*</span>
+            </label>
             <div class="input-wrapper">
               <input type="number" id="tareWeight" formControlName="tareWeight" class="form-control"
                 placeholder="Enter Tare Weight" step="0.01" min="0">
@@ -168,6 +187,7 @@
           </div>
         </div>
 
+        <!-- Row 5: Remark (Full Width) -->
         <div class="form-group">
           <label for="remark">Remark</label>
           <div class="input-wrapper">
@@ -177,13 +197,15 @@
           </div>
         </div>
 
+        <!-- Form Actions -->
         <div class="form-actions">
           <button type="submit" class="btn-primary" [disabled]="addVehicleForm.invalid || isSubmitting">
             <i class="fas fa-save"></i>
             <span>{{isSubmitting ? 'Saving...' : 'Save Vehicle'}}</span>
           </button>
           <button type="button" class="btn-secondary" (click)="resetAddForm()">
-            <i class="fas fa-undo"></i> <span>Reset</span>
+            <i class="fas fa-undo"></i>
+            <span>Reset</span>
           </button>
         </div>
       </form>
@@ -191,7 +213,7 @@
   </div>
 
   <!-- Report Content -->
-  <div class="report-content report-spacing">   
+  <div class="report-content report-spacing">
     <!-- Table View -->
     <div class="table-view">
       <div class="results-container">
