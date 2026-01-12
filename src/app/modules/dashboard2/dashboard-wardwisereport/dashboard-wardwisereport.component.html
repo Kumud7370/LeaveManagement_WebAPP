@@ -1,0 +1,71 @@
+<!-- Analytics Header -->
+<div class="analytics-header">
+    <h2><i class="fas fa-chart-pie"></i> Report Dashboard</h2>
+    <p>Comprehensive analytics and insights for waste management operations</p>
+</div>
+
+<!-- Site-wise Analytics Section -->
+<div class="site-analytics-section">
+    <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> SWM</h3>
+
+    <!-- Historical Data Table -->
+<div class="historical-table-section" *ngIf=" swmWardwiseTableData.length > 0">
+
+    <div class="table-container">
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Ward</th>
+                    <th>Total Weight (MT)</th>
+                    <th>Total Trips</th>
+                    <th>Avg Daily (MT)</th>                  
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let record of swmWardwiseTableData" >
+                    <td class="year-cell">
+                       {{ record.ward }}
+                    </td>
+                    <td>{{ record.totalNetWeight | number:'1.2-2' }}</td>
+                    <td>{{ record.tripsCount | number }}</td>
+                    <td>{{ record.avgNetWeight | number:'1.2-2' }}</td>                   
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<div class="site-analytics-section">
+    <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> RTS-WATD</h3>
+
+    <!-- Historical Data Table -->
+<div class="historical-table-section" *ngIf="rtsWardwiseTableData.length > 0">
+
+    <div class="table-container">
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Ward</th>
+                    <th>Total Weight (MT)</th>
+                    <th>Total Trips</th>
+                    <th>Avg Daily (MT)</th>
+                 
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let record of rtsWardwiseTableData" >
+                    <td class="year-cell">
+                       {{ record.ward }}
+                    </td>
+                    <td>{{ record.totalNetWeight | number:'1.2-2' }}</td>
+                    <td>{{ record.tripsCount | number }}</td>
+                    <td>{{ record.avgNetWeight | number:'1.2-2' }}</td>
+                   
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+

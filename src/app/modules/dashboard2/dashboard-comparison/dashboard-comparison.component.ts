@@ -115,7 +115,9 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
     
     this.dashboardService.getDashboardMonthlySummary(filters)
       .subscribe(res => {
-        this.data = res.data;
+   
+           this.data = res.data
+      .filter((x: any) => x.siteName === 'Kanjur' || x.siteName === 'Deonar');
         this.prepareKPIs();
         this.prepareMonthlyChart();
         this.prepareQuarterlyTripsChart();

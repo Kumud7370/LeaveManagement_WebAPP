@@ -7,13 +7,14 @@ import { Subject, takeUntil, forkJoin, of, type Observable } from "rxjs"
 import moment from "moment"
 import { DashboardAnalyticsComponent } from "./dashboard-analytics/dashboard-analytics.component"
 import { DashboardComparisonComponent } from "./dashboard-comparison/dashboard-comparison.component"
+import { DashboardWardwisereportComponent } from "./dashboard-wardwisereport/dashboard-wardwisereport.component";
 
 @Component({
   selector: "app-dashboard2",
   templateUrl: "./dashboard.component.html",
   styleUrls: ["./dashboard.component.scss"],
   standalone: true,
-  imports: [CommonModule, NgApexchartsModule, FormsModule, DashboardAnalyticsComponent, DashboardComparisonComponent],
+  imports: [CommonModule, NgApexchartsModule, FormsModule, DashboardAnalyticsComponent, DashboardComparisonComponent, DashboardWardwisereportComponent],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>()
@@ -199,7 +200,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     this.searchParams = analyticsPayload;
 
-    this.dbCallingService.getDashboardOverallKpis().subscribe({
+    this.dbCallingService.getDashboardOverallKpis(analyticsPayload).subscribe({
       next: (res) => {
         const data = res.data;
         this.swmOverallKpis = data.find((kpi: any) => kpi.siteName === 'SWM') || {};

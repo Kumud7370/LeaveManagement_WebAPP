@@ -573,11 +573,7 @@
 
             <!-- Reports Section -->
             <div class="dashboard-section" *ngIf="activeSection === 'reports'">
-                <div class="reports-placeholder">
-                    <i class="fas fa-file-chart-line" style="font-size: 3rem; color: #3b82f6; margin-bottom: 1rem;"></i>
-                    <h2>Reports Section</h2>
-                    <p>Detailed reports and data exports will be available here.</p>
-                </div>
+               <app-dashboard-wardwisereport [data]="this.analyticsData"></app-dashboard-wardwisereport>
             </div>
             <!-- End of Reports Section -->
 

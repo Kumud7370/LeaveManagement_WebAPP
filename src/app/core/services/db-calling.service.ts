@@ -454,23 +454,29 @@ export class DbCallingService {
       )
   }
 
-    getDashboardMonthlySummary(filters: any) {
+  getDashboardMonthlySummary(filters: any) {
+    console.log('Fetching monthly summary with filters:', filters);
     return this.http.post<any>(
       `${this.apiUrl}/dashboard/getdashboardmonthlysummery`,
       filters
     );
   }
-   getDashboardAnalyticsSummary(filters: any) {
+
+  getDashboardAnalyticsSummary(filters: any) {
+    console.log('Fetching analytics summary with filters:', filters);
     return this.http.post<any>(
       `${this.apiUrl}/dashboard/getdashboardanalyticssummary`,
       filters
     );
   }
-   getDashboardOverallKpis() {
-    return this.http.get<any>(
-      `${this.apiUrl}/dashboard/getdashboardoverallkpis`      
+
+  getDashboardOverallKpis(filters: any): Observable<any> {
+    console.log('Fetching overall KPIs with filters:', filters);
+    return this.http.post<any>(
+      `${this.apiUrl}/dashboard/getdashboardoverallkpis`,
+      filters
     );
   }
-  
+
 }
 
