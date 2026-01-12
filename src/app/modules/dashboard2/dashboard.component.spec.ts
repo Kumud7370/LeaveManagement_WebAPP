@@ -12,14 +12,11 @@ describe("DashboardComponent", () => {
 
   beforeEach(async () => {
     const spy = jasmine.createSpyObj("DbCallingService", [
-      "getWardwiseReport",
-      "GetWBTripSummary",
-      "getCumulativeTripSummary",
-      "getAllWards",
+      "getWards",
       "getVehicleTypes",
-      "getAgencies",
-      "getOverviewMetrics",
-      "getYearlyComparison",
+      "GetAgencies",
+      "getDashboardOverallKpis",
+      "getDashboardAnalyticsSummary",
     ])
 
     await TestBed.configureTestingModule({
@@ -31,52 +28,12 @@ describe("DashboardComponent", () => {
     component = fixture.componentInstance
     mockDbCallingService = TestBed.inject(DbCallingService) as jasmine.SpyObj<DbCallingService>
 
-    // Setup default mock responses
-    // mockDbCallingService.getWardwiseReport.and.returnValue(
-    //   of({
-    //     serviceResponse: 1,
-    //     wardData: [{ wardName: "Ward A", vehicleCount: 10, totalNetWeight: 100, transactionDate: "2025-01-01" }],
-    //   }),
-    // )
-
-    // mockDbCallingService.getWards.and.returnValue(
-    //   of({
-    //     data: [{ wardName: "Ward A" }, { wardName: "Ward B" }, { wardName: "Ward C" }],
-    //   }),
-    // )
-
-    // mockDbCallingService.getVehicleTypes.and.returnValue(
-    //   of({
-    //     data: [{ vehicleTypeName: "COMPACTOR" }, { vehicleTypeName: "MINI COMPACTOR" }, { vehicleTypeName: "DUMPER" }],
-    //   }),
-    // )
-
-    // mockDbCallingService.GetAgencies.and.returnValue(
-    //   of({
-    //     data: [{ agencyName: "Agency A" }, { agencyName: "Agency B" }],
-    //   }),
-    // )
-
-    // mockDbCallingService.getCumulativeTripSummary.and.returnValue(
-    //   of({
-    //     data: {
-    //       today: 100,
-    //       lastDay: 95,
-    //       week: 650,
-    //       month: 2800,
-    //       year: 35000,
-    //     },
-    //   }),
-    // )
-
-    // mockDbCallingService.GetWBTripSummary.and.returnValue(
-    //   of({
-    //     data: {
-    //       swmSites: [{ siteName: "Kanjur", vehicleCount: 831, netWeight: 6140.29 }],
-    //       rtsSites: [{ siteName: "Deonar", vehicleCount: 229, netWeight: 1624.82 }],
-    //     },
-    //   }),
-    // )
+    // Setup minimal mock responses to prevent errors
+    mockDbCallingService.getWards.and.returnValue(of({ data: [] }))
+    mockDbCallingService.getVehicleTypes.and.returnValue(of({ data: [] }))
+    mockDbCallingService.GetAgencies.and.returnValue(of({ data: [] }))
+    mockDbCallingService.getDashboardOverallKpis.and.returnValue(of({ data: [] }))
+    mockDbCallingService.getDashboardAnalyticsSummary.and.returnValue(of({ data: [] }))
 
     fixture.detectChanges()
   })
@@ -89,18 +46,19 @@ describe("DashboardComponent", () => {
     expect(component.kanjurData).toBeDefined()
     expect(component.deonarData).toBeDefined()
     expect(component.totalData).toBeDefined()
+    expect(component.mrtswardData).toBeDefined()
+    expect(component.grtswardData).toBeDefined()
+    expect(component.vrtswardData).toBeDefined()
+    expect(component.wardTotalData).toBeDefined()
   })
 
   it("should initialize chart options", () => {
-    expect(component.vehicleChartOptions).toBeDefined()
-    expect(component.capacityVsActualChartOptions).toBeDefined()
-    expect(component.monthlyComparisonChartOptions).toBeDefined()
-    expect(component.quarterlyComparisonChartOptions).toBeDefined()
-    expect(component.yoyGrowthChartOptions).toBeDefined()
+    expect(component.wardwiseChartOptions).toBeDefined()
   })
 
   it("should load dashboard data on init", () => {
-    expect(mockDbCallingService.getWardwiseReport).toHaveBeenCalled()
+    expect(mockDbCallingService.getDashboardOverallKpis).toHaveBeenCalled()
+    expect(mockDbCallingService.getDashboardAnalyticsSummary).toHaveBeenCalled()
   })
 
   it("should load filters from API on init", () => {
@@ -112,11 +70,6 @@ describe("DashboardComponent", () => {
   it("should set loading to false after initialization", () => {
     component.ngOnInit()
     expect(component.isLoading).toBe(false)
-  })
-
-  it("should initialize available years for comparison", () => {
-    expect(component.availableYears.length).toBeGreaterThan(0)
-    expect(component.availableYears[0]).toBe(new Date().getFullYear())
   })
 
   it("should switch sections correctly", () => {
@@ -148,6 +101,12 @@ describe("DashboardComponent", () => {
 
     component.selectedWard = "Ward A"
     expect(component.getActiveFiltersCount()).toBe(1)
+
+    component.selectedAgency = "Agency A"
+    expect(component.getActiveFiltersCount()).toBe(2)
+
+    component.selectedVehicleType = "COMPACTOR"
+    expect(component.getActiveFiltersCount()).toBe(3)
   })
 
   it("should show custom date range when custom option selected", () => {
@@ -156,24 +115,14 @@ describe("DashboardComponent", () => {
     expect(component.showCustomDateRange).toBe(true)
   })
 
-  it("should calculate progress width correctly", () => {
-    expect(component.getProgressWidth(100, 80)).toBe(100)
-    expect(component.getProgressWidth(80, 100)).toBe(80)
-    expect(component.getProgressWidth(0, 0)).toBe(0)
-  })
+  it("should hide custom date range when non-custom option selected", () => {
+    component.globalTimeRange = "custom"
+    component.onTimeRangeChange()
+    expect(component.showCustomDateRange).toBe(true)
 
-  it("should have comparison data initialized", () => {
-    expect(component.comparisonData).toBeDefined()
-    expect(component.comparisonData.currentYear).toBeDefined()
-    expect(component.comparisonData.previousYear).toBeDefined()
-    expect(component.comparisonData.changes).toBeDefined()
-    expect(component.comparisonData.siteWise).toBeDefined()
-  })
-
-  it("should load comparison data when year changes", () => {
-    const loadSpy = spyOn(component, "loadComparisonData")
-    component.onComparisonYearChange()
-    expect(loadSpy).toHaveBeenCalled()
+    component.globalTimeRange = "day"
+    component.onTimeRangeChange()
+    expect(component.showCustomDateRange).toBe(false)
   })
 
   it("should clear all filters correctly", () => {
@@ -188,5 +137,102 @@ describe("DashboardComponent", () => {
     expect(component.selectedAgency).toBe("")
     expect(component.selectedVehicleType).toBe("")
     expect(component.globalTimeRange).toBe("day")
+  })
+
+  it("should call loadDashboardData when filters change", () => {
+    spyOn(component, "loadDashboardData")
+    component.onGlobalFilterChange()
+    expect(component.loadDashboardData).toHaveBeenCalled()
+  })
+
+  it("should call loadDashboardData when time range changes (non-custom)", () => {
+    spyOn(component, "onGlobalFilterChange")
+    component.globalTimeRange = "week"
+    component.onTimeRangeChange()
+    expect(component.onGlobalFilterChange).toHaveBeenCalled()
+  })
+
+  it("should not call loadDashboardData when custom time range selected", () => {
+    spyOn(component, "onGlobalFilterChange")
+    component.globalTimeRange = "custom"
+    component.onTimeRangeChange()
+    expect(component.onGlobalFilterChange).not.toHaveBeenCalled()
+  })
+
+  it("should apply custom date range when both dates are set", () => {
+    spyOn(component, "onGlobalFilterChange")
+    component.customDateFrom = "2025-01-01"
+    component.customDateTo = "2025-01-10"
+    component.applyCustomDateRange()
+    expect(component.onGlobalFilterChange).toHaveBeenCalled()
+  })
+
+  it("should not apply custom date range when dates are missing", () => {
+    spyOn(component, "onGlobalFilterChange")
+    component.customDateFrom = ""
+    component.customDateTo = ""
+    component.applyCustomDateRange()
+    expect(component.onGlobalFilterChange).not.toHaveBeenCalled()
+  })
+
+  it("should refresh all data when refreshAllData is called", () => {
+    spyOn(component, "loadDashboardData")
+    
+    component.refreshAllData()
+    
+    expect(component.isRefreshing).toBe(true)
+    expect(component.loadDashboardData).toHaveBeenCalled()
+  })
+
+  it("should set isExporting flag when exporting data", () => {
+    component.exportAllData()
+    expect(component.isExporting).toBe(true)
+  })
+
+  it("should initialize with overview section active", () => {
+    expect(component.activeSection).toBe("overview")
+  })
+
+  it("should initialize with sidebar not collapsed", () => {
+    expect(component.sidebarCollapsed).toBe(false)
+  })
+
+  it("should initialize with filters not collapsed", () => {
+    expect(component.filtersCollapsed).toBe(false)
+  })
+
+  it("should have initial time range as day", () => {
+    expect(component.globalTimeRange).toBe("day")
+  })
+
+  it("should have empty initial filter selections", () => {
+    expect(component.selectedWard).toBe("")
+    expect(component.selectedAgency).toBe("")
+    expect(component.selectedVehicleType).toBe("")
+  })
+
+  it("should initialize available filters as empty arrays", () => {
+    expect(component.availableWards).toEqual([])
+    expect(component.availableAgencies).toEqual([])
+    expect(component.availableVehicleTypes).toEqual([])
+  })
+
+  it("should set searchParams when loading dashboard data", () => {
+    component.loadDashboardData()
+    expect(component.searchParams).toBeDefined()
+    expect(component.searchParams.UserId).toBeDefined()
+    expect(component.searchParams.SiteName).toBe("SWM")
+  })
+
+  it("should handle drillDownMetric calls without errors", () => {
+    spyOn(console, "log")
+    component.drillDownMetric("today")
+    expect(console.log).toHaveBeenCalledWith("Drill down to:", "today")
+  })
+
+  it("should handle scrollToSection calls without errors", () => {
+    component.scrollToSection("overview")
+    // Just verify it doesn't throw an error
+    expect(component).toBeTruthy()
   })
 })

@@ -4,46 +4,6 @@
     <p>Comprehensive analytics and insights for waste management operations</p>
 </div>
 
-<!-- Overall Analytics Cards -->
-<!-- <div class="analytics-overview-grid">
-                        <div class="analytics-card total-trips">
-                            <div class="card-icon">
-                                <i class="fas fa-truck"></i>
-                            </div>
-                            <div class="card-content">
-                                <h4>Total Trips</h4>
-                                <span class="value">{{ overallAnalytics.totalTrips | number }}</span>
-                            </div>
-                        </div>
-                        <div class="analytics-card total-weight">
-                            <div class="card-icon">
-                                <i class="fas fa-weight-hanging"></i>
-                            </div>
-                            <div class="card-content">
-                                <h4>Total Weight</h4>
-                                <span class="value">{{ overallAnalytics.totalWeight | number:'1.2-2' }} MT</span>
-                            </div>
-                        </div>
-                        <div class="analytics-card avg-daily">
-                            <div class="card-icon">
-                                <i class="fas fa-chart-bar"></i>
-                            </div>
-                            <div class="card-content">
-                                <h4>Avg Daily Weight</h4>
-                                <span class="value">{{ overallAnalytics.avgDailyWeight | number:'1.2-2' }} MT</span>
-                            </div>
-                        </div>
-                        <div class="analytics-card capacity-util">
-                            <div class="card-icon">
-                                <i class="fas fa-tachometer-alt"></i>
-                            </div>
-                            <div class="card-content">
-                                <h4>Capacity Utilization</h4>
-                                <span class="value">{{ overallAnalytics.capacityUtilization | number:'1.1-1' }}%</span>
-                            </div>
-                        </div>
-                    </div> -->
-
 <!-- Site-wise Analytics Section -->
 <div class="site-analytics-section">
     <h3 class="section-title"><i class="fas fa-map-marked-alt"></i> Site-wise Analytics</h3>
@@ -71,28 +31,10 @@
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Avg per Trip</span>
-                    <span class="stat-value">{{ kanjurData.trips > 0 ? (kanjurData.netWeight / kanjurData.trips |
-                        number:'1.2-2') : '0' }} MT</span>
+                    <span class="stat-value">{{ kanjurData.trips > 0 ? (kanjurData.netWeight / kanjurData.trips | number:'1.2-2') : '0' }} MT</span>
                 </div>
             </div>
-
-            <!-- <div class="ward-breakdown" *ngIf="kanjurAnalytics.length > 0">
-                                    <h5>Ward Breakdown</h5>
-                                    <div class="ward-list">
-                                        <div class="ward-item" *ngFor="let ward of kanjurAnalytics">
-                                            <span class="ward-name">{{ ward.wardName }}</span>
-                                            <div class="ward-stats">
-                                                <span>{{ ward.trips }} trips</span>
-                                                <span>{{ ward.netWeight | number:'1.2-2' }} MT</span>
-                                                <span class="utilization-badge" [class.good]="ward.utilization >= 70" [class.warning]="ward.utilization >= 50 && ward.utilization < 70" [class.poor]="ward.utilization < 50">
-                                                    {{ ward.utilization | number:'1.1-1' }}%
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> -->
         </div>
-
 
         <div class="site-analytics-card deonar">
             <div class="site-header">
@@ -115,26 +57,9 @@
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Avg per Trip</span>
-                    <span class="stat-value">{{ deonarData.trips > 0 ? (deonarData.netWeight / deonarData.trips |
-                        number:'1.2-2') : '0' }} MT</span>
+                    <span class="stat-value">{{ deonarData.trips > 0 ? (deonarData.netWeight / deonarData.trips | number:'1.2-2') : '0' }} MT</span>
                 </div>
             </div>
-
-            <!-- <div class="ward-breakdown" *ngIf="deonarAnalytics.length > 0">
-                                    <h5>Ward Breakdown</h5>
-                                    <div class="ward-list">
-                                        <div class="ward-item" *ngFor="let ward of deonarAnalytics">
-                                            <span class="ward-name">{{ ward.wardName }}</span>
-                                            <div class="ward-stats">
-                                                <span>{{ ward.trips }} trips</span>
-                                                <span>{{ ward.netWeight | number:'1.2-2' }} MT</span>
-                                                <span class="utilization-badge" [class.good]="ward.utilization >= 70" [class.warning]="ward.utilization >= 50 && ward.utilization < 70" [class.poor]="ward.utilization < 50">
-                                                    {{ ward.utilization | number:'1.1-1' }}%
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> -->
         </div>
 
         <div class="site-analytics-card total">
@@ -158,57 +83,12 @@
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Avg per Trip</span>
-                    <span class="stat-value">{{ totalData.trips > 0 ? (totalData.netWeight / totalData.trips |
-                        number:'1.2-2') : '0' }} MT</span>
+                    <span class="stat-value">{{ totalData.trips > 0 ? (totalData.netWeight / totalData.trips | number:'1.2-2') : '0' }} MT</span>
                 </div>
             </div>
-
-            <!-- <div class="ward-breakdown" *ngIf="deonarAnalytics.length > 0">
-                                    <h5>Ward Breakdown</h5>
-                                    <div class="ward-list">
-                                        <div class="ward-item" *ngFor="let ward of deonarAnalytics">
-                                            <span class="ward-name">{{ ward.wardName }}</span>
-                                            <div class="ward-stats">
-                                                <span>{{ ward.trips }} trips</span>
-                                                <span>{{ ward.netWeight | number:'1.2-2' }} MT</span>
-                                                <span class="utilization-badge" [class.good]="ward.utilization >= 70" [class.warning]="ward.utilization >= 50 && ward.utilization < 70" [class.poor]="ward.utilization < 50">
-                                                    {{ ward.utilization | number:'1.1-1' }}%
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> -->
         </div>
     </div>
 </div>
-
-<!-- RTS Analytics -->
-<!-- <div class="rts-analytics-section">
-                        <h3 class="section-title"><i class="fas fa-warehouse"></i> RTS Analytics</h3>
-                        <div class="rts-cards-grid">
-                            <div class="rts-card vrts">
-                                <div class="rts-header">
-                                    <h4>VRTS</h4>
-                                    <i class="fas fa-recycle"></i>
-                                </div>
-                                <div class="rts-value">{{ unifiedData.vrts | number:'1.2-2' }} MT</div>
-                            </div>
-                            <div class="rts-card mrts">
-                                <div class="rts-header">
-                                    <h4>MRTS</h4>
-                                    <i class="fas fa-recycle"></i>
-                                </div>
-                                <div class="rts-value">{{ unifiedData.mrts | number:'1.2-2' }} MT</div>
-                            </div>
-                            <div class="rts-card grts">
-                                <div class="rts-header">
-                                    <h4>GRTS</h4>
-                                    <i class="fas fa-recycle"></i>
-                                </div>
-                                <div class="rts-value">{{ unifiedData.grts | number:'1.2-2' }} MT</div>
-                            </div>
-                        </div>
-                    </div> -->
 
 <!-- Analytics Charts -->
 <div class="charts-grid">
@@ -254,14 +134,17 @@
         <div class="chart-header">
             <div class="chart-title">
                 <h3>Ward-wise Total Net Weight</h3>
-
                 <span class="chart-subtitle">Net Weight Distribution (MT)</span>
             </div>
         </div>
         <div class="chart-container">
             <apx-chart [series]="wardwiseChartOptions.series" [chart]="wardwiseChartOptions.chart"
-                [xaxis]="wardwiseChartOptions.xaxis" [plotOptions]="wardwiseChartOptions.plotOptions"
-                [dataLabels]="wardwiseChartOptions.dataLabels" [tooltip]="wardwiseChartOptions.tooltip">
+                [xaxis]="wardwiseChartOptions.xaxis" [yaxis]="wardwiseChartOptions.yaxis"
+                [plotOptions]="wardwiseChartOptions.plotOptions"
+                [dataLabels]="wardwiseChartOptions.dataLabels" 
+                [stroke]="wardwiseChartOptions.stroke"
+                [tooltip]="wardwiseChartOptions.tooltip"
+                [legend]="wardwiseChartOptions.legend">
             </apx-chart>
         </div>
     </div>

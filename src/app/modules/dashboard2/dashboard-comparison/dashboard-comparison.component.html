@@ -6,10 +6,8 @@
     </div>
     <div class="performance-controls">
         <div class="year-selector">
-
             <label>Select Year:</label>
             <select [(ngModel)]="selectedYear" (change)="onSelectedYearChange()">
-
                 <option *ngFor="let year of availableYears" [value]="year">
                     {{ year }}
                 </option>
@@ -18,22 +16,17 @@
             <span class="vs-text">VS</span>
 
             <select [(ngModel)]="previousYear" (change)="loadDashboard()">
-
                 <option *ngFor="let year of filteredPreviousYears" [value]="year">
                     {{ year }}
                 </option>
             </select>
-
         </div>
 
         <button class="btn-refresh-comparison" (click)="loadDashboard()" [disabled]="isLoadingComparison">
-
             <i class="fas fa-sync-alt" [class.fa-spin]="isLoadingComparison"></i>
             <span class="btn-text">Refresh Data</span>
-
         </button>
     </div>
-
 </div>
 
 <!-- Loading State for Comparison -->
@@ -73,10 +66,8 @@
                 <i class="fas"
                     [class.fa-arrow-up]="safePercentChange(this.kpis.totalWeight.current, this.kpis.totalWeight.previous) >= 0"
                     [class.fa-arrow-down]="safePercentChange(this.kpis.totalWeight.current, this.kpis.totalWeight.previous) < 0"></i>
-                <span>{{ safePercentChange(this.kpis.totalWeight.current, this.kpis.totalWeight.previous) |
-                    number:'1.2-2' }}%</span>
-                <span class="change-label">{{ safePercentChange(this.kpis.totalWeight.current,
-                    this.kpis.totalWeight.previous) >= 0 ? 'Increase' : 'Decrease' }}</span>
+                <span>{{ safePercentChange(this.kpis.totalWeight.current, this.kpis.totalWeight.previous) | number:'1.2-2' }}%</span>
+                <span class="change-label">{{ safePercentChange(this.kpis.totalWeight.current, this.kpis.totalWeight.previous) >= 0 ? 'Increase' : 'Decrease' }}</span>
             </div>
         </div>
     </div>
@@ -109,10 +100,8 @@
                 <i class="fas"
                     [class.fa-arrow-up]="safePercentChange(this.kpis.totalTrips.current, this.kpis.totalTrips.previous) >= 0"
                     [class.fa-arrow-down]="safePercentChange(this.kpis.totalTrips.current, this.kpis.totalTrips.previous) < 0"></i>
-                <span>{{ safePercentChange(this.kpis.totalTrips.current, this.kpis.totalTrips.previous) | number:'1.2-2'
-                    }}%</span>
-                <span class="change-label">{{ safePercentChange(this.kpis.totalTrips.current,
-                    this.kpis.totalTrips.previous) >= 0 ? 'Increase' : 'Decrease' }}</span>
+                <span>{{ safePercentChange(this.kpis.totalTrips.current, this.kpis.totalTrips.previous) | number:'1.2-2' }}%</span>
+                <span class="change-label">{{ safePercentChange(this.kpis.totalTrips.current, this.kpis.totalTrips.previous) >= 0 ? 'Increase' : 'Decrease' }}</span>
             </div>
         </div>
     </div>
@@ -129,14 +118,14 @@
             <div class="comparison-values">
                 <div class="current-value">
                     <span class="label">{{ selectedYear }}</span>
-                    <span class="value">{{ this.kpis.avgDailyWeight.current | number }}</span>
+                    <span class="value">{{ this.kpis.avgDailyWeight.current | number:'1.2-2' }}</span>
                 </div>
                 <div class="vs-divider">
                     <span>vs</span>
                 </div>
                 <div class="previous-value">
                     <span class="label">{{ previousYear }}</span>
-                    <span class="value">{{ this.kpis.avgDailyWeight.previous | number }}</span>
+                    <span class="value">{{ this.kpis.avgDailyWeight.previous | number:'1.2-2' }}</span>
                 </div>
             </div>
             <div class="comparison-change"
@@ -145,10 +134,8 @@
                 <i class="fas"
                     [class.fa-arrow-up]="safePercentChange(this.kpis.avgDailyWeight.current, this.kpis.avgDailyWeight.previous) >= 0"
                     [class.fa-arrow-down]="safePercentChange(this.kpis.avgDailyWeight.current, this.kpis.avgDailyWeight.previous) < 0"></i>
-                <span>{{ safePercentChange(this.kpis.avgDailyWeight.current, this.kpis.avgDailyWeight.previous) |
-                    number:'1.2-2' }}%</span>
-                <span class="change-label">{{ safePercentChange(this.kpis.avgDailyWeight.current,
-                    this.kpis.avgDailyWeight.previous) >= 0 ? 'Increase' : 'Decrease' }}</span>
+                <span>{{ safePercentChange(this.kpis.avgDailyWeight.current, this.kpis.avgDailyWeight.previous) | number:'1.2-2' }}%</span>
+                <span class="change-label">{{ safePercentChange(this.kpis.avgDailyWeight.current, this.kpis.avgDailyWeight.previous) >= 0 ? 'Increase' : 'Decrease' }}</span>
             </div>
         </div>
     </div>
@@ -181,10 +168,8 @@
                 <i class="fas"
                     [class.fa-arrow-up]="safePercentChange(this.kpis.efficiency.current, this.kpis.efficiency.previous) >= 0"
                     [class.fa-arrow-down]="safePercentChange(this.kpis.efficiency.current, this.kpis.efficiency.previous) < 0"></i>
-                <span>{{ safePercentChange(this.kpis.efficiency.current, this.kpis.efficiency.previous) | number:'1.2-2'
-                    }}%</span>
-                <span class="change-label">{{ safePercentChange(this.kpis.efficiency.current,
-                    this.kpis.efficiency.previous) >= 0 ? 'Improvement' : 'Decline' }}</span>
+                <span>{{ safePercentChange(this.kpis.efficiency.current, this.kpis.efficiency.previous) | number:'1.2-2' }}%</span>
+                <span class="change-label">{{ safePercentChange(this.kpis.efficiency.current, this.kpis.efficiency.previous) >= 0 ? 'Improvement' : 'Decline' }}</span>
             </div>
         </div>
     </div>
@@ -212,89 +197,8 @@
     </div>
 </div>
 
-<!-- Site-wise Comparison -->
-<!-- <div class="site-comparison-section" *ngIf="!isLoadingComparison">
-                        <h3 class="section-title"><i class="fas fa-map-marker-alt"></i> Site-wise Year Comparison</h3>
-                        
-                        <div class="site-comparison-grid">
-                          
-                            <div class="site-comparison-card kanjur">
-                                <div class="site-header">
-                                    <h4>Kanjur</h4>
-                                    <div class="site-badge">SWM</div>
-                                </div>
-                                <div class="site-metrics">
-                                    <div class="site-metric-row">
-                                        <span class="metric-label">Weight (MT)</span>
-                                        <div class="metric-comparison">
-                                            <span class="current">{{ comparisonData.siteWise.kanjur.currentWeight | number:'1.2-2' }}</span>
-                                            <span class="separator">→</span>
-                                            <span class="previous">{{ comparisonData.siteWise.kanjur.previousWeight | number:'1.2-2' }}</span>
-                                            <span class="change" [class.positive]="comparisonData.siteWise.kanjur.weightChange >= 0" [class.negative]="comparisonData.siteWise.kanjur.weightChange < 0">
-                                                {{ comparisonData.siteWise.kanjur.weightChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.kanjur.weightChange | number:'1.1-1' }}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="site-metric-row">
-                                        <span class="metric-label">Trips</span>
-                                        <div class="metric-comparison">
-                                            <span class="current">{{ comparisonData.siteWise.kanjur.currentTrips | number }}</span>
-                                            <span class="separator">→</span>
-                                            <span class="previous">{{ comparisonData.siteWise.kanjur.previousTrips | number }}</span>
-                                            <span class="change" [class.positive]="comparisonData.siteWise.kanjur.tripsChange >= 0" [class.negative]="comparisonData.siteWise.kanjur.tripsChange < 0">
-                                                {{ comparisonData.siteWise.kanjur.tripsChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.kanjur.tripsChange | number:'1.1-1' }}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="site-progress">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill kanjur-fill" [style.width.%]="getProgressWidth(comparisonData.siteWise.kanjur.currentWeight, comparisonData.siteWise.kanjur.previousWeight)"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                       
-                            <div class="site-comparison-card deonar">
-                                <div class="site-header">
-                                    <h4>Deonar</h4>
-                                    <div class="site-badge">SWM</div>
-                                </div>
-                                <div class="site-metrics">
-                                    <div class="site-metric-row">
-                                        <span class="metric-label">Weight (MT)</span>
-                                        <div class="metric-comparison">
-                                            <span class="current">{{ comparisonData.siteWise.deonar.currentWeight | number:'1.2-2' }}</span>
-                                            <span class="separator">→</span>
-                                            <span class="previous">{{ comparisonData.siteWise.deonar.previousWeight | number:'1.2-2' }}</span>
-                                            <span class="change" [class.positive]="comparisonData.siteWise.deonar.weightChange >= 0" [class.negative]="comparisonData.siteWise.deonar.weightChange < 0">
-                                                {{ comparisonData.siteWise.deonar.weightChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.deonar.weightChange | number:'1.1-1' }}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="site-metric-row">
-                                        <span class="metric-label">Trips</span>
-                                        <div class="metric-comparison">
-                                            <span class="current">{{ comparisonData.siteWise.deonar.currentTrips | number }}</span>
-                                            <span class="separator">→</span>
-                                            <span class="previous">{{ comparisonData.siteWise.deonar.previousTrips | number }}</span>
-                                            <span class="change" [class.positive]="comparisonData.siteWise.deonar.tripsChange >= 0" [class.negative]="comparisonData.siteWise.deonar.tripsChange < 0">
-                                                {{ comparisonData.siteWise.deonar.tripsChange >= 0 ? '+' : '' }}{{ comparisonData.siteWise.deonar.tripsChange | number:'1.1-1' }}%
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="site-progress">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill deonar-fill" [style.width.%]="getProgressWidth(comparisonData.siteWise.deonar.currentWeight, comparisonData.siteWise.deonar.previousWeight)"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> -->
-
 <!-- Quarterly Trend Chart -->
-<div class="charts-grid" *ngIf="quarterlyComparisonChartOptions.series?.length > 0 && !isLoadingComparison">
+<div class="charts-grid" *ngIf="quarterlyComparisonChartOptions?.series?.length > 0 && !isLoadingComparison">
     <div class="enhanced-chart-card">
         <div class="chart-header">
             <div class="chart-title">
@@ -314,7 +218,7 @@
     </div>
 
     <!-- Year Over Year Growth Chart -->
-    <div class="enhanced-chart-card" *ngIf="yoyGrowthChartOptions.series?.length > 0">
+    <div class="enhanced-chart-card" *ngIf="yoyGrowthChartOptions?.series?.length > 0">
         <div class="chart-header">
             <div class="chart-title">
                 <h3>Year-Over-Year Growth</h3>
@@ -348,10 +252,9 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let record of historicalData" [class.current-year]="record.year === selectedComparisonYear">
+                <tr *ngFor="let record of historicalData" [class.current-year]="record.year === selectedYear">
                     <td class="year-cell">
-                        <span class="year-badge" [class.active]="record.year === selectedComparisonYear">{{ record.year
-                            }}</span>
+                        <span class="year-badge" [class.active]="record.year === selectedYear">{{ record.year }}</span>
                     </td>
                     <td>{{ record.totalWeight | number:'1.2-2' }}</td>
                     <td>{{ record.totalTrips | number }}</td>
