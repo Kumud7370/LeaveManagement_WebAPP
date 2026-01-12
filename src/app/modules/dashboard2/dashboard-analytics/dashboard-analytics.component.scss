@@ -1,4 +1,4 @@
-// Variables
+// Variables - Aligned with Dashboard Comparison
 $primary-color: #1a2a6c;
 $secondary-color: #b21f1f;
 $accent-color: #00ffcc;
@@ -8,6 +8,9 @@ $border-color: #e5e7eb;
 $text-color: #2d3748;
 $text-muted: #6b7280;
 $success-color: #10b981;
+$warning-color: #f59e0b;
+$danger-color: #ef4444;
+$info-color: #3b82f6;
 $border-radius: 12px;
 $border-radius-sm: 8px;
 $transition-speed: 0.3s;
@@ -15,75 +18,85 @@ $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 $shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
-// Container
+// Container - FIXED: Flexible width to adapt to sidebar states
 .analytics-container {
   padding: 2rem;
-  max-width: 1400px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
-// Header Section
+// Header Section - Aligned with Comparison
 .analytics-header {
-  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba($primary-color, 0.05), rgba($info-color, 0.05));
+  border-radius: 16px;
+  border: 1px solid rgba($primary-color, 0.1);
+  margin-bottom: 2rem;
 
   h2 {
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: $primary-color;
     margin: 0 0 0.5rem 0;
     display: flex;
     align-items: center;
     gap: 0.75rem;
     font-weight: 700;
-    font-family: 'Orbitron', sans-serif;
+    font-family: inherit;
 
     i {
-      color: $accent-color;
+      color: $info-color;
     }
   }
 
   p {
     color: $text-muted;
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.875rem;
   }
 }
 
 // Section Titles
 .section-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: $primary-color;
-  margin: 2.5rem 0 1.5rem 0;
+  margin: 2rem 0 1.5rem 0;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   font-weight: 700;
 
   i {
-    color: $secondary-color;
+    color: $info-color;
   }
 }
 
-// Site Analytics Section
+// Site Analytics Section - FIXED: Better responsive grid with proper wrapping
 .site-analytics-section {
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
+  width: 100%;
+  overflow: hidden;
 }
 
 .site-analytics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 1.5rem;
+  width: 100%;
 }
 
 .site-analytics-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: $border-radius;
+  background: white;
+  border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: $shadow-md;
+  box-shadow: $shadow-sm;
   transition: all $transition-speed ease;
-  border-left: 4px solid $border-color;
+  border: 1px solid $border-color;
   position: relative;
   overflow: hidden;
+  min-width: 0; // CRITICAL: Prevents overflow
+  box-sizing: border-box;
 
   &::before {
     content: '';
@@ -102,15 +115,21 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
   }
 
   &.kanjur {
-    border-left-color: #0066ff;
+    .site-icon {
+      background: linear-gradient(135deg, $info-color, #0ea5e9);
+    }
   }
 
   &.deonar {
-    border-left-color: #764ba2;
+    .site-icon {
+      background: linear-gradient(135deg, $success-color, #059669);
+    }
   }
 
   &.total {
-    border-left-color: $secondary-color;
+    .site-icon {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
   }
 
   .site-header {
@@ -121,15 +140,14 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
   }
 
   .site-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: $border-radius;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.75rem;
-    background: linear-gradient(135deg, rgba($primary-color, 0.1), rgba($secondary-color, 0.1));
-    color: $primary-color;
+    font-size: 1.25rem;
+    color: white;
     flex-shrink: 0;
   }
 
@@ -138,7 +156,7 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
 
     h4 {
       margin: 0 0 0.25rem 0;
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       color: $text-color;
       font-weight: 700;
     }
@@ -158,47 +176,61 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
+    width: 100%;
+    min-width: 0;
   }
 
   .stat-item {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .stat-label {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     color: $text-muted;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .stat-value {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
     color: $text-color;
     font-weight: 700;
-    font-family: 'Orbitron', monospace;
+    font-family: 'Courier New', monospace;
+    word-break: break-word;
   }
 }
 
-// Charts Section
+// Charts Section - FIXED: Better responsive behavior with proper sizing
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .enhanced-chart-card {
   background: $card-background;
   border-radius: $border-radius;
-  padding: 1.5rem;
-  box-shadow: $shadow-md;
-  overflow: visible;
+  box-shadow: $shadow-sm;
+  border: 1px solid $border-color;
+  overflow: hidden;
   transition: all $transition-speed;
+  min-width: 0; // CRITICAL: Prevents overflow issues
+  max-width: 100%;
+  box-sizing: border-box;
 
   &:hover {
-    box-shadow: $shadow-lg;
+    box-shadow: $shadow-md;
   }
 
   &.full-width {
@@ -206,16 +238,16 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
   }
 
   .chart-header {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid rgba($primary-color, 0.1);
+    background: linear-gradient(135deg, rgba($primary-color, 0.03), rgba($info-color, 0.03));
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid $border-color;
   }
 
   .chart-title {
     h3 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.25rem;
-      color: $text-color;
+      margin: 0 0 0.25rem 0;
+      font-size: 1.125rem;
+      color: $primary-color;
       font-weight: 700;
     }
 
@@ -229,19 +261,43 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
 
   .chart-container {
     width: 100%;
-    min-height: 320px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    min-height: 400px;
+    padding: 1.25rem;
     position: relative;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba($primary-color, 0.4) transparent;
+    overflow: visible; // CHANGED: Allow legend to overflow if needed
+    box-sizing: border-box;
+    
+    apx-chart {
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important; // CRITICAL: Prevents chart overflow
+      box-sizing: border-box !important;
+    }
+  }
+}
 
+// ApexCharts Global Overrides - FIXED: Better legend handling and NO WHITE colors
+::ng-deep {
+  .apexcharts-canvas {
+    margin: 0 auto;
+  }
+
+  // FIXED LEGEND STYLING - Better spacing and NO overlapping
+  .apexcharts-legend {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    gap: 8px 14px !important;
+    padding: 16px 12px 12px 12px !important;
+    max-height: 220px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    line-height: 1.5 !important;
+    margin-top: 8px !important;
+    
     &::-webkit-scrollbar {
-      height: 6px;
+      width: 5px;
     }
 
     &::-webkit-scrollbar-thumb {
@@ -250,45 +306,46 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
     }
     
     &::-webkit-scrollbar-track {
-      background: transparent;
+      background: rgba($border-color, 0.3);
+      border-radius: 10px;
     }
 
-    apx-chart {
-      width: 100% !important;
-      max-width: 100% !important;
-      min-width: 100% !important;
-    }
-  }
-}
-
-// ApexCharts Global Overrides
-::ng-deep {
-  .apexcharts-canvas {
-    margin: 0 auto;
-  }
-
-  .apexcharts-legend {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    gap: 0.75rem !important;
-    padding: 1rem 0.5rem !important;
+    scrollbar-width: thin;
+    scrollbar-color: rgba($primary-color, 0.3) rgba($border-color, 0.3);
   }
 
   .apexcharts-legend-series {
-    margin: 0.25rem 0.5rem !important;
-  }
-
-  .apexcharts-legend-text {
-    font-size: 0.875rem !important;
-    font-weight: 500 !important;
-    color: $text-color !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    margin: 4px 6px !important;
+    max-width: 200px !important;
+    min-width: 100px !important;
+    line-height: 1.3 !important;
+    flex-shrink: 0 !important;
   }
 
   .apexcharts-legend-marker {
-    margin-right: 0.5rem !important;
-    width: 12px !important;
-    height: 12px !important;
+    margin-right: 7px !important;
+    margin-left: 0 !important;
+    width: 11px !important;
+    height: 11px !important;
+    flex-shrink: 0 !important;
+    border-radius: 2px !important;
+    // ENSURE NO WHITE BACKGROUND
+    background-color: currentColor !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .apexcharts-legend-text {
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: $text-color !important;
+    white-space: normal !important; // CHANGED: Allow text wrapping
+    overflow: visible !important;
+    text-overflow: clip !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 1.4 !important;
   }
 
   // Tooltip styling
@@ -297,132 +354,177 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
     border: 1px solid $border-color !important;
     box-shadow: $shadow-md !important;
     border-radius: $border-radius-sm !important;
+    
+    .apexcharts-tooltip-title {
+      background: rgba($primary-color, 0.05) !important;
+      border-bottom: 1px solid $border-color !important;
+      color: $text-color !important;
+      font-weight: 600 !important;
+    }
   }
 
-  // Data labels
+  // Data labels - prevent overlap, ensure visibility
   .apexcharts-datalabel {
-    font-weight: 600 !important;
+    font-weight: 700 !important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4) !important;
+    // ENSURE NO WHITE TEXT on white backgrounds
+    fill: #ffffff !important;
   }
 
-  // X-axis labels
-  .apexcharts-xaxis-label {
-    font-size: 0.75rem !important;
+  .apexcharts-datalabel-label {
+    fill: #ffffff !important;
   }
 
-  // Y-axis labels
+  .apexcharts-datalabel-value {
+    fill: #ffffff !important;
+  }
+
+  // Axis labels
+  .apexcharts-xaxis-label,
   .apexcharts-yaxis-label {
     font-size: 0.75rem !important;
-  }
-}
-
-// ============================================
-// RESPONSIVE BREAKPOINTS
-// ============================================
-
-// Large Desktop (1200px+)
-@media (min-width: 1200px) {
-  .charts-grid {
-    grid-template-columns: repeat(2, 1fr);
+    font-weight: 500 !important;
+    fill: $text-color !important;
   }
 
-  .enhanced-chart-card {
-    .chart-container {
-      min-height: 360px;
+  // Grid lines
+  .apexcharts-gridline {
+    stroke: #f1f5f9 !important;
+  }
+
+  // Inner labels (donut center text)
+  .apexcharts-datalabels-group {
+    .apexcharts-text {
+      fill: $text-color !important; // ENSURE visible center text
     }
   }
 }
 
-// Desktop/Laptop (992px - 1199px)
+// ============================================
+// RESPONSIVE BREAKPOINTS - FIXED
+// ============================================
+
+// Large Desktop (1200px+)
+@media (min-width: 1200px) {
+  .analytics-container {
+    padding: 2rem 2.5rem;
+  }
+
+  .site-analytics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .charts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+// Medium Desktop (992px - 1199px)  
+@media (min-width: 992px) and (max-width: 1199px) {
+  .site-analytics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  
+  .site-analytics-card {
+    .stat-value {
+      font-size: 1.15rem;
+    }
+  }
+}
+
+// Tablet Landscape (768px - 1199px)
 @media (max-width: 1199px) {
   .analytics-container {
     padding: 1.75rem;
   }
 
   .site-analytics-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 1.25rem;
   }
 
   .charts-grid {
-    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
   }
 }
 
-// Tablet Landscape (768px - 991px)
+// Tablet Portrait and below (991px and below)
 @media (max-width: 991px) {
   .analytics-container {
     padding: 1.5rem;
   }
 
   .analytics-header {
-    margin-bottom: 2rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
 
     h2 {
-      font-size: 1.75rem;
+      font-size: 1.35rem;
     }
   }
 
   .section-title {
-    font-size: 1.35rem;
-    margin: 2rem 0 1.25rem 0;
+    font-size: 1.15rem;
+    margin: 1.5rem 0 1rem 0;
   }
 
   .site-analytics-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-  }
-
-  .site-analytics-card {
-    padding: 1.25rem;
-
-    .site-icon {
-      width: 48px;
-      height: 48px;
-      font-size: 1.5rem;
-    }
-
-    .site-info h4 {
-      font-size: 1.05rem;
-    }
-
-    .stat-value {
-      font-size: 1.25rem;
-    }
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   }
 
   .charts-grid {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+    grid-template-columns: 1fr; // SINGLE COLUMN for better display
   }
 
   .enhanced-chart-card {
     .chart-container {
-      min-height: 300px;
+      min-height: 380px;
+      padding: 1rem;
+    }
+  }
+
+  ::ng-deep {
+    .apexcharts-legend {
+      max-height: 180px !important;
+      padding: 12px 10px !important;
+      gap: 7px 12px !important;
+    }
+
+    .apexcharts-legend-series {
+      min-width: 90px !important;
+      max-width: 170px !important;
+      margin: 3px 5px !important;
+    }
+
+    .apexcharts-legend-text {
+      font-size: 10.5px !important;
     }
   }
 }
 
-// Tablet Portrait (576px - 767px)
+// Tablet Portrait (576px - 767px) - IMPROVED FOR WARD-WISE CHART
 @media (max-width: 767px) {
   .analytics-container {
     padding: 1.25rem;
   }
 
   .analytics-header {
-    margin-bottom: 1.5rem;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
 
     h2 {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       gap: 0.5rem;
     }
 
     p {
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
   }
 
   .section-title {
-    font-size: 1.25rem;
-    margin: 1.5rem 0 1rem 0;
+    font-size: 1.05rem;
+    margin: 1.25rem 0 0.875rem 0;
   }
 
   .site-analytics-grid {
@@ -433,14 +535,10 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
   .site-analytics-card {
     padding: 1.25rem;
 
-    .site-header {
-      margin-bottom: 1.25rem;
-    }
-
     .site-icon {
       width: 44px;
       height: 44px;
-      font-size: 1.35rem;
+      font-size: 1.15rem;
     }
 
     .site-info h4 {
@@ -467,94 +565,96 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
   }
 
   .charts-grid {
-    grid-template-columns: 1fr;
     gap: 1rem;
   }
 
   .enhanced-chart-card {
-    padding: 1.25rem;
-
     .chart-header {
-      margin-bottom: 1.25rem;
-      padding-bottom: 0.75rem;
+      padding: 0.875rem 1rem;
     }
 
     .chart-title h3 {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
     }
 
+    // IMPROVED: Better spacing for ward-wise chart on mobile
     .chart-container {
-      min-height: 300px;
+      min-height: 420px; // Increased height
+      padding: 0.875rem 0.5rem 0.5rem 0.5rem; // Optimized padding
     }
   }
 
   ::ng-deep {
     .apexcharts-legend {
-      gap: 0.5rem !important;
-      padding: 0.75rem 0.25rem !important;
+      gap: 6px 10px !important;
+      padding: 10px 8px !important;
+      max-height: 160px !important;
+    }
+
+    .apexcharts-legend-series {
+      margin: 3px 4px !important;
+      min-width: 80px !important;
+      max-width: 140px !important;
     }
 
     .apexcharts-legend-text {
-      font-size: 0.8rem !important;
+      font-size: 10px !important;
     }
 
     .apexcharts-legend-marker {
       width: 10px !important;
       height: 10px !important;
+      margin-right: 6px !important;
     }
 
-    .apexcharts-xaxis-label,
+    // IMPROVED: Better X-axis label visibility on mobile
+    .apexcharts-xaxis-label {
+      font-size: 9px !important;
+      font-weight: 500 !important;
+    }
+
     .apexcharts-yaxis-label {
-      font-size: 0.7rem !important;
+      font-size: 9px !important;
     }
   }
 }
 
-// Mobile Landscape / Large Phone (481px - 575px)
+// Mobile (481px - 575px) - OPTIMIZED FOR WARD-WISE CHART
 @media (max-width: 575px) {
   .analytics-container {
     padding: 1rem;
   }
 
   .analytics-header {
-    margin-bottom: 1.25rem;
+    padding: 0.875rem;
 
     h2 {
-      font-size: 1.35rem;
+      font-size: 1.15rem;
       gap: 0.5rem;
 
       i {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
       }
     }
 
     p {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
     }
   }
 
   .section-title {
-    font-size: 1.15rem;
-    margin: 1.25rem 0 0.875rem 0;
-    gap: 0.5rem;
-
-    i {
-      font-size: 1.15rem;
-    }
+    font-size: 1rem;
+    margin: 1rem 0 0.75rem 0;
   }
 
   .site-analytics-card {
     padding: 1rem;
-
-    .site-header {
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-    }
+    border-radius: 12px;
 
     .site-icon {
       width: 40px;
       height: 40px;
-      font-size: 1.25rem;
+      font-size: 1.05rem;
     }
 
     .site-info h4 {
@@ -566,16 +666,8 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
       font-size: 0.7rem;
     }
 
-    .site-stats {
-      gap: 0.75rem;
-    }
-
-    .stat-item {
-      padding: 0.625rem;
-    }
-
     .stat-label {
-      font-size: 0.8rem;
+      font-size: 0.65rem;
     }
 
     .stat-value {
@@ -584,193 +676,70 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
   }
 
   .enhanced-chart-card {
-    padding: 1rem;
-
     .chart-header {
-      margin-bottom: 1rem;
-      padding-bottom: 0.625rem;
+      padding: 0.75rem 0.875rem;
     }
 
     .chart-title h3 {
-      font-size: 1.05rem;
+      font-size: 1rem;
     }
 
     .chart-title .chart-subtitle {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
     }
 
+    // IMPROVED: Better height and spacing for ward-wise chart
     .chart-container {
-      min-height: 280px;
+      min-height: 400px; // Increased height for better label visibility
+      padding: 0.75rem 0.375rem 0.375rem 0.375rem;
     }
   }
 
   ::ng-deep {
     .apexcharts-legend {
-      gap: 0.375rem !important;
-      padding: 0.625rem 0.25rem !important;
+      gap: 5px 8px !important;
+      padding: 8px 6px !important;
+      max-height: 140px !important;
+    }
+
+    .apexcharts-legend-series {
+      margin: 2px 3px !important;
+      min-width: 70px !important;
+      max-width: 120px !important;
     }
 
     .apexcharts-legend-text {
-      font-size: 0.75rem !important;
+      font-size: 9.5px !important;
     }
 
     .apexcharts-legend-marker {
       width: 9px !important;
       height: 9px !important;
-      margin-right: 0.375rem !important;
+      margin-right: 5px !important;
     }
 
-    .apexcharts-xaxis-label,
+    .apexcharts-xaxis-label {
+      font-size: 8.5px !important;
+      font-weight: 500 !important;
+    }
+
     .apexcharts-yaxis-label {
-      font-size: 0.65rem !important;
+      font-size: 8.5px !important;
     }
   }
 }
 
-// Small Mobile (376px - 480px)
+// Extra Small Mobile (320px - 480px) - MAXIMUM OPTIMIZATION FOR WARD-WISE CHART
 @media (max-width: 480px) {
   .analytics-container {
     padding: 0.875rem;
   }
 
   .analytics-header {
-    margin-bottom: 1rem;
-
-    h2 {
-      font-size: 1.25rem;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.375rem;
-
-      i {
-        font-size: 1.15rem;
-      }
-    }
-
-    p {
-      font-size: 0.85rem;
-    }
-  }
-
-  .section-title {
-    font-size: 1.05rem;
-    margin: 1rem 0 0.75rem 0;
-    gap: 0.375rem;
-
-    i {
-      font-size: 1.05rem;
-    }
-  }
-
-  .site-analytics-section {
-    margin-bottom: 2rem;
-  }
-
-  .site-analytics-grid {
-    gap: 0.875rem;
-  }
-
-  .site-analytics-card {
-    padding: 0.875rem;
-
-    .site-header {
-      gap: 0.625rem;
-      margin-bottom: 0.875rem;
-    }
-
-    .site-icon {
-      width: 36px;
-      height: 36px;
-      font-size: 1.15rem;
-    }
-
-    .site-info h4 {
-      font-size: 0.9rem;
-    }
-
-    .site-badge {
-      padding: 0.15rem 0.5rem;
-      font-size: 0.65rem;
-    }
-
-    .site-stats {
-      gap: 0.625rem;
-    }
-
-    .stat-item {
-      padding: 0.5rem;
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
-    }
-
-    .stat-value {
-      font-size: 1rem;
-    }
-  }
-
-  .charts-grid {
-    gap: 0.875rem;
-  }
-
-  .enhanced-chart-card {
-    padding: 0.875rem;
-
-    .chart-header {
-      margin-bottom: 0.875rem;
-      padding-bottom: 0.5rem;
-    }
-
-    .chart-title h3 {
-      font-size: 1rem;
-    }
-
-    .chart-title .chart-subtitle {
-      font-size: 0.75rem;
-    }
-
-    .chart-container {
-      min-height: 260px;
-    }
-  }
-
-  ::ng-deep {
-    .apexcharts-legend {
-      gap: 0.325rem !important;
-      padding: 0.5rem 0.25rem !important;
-    }
-
-    .apexcharts-legend-text {
-      font-size: 0.7rem !important;
-    }
-
-    .apexcharts-legend-marker {
-      width: 8px !important;
-      height: 8px !important;
-      margin-right: 0.325rem !important;
-    }
-
-    .apexcharts-xaxis-label,
-    .apexcharts-yaxis-label {
-      font-size: 0.625rem !important;
-    }
-
-    .apexcharts-datalabel {
-      font-size: 0.7rem !important;
-    }
-  }
-}
-
-// Extra Small Mobile (320px - 375px)
-@media (max-width: 375px) {
-  .analytics-container {
     padding: 0.75rem;
-  }
 
-  .analytics-header {
     h2 {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
 
       i {
         font-size: 1.05rem;
@@ -778,52 +747,49 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
     }
 
     p {
-      font-size: 0.8rem;
+      font-size: 0.7rem;
     }
   }
 
   .section-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
     margin: 0.875rem 0 0.625rem 0;
 
     i {
-      font-size: 1rem;
-    }
-  }
-
-  .site-analytics-card {
-    padding: 0.75rem;
-
-    .site-icon {
-      width: 32px;
-      height: 32px;
-      font-size: 1.05rem;
-    }
-
-    .site-info h4 {
-      font-size: 0.85rem;
-    }
-
-    .site-badge {
-      padding: 0.125rem 0.4rem;
-      font-size: 0.625rem;
-    }
-
-    .stat-label {
-      font-size: 0.7rem;
-    }
-
-    .stat-value {
       font-size: 0.95rem;
     }
   }
 
-  .enhanced-chart-card {
-    padding: 0.75rem;
+  .site-analytics-card {
+    padding: 0.875rem;
 
+    .site-icon {
+      width: 36px;
+      height: 36px;
+      font-size: 1rem;
+    }
+
+    .site-info h4 {
+      font-size: 0.875rem;
+    }
+
+    .site-badge {
+      padding: 0.15rem 0.5rem;
+      font-size: 0.65rem;
+    }
+
+    .stat-label {
+      font-size: 0.625rem;
+    }
+
+    .stat-value {
+      font-size: 1rem;
+    }
+  }
+
+  .enhanced-chart-card {
     .chart-header {
-      margin-bottom: 0.75rem;
-      padding-bottom: 0.375rem;
+      padding: 0.625rem 0.75rem;
     }
 
     .chart-title h3 {
@@ -834,82 +800,53 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.
       font-size: 0.7rem;
     }
 
+    // MAXIMUM OPTIMIZATION: Increased height and minimal padding
     .chart-container {
-      min-height: 240px;
+      min-height: 400px; // Adequate height for rotated labels
+      padding: 0.625rem 0.25rem 0.25rem 0.25rem; // Minimal padding
     }
   }
 
   ::ng-deep {
     .apexcharts-legend {
-      gap: 0.25rem !important;
-      padding: 0.375rem 0.125rem !important;
+      gap: 4px 6px !important;
+      padding: 6px 4px !important;
+      max-height: 120px !important;
+    }
+
+    .apexcharts-legend-series {
+      margin: 2px 3px !important;
+      min-width: 60px !important;
+      max-width: 100px !important;
     }
 
     .apexcharts-legend-text {
-      font-size: 0.65rem !important;
+      font-size: 9px !important;
     }
 
     .apexcharts-legend-marker {
-      width: 7px !important;
-      height: 7px !important;
-      margin-right: 0.25rem !important;
-    }
-
-    .apexcharts-xaxis-label,
-    .apexcharts-yaxis-label {
-      font-size: 0.6rem !important;
+      width: 8px !important;
+      height: 8px !important;
+      margin-right: 4px !important;
     }
 
     .apexcharts-datalabel {
-      font-size: 0.65rem !important;
-    }
-  }
-}
-
-// Landscape orientation adjustments
-@media (max-height: 500px) and (orientation: landscape) {
-  .analytics-container {
-    padding: 0.75rem;
-  }
-
-  .analytics-header {
-    margin-bottom: 0.875rem;
-
-    h2 {
-      font-size: 1.25rem;
-    }
-  }
-
-  .section-title {
-    font-size: 1.15rem;
-    margin: 1rem 0 0.75rem 0;
-  }
-
-  .site-analytics-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-  }
-
-  .site-analytics-card {
-    padding: 0.75rem;
-
-    .site-header {
-      margin-bottom: 0.75rem;
+      font-size: 0.7rem !important;
     }
 
-    .site-stats {
-      gap: 0.5rem;
+    // CRITICAL: Smaller fonts for X and Y axis labels on very small screens
+    .apexcharts-xaxis-label {
+      font-size: 8px !important;
+      font-weight: 500 !important;
     }
-  }
 
-  .charts-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
+    .apexcharts-yaxis-label {
+      font-size: 8px !important;
+    }
 
-  .enhanced-chart-card {
-    .chart-container {
-      min-height: 200px;
+    // IMPROVED: Better spacing for Y-axis titles on mobile
+    .apexcharts-yaxis-title {
+      font-size: 9px !important;
     }
   }
 }

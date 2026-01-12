@@ -107,6 +107,7 @@
                 [legend]="pieChartOptionsSWMWeightDistribution.legend"
                 [plotOptions]="pieChartOptionsSWMWeightDistribution.plotOptions"
                 [dataLabels]="pieChartOptionsSWMWeightDistribution.dataLabels"
+                [tooltip]="pieChartOptionsSWMWeightDistribution.tooltip"
                 [responsive]="pieChartOptionsSWMWeightDistribution.responsive">
             </apx-chart>
         </div>
@@ -119,12 +120,15 @@
                 <span class="chart-subtitle">Weight Analysis</span>
             </div>
         </div>
-        <div class="chart-container">
-            <apx-chart [series]="pieChartOptionsSWMVehicleType?.series" [chart]="pieChartOptionsSWMVehicleType.chart"
-                [labels]="pieChartOptionsSWMVehicleType.labels" [colors]="pieChartOptionsSWMVehicleType.colors"
+        <div class="chart-container" *ngIf="pieChartOptionsSWMVehicleType?.series?.length > 0">
+            <apx-chart [series]="pieChartOptionsSWMVehicleType?.series" 
+                [chart]="pieChartOptionsSWMVehicleType.chart"
+                [labels]="pieChartOptionsSWMVehicleType.labels" 
+                [colors]="pieChartOptionsSWMVehicleType.colors"
                 [legend]="pieChartOptionsSWMVehicleType.legend"
                 [plotOptions]="pieChartOptionsSWMVehicleType.plotOptions"
                 [dataLabels]="pieChartOptionsSWMVehicleType.dataLabels"
+                [tooltip]="pieChartOptionsSWMVehicleType.tooltip"
                 [responsive]="pieChartOptionsSWMVehicleType.responsive">
             </apx-chart>
         </div>
@@ -137,14 +141,18 @@
                 <span class="chart-subtitle">Net Weight Distribution (MT)</span>
             </div>
         </div>
-        <div class="chart-container">
-            <apx-chart [series]="wardwiseChartOptions.series" [chart]="wardwiseChartOptions.chart"
-                [xaxis]="wardwiseChartOptions.xaxis" [yaxis]="wardwiseChartOptions.yaxis"
+        <div class="chart-container" *ngIf="wardwiseChartOptions?.series?.length > 0">
+            <apx-chart [series]="wardwiseChartOptions.series" 
+                [chart]="wardwiseChartOptions.chart"
+                [xaxis]="wardwiseChartOptions.xaxis" 
+                [yaxis]="wardwiseChartOptions.yaxis"
                 [plotOptions]="wardwiseChartOptions.plotOptions"
                 [dataLabels]="wardwiseChartOptions.dataLabels" 
                 [stroke]="wardwiseChartOptions.stroke"
                 [tooltip]="wardwiseChartOptions.tooltip"
-                [legend]="wardwiseChartOptions.legend">
+                [colors]="wardwiseChartOptions.colors"
+                [legend]="wardwiseChartOptions.legend"
+                [responsive]="wardwiseChartOptions.responsive">
             </apx-chart>
         </div>
     </div>
