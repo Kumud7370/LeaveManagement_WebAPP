@@ -14,8 +14,9 @@ $info-color: #3b82f6;
 $shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 $shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-$border-radius: 8px;
-$transition-speed: 0.2s;
+$border-radius: 12px;
+$border-radius-sm: 8px;
+$transition-speed: 0.3s;
 
 // Performance Header
 .performance-header {
@@ -463,12 +464,15 @@ $transition-speed: 0.2s;
   }
 }
 
-// Charts Grid - UPDATED FOR BETTER MOBILE DISPLAY
+// Charts Grid
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
   margin-bottom: 2rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 
   @media (max-width: 992px) {
     grid-template-columns: 1fr;
@@ -477,165 +481,352 @@ $transition-speed: 0.2s;
   @media (max-width: 768px) {
     gap: 1rem;
   }
+}
 
-  .enhanced-chart-card {
+.enhanced-chart-card {
+  background: $card-background;
+  border-radius: $border-radius;
+  box-shadow: $shadow-sm;
+  border: 1px solid $border-color;
+  overflow: hidden;
+  transition: all $transition-speed;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+
+  &.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    overflow: auto;
     background: white;
-    border-radius: $border-radius;
-    box-shadow: $shadow-sm;
-    border: 1px solid $border-color;
-    overflow: hidden;
-    transition: all $transition-speed;
+    margin: 0;
+
+    .chart-container {
+      min-height: calc(100vh - 200px);
+    }
+  }
+
+  .chart-header {
+    background: linear-gradient(135deg, rgba($primary-color, 0.03), rgba($info-color, 0.03));
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid $border-color;
+
+    @media (max-width: 480px) {
+      padding: 0.75rem 1rem;
+    }
+  }
+
+  .chart-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .chart-title {
+    flex: 1;
+    min-width: 200px;
+
+    h3 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.125rem;
+      color: $primary-color;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      @media (max-width: 480px) {
+        font-size: 1rem;
+      }
+
+      i {
+        color: $info-color;
+        font-size: 1.125rem;
+      }
+    }
+
+    .chart-subtitle {
+      display: block;
+      font-size: 0.875rem;
+      color: $text-muted;
+      font-weight: 500;
+      line-height: 1.4;
+
+      @media (max-width: 480px) {
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  .chart-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: linear-gradient(90deg, rgba($info-color, 0.4), rgba($success-color, 0.4));
+      border-radius: 10px;
+
+      &:hover {
+        background: linear-gradient(90deg, rgba($info-color, 0.6), rgba($success-color, 0.6));
+      }
+    }
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba($info-color, 0.4) #f1f5f9;
+  }
+
+  .chart-container {
+    width: 100%;
     min-height: 400px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: visible;
+    box-sizing: border-box;
 
     @media (max-width: 768px) {
       min-height: 380px;
+      padding: 0.75rem 0.5rem;
     }
+
+    @media (max-width: 480px) {
+      min-height: 360px;
+      padding: 0.5rem 0.25rem;
+    }
+
+    apx-chart {
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+    }
+  }
+}
+
+// Chart Controls
+.chart-controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  gap: 0.375rem;
+  align-items: center;
+  background: white;
+  padding: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid $border-color;
+  box-shadow: $shadow-sm;
+}
+
+.control-btn {
+  background: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: $text-color;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  position: relative;
+
+  i {
+    font-size: 0.875rem;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba($info-color, 0.1), rgba($success-color, 0.1));
+    color: $info-color;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba($info-color, 0.2);
+
+    i {
+      transform: scale(1.1);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &.active {
+    background: linear-gradient(135deg, $info-color, $success-color);
+    color: white;
+    box-shadow: 0 2px 6px rgba($info-color, 0.3);
 
     &:hover {
-      box-shadow: $shadow-md;
+      background: linear-gradient(135deg, darken($info-color, 5%), darken($success-color, 5%));
+    }
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #f3f4f6;
+  }
+}
+
+.zoom-indicator {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $text-muted;
+  padding: 0 0.5rem;
+  white-space: nowrap;
+  min-width: 45px;
+  text-align: center;
+}
+
+// Data Table Styling
+.data-table-container {
+  padding: 1.5rem;
+  max-height: 600px;
+  overflow: auto;
+  background: white;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($info-color, 0.4);
+    border-radius: 10px;
+
+    &:hover {
+      background: rgba($info-color, 0.6);
+    }
+  }
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba($info-color, 0.4) #f1f5f9;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid $border-color;
+  box-shadow: $shadow-sm;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  background: white;
+
+  thead {
+    background: linear-gradient(135deg, rgba($primary-color, 0.05), rgba($info-color, 0.05));
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+    tr {
+      border-bottom: 2px solid $border-color;
     }
 
-    &.full-width {
-      grid-column: 1 / -1;
-    }
-
-    .chart-header {
-      background: linear-gradient(135deg, rgba($primary-color, 0.03), rgba($secondary-color, 0.03));
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid $border-color;
-
-      @media (max-width: 480px) {
-        padding: 0.75rem 1rem;
-      }
-
-      .chart-title {
-        h3 {
-          font-size: 1.125rem;
-          font-weight: 700;
-          color: $primary-color;
-          margin: 0 0 0.25rem 0;
-
-          @media (max-width: 480px) {
-            font-size: 1rem;
-          }
-        }
-
-        .chart-subtitle {
-          font-size: 0.875rem;
-          color: $text-muted;
-          font-weight: 500;
-
-          @media (max-width: 480px) {
-            font-size: 0.8rem;
-          }
-        }
-      }
-    }
-
-    .chart-container {
-      position: relative;
-      width: 100%;
-      min-height: 380px;
+    th {
       padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: $primary-color;
+      white-space: nowrap;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
 
-      @media (max-width: 768px) {
-        min-height: 360px;
-        padding: 0.75rem 0.5rem;
+  tbody {
+    tr {
+      border-bottom: 1px solid $border-color;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: rgba($info-color, 0.03);
+        box-shadow: inset 0 0 0 1px rgba($info-color, 0.1);
       }
 
-      @media (max-width: 480px) {
-        min-height: 340px;
-        padding: 0.5rem 0.25rem;
+      &:last-child {
+        border-bottom: none;
       }
 
-      // Override ApexCharts default styles for better mobile display
-      ::ng-deep {
-        .apexcharts-canvas {
-          margin: 0 auto;
+      &:nth-child(even) {
+        background: rgba($background-color, 0.3);
+
+        &:hover {
+          background: rgba($info-color, 0.03);
+        }
+      }
+    }
+
+    td {
+      padding: 0.875rem 1rem;
+      color: $text-color;
+      font-size: 0.875rem;
+
+      &.month-name,
+      &.quarter-name,
+      &.metric-name {
+        font-weight: 600;
+        color: $primary-color;
+      }
+
+      &.number-cell {
+        font-family: 'Courier New', monospace;
+        text-align: right;
+        font-weight: 600;
+        color: $info-color;
+
+        &.positive {
+          color: $success-color;
         }
 
-        .apexcharts-legend {
-          padding: 8px 5px !important;
-          
-          @media (max-width: 768px) {
-            padding: 8px 3px !important;
-          }
-        }
-
-        .apexcharts-legend-series {
-          margin: 4px 8px !important;
-          
-          @media (max-width: 768px) {
-            margin: 4px 6px !important;
-          }
-        }
-
-        // Month label styling for better readability
-        .apexcharts-xaxis-label {
-          font-weight: 600 !important;
-          
-          @media (max-width: 768px) {
-            font-size: 12px !important;
-            font-weight: 600 !important;
-          }
-
-          @media (max-width: 480px) {
-            font-size: 11px !important;
-            font-weight: 700 !important;
-          }
-        }
-
-        .apexcharts-yaxis-label {
-          @media (max-width: 768px) {
-            font-size: 11px !important;
-          }
-        }
-
-        // Improve spacing for x-axis
-        .apexcharts-xaxis {
-          @media (max-width: 768px) {
-            .apexcharts-xaxis-texts-g {
-              text {
-                font-weight: 600 !important;
-              }
-            }
-          }
-        }
-
-        .apexcharts-text {
-          @media (max-width: 768px) {
-            font-size: 11px !important;
-          }
-        }
-
-        // Ensure chart takes full available width
-        svg {
-          width: 100% !important;
-        }
-
-        // Better grid line visibility
-        .apexcharts-gridline {
-          stroke: #f1f5f9;
-        }
-
-        // Tooltip improvements
-        .apexcharts-tooltip {
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-          border-radius: 8px !important;
-          
-          @media (max-width: 768px) {
-            font-size: 11px !important;
-          }
-        }
-
-        // X-axis title improvements
-        .apexcharts-xaxis-title-text,
-        .apexcharts-yaxis-title-text {
-          font-weight: 600 !important;
-          
-          @media (max-width: 768px) {
-            font-size: 12px !important;
-          }
+        &.negative {
+          color: $danger-color;
         }
       }
     }
@@ -682,7 +873,6 @@ $transition-speed: 0.2s;
       border-radius: 12px;
     }
 
-    // Scrollbar styling
     &::-webkit-scrollbar {
       height: 8px;
     }
@@ -695,10 +885,10 @@ $transition-speed: 0.2s;
     &::-webkit-scrollbar-thumb {
       background: #cbd5e1;
       border-radius: 10px;
-    }
 
-    &::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
+      &:hover {
+        background: #94a3b8;
+      }
     }
   }
 }
@@ -807,5 +997,33 @@ $transition-speed: 0.2s;
     i {
       font-size: 0.75rem;
     }
+  }
+}
+
+// ApexCharts Overrides
+::ng-deep {
+  .apexcharts-canvas {
+    margin: 0 auto;
+  }
+
+  .apexcharts-legend {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    padding: 12px !important;
+  }
+
+  .apexcharts-tooltip {
+    background: white !important;
+    border: 1px solid $border-color !important;
+    box-shadow: $shadow-md !important;
+    border-radius: $border-radius-sm !important;
+  }
+
+  .apexcharts-xaxis-label,
+  .apexcharts-yaxis-label {
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    fill: $text-color !important;
   }
 }

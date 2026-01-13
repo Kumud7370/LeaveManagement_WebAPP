@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener, Input, OnChanges } from "@angular/core"
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener, Input, OnChanges, ViewChild, ElementRef } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { NgApexchartsModule } from "ng-apexcharts"
@@ -14,6 +14,19 @@ export interface HistoricalRecord {
   yoyChange: number
 }
 
+interface ChartState {
+  zoomLevel: number
+  isFullscreen: boolean
+  showDataTable: boolean
+  showGridLines: boolean
+}
+
+interface ChartStates {
+  monthly: ChartState
+  quarterly: ChartState
+  yoy: ChartState
+}
+
 @Component({
   selector: 'app-dashboard-comparison',
   imports: [CommonModule, NgApexchartsModule, FormsModule],
@@ -22,6 +35,9 @@ export interface HistoricalRecord {
 })
 export class DashboardComparisonComponent implements OnChanges, OnDestroy {
   @Input() searchParams: any;
+  @ViewChild('monthlyChartWrapper', { static: false }) monthlyChartWrapper!: ElementRef;
+  @ViewChild('quarterlyChartWrapper', { static: false }) quarterlyChartWrapper!: ElementRef;
+  @ViewChild('yoyChartWrapper', { static: false }) yoyChartWrapper!: ElementRef;
 
   selectedYear = 2023;
   previousYear = 2022;
@@ -38,6 +54,33 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
   quarterlyComparisonChartOptions: any;
   yoyGrowthChartOptions: any;
 
+  // Chart states
+  chartStates: ChartStates = {
+    monthly: {
+      zoomLevel: 100,
+      isFullscreen: false,
+      showDataTable: false,
+      showGridLines: true
+    },
+    quarterly: {
+      zoomLevel: 100,
+      isFullscreen: false,
+      showDataTable: false,
+      showGridLines: true
+    },
+    yoy: {
+      zoomLevel: 100,
+      isFullscreen: false,
+      showDataTable: false,
+      showGridLines: true
+    }
+  };
+
+  // Table data
+  monthlyTableData: any[] = [];
+  quarterlyTableData: any[] = [];
+  yoyTableData: any[] = [];
+
   private destroy$ = new Subject<void>()
   isLoadingComparison = false
   availableYears: number[] = []
@@ -52,6 +95,24 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
   @HostListener("window:resize", ["$event"])
   onResize(event: any) {
     this.updateChartResponsiveness()
+  }
+
+  @HostListener('document:fullscreenchange', ['$event'])
+  @HostListener('document:webkitfullscreenchange', ['$event'])
+  @HostListener('document:mozfullscreenchange', ['$event'])
+  @HostListener('document:MSFullscreenChange', ['$event'])
+  onFullscreenChange(event?: Event) {
+    if (!document.fullscreenElement && !(document as any).webkitFullscreenElement) {
+      this.chartStates.monthly.isFullscreen = false;
+      this.chartStates.quarterly.isFullscreen = false;
+      this.chartStates.yoy.isFullscreen = false;
+
+      setTimeout(() => {
+        this.prepareMonthlyChart();
+        this.prepareQuarterlyTripsChart();
+        this.prepareYoYGrowthChart();
+      }, 100);
+    }
   }
 
   ngOnChanges(): void {
@@ -110,19 +171,19 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
       FromDate: `${this.previousYear}-01-01`,
       ToDate: `${this.selectedYear}-12-31`
     };
-    
+
     this.isLoadingComparison = true;
-    
+
     this.dashboardService.getDashboardMonthlySummary(filters)
       .subscribe(res => {
-   
-           this.data = res.data
-      .filter((x: any) => x.siteName === 'Kanjur' || x.siteName === 'Deonar');
+        this.data = res.data
+          .filter((x: any) => x.siteName === 'Kanjur' || x.siteName === 'Deonar');
         this.prepareKPIs();
         this.prepareMonthlyChart();
         this.prepareQuarterlyTripsChart();
         this.prepareYoYGrowthChart();
         this.prepareTableData();
+        this.prepareAllTableData();
         this.isLoadingComparison = false;
         this.cdr.detectChanges();
       });
@@ -170,16 +231,20 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
           .reduce((a, b) => a + b.totalNetWeight, 0)
       );
 
-    // Use abbreviated month names for mobile
-    const monthLabels = isMobile 
+    const monthLabels = isMobile
       ? ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
       : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    // Full month names for tooltip
     const fullMonthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
+
+    // Calculate dynamic width based on zoom
+    const baseWidth = isMobile ? Math.max(months.length * 60, window.innerWidth - 40) : '100%';
+    const zoomedWidth = typeof baseWidth === 'number'
+      ? baseWidth * (this.chartStates.monthly.zoomLevel / 100)
+      : baseWidth;
 
     this.monthlyComparisonChartOptions = {
       series: [
@@ -188,17 +253,18 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
       ],
       chart: {
         type: 'bar',
-        height: isMobile ? 400 : 420,
-        toolbar: { 
+        height: this.chartStates.monthly.isFullscreen ? window.innerHeight - 200 : (isMobile ? 400 : 420),
+        width: zoomedWidth,
+        toolbar: {
           show: true,
           tools: {
             download: true,
             selection: false,
-            zoom: false,
-            zoomin: false,
-            zoomout: false,
-            pan: false,
-            reset: false
+            zoom: !isMobile,
+            zoomin: !isMobile,
+            zoomout: !isMobile,
+            pan: !isMobile,
+            reset: !isMobile
           }
         },
         fontFamily: 'inherit',
@@ -216,7 +282,7 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
           }
         }
       },
-      dataLabels: { 
+      dataLabels: {
         enabled: false
       },
       stroke: {
@@ -224,7 +290,7 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
         width: 2,
         colors: ['transparent']
       },
-      legend: { 
+      legend: {
         position: 'top',
         horizontalAlign: 'center',
         fontSize: isMobile ? '11px' : '14px',
@@ -264,12 +330,6 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
           show: true,
           height: 4,
           color: '#cbd5e1'
-        },
-        crosshairs: {
-          show: true
-        },
-        tooltip: {
-          enabled: false
         }
       },
       yaxis: {
@@ -294,6 +354,7 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
         }
       },
       grid: {
+        show: this.chartStates.monthly.showGridLines,
         borderColor: '#f1f5f9',
         strokeDashArray: 3,
         xaxis: {
@@ -327,96 +388,8 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
         },
         style: {
           fontSize: '12px'
-        },
-        marker: {
-          show: true
         }
-      },
-      states: {
-        hover: {
-          filter: {
-            type: 'darken',
-            value: 0.15
-          }
-        },
-        active: {
-          filter: {
-            type: 'darken',
-            value: 0.25
-          }
-        }
-      },
-      responsive: [
-        {
-          breakpoint: 480,
-          options: {
-            chart: {
-              height: 400
-            },
-            plotOptions: {
-              bar: {
-                columnWidth: '85%'
-              }
-            },
-            xaxis: {
-              labels: {
-                style: {
-                  fontSize: '11px'
-                }
-              }
-            },
-            yaxis: {
-              title: {
-                text: 'MT'
-              },
-              labels: {
-                style: {
-                  fontSize: '11px'
-                }
-              }
-            },
-            legend: {
-              fontSize: '11px',
-              itemMargin: {
-                horizontal: 10
-              }
-            }
-          }
-        },
-        {
-          breakpoint: 768,
-          options: {
-            chart: {
-              height: 400
-            },
-            plotOptions: {
-              bar: {
-                columnWidth: '85%'
-              }
-            },
-            xaxis: {
-              labels: {
-                style: {
-                  fontSize: '12px'
-                }
-              }
-            },
-            yaxis: {
-              labels: {
-                style: {
-                  fontSize: '11px'
-                }
-              }
-            },
-            legend: {
-              fontSize: '11px',
-              itemMargin: {
-                horizontal: 10
-              }
-            }
-          }
-        }
-      ]
+      }
     };
   }
 
@@ -434,6 +407,11 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
           .reduce((a, b) => a + b.tripsCount, 0)
       );
 
+    const baseWidth = isMobile ? Math.max(quarters.length * 80, window.innerWidth - 40) : '100%';
+    const zoomedWidth = typeof baseWidth === 'number'
+      ? baseWidth * (this.chartStates.quarterly.zoomLevel / 100)
+      : baseWidth;
+
     this.quarterlyComparisonChartOptions = {
       series: [
         { name: `${this.selectedYear}`, data: tripsByQuarter(Number(this.selectedYear)) },
@@ -441,17 +419,18 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
       ],
       chart: {
         type: 'bar',
-        height: isMobile ? 320 : 350,
-        toolbar: { 
+        height: this.chartStates.quarterly.isFullscreen ? window.innerHeight - 200 : (isMobile ? 320 : 350),
+        width: zoomedWidth,
+        toolbar: {
           show: true,
           tools: {
             download: true,
             selection: false,
-            zoom: false,
-            zoomin: false,
-            zoomout: false,
-            pan: false,
-            reset: false
+            zoom: !isMobile,
+            zoomin: !isMobile,
+            zoomout: !isMobile,
+            pan: !isMobile,
+            reset: !isMobile
           }
         },
         fontFamily: 'inherit'
@@ -465,7 +444,7 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
           }
         }
       },
-      dataLabels: { 
+      dataLabels: {
         enabled: !isMobile,
         formatter: (val: number) => val.toString(),
         offsetY: -20,
@@ -528,6 +507,7 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
         }
       },
       grid: {
+        show: this.chartStates.quarterly.showGridLines,
         borderColor: '#f1f5f9',
         strokeDashArray: 3,
         padding: {
@@ -542,35 +522,14 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
         intersect: false,
         y: {
           formatter: (val: number) => `${val} Trips`
-        },
-        style: {
-          fontSize: '12px'
         }
-      },
-      responsive: [
-        {
-          breakpoint: 768,
-          options: {
-            chart: {
-              height: 320
-            },
-            plotOptions: {
-              bar: {
-                columnWidth: '60%'
-              }
-            },
-            dataLabels: {
-              enabled: false
-            }
-          }
-        }
-      ]
+      }
     };
   }
 
   prepareYoYGrowthChart() {
     const isMobile = window.innerWidth < 768;
-    
+
     const totalWeight = (year: number) =>
       this.data
         .filter(x => Number(x.summaryYear) === year)
@@ -585,11 +544,16 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
       totalWeight(Number(this.selectedYear)),
       totalWeight(Number(this.previousYear))
     );
-    
+
     const tripsGrowth = this.calculateGrowth(
       totalTrips(Number(this.selectedYear)),
       totalTrips(Number(this.previousYear))
     );
+
+    const baseWidth = isMobile ? Math.max(2 * 100, window.innerWidth - 40) : '100%';
+    const zoomedWidth = typeof baseWidth === 'number'
+      ? baseWidth * (this.chartStates.yoy.zoomLevel / 100)
+      : baseWidth;
 
     this.yoyGrowthChartOptions = {
       series: [
@@ -600,17 +564,18 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
       ],
       chart: {
         type: 'bar',
-        height: isMobile ? 320 : 350,
-        toolbar: { 
+        height: this.chartStates.yoy.isFullscreen ? window.innerHeight - 200 : (isMobile ? 320 : 350),
+        width: zoomedWidth,
+        toolbar: {
           show: true,
           tools: {
             download: true,
             selection: false,
-            zoom: false,
-            zoomin: false,
-            zoomout: false,
-            pan: false,
-            reset: false
+            zoom: !isMobile,
+            zoomin: !isMobile,
+            zoomout: !isMobile,
+            pan: !isMobile,
+            reset: !isMobile
           }
         },
         fontFamily: 'inherit'
@@ -641,16 +606,14 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
         show: false
       },
       xaxis: {
-        categories: isMobile 
+        categories: isMobile
           ? ['Weight', 'Trips']
           : ['Weight Growth', 'Trips Growth'],
         labels: {
           style: {
             fontSize: isMobile ? '10px' : '12px',
             fontWeight: 600
-          },
-          rotate: 0,
-          trim: true
+          }
         },
         axisBorder: {
           show: true,
@@ -674,6 +637,7 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
         }
       },
       grid: {
+        show: this.chartStates.yoy.showGridLines,
         borderColor: '#f1f5f9',
         strokeDashArray: 3,
         padding: {
@@ -686,34 +650,8 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
       tooltip: {
         y: {
           formatter: (val: number) => `${val.toFixed(2)}%`
-        },
-        style: {
-          fontSize: '12px'
         }
-      },
-      responsive: [
-        {
-          breakpoint: 768,
-          options: {
-            chart: {
-              height: 320
-            },
-            plotOptions: {
-              bar: {
-                columnWidth: '50%'
-              }
-            },
-            xaxis: {
-              categories: ['Weight', 'Trips'],
-              labels: {
-                style: {
-                  fontSize: '10px'
-                }
-              }
-            }
-          }
-        }
-      ]
+      }
     };
   }
 
@@ -757,13 +695,209 @@ export class DashboardComparisonComponent implements OnChanges, OnDestroy {
     this.historicalData = yearlyStats.reverse();
   }
 
+  prepareAllTableData() {
+    // Monthly table data
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
+
+    this.monthlyTableData = months.map((m, index) => {
+      const currentYearData = this.data
+        .filter(x => Number(x.summaryYear) === Number(this.selectedYear) && Number(x.summaryMonth) === m)
+        .reduce((a, b) => a + b.totalNetWeight, 0);
+
+      const previousYearData = this.data
+        .filter(x => Number(x.summaryYear) === Number(this.previousYear) && Number(x.summaryMonth) === m)
+        .reduce((a, b) => a + b.totalNetWeight, 0);
+
+      return {
+        month: monthNames[index],
+        currentYear: currentYearData,
+        previousYear: previousYearData,
+        difference: currentYearData - previousYearData
+      };
+    });
+
+    // Quarterly table data
+    const quarters = [1, 2, 3, 4];
+    this.quarterlyTableData = quarters.map(q => {
+      const currentYearData = this.data
+        .filter(x => Number(x.summaryYear) === Number(this.selectedYear) &&
+          Math.ceil(Number(x.summaryMonth) / 3) === q)
+        .reduce((a, b) => a + b.tripsCount, 0);
+
+      const previousYearData = this.data
+        .filter(x => Number(x.summaryYear) === Number(this.previousYear) &&
+          Math.ceil(Number(x.summaryMonth) / 3) === q)
+        .reduce((a, b) => a + b.tripsCount, 0);
+
+      return {
+        quarter: `Q${q}`,
+        currentYear: currentYearData,
+        previousYear: previousYearData,
+        difference: currentYearData - previousYearData
+      };
+    });
+
+    // YoY table data
+    const totalWeight = (year: number) =>
+      this.data
+        .filter(x => Number(x.summaryYear) === year)
+        .reduce((a, b) => a + b.totalNetWeight, 0);
+
+    const totalTrips = (year: number) =>
+      this.data
+        .filter(x => Number(x.summaryYear) === year)
+        .reduce((a, b) => a + b.tripsCount, 0);
+
+    this.yoyTableData = [
+      {
+        metric: 'Weight Growth',
+        growth: this.calculateGrowth(
+          totalWeight(Number(this.selectedYear)),
+          totalWeight(Number(this.previousYear))
+        )
+      },
+      {
+        metric: 'Trips Growth',
+        growth: this.calculateGrowth(
+          totalTrips(Number(this.selectedYear)),
+          totalTrips(Number(this.previousYear))
+        )
+      }
+    ];
+  }
+
+  // Chart Control Methods
+  zoomIn(chartType: 'monthly' | 'quarterly' | 'yoy', event?: Event): void {
+    if (event) event.preventDefault();
+
+    if (this.chartStates[chartType].zoomLevel < 200) {
+      this.chartStates[chartType].zoomLevel += 25;
+      this.updateChart(chartType);
+    }
+  }
+
+  zoomOut(chartType: 'monthly' | 'quarterly' | 'yoy', event?: Event): void {
+    if (event) event.preventDefault();
+
+    if (this.chartStates[chartType].zoomLevel > 50) {
+      this.chartStates[chartType].zoomLevel -= 25;
+      this.updateChart(chartType);
+    }
+  }
+
+  resetZoom(chartType: 'monthly' | 'quarterly' | 'yoy', event?: Event): void {
+    if (event) event.preventDefault();
+
+    this.chartStates[chartType].zoomLevel = 100;
+    this.updateChart(chartType);
+  }
+
+  toggleFullscreen(chartType: 'monthly' | 'quarterly' | 'yoy', event?: Event): void {
+    if (event) event.preventDefault();
+
+    const wrapperMap: { [K in 'monthly' | 'quarterly' | 'yoy']: ElementRef } = {
+      monthly: this.monthlyChartWrapper,
+      quarterly: this.quarterlyChartWrapper,
+      yoy: this.yoyChartWrapper
+    };
+
+    const element = wrapperMap[chartType]?.nativeElement;
+
+    if (!this.chartStates[chartType].isFullscreen) {
+      if (element.requestFullscreen) {
+        element.requestFullscreen();
+      } else if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+      } else if (element.msRequestFullscreen) {
+        element.msRequestFullscreen();
+      }
+      this.chartStates[chartType].isFullscreen = true;
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
+      }
+      this.chartStates[chartType].isFullscreen = false;
+    }
+
+    setTimeout(() => this.updateChart(chartType), 100);
+  }
+
+  toggleDataTable(chartType: 'monthly' | 'quarterly' | 'yoy'): void {
+    this.chartStates[chartType].showDataTable = !this.chartStates[chartType].showDataTable;
+  }
+
+  toggleGridLines(chartType: 'monthly' | 'quarterly' | 'yoy'): void {
+    this.chartStates[chartType].showGridLines = !this.chartStates[chartType].showGridLines;
+    this.updateChart(chartType);
+  }
+
+  exportToCSV(chartType: 'monthly' | 'quarterly' | 'yoy'): void {
+    let csvContent = '';
+    let filename = '';
+
+    switch (chartType) {
+      case 'monthly':
+        csvContent = [
+          ['Month', `${this.selectedYear} (MT)`, `${this.previousYear} (MT)`, 'Difference'],
+          ...this.monthlyTableData.map(row => [row.month, row.currentYear, row.previousYear, row.difference])
+        ].map(row => row.join(',')).join('\n');
+        filename = 'monthly-comparison.csv';
+        break;
+
+      case 'quarterly':
+        csvContent = [
+          ['Quarter', `${this.selectedYear} (Trips)`, `${this.previousYear} (Trips)`, 'Difference'],
+          ...this.quarterlyTableData.map(row => [row.quarter, row.currentYear, row.previousYear, row.difference])
+        ].map(row => row.join(',')).join('\n');
+        filename = 'quarterly-comparison.csv';
+        break;
+
+      case 'yoy':
+        csvContent = [
+          ['Metric', 'Growth (%)'],
+          ...this.yoyTableData.map(row => [row.metric, row.growth])
+        ].map(row => row.join(',')).join('\n');
+        filename = 'yoy-growth.csv';
+        break;
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  private updateChart(chartType: 'monthly' | 'quarterly' | 'yoy'): void {
+    switch (chartType) {
+      case 'monthly':
+        this.prepareMonthlyChart();
+        break;
+      case 'quarterly':
+        this.prepareQuarterlyTripsChart();
+        break;
+      case 'yoy':
+        this.prepareYoYGrowthChart();
+        break;
+    }
+    this.cdr.detectChanges();
+  }
+
   private updateChartResponsiveness(): void {
     const isMobile = window.innerWidth < 768;
     const isSmallMobile = window.innerWidth < 480;
 
     // Update monthly chart with proper month labels
     if (this.monthlyComparisonChartOptions) {
-      const monthLabels = isMobile 
+      const monthLabels = isMobile
         ? ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D']
         : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
