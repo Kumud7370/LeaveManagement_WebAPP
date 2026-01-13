@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, Input, OnChanges, HostListener } from "@angular/core"
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, Input, OnChanges, HostListener, ViewChild, ElementRef } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { NgApexchartsModule } from "ng-apexcharts"
@@ -13,9 +13,11 @@ import { Subject, takeUntil } from "rxjs"
 })
 export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
   @Input() data: any;
+  @ViewChild('wardChartWrapper', { static: false }) wardChartWrapper!: ElementRef;
+
   private destroy$ = new Subject<void>()
   isLoading = true
-  
+
   pieChartOptionsSWMWeightDistribution!: any;
   pieChartOptionsSWMVehicleType!: any;
   wardwiseChartOptions!: any;
@@ -24,34 +26,30 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
   deonarData = { trips: 0, netWeight: 0 }
   totalData = { trips: 0, netWeight: 0 }
 
+  // Ward chart controls state
+  wardChartState = {
+    zoomLevel: 100,
+    isFullscreen: false,
+    showDataTable: false,
+    chartType: 'combined' as 'combined' | 'bar' | 'line',
+    showGridLines: true
+  }
+
+  // Ward data for table view
+  wardTableData: any[] = [];
+
   // Distinct color palette to avoid white/invisible colors
   private readonly distinctColors = [
-    '#3b82f6', // Blue
-    '#10b981', // Green
-    '#f59e0b', // Amber
-    '#ef4444', // Red
-    '#8b5cf6', // Purple
-    '#ec4899', // Pink
-    '#14b8a6', // Teal
-    '#f97316', // Orange
-    '#06b6d4', // Cyan
-    '#84cc16', // Lime
-    '#6366f1', // Indigo
-    '#a855f7', // Violet
-    '#d946ef', // Fuchsia
-    '#0ea5e9', // Light Blue
-    '#22c55e', // Light Green
-    '#eab308', // Yellow
-    '#dc2626', // Dark Red
-    '#7c3aed', // Dark Purple
-    '#db2777', // Dark Pink
-    '#0d9488'  // Dark Teal
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899',
+    '#14b8a6', '#f97316', '#06b6d4', '#84cc16', '#6366f1', '#a855f7',
+    '#d946ef', '#0ea5e9', '#22c55e', '#eab308', '#dc2626', '#7c3aed',
+    '#db2777', '#0d9488'
   ];
 
   constructor(
     private dbCallingService: DbCallingService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnChanges(): void {
     if (this.data?.length) {
@@ -97,7 +95,7 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
         fontFamily: 'inherit'
       },
       labels: ['Kanjur', 'Deonar'],
-      colors: ['#3b82f6', '#10b981'], // Distinct blue and green
+      colors: ['#3b82f6', '#10b981'],
       legend: {
         position: 'bottom',
         horizontalAlign: 'center',
@@ -196,7 +194,6 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
     const series = Object.values(grouped) as number[];
     const total = series.reduce((a, b) => a + b, 0);
 
-    // Generate distinct colors based on number of vehicle types
     const colors = labels.map((_, index) => this.distinctColors[index % this.distinctColors.length]);
 
     this.pieChartOptionsSWMVehicleType = {
@@ -207,7 +204,7 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
         fontFamily: 'inherit'
       },
       labels,
-      colors: colors, // Use distinct color palette
+      colors: colors,
       legend: {
         position: 'bottom',
         horizontalAlign: 'center',
@@ -224,12 +221,11 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
           radius: 2,
           offsetX: -2
         },
-        formatter: function(seriesName: string, opts: any) {
+        formatter: function (seriesName: string, opts: any) {
           const value = opts.w.globals.series[opts.seriesIndex];
           const percentage = ((value / total) * 100).toFixed(1);
-          // Truncate long vehicle type names for legend
-          const displayName = seriesName.length > 20 
-            ? seriesName.substring(0, 18) + '...' 
+          const displayName = seriesName.length > 20
+            ? seriesName.substring(0, 18) + '...'
             : seriesName;
           return `${displayName}: ${percentage}%`;
         },
@@ -243,7 +239,6 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
       dataLabels: {
         enabled: true,
         formatter: (val: number) => {
-          // Only show percentage if slice is larger than 3%
           return val > 3 ? `${val.toFixed(1)}%` : '';
         },
         style: {
@@ -261,7 +256,7 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
       },
       tooltip: {
         y: {
-          formatter: (val: number) => `${val.toFixed(2)} MT (${((val/total)*100).toFixed(1)}%)`
+          formatter: (val: number) => `${val.toFixed(2)} MT (${((val / total) * 100).toFixed(1)}%)`
         }
       },
       plotOptions: {
@@ -310,11 +305,11 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
                 horizontal: 8,
                 vertical: 4
               },
-              formatter: function(seriesName: string, opts: any) {
+              formatter: function (seriesName: string, opts: any) {
                 const value = opts.w.globals.series[opts.seriesIndex];
                 const percentage = ((value / total) * 100).toFixed(1);
-                const displayName = seriesName.length > 16 
-                  ? seriesName.substring(0, 14) + '...' 
+                const displayName = seriesName.length > 16
+                  ? seriesName.substring(0, 14) + '...'
                   : seriesName;
                 return `${displayName}: ${percentage}%`;
               }
@@ -351,11 +346,11 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
                 horizontal: 7,
                 vertical: 3
               },
-              formatter: function(seriesName: string, opts: any) {
+              formatter: function (seriesName: string, opts: any) {
                 const value = opts.w.globals.series[opts.seriesIndex];
                 const percentage = ((value / total) * 100).toFixed(1);
-                const displayName = seriesName.length > 14 
-                  ? seriesName.substring(0, 12) + '...' 
+                const displayName = seriesName.length > 14
+                  ? seriesName.substring(0, 12) + '...'
                   : seriesName;
                 return `${displayName}: ${percentage}%`;
               }
@@ -392,11 +387,11 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
                 horizontal: 6,
                 vertical: 2
               },
-              formatter: function(seriesName: string, opts: any) {
+              formatter: function (seriesName: string, opts: any) {
                 const value = opts.w.globals.series[opts.seriesIndex];
                 const percentage = ((value / total) * 100).toFixed(1);
-                const displayName = seriesName.length > 12 
-                  ? seriesName.substring(0, 10) + '...' 
+                const displayName = seriesName.length > 12
+                  ? seriesName.substring(0, 10) + '...'
                   : seriesName;
                 return `${displayName}: ${percentage}%`;
               }
@@ -446,11 +441,35 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
     const totalValues = wards.map(w => +grouped[w].totalNetWeight.toFixed(2));
     const avgLineData = wards.map(w => +grouped[w].avgNetWeightPerDay.toFixed(2));
 
-    this.wardwiseChartOptions = {
-      series: [
+    // Prepare table data
+    this.wardTableData = wards.map((ward, index) => ({
+      ward,
+      totalNetWeight: totalValues[index],
+      avgNetWeightPerDay: avgLineData[index]
+    }));
+
+    const windowWidth = window.innerWidth;
+    const isMobile = windowWidth < 768;
+    const isTablet = windowWidth >= 768 && windowWidth < 992;
+
+    // Calculate dynamic width for mobile horizontal scroll
+    // Each ward needs minimum 50px width for clear visibility
+    const minBarWidth = 50;
+    const calculatedWidth = wards.length * minBarWidth;
+    const baseWidth = isMobile ? Math.max(calculatedWidth, windowWidth - 40) : '100%';
+
+    // Apply zoom
+    const zoomedWidth = typeof baseWidth === 'number'
+      ? baseWidth * (this.wardChartState.zoomLevel / 100)
+      : baseWidth;
+
+    // Determine series based on chart type
+    let series: any[] = [];
+    if (this.wardChartState.chartType === 'combined') {
+      series = [
         {
           name: 'Total Net Weight (MT)',
-          type: 'bar',
+          type: 'column',
           data: totalValues
         },
         {
@@ -458,239 +477,394 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
           type: 'line',
           data: avgLineData
         }
-      ],
+      ];
+    } else if (this.wardChartState.chartType === 'bar') {
+      series = [{
+        name: 'Total Net Weight (MT)',
+        type: 'column',
+        data: totalValues
+      }];
+    } else {
+      series = [{
+        name: 'Avg Net Weight / Day (MT)',
+        type: 'line',
+        data: avgLineData
+      }];
+    }
+
+    this.wardwiseChartOptions = {
+      series,
       chart: {
         type: 'line',
-        height: 360,
+        height: this.wardChartState.isFullscreen ? window.innerHeight - 200 : (isMobile ? 380 : isTablet ? 380 : 400),
+        width: zoomedWidth,
         fontFamily: 'inherit',
-        toolbar: { show: false }
+        toolbar: {
+          show: true,
+          tools: {
+            download: true,
+            selection: false,
+            zoom: !isMobile,
+            zoomin: !isMobile,
+            zoomout: !isMobile,
+            pan: !isMobile,
+            reset: !isMobile
+          }
+        },
+        zoom: {
+          enabled: !isMobile
+        },
+        animations: {
+          enabled: true,
+          easing: 'easeinout',
+          speed: 600
+        }
       },
-      colors: ['#3b82f6', '#10b981'],
+      colors: this.wardChartState.chartType === 'line' ? ['#10b981'] : ['#3b82f6', '#10b981'],
+      fill: {
+        type: this.wardChartState.chartType === 'line' ? 'solid' : ['gradient', 'solid'],
+        gradient: {
+          shade: 'light',
+          type: 'vertical',
+          shadeIntensity: 0.25,
+          gradientToColors: ['#60a5fa'],
+          opacityFrom: 0.85,
+          opacityTo: 0.65,
+          stops: [0, 100]
+        }
+      },
       stroke: {
-        width: [0, 3],
+        width: this.wardChartState.chartType === 'bar' ? [0] : this.wardChartState.chartType === 'line' ? [3] : [0, 3],
         curve: 'smooth'
       },
       plotOptions: {
         bar: {
-          columnWidth: '45%',
-          borderRadius: 6
+          columnWidth: isMobile ? '65%' : '50%',
+          borderRadius: 6,
+          borderRadiusApplication: 'end',
+          dataLabels: {
+            position: 'top'
+          }
         }
       },
       dataLabels: {
-        enabled: false
+        enabled: !isMobile && this.wardChartState.chartType !== 'line',
+        enabledOnSeries: [0],
+        offsetY: -20,
+        style: {
+          fontSize: '10px',
+          fontWeight: 600,
+          colors: ['#2d3748']
+        },
+        background: {
+          enabled: true,
+          foreColor: '#fff',
+          borderRadius: 3,
+          padding: 3,
+          opacity: 0.9,
+          borderWidth: 1,
+          borderColor: '#e5e7eb'
+        },
+        formatter: (val: number) => val ? val.toFixed(1) : '0'
+      },
+      markers: {
+        size: this.wardChartState.chartType === 'bar' ? [0] : this.wardChartState.chartType === 'line' ? [5] : [0, 5],
+        colors: ['#ffffff'],
+        strokeColors: ['#10b981'],
+        strokeWidth: 2,
+        hover: {
+          size: 7,
+          sizeOffset: 3
+        }
       },
       xaxis: {
         categories: wards,
         labels: {
           style: {
-            fontSize: '11px',
-            fontWeight: 500
+            fontSize: isMobile ? '10px' : '11px',
+            fontWeight: 500,
+            colors: '#4a5568'
           },
-          rotate: -45,
+          rotate: isMobile ? 0 : -35,
           rotateAlways: false,
-          trim: true,
-          hideOverlappingLabels: true
+          trim: false,
+          hideOverlappingLabels: false,
+          maxHeight: isMobile ? undefined : 120
+        },
+        axisBorder: {
+          show: true,
+          color: '#cbd5e1',
+          height: 1
+        },
+        axisTicks: {
+          show: true,
+          color: '#cbd5e1',
+          height: 6
         },
         tickPlacement: 'on'
       },
-      yaxis: [
-        {
-          title: { 
-            text: 'Total Net Weight (MT)',
-            style: {
-              fontSize: '12px',
-              fontWeight: 600
-            }
-          },
-          labels: {
-            formatter: (val: number) => val.toFixed(2),
-            style: {
-              fontSize: '11px'
-            }
+      yaxis: this.getYAxisConfig(isMobile),
+      grid: {
+        show: this.wardChartState.showGridLines,
+        borderColor: '#f1f5f9',
+        strokeDashArray: 3,
+        position: 'back',
+        xaxis: {
+          lines: {
+            show: false
           }
         },
-        {
-          opposite: true,
-          title: { 
-            text: 'Avg Net Weight / Day (MT)',
-            style: {
-              fontSize: '12px',
-              fontWeight: 600
-            }
-          },
-          labels: {
-            formatter: (val: number) => val.toFixed(2),
-            style: {
-              fontSize: '11px'
-            }
+        yaxis: {
+          lines: {
+            show: true
           }
+        },
+        padding: {
+          top: 20,
+          right: isMobile ? 15 : 20,
+          bottom: 10,
+          left: isMobile ? 5 : 10
         }
-      ],
+      },
       tooltip: {
         shared: true,
         intersect: false,
+        theme: 'light',
+        x: {
+          show: true
+        },
         y: {
-          formatter: (val: number) => `${val.toFixed(2)} MT`
+          formatter: (val: number) => val ? `${val.toFixed(2)} MT` : '0 MT'
         }
       },
       legend: {
-        position: 'bottom',
+        position: 'top',
         horizontalAlign: 'center',
-        fontSize: '12px',
+        fontSize: isMobile ? '11px' : '12px',
         fontWeight: 500,
+        offsetY: 0,
         itemMargin: {
-          horizontal: 12,
+          horizontal: isMobile ? 10 : 15,
           vertical: 5
-        }
-      },
-      responsive: [
-        {
-          breakpoint: 768,
-          options: {
-            chart: { 
-              height: 400
-            },
-            plotOptions: {
-              bar: { columnWidth: '50%' }
-            },
-            xaxis: {
-              labels: {
-                style: {
-                  fontSize: '9px',
-                  fontWeight: 500
-                },
-                rotate: -45,
-                rotateAlways: true,
-                trim: true,
-                hideOverlappingLabels: true,
-                minHeight: 60
-              }
-            },
-            yaxis: [
-              {
-                title: { 
-                  text: 'Total (MT)',
-                  style: {
-                    fontSize: '10px',
-                    fontWeight: 600
-                  }
-                },
-                labels: {
-                  formatter: (val: number) => val.toFixed(1),
-                  style: {
-                    fontSize: '9px'
-                  }
-                }
-              },
-              {
-                opposite: true,
-                title: { 
-                  text: 'Avg/Day (MT)',
-                  style: {
-                    fontSize: '10px',
-                    fontWeight: 600
-                  }
-                },
-                labels: {
-                  formatter: (val: number) => val.toFixed(1),
-                  style: {
-                    fontSize: '9px'
-                  }
-                }
-              }
-            ],
-            legend: {
-              fontSize: '10px',
-              itemMargin: {
-                horizontal: 8,
-                vertical: 4
-              }
-            }
-          }
         },
-        {
-          breakpoint: 480,
-          options: {
-            chart: { 
-              height: 380
-            },
-            plotOptions: {
-              bar: { columnWidth: '60%' }
-            },
-            xaxis: {
-              labels: {
-                style: {
-                  fontSize: '8px',
-                  fontWeight: 500
-                },
-                rotate: -45,
-                rotateAlways: true,
-                trim: true,
-                hideOverlappingLabels: true,
-                minHeight: 70
-              }
-            },
-            yaxis: [
-              {
-                title: { 
-                  text: 'Total',
-                  style: {
-                    fontSize: '9px',
-                    fontWeight: 600
-                  }
-                },
-                labels: {
-                  formatter: (val: number) => val.toFixed(0),
-                  style: {
-                    fontSize: '8px'
-                  }
-                }
-              },
-              {
-                opposite: true,
-                title: { 
-                  text: 'Avg',
-                  style: {
-                    fontSize: '9px',
-                    fontWeight: 600
-                  }
-                },
-                labels: {
-                  formatter: (val: number) => val.toFixed(0),
-                  style: {
-                    fontSize: '8px'
-                  }
-                }
-              }
-            ],
-            legend: {
-              fontSize: '9px',
-              itemMargin: {
-                horizontal: 6,
-                vertical: 3
-              }
-            }
-          }
+        markers: {
+          width: 12,
+          height: 12,
+          radius: 3
         }
-      ]
+      }
     };
 
     this.isLoading = false;
   }
 
+  getYAxisConfig(isMobile: boolean): any[] {
+    if (this.wardChartState.chartType === 'bar') {
+      return [{
+        seriesName: 'Total Net Weight (MT)',
+        title: {
+          text: isMobile ? 'Total (MT)' : 'Total Net Weight (MT)',
+          style: {
+            fontSize: isMobile ? '11px' : '12px',
+            fontWeight: 600,
+            color: '#3b82f6'
+          }
+        },
+        labels: {
+          formatter: (val: number) => val ? val.toFixed(1) : '0',
+          style: {
+            fontSize: isMobile ? '10px' : '11px',
+            colors: '#64748b'
+          }
+        },
+        axisBorder: {
+          show: true,
+          color: '#3b82f6'
+        }
+      }];
+    } else if (this.wardChartState.chartType === 'line') {
+      return [{
+        seriesName: 'Avg Net Weight / Day (MT)',
+        title: {
+          text: isMobile ? 'Avg (MT)' : 'Avg / Day (MT)',
+          style: {
+            fontSize: isMobile ? '11px' : '12px',
+            fontWeight: 600,
+            color: '#10b981'
+          }
+        },
+        labels: {
+          formatter: (val: number) => val ? val.toFixed(1) : '0',
+          style: {
+            fontSize: isMobile ? '10px' : '11px',
+            colors: '#64748b'
+          }
+        },
+        axisBorder: {
+          show: true,
+          color: '#10b981'
+        }
+      }];
+    } else {
+      return [
+        {
+          seriesName: 'Total Net Weight (MT)',
+          title: {
+            text: isMobile ? 'Total (MT)' : 'Total Net Weight (MT)',
+            style: {
+              fontSize: isMobile ? '11px' : '12px',
+              fontWeight: 600,
+              color: '#3b82f6'
+            }
+          },
+          labels: {
+            formatter: (val: number) => val ? val.toFixed(1) : '0',
+            style: {
+              fontSize: isMobile ? '10px' : '11px',
+              colors: '#64748b'
+            }
+          },
+          axisBorder: {
+            show: true,
+            color: '#3b82f6'
+          }
+        },
+        {
+          seriesName: 'Avg Net Weight / Day (MT)',
+          opposite: true,
+          title: {
+            text: isMobile ? 'Avg (MT)' : 'Avg / Day (MT)',
+            style: {
+              fontSize: isMobile ? '11px' : '12px',
+              fontWeight: 600,
+              color: '#10b981'
+            }
+          },
+          labels: {
+            formatter: (val: number) => val ? val.toFixed(1) : '0',
+            style: {
+              fontSize: isMobile ? '10px' : '11px',
+              colors: '#64748b'
+            }
+          },
+          axisBorder: {
+            show: true,
+            color: '#10b981'
+          }
+        }
+      ];
+    }
+  }
+
+  // Ward Chart Control Methods - FIXED: Added optional event parameter
+  zoomIn(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    if (this.wardChartState.zoomLevel < 200) {
+      this.wardChartState.zoomLevel += 25;
+      this.prepareWardwiseChart();
+    }
+  }
+
+  zoomOut(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    if (this.wardChartState.zoomLevel > 50) {
+      this.wardChartState.zoomLevel -= 25;
+      this.prepareWardwiseChart();
+    }
+  }
+
+  resetZoom(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+    this.wardChartState.zoomLevel = 100;
+    this.prepareWardwiseChart();
+  }
+
+  toggleFullscreen(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+    }
+
+    const element = this.wardChartWrapper?.nativeElement;
+
+    if (!this.wardChartState.isFullscreen) {
+      if (element.requestFullscreen) {
+        element.requestFullscreen();
+      } else if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+      } else if (element.msRequestFullscreen) {
+        element.msRequestFullscreen();
+      }
+      this.wardChartState.isFullscreen = true;
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
+      }
+      this.wardChartState.isFullscreen = false;
+    }
+
+    setTimeout(() => this.prepareWardwiseChart(), 100);
+  }
+
+  toggleDataTable(): void {
+    this.wardChartState.showDataTable = !this.wardChartState.showDataTable;
+  }
+
+  changeChartType(type: 'combined' | 'bar' | 'line'): void {
+    this.wardChartState.chartType = type;
+    this.prepareWardwiseChart();
+  }
+
+  toggleGridLines(): void {
+    this.wardChartState.showGridLines = !this.wardChartState.showGridLines;
+    this.prepareWardwiseChart();
+  }
+
+  exportToCSV(): void {
+    const csvContent = [
+      ['Ward', 'Total Net Weight (MT)', 'Avg Net Weight / Day (MT)'],
+      ...this.wardTableData.map(row => [row.ward, row.totalNetWeight, row.avgNetWeightPerDay])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ward-wise-data.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
   @HostListener("window:resize", ["$event"])
   onResize(event: any) {
-    // Debounce resize events for better performance
     this.updateChartResponsiveness()
+  }
+
+  @HostListener('document:fullscreenchange', ['$event'])
+  @HostListener('document:webkitfullscreenchange', ['$event'])
+  @HostListener('document:mozfullscreenchange', ['$event'])
+  @HostListener('document:MSFullscreenChange', ['$event'])
+  onFullscreenChange(event?: Event) {
+    if (!document.fullscreenElement && !(document as any).webkitFullscreenElement) {
+      this.wardChartState.isFullscreen = false;
+      setTimeout(() => this.prepareWardwiseChart(), 100);
+    }
   }
 
   private updateChartResponsiveness(): void {
     const windowWidth = window.innerWidth
     const isMobile = windowWidth < 768
     const isTablet = windowWidth >= 768 && windowWidth < 992
-    const isSmallDesktop = windowWidth >= 992 && windowWidth < 1300
 
-    // Adjust pie chart heights based on viewport
     if (this.pieChartOptionsSWMVehicleType?.chart) {
       if (isMobile) {
         this.pieChartOptionsSWMVehicleType.chart.height = 340
@@ -700,38 +874,15 @@ export class DashboardAnalyticsComponent implements OnChanges, OnDestroy {
         this.pieChartOptionsSWMVehicleType.chart.height = 400
       }
     }
-    
+
     if (this.pieChartOptionsSWMWeightDistribution?.chart) {
       this.pieChartOptionsSWMWeightDistribution.chart.height = isMobile ? 300 : 320
     }
 
-    // Adjust bar chart based on viewport
-    const barCharts = [this.wardwiseChartOptions]
-
-    barCharts.forEach((opt) => {
-      if (opt?.chart) {
-        if (isMobile && windowWidth <= 480) {
-          opt.chart.height = 380
-        } else if (isMobile) {
-          opt.chart.height = 400
-        } else if (isTablet) {
-          opt.chart.height = 340
-        } else {
-          opt.chart.height = 360
-        }
-      }
-      if (opt?.plotOptions?.bar) {
-        if (isMobile && windowWidth <= 480) {
-          opt.plotOptions.bar.columnWidth = "60%"
-        } else if (isMobile) {
-          opt.plotOptions.bar.columnWidth = "50%"
-        } else if (isSmallDesktop) {
-          opt.plotOptions.bar.columnWidth = "55%"
-        } else {
-          opt.plotOptions.bar.columnWidth = "45%"
-        }
-      }
-    })
+    // Rebuild ward chart on resize for proper width calculation
+    if (this.data?.length) {
+      this.prepareWardwiseChart();
+    }
 
     this.cdr.detectChanges()
   }
