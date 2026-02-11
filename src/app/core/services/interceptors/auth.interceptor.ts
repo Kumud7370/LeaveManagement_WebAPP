@@ -7,14 +7,13 @@ import { ApiClientService } from '../api/apiClient';
 let isRefreshing = false;
 const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
-
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const apiClient = inject(ApiClientService);
   const router = inject(Router);
 
-  // Add token to request if available (except for auth endpoints)
-  const token = localStorage.getItem('accessToken');
-  const isAuthEndpoint = req.url.includes('/auth/');
+  // Check both sessionStorage and localStorage for token
+  const token = sessionStorage.getItem('token') || localStorage.getItem('accessToken');
+  const isAuthEndpoint = req.url.includes('/Auth/');
 
   let authReq = req;
   if (token && !isAuthEndpoint) {
@@ -36,7 +35,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   );
 };
 
-
 function handle401Error(
   request: HttpRequest<unknown>,
   next: HttpHandlerFn,
@@ -47,17 +45,18 @@ function handle401Error(
     isRefreshing = true;
     refreshTokenSubject.next(null);
 
-    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshToken = sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken');
 
     if (refreshToken) {
       return apiClient.refreshToken().pipe(
         switchMap((response: any) => {
           isRefreshing = false;
-          refreshTokenSubject.next(response.accessToken);
+          const newToken = response.accessToken || response.token;
+          refreshTokenSubject.next(newToken);
 
           const clonedRequest = request.clone({
             setHeaders: {
-              Authorization: `Bearer ${response.accessToken}`
+              Authorization: `Bearer ${newToken}`
             }
           });
           return next(clonedRequest);
@@ -76,7 +75,6 @@ function handle401Error(
       return throwError(() => new Error('No refresh token available'));
     }
   } else {
-    // Wait for token refresh to complete
     return refreshTokenSubject.pipe(
       filter(token => token !== null),
       take(1),

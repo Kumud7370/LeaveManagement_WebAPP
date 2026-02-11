@@ -1,489 +1,7 @@
-// import { Injectable } from '@angular/core';
-// import { HttpClient } from '@angular/common/http';
-// import { Observable, of } from 'rxjs';
-// import { catchError, map } from 'rxjs/operators';
-// import { environment } from '../../../environments/environment';
-// import { NewsItem } from '../../../app/modules/dashboard/dashboard.component';
-
-// @Injectable({
-//   providedIn: 'root'
-// })
-// export class DbCallingService {
-//   private apiUrl = environment.apiUrl;
-
-//   constructor(private http: HttpClient) { }
-
-//   getDashboardGraphData(): Observable<any> {
-//     return this.http.get<any>(`${this.apiUrl}/dashboard/graph-data`).pipe(
-//       catchError(error => {
-//         console.error('Error fetching dashboard graph data', error);
-//         // Return mock data for development
-//         return of({
-//           Data: [
-//             { MonthYear: 'Jan 2023', VehicleCount: 120, TotalActNetWeight: 1500 },
-//             { MonthYear: 'Feb 2023', VehicleCount: 150, TotalActNetWeight: 1800 },
-//             { MonthYear: 'Mar 2023', VehicleCount: 180, TotalActNetWeight: 2200 },
-//             { MonthYear: 'Apr 2023', VehicleCount: 210, TotalActNetWeight: 2500 },
-//             { MonthYear: 'May 2023', VehicleCount: 190, TotalActNetWeight: 2300 },
-//             { MonthYear: 'Jun 2023', VehicleCount: 220, TotalActNetWeight: 2700 }
-//           ]
-//         });
-//       })
-//     );
-//   }
-
-//   getDashboardGraphWardwiseData(): Observable<any> {
-//     return this.http.get<any>(`${this.apiUrl}/dashboard/ward-data`).pipe(
-//       catchError(error => {
-//         console.error('Error fetching ward-wise data', error);
-//         // Return mock data for development
-//         return of({
-//           WBWidgetTable: [
-//             { WBName: 'Ward A', VehicleCount: 50, ActNetWt: 600 },
-//             { WBName: 'Ward B', VehicleCount: 70, ActNetWt: 850 },
-//             { WBName: 'Ward C', VehicleCount: 45, ActNetWt: 550 },
-//             { WBName: 'Ward D', VehicleCount: 65, ActNetWt: 780 },
-//             { WBName: 'Ward E', VehicleCount: 55, ActNetWt: 670 },
-//             { WBName: 'Ward F', VehicleCount: 40, ActNetWt: 480 }
-//           ]
-//         });
-//       })
-//     );
-//   }
-
-//   getWidgetData(): Observable<any> {
-//     return this.http.get<any>(`${this.apiUrl}/dashboard/widget-data`).pipe(
-//       catchError(error => {
-//         console.error('Error fetching widget data', error);
-//         // Return mock data for development
-//         return of({
-//           totalVehicles: 985,
-//           totalWeight: 12450,
-//           activeWards: 24,
-//           completionPercentage: 78
-//         });
-//       })
-//     );
-//   }
-
-//   GetWBTripSummary(data: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/dashboard/getwbtripsummary`, data).pipe(
-//       catchError(error => {
-//         console.error('Error fetching dashboard data', error);
-//         return of({ VehicleData: [] }); // fallback to empty array on error
-//       })
-//     );
-//   }
-
-//   getVehicles(data: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/vehicles/list`, data).pipe(
-//       catchError(error => {
-//         console.error('Error fetching vehicle data', error);
-//         return of({ VehicleData: [] }); // fallback to empty array on error
-//       })
-//     );
-//   }
-//   getVehicleTypes(data: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Master/getvehicletypes`, data).pipe(
-//       catchError(error => {
-//         console.error('Error fetching vehicle data', error);
-//         return of({ VehicleData: [] }); // fallback to empty array on error
-//       })
-//     );
-//   }
-//   getWards(data: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Logsheet/getAllWards`, data).pipe(
-//       catchError(error => {
-//         console.error('Error fetching ward data', error);
-//         return of({ WardData: [] });
-//       })
-//     );
-//   }
-
-//   getWasteTypes(): Observable<any> {
-//     return this.http.get<any>(`${this.apiUrl}/waste-types`).pipe(
-//       catchError(error => {
-//         console.error('Error fetching waste types', error);
-//         return of(null);
-//       })
-//     );
-//   }
-
-//   getRoutes(): Observable<any> {
-//     return this.http.get<any>(`${this.apiUrl}/routes`).pipe(
-//       catchError(error => {
-//         console.error('Error fetching routes', error);
-//         return of(null);
-//       })
-//     );
-//   }
-
-//   GetAgencies(obj: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Master/GetAgencies`, obj).pipe(
-//       catchError(error => {
-//         console.error('Error generating logsheet', error);
-//         return of(null);
-//       })
-//     );
-//   }
-//   GetSiteLocations(obj: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Master/GetSiteLocations`, obj).pipe(
-//       catchError(error => {
-//         console.error('Error generating logsheet', error);
-//         return of(null);
-//       })
-//     );
-//   }
-//   GetDumpingSiteLocations(obj: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/logsheet/GetDumpingSiteLocations`, obj).pipe(
-//       catchError(error => {
-//         console.error('Error generating logsheet', error);
-//         return of(null);
-//       })
-//     );
-//   }
-//   generateLogsheet(obj: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/logsheet/generate`, obj).pipe(
-//       catchError(error => {
-//         console.error('Error generating logsheet', error);
-//         return of(null);
-//       })
-//     );
-//   }
-//   GetLogsheetReport(obj: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/logsheet/getLogsheetReport`, obj).pipe(
-//       catchError(error => {
-//         console.error('Error generating logsheet', error);
-//         return of(null);
-//       })
-//     );
-//   }
-//   loginUser(data: { username: string; password: string, deviceId: string }): Observable<any> {
-//     return this.http.post(`${this.apiUrl}/User/userWebLogin`, data).pipe(
-//       catchError(error => {
-//         console.error('Login error', error);
-//         return of(null);
-//       })
-//     );
-//   }
-
-//   getSearchReports(payload: any) {
-//     return this.http.post(`${this.apiUrl}/Report/GetSearchReports`, payload).pipe(
-//       catchError(error => {
-//         console.error('Error generating report', error);
-//         return of(null);
-//       })
-//     )
-//   }
-
-//   getWardwiseReport(data: {
-//     WeighBridge: string;
-//     FromDate: string;
-//     ToDate: string;
-//     FullDate: string;
-//     WardName: string;
-//     Act_Shift: string;
-//     TransactionDate: string;
-//   }): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Report/GetWardwiseReport`, data).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching wardwise report", error)
-
-//         return of({ WardData: [], ServiceResponse: "Failed", msg: "Error fetching data" })
-//       }),
-//     )
-//   }
-
-//   getShiftwiseReport(data: {
-//     WeighBridge: string;
-//     FromDate: string;
-//     ToDate: string;
-//     Act_Shift: string;
-//     WardName: string;
-//   }): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Report/getShiftwiseReport`, data).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching shiftwise report", error);
-//         return of({
-//           ShiftData: [],
-//           ServiceResponse: "Failed",
-//           msg: "Error fetching shiftwise data"
-//         });
-//       })
-//     );
-//   }
-//   getBillableSearchData(data: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Report/GetBillableSearchData`, data).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching billable search data", error);
-//         return of({
-//           Data: [],
-//           ServiceResponse: 0,
-//           msg: "Error fetching billable data"
-//         });
-//       })
-//     );
-//   }
-
-//   sendToVerifyBillingData(data: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Report/billingactions`, data).pipe(
-//       catchError((error) => {
-//         console.error("Error sending billing data for verification", error);
-//         return of({
-//           ServiceResponse: 0,
-//           msg: "Error sending data for verification"
-//         });
-//       })
-//     );
-//   }
-
-//   rejectBillingData(data: {
-//     UserId: number;
-//     SlipSrNoNew: string;
-//     BillingStatus: number;
-//     Remark?: string;
-//   }): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Report/BillingReject`, data).pipe(
-//       catchError((error) => {
-//         console.error("Error rejecting billing data", error);
-//         return error;
-//       })
-//     );
-//   }
-
-//   // VERIFICATION METHODS
-//   getVerificationData(data: {
-//     UserId: number
-//     SlipSrNos: string
-//     FromDate: string
-//     ToDate: string
-//     Status: number
-//   }): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Verification/GetVerificationData`, data).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching verification data", error)
-//         return of({
-//           Data: [],
-//           ServiceResponse: 0,
-//           msg: "Error fetching verification data",
-//         })
-//       }),
-//     )
-//   }
-
-//   getPendingVerifications(data: {
-//     UserId: number
-//     Status: number
-//   }): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Verification/GetPendingVerifications`, data).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching pending verifications", error)
-//         return of({
-//           Data: [],
-//           ServiceResponse: 0,
-//           msg: "Error fetching pending verifications",
-//         })
-//       }),
-//     )
-//   }
-
-//   performVerificationAction(data: {
-//     UserId: number
-//     VerifierId: number
-//     SlipSrNo: string
-//     Action: string
-//     Remark: string
-//     VerificationDate: string
-//   }): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Verification/PerformAction`, data).pipe(
-//       catchError((error) => {
-//         console.error("Error performing verification action", error)
-//         return of({
-//           ServiceResponse: 0,
-//           msg: "Error performing verification action",
-//         })
-//       }),
-//     )
-//   }
-
-//   performBulkVerificationAction(data: {
-//     UserId: number
-//     VerifierId: number
-//     SlipSrNos: string
-//     Action: string
-//     Remark: string
-//     VerificationDate: string
-//   }): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Verification/PerformBulkAction`, data).pipe(
-//       catchError((error) => {
-//         console.error("Error performing bulk verification action", error)
-//         return of({
-//           ServiceResponse: 0,
-//           msg: "Error performing bulk verification action",
-//         })
-//       }),
-//     )
-//   }
-
-
-//   getVehiclemasterData(data: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Master/getvehicle`, data).pipe(
-//       catchError((error) => {
-//         console.error("Error while fetching vehicle list", error)
-//         return of({
-//           data: [],
-//           status: 500,
-//           msg: "Error while fetching vehicle list",
-//         })
-//       }),
-//     )
-//   }
-//   getImportantUpdates(payload: any): Observable<NewsItem[]> {
-//     return this.http.post<NewsItem[]>(`${this.apiUrl}/Dashboard/InsertImportantUpdate`, payload).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching important updates", error);
-//         return of([] as NewsItem[]);
-//       }),
-//     );
-//   }
-
-//   GetTripDetails(payload: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Report/GetTripDetails`, payload).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching TripDetail", error);
-//         return of(null);
-//       }),
-//     );
-//   }
-
-//   AddAgency(payload: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Master/addAgency`, payload).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching TripDetail", error);
-//         return of(null);
-//       }),
-//     );
-//   }
-
-//   addVehicle(vehicle: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Master/addvehicle`, vehicle).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching TripDetail", error);
-//         return of(null);
-//       }),
-//     );
-//   }
-
-//   GetPenaltyList(payload: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Master/GetPenaltyList`, payload).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching TripDetail", error);
-//         return of(null);
-//       }),
-//     );
-//   }
-//   VerifyLogsheet(payload: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Logsheet/VerifyLogsheet`, payload).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching TripDetail", error);
-//         return of(null);
-//       }),
-//     );
-//   }
-//   GetTripDetailsForSlipGeneartion(payload: any): Observable<any> {
-//     return this.http.post<any>(`${this.apiUrl}/Report/GetTripDetailsForSlipGeneartion`, payload).pipe(
-//       catchError((error) => {
-//         console.error("Error fetching TripDetail", error);
-//         return of(null);
-//       }),
-//     );
-//   }
-//   getCumulativeTripSummary(payload: any) {
-//     return this.http.post<any>(
-//       environment.apiUrl + "/dashboard/getcumulativetripsummary",
-//       payload
-//     );
-//   }
-
-//   // getDashboardMetrics(data: {
-//   //   userId?: number;
-//   //   siteName?: string;
-//   //   wardName?: string;
-//   //   agency?: string;
-//   //   vehicleType?: string;
-//   // }): Observable<any> {
-//   //   return this.http.post<any>(`${this.apiUrl}/Dashboard/getdashboardmetrics`, data).pipe(
-//   //     catchError((error) => {
-//   //       console.error("Error fetching dashboard metrics", error);
-//   //       // Return fallback data structure on error
-//   //       return of({
-//   //         status: "error",
-//   //         message: "Failed to fetch dashboard metrics",
-//   //         data: {
-//   //           last30DaysTotal: 0,
-//   //           last30DaysAvgWardWise: 0,
-//   //           todayWeight: 0,
-//   //           yesterdayWeight: 0,
-//   //           thisWeekWeight: 0,
-//   //           thisMonthWeight: 0,
-//   //           thisYearWeight: 0,
-//   //           wardCount: 0
-//   //         }
-//   //       });
-//   //     })
-//   //   );
-//   // }
-//   // db-calling.service.ts
-//   getDashboardMetrics(payload: {
-//     userId?: number
-//     siteName?: string
-//     wardName?: string
-//     agency?: string
-//     vehicleType?: string
-//     fromDate?: string
-//     toDate?: string
-//   }): Observable<any> {
-//     return this.http
-//       .post<any>(`${this.apiUrl}/dashboard/getdashboardmetrics`, payload)
-//       .pipe(
-//         map(res => res?.data ?? null),
-//         catchError(error => {
-//           console.error("Error fetching dashboard metrics", error)
-//           return of(null)
-//         })
-//       )
-//   }
-
-//   getDashboardMonthlySummary(filters: any) {
-//     console.log('Fetching monthly summary with filters:', filters);
-//     return this.http.post<any>(
-//       `${this.apiUrl}/dashboard/getdashboardmonthlysummery`,
-//       filters
-//     );
-//   }
-
-//   getDashboardAnalyticsSummary(filters: any) {
-//     console.log('Fetching analytics summary with filters:', filters);
-//     return this.http.post<any>(
-//       `${this.apiUrl}/dashboard/getdashboardanalyticssummary`,
-//       filters
-//     );
-//   }
-
-//   getDashboardOverallKpis(filters: any): Observable<any> {
-//     console.log('Fetching overall KPIs with filters:', filters);
-//     return this.http.post<any>(
-//       `${this.apiUrl}/dashboard/getdashboardoverallkpis`,
-//       filters
-//     );
-//   }
-
-// }
-
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -494,9 +12,6 @@ export class ApiClientService {
 
   constructor(private http: HttpClient) { }
 
-  /**
-   * Get HTTP headers with JWT token if available
-   */
   private getHeaders(): HttpHeaders {
     let headers = new HttpHeaders({
       'Content-Type': 'application/json',
@@ -511,119 +26,116 @@ export class ApiClientService {
     return headers;
   }
 
-  /**
-   * Get authentication token from localStorage
-   */
   private getAuthToken(): string | null {
-    return localStorage.getItem('accessToken');
+    return sessionStorage.getItem('token') || localStorage.getItem('accessToken');
   }
 
-  /**
-   * Store authentication token in localStorage
-   */
   public setAuthToken(token: string): void {
+    sessionStorage.setItem('token', token);
     localStorage.setItem('accessToken', token);
   }
 
-  /**
-   * Store refresh token in localStorage
-   */
   public setRefreshToken(token: string): void {
+    sessionStorage.setItem('refreshToken', token);
     localStorage.setItem('refreshToken', token);
   }
 
-  /**
-   * Remove authentication tokens
-   */
   public clearTokens(): void {
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('UserId');
+    sessionStorage.removeItem('SiteName');
+    sessionStorage.removeItem('RoleName');
+    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('role');
+    sessionStorage.removeItem('deviceId');
+    
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
   }
 
-  /**
-   * Generic GET request
-   */
   public get<T>(endpoint: string): Observable<T> {
     const url = `${this.baseUrl}/${endpoint}`;
     return this.http.get<T>(url, { headers: this.getHeaders() })
-      .pipe(
-        catchError(this.handleError)
-      );
+      .pipe(catchError(this.handleError));
   }
 
-  /**
-   * Generic POST request
-   */
   public post<T>(endpoint: string, data: any): Observable<T> {
     const url = `${this.baseUrl}/${endpoint}`;
     return this.http.post<T>(url, data, { headers: this.getHeaders() })
-      .pipe(
-        catchError(this.handleError)
-      );
+      .pipe(catchError(this.handleError));
   }
 
-  /**
-   * Generic PUT request
-   */
   public put<T>(endpoint: string, data: any): Observable<T> {
     const url = `${this.baseUrl}/${endpoint}`;
     return this.http.put<T>(url, data, { headers: this.getHeaders() })
-      .pipe(
-        catchError(this.handleError)
-      );
+      .pipe(catchError(this.handleError));
   }
 
-  /**
-   * Generic PATCH request
-   */
   public patch<T>(endpoint: string, data: any): Observable<T> {
     const url = `${this.baseUrl}/${endpoint}`;
     return this.http.patch<T>(url, data, { headers: this.getHeaders() })
-      .pipe(
-        catchError(this.handleError)
-      );
+      .pipe(catchError(this.handleError));
   }
 
-  /**
-   * Generic DELETE request
-   */
   public delete<T>(endpoint: string): Observable<T> {
     const url = `${this.baseUrl}/${endpoint}`;
     return this.http.delete<T>(url, { headers: this.getHeaders() })
-      .pipe(
-        catchError(this.handleError)
-      );
+      .pipe(catchError(this.handleError));
   }
 
-  /**
-   * Handle HTTP errors
-   */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'An unknown error occurred';
 
     if (error.error instanceof ErrorEvent) {
-      // Client-side or network error
-      errorMessage = `Error: ${error.error.message}`;
+      errorMessage = `Network Error: ${error.error.message}`;
+    } else if (error.status === 0) {
+      errorMessage = 'Cannot connect to the server. Please ensure the API server is running at ' + 
+                     (error.url?.split('/api')[0] || 'the configured URL');
     } else {
-      // Backend returned an unsuccessful response code
-      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+      errorMessage = `Server Error: ${error.status} - ${error.statusText}`;
       
-      if (error.error && error.error.message) {
-        errorMessage = error.error.message;
+      if (error.error && typeof error.error === 'object') {
+        if (error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.error.title) {
+          errorMessage = error.error.title;
+        }
       }
     }
 
-    console.error('API Error:', errorMessage);
+    console.error('API Error Details:', {
+      status: error.status,
+      statusText: error.statusText,
+      url: error.url,
+      message: errorMessage,
+      error: error.error
+    });
+
     return throwError(() => new Error(errorMessage));
   }
 
   // ==================== Authentication Endpoints ====================
 
-  /**
-   * Login user
-   */
+  public loginUser(credentials: { username: string; password: string; deviceId: string }): Observable<any> {
+    console.log('Attempting login with:', { 
+      username: credentials.username, 
+      endpoint: `${this.baseUrl}/Auth/login` 
+    });
+
+    return this.post('Auth/login', credentials).pipe(
+      tap((response) => {
+        console.log('Login response received:', response);
+      }),
+      catchError((error) => {
+        console.error('Login failed:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
   public login(credentials: { email: string; password: string }): Observable<any> {
-    return this.post('auth/login', credentials).pipe(
+    return this.post('Auth/login', credentials).pipe(
       map((response: any) => {
         if (response.accessToken) {
           this.setAuthToken(response.accessToken);
@@ -636,31 +148,26 @@ export class ApiClientService {
     );
   }
 
-  /**
-   * Register new user
-   */
   public register(userData: any): Observable<any> {
-    return this.post('auth/register', userData);
+    return this.post('Auth/register', userData);
   }
 
-  /**
-   * Logout user
-   */
   public logout(): Observable<any> {
-    return this.post('auth/logout', {}).pipe(
+    return this.post('Auth/logout', {}).pipe(
       map((response) => {
         this.clearTokens();
         return response;
+      }),
+      catchError((error) => {
+        this.clearTokens();
+        return throwError(() => error);
       })
     );
   }
 
-  /**
-   * Refresh access token
-   */
   public refreshToken(): Observable<any> {
-    const refreshToken = localStorage.getItem('refreshToken');
-    return this.post('auth/refresh', { refreshToken }).pipe(
+    const refreshToken = sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken');
+    return this.post('Auth/refresh-token', { refreshToken }).pipe(
       map((response: any) => {
         if (response.accessToken) {
           this.setAuthToken(response.accessToken);
@@ -670,114 +177,248 @@ export class ApiClientService {
     );
   }
 
-  /**
-   * Forgot password
-   */
   public forgotPassword(email: string): Observable<any> {
-    return this.post('auth/forgot-password', { email });
+    return this.post('Auth/forgot-password', { email });
   }
 
-  /**
-   * Reset password
-   */
   public resetPassword(data: { token: string; newPassword: string }): Observable<any> {
-    return this.post('auth/reset-password', data);
+    return this.post('Auth/reset-password', data);
+  }
+
+  public changePassword(data: { currentPassword: string; newPassword: string }): Observable<any> {
+    return this.post('Auth/change-password', data);
+  }
+
+  public getCurrentUser(): Observable<any> {
+    return this.get('Auth/me');
   }
 
   // ==================== User Endpoints ====================
 
-  /**
-   * Get current user profile
-   */
-  public getCurrentUser(): Observable<any> {
-    return this.get('users/me');
-  }
-
-  /**
-   * Update user profile
-   */
   public updateProfile(userData: any): Observable<any> {
     return this.put('users/me', userData);
   }
 
-  /**
-   * Get all users (admin only)
-   */
   public getUsers(): Observable<any> {
     return this.get('users');
   }
 
-  /**
-   * Get user by ID
-   */
   public getUserById(userId: string): Observable<any> {
     return this.get(`users/${userId}`);
   }
 
   // ==================== Attendance Endpoints ====================
 
-  /**
-   * Mark attendance
-   */
+  public checkIn(data: any): Observable<any> {
+    return this.post('Attendance/checkin', data);
+  }
+
+  public checkOut(data: any): Observable<any> {
+    return this.post('Attendance/checkout', data);
+  }
+
+  public manualAttendance(data: any): Observable<any> {
+    return this.post('Attendance/manual', data);
+  }
+
   public markAttendance(attendanceData: any): Observable<any> {
-    return this.post('attendance', attendanceData);
+    return this.manualAttendance(attendanceData);
   }
 
-  /**
-   * Get attendance records
-   */
-  public getAttendance(params?: any): Observable<any> {
-    let queryString = '';
-    if (params) {
-      const queryParams = new URLSearchParams(params).toString();
-      queryString = queryParams ? `?${queryParams}` : '';
-    }
-    return this.get(`attendance${queryString}`);
-  }
-
-  /**
-   * Get attendance by ID
-   */
   public getAttendanceById(attendanceId: string): Observable<any> {
-    return this.get(`attendance/${attendanceId}`);
+    return this.get(`Attendance/${attendanceId}`);
   }
 
-  /**
-   * Update attendance
-   */
   public updateAttendance(attendanceId: string, data: any): Observable<any> {
-    return this.put(`attendance/${attendanceId}`, data);
+    return this.put(`Attendance/${attendanceId}`, data);
   }
 
-  /**
-   * Delete attendance
-   */
   public deleteAttendance(attendanceId: string): Observable<any> {
-    return this.delete(`attendance/${attendanceId}`);
+    return this.delete(`Attendance/${attendanceId}`);
   }
 
-  // ==================== Reports Endpoints ====================
-
-  /**
-   * Get attendance report
-   */
-  public getAttendanceReport(params: any): Observable<any> {
-    const queryParams = new URLSearchParams(params).toString();
-    return this.get(`reports/attendance?${queryParams}`);
+  public getAttendance(params?: any): Observable<any> {
+    if (params) {
+      return this.filterAttendance(params);
+    }
+    return this.getAttendanceStatistics();
   }
 
-  /**
-   * Export attendance report
-   */
-  public exportAttendanceReport(params: any, format: 'csv' | 'excel' | 'pdf'): Observable<Blob> {
-    const queryParams = new URLSearchParams(params).toString();
-    const url = `${this.baseUrl}/reports/export/${format}?${queryParams}`;
-    
-    return this.http.get(url, {
-      headers: this.getHeaders(),
-      responseType: 'blob'
-    }).pipe(
-      catchError(this.handleError)
-    );
+  public getTodayAttendance(employeeId: string): Observable<any> {
+    return this.get(`Attendance/today/${employeeId}`);
+  }
+
+  public getAttendanceByDate(employeeId: string, date: string): Observable<any> {
+    return this.get(`Attendance/date/${employeeId}/${date}`);
+  }
+
+  public filterAttendance(filterData: any): Observable<any> {
+    return this.post('Attendance/filter', filterData);
+  }
+
+  public getAttendanceHistory(employeeId: string): Observable<any> {
+    return this.get(`Attendance/history/${employeeId}`);
+  }
+
+  public getAttendanceSummary(employeeId: string): Observable<any> {
+    return this.get(`Attendance/summary/${employeeId}`);
+  }
+
+  public getAttendanceStatistics(): Observable<any> {
+    return this.get('Attendance/statistics');
+  }
+
+  public getLateAttendance(): Observable<any> {
+    return this.get('Attendance/late');
+  }
+
+  public getEarlyLeave(): Observable<any> {
+    return this.get('Attendance/early-leave');
+  }
+
+  public approveAttendance(id: string): Observable<any> {
+    return this.patch(`Attendance/${id}/approve`, {});
+  }
+
+  public markAbsent(data: any): Observable<any> {
+    return this.post('Attendance/mark-absent', data);
+  }
+
+  // ==================== Department Endpoints ====================
+
+  public createDepartment(data: any): Observable<any> {
+    return this.post('Department', data);
+  }
+
+  public updateDepartment(data: any): Observable<any> {
+    return this.put('Department', data);
+  }
+
+  public getDepartmentById(id: string): Observable<any> {
+    return this.get(`Department/${id}`);
+  }
+
+  public deleteDepartment(id: string): Observable<any> {
+    return this.delete(`Department/${id}`);
+  }
+
+  public filterDepartments(filterData: any): Observable<any> {
+    return this.post('Department/filter', filterData);
+  }
+
+  public getActiveDepartments(): Observable<any> {
+    return this.get('Department/active');
+  }
+
+  // ==================== Employee Endpoints ====================
+
+  public createEmployee(data: any): Observable<any> {
+    return this.post('Employee', data);
+  }
+
+  public getEmployeeById(id: string): Observable<any> {
+    return this.get(`Employee/${id}`);
+  }
+
+  public updateEmployee(id: string, data: any): Observable<any> {
+    return this.put(`Employee/${id}`, data);
+  }
+
+  public deleteEmployee(id: string): Observable<any> {
+    return this.delete(`Employee/${id}`);
+  }
+
+  public filterEmployees(filterData: any): Observable<any> {
+    return this.post('Employee/filter', filterData);
+  }
+
+  public getActiveEmployees(): Observable<any> {
+    return this.get('Employee/active');
+  }
+
+  // ==================== Leave Endpoints ====================
+
+  public createLeave(data: any): Observable<any> {
+    return this.post('Leave', data);
+  }
+
+  public getLeaveById(id: string): Observable<any> {
+    return this.get(`Leave/${id}`);
+  }
+
+  public updateLeave(id: string, data: any): Observable<any> {
+    return this.put(`Leave/${id}`, data);
+  }
+
+  public deleteLeave(id: string): Observable<any> {
+    return this.delete(`Leave/${id}`);
+  }
+
+  public filterLeaves(filterData: any): Observable<any> {
+    return this.post('Leave/filter', filterData);
+  }
+
+  public getPendingLeaves(): Observable<any> {
+    return this.get('Leave/pending');
+  }
+
+  public approveLeave(id: string): Observable<any> {
+    return this.patch(`Leave/${id}/approve`, {});
+  }
+
+  public rejectLeave(id: string): Observable<any> {
+    return this.patch(`Leave/${id}/reject`, {});
+  }
+
+  // ==================== Shift Endpoints ====================
+
+  public createShift(data: any): Observable<any> {
+    return this.post('Shift', data);
+  }
+
+  public getShiftById(id: string): Observable<any> {
+    return this.get(`Shift/${id}`);
+  }
+
+  public updateShift(id: string, data: any): Observable<any> {
+    return this.put(`Shift/${id}`, data);
+  }
+
+  public deleteShift(id: string): Observable<any> {
+    return this.delete(`Shift/${id}`);
+  }
+
+  public filterShifts(filterData: any): Observable<any> {
+    return this.post('Shift/filter', filterData);
+  }
+
+  public getActiveShifts(): Observable<any> {
+    return this.get('Shift/active');
+  }
+
+  // ==================== Holiday Endpoints ====================
+
+  public createHoliday(data: any): Observable<any> {
+    return this.post('Holiday', data);
+  }
+
+  public getHolidayById(id: string): Observable<any> {
+    return this.get(`Holiday/${id}`);
+  }
+
+  public updateHoliday(id: string, data: any): Observable<any> {
+    return this.put(`Holiday/${id}`, data);
+  }
+
+  public deleteHoliday(id: string): Observable<any> {
+    return this.delete(`Holiday/${id}`);
+  }
+
+  public filterHolidays(filterData: any): Observable<any> {
+    return this.post('Holiday/filter', filterData);
+  }
+
+  public getUpcomingHolidays(): Observable<any> {
+    return this.get('Holiday/upcoming');
   }
 }
