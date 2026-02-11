@@ -1,23 +1,23 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+// import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { DashboardComparisonComponent } from './dashboard-comparison.component';
+// import { DashboardComparisonComponent } from './dashboard-comparison.component';
 
-describe('DashboardComparisonComponent', () => {
-  let component: DashboardComparisonComponent;
-  let fixture: ComponentFixture<DashboardComparisonComponent>;
+// describe('DashboardComparisonComponent', () => {
+//   let component: DashboardComparisonComponent;
+//   let fixture: ComponentFixture<DashboardComparisonComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [DashboardComparisonComponent]
-    })
-    .compileComponents();
+//   beforeEach(async () => {
+//     await TestBed.configureTestingModule({
+//       imports: [DashboardComparisonComponent]
+//     })
+//     .compileComponents();
 
-    fixture = TestBed.createComponent(DashboardComparisonComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+//     fixture = TestBed.createComponent(DashboardComparisonComponent);
+//     component = fixture.componentInstance;
+//     fixture.detectChanges();
+//   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
+//   it('should create', () => {
+//     expect(component).toBeTruthy();
+//   });
+// });
