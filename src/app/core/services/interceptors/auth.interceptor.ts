@@ -1,24 +1,93 @@
-import { inject } from "@angular/core"
-import { HttpErrorResponse, HttpInterceptorFn } from "@angular/common/http"
-import { Router } from "@angular/router"
-import { AuthService } from "../../services/AuthServices/auth.service"
-import { catchError } from "rxjs/operators"
-import { throwError } from "rxjs"
+import { HttpInterceptorFn, HttpErrorResponse, HttpRequest, HttpHandlerFn, HttpEvent } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { catchError, throwError, switchMap, BehaviorSubject, filter, take, Observable } from 'rxjs';
+import { ApiClientService } from '../api/apiClient';
+
+let isRefreshing = false;
+const refreshTokenSubject = new BehaviorSubject<string | null>(null);
+
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-    const authService = inject(AuthService)
-    const router = inject(Router)
+  const apiClient = inject(ApiClientService);
+  const router = inject(Router);
 
-    const token = sessionStorage.getItem("token")
-    const cloned = token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req
+  // Add token to request if available (except for auth endpoints)
+  const token = localStorage.getItem('accessToken');
+  const isAuthEndpoint = req.url.includes('/auth/');
 
-    return next(cloned).pipe(
-        catchError((error: HttpErrorResponse) => {
-            if (error && (error.status === 401 || error.status === 403)) {
-                // Session likely expired or unauthorized – perform logout and redirect with message
-                authService.logout("expired") // navigates to /login?reason=expired
+  let authReq = req;
+  if (token && !isAuthEndpoint) {
+    authReq = req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  }
+
+  return next(authReq).pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (error.status === 401 && !isAuthEndpoint) {
+        return handle401Error(authReq, next, apiClient, router);
+      }
+
+      return throwError(() => error);
+    })
+  );
+};
+
+
+function handle401Error(
+  request: HttpRequest<unknown>,
+  next: HttpHandlerFn,
+  apiClient: ApiClientService,
+  router: Router
+): Observable<HttpEvent<unknown>> {
+  if (!isRefreshing) {
+    isRefreshing = true;
+    refreshTokenSubject.next(null);
+
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    if (refreshToken) {
+      return apiClient.refreshToken().pipe(
+        switchMap((response: any) => {
+          isRefreshing = false;
+          refreshTokenSubject.next(response.accessToken);
+
+          const clonedRequest = request.clone({
+            setHeaders: {
+              Authorization: `Bearer ${response.accessToken}`
             }
-            return throwError(() => error)
+          });
+          return next(clonedRequest);
         }),
-    )
+        catchError((err) => {
+          isRefreshing = false;
+          apiClient.clearTokens();
+          router.navigate(['/login']);
+          return throwError(() => err);
+        })
+      );
+    } else {
+      isRefreshing = false;
+      apiClient.clearTokens();
+      router.navigate(['/login']);
+      return throwError(() => new Error('No refresh token available'));
+    }
+  } else {
+    // Wait for token refresh to complete
+    return refreshTokenSubject.pipe(
+      filter(token => token !== null),
+      take(1),
+      switchMap(token => {
+        const clonedRequest = request.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        return next(clonedRequest);
+      })
+    );
+  }
 }
