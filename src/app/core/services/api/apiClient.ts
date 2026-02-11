@@ -480,3 +480,304 @@
 
 // }
 
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ApiClientService {
+  private baseUrl: string = environment.apiUrl;
+
+  constructor(private http: HttpClient) { }
+
+  /**
+   * Get HTTP headers with JWT token if available
+   */
+  private getHeaders(): HttpHeaders {
+    let headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+
+    const token = this.getAuthToken();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    return headers;
+  }
+
+  /**
+   * Get authentication token from localStorage
+   */
+  private getAuthToken(): string | null {
+    return localStorage.getItem('accessToken');
+  }
+
+  /**
+   * Store authentication token in localStorage
+   */
+  public setAuthToken(token: string): void {
+    localStorage.setItem('accessToken', token);
+  }
+
+  /**
+   * Store refresh token in localStorage
+   */
+  public setRefreshToken(token: string): void {
+    localStorage.setItem('refreshToken', token);
+  }
+
+  /**
+   * Remove authentication tokens
+   */
+  public clearTokens(): void {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+  }
+
+  /**
+   * Generic GET request
+   */
+  public get<T>(endpoint: string): Observable<T> {
+    const url = `${this.baseUrl}/${endpoint}`;
+    return this.http.get<T>(url, { headers: this.getHeaders() })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Generic POST request
+   */
+  public post<T>(endpoint: string, data: any): Observable<T> {
+    const url = `${this.baseUrl}/${endpoint}`;
+    return this.http.post<T>(url, data, { headers: this.getHeaders() })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Generic PUT request
+   */
+  public put<T>(endpoint: string, data: any): Observable<T> {
+    const url = `${this.baseUrl}/${endpoint}`;
+    return this.http.put<T>(url, data, { headers: this.getHeaders() })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Generic PATCH request
+   */
+  public patch<T>(endpoint: string, data: any): Observable<T> {
+    const url = `${this.baseUrl}/${endpoint}`;
+    return this.http.patch<T>(url, data, { headers: this.getHeaders() })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Generic DELETE request
+   */
+  public delete<T>(endpoint: string): Observable<T> {
+    const url = `${this.baseUrl}/${endpoint}`;
+    return this.http.delete<T>(url, { headers: this.getHeaders() })
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Handle HTTP errors
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage = 'An unknown error occurred';
+
+    if (error.error instanceof ErrorEvent) {
+      // Client-side or network error
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      // Backend returned an unsuccessful response code
+      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+      
+      if (error.error && error.error.message) {
+        errorMessage = error.error.message;
+      }
+    }
+
+    console.error('API Error:', errorMessage);
+    return throwError(() => new Error(errorMessage));
+  }
+
+  // ==================== Authentication Endpoints ====================
+
+  /**
+   * Login user
+   */
+  public login(credentials: { email: string; password: string }): Observable<any> {
+    return this.post('auth/login', credentials).pipe(
+      map((response: any) => {
+        if (response.accessToken) {
+          this.setAuthToken(response.accessToken);
+        }
+        if (response.refreshToken) {
+          this.setRefreshToken(response.refreshToken);
+        }
+        return response;
+      })
+    );
+  }
+
+  /**
+   * Register new user
+   */
+  public register(userData: any): Observable<any> {
+    return this.post('auth/register', userData);
+  }
+
+  /**
+   * Logout user
+   */
+  public logout(): Observable<any> {
+    return this.post('auth/logout', {}).pipe(
+      map((response) => {
+        this.clearTokens();
+        return response;
+      })
+    );
+  }
+
+  /**
+   * Refresh access token
+   */
+  public refreshToken(): Observable<any> {
+    const refreshToken = localStorage.getItem('refreshToken');
+    return this.post('auth/refresh', { refreshToken }).pipe(
+      map((response: any) => {
+        if (response.accessToken) {
+          this.setAuthToken(response.accessToken);
+        }
+        return response;
+      })
+    );
+  }
+
+  /**
+   * Forgot password
+   */
+  public forgotPassword(email: string): Observable<any> {
+    return this.post('auth/forgot-password', { email });
+  }
+
+  /**
+   * Reset password
+   */
+  public resetPassword(data: { token: string; newPassword: string }): Observable<any> {
+    return this.post('auth/reset-password', data);
+  }
+
+  // ==================== User Endpoints ====================
+
+  /**
+   * Get current user profile
+   */
+  public getCurrentUser(): Observable<any> {
+    return this.get('users/me');
+  }
+
+  /**
+   * Update user profile
+   */
+  public updateProfile(userData: any): Observable<any> {
+    return this.put('users/me', userData);
+  }
+
+  /**
+   * Get all users (admin only)
+   */
+  public getUsers(): Observable<any> {
+    return this.get('users');
+  }
+
+  /**
+   * Get user by ID
+   */
+  public getUserById(userId: string): Observable<any> {
+    return this.get(`users/${userId}`);
+  }
+
+  // ==================== Attendance Endpoints ====================
+
+  /**
+   * Mark attendance
+   */
+  public markAttendance(attendanceData: any): Observable<any> {
+    return this.post('attendance', attendanceData);
+  }
+
+  /**
+   * Get attendance records
+   */
+  public getAttendance(params?: any): Observable<any> {
+    let queryString = '';
+    if (params) {
+      const queryParams = new URLSearchParams(params).toString();
+      queryString = queryParams ? `?${queryParams}` : '';
+    }
+    return this.get(`attendance${queryString}`);
+  }
+
+  /**
+   * Get attendance by ID
+   */
+  public getAttendanceById(attendanceId: string): Observable<any> {
+    return this.get(`attendance/${attendanceId}`);
+  }
+
+  /**
+   * Update attendance
+   */
+  public updateAttendance(attendanceId: string, data: any): Observable<any> {
+    return this.put(`attendance/${attendanceId}`, data);
+  }
+
+  /**
+   * Delete attendance
+   */
+  public deleteAttendance(attendanceId: string): Observable<any> {
+    return this.delete(`attendance/${attendanceId}`);
+  }
+
+  // ==================== Reports Endpoints ====================
+
+  /**
+   * Get attendance report
+   */
+  public getAttendanceReport(params: any): Observable<any> {
+    const queryParams = new URLSearchParams(params).toString();
+    return this.get(`reports/attendance?${queryParams}`);
+  }
+
+  /**
+   * Export attendance report
+   */
+  public exportAttendanceReport(params: any, format: 'csv' | 'excel' | 'pdf'): Observable<Blob> {
+    const queryParams = new URLSearchParams(params).toString();
+    const url = `${this.baseUrl}/reports/export/${format}?${queryParams}`;
+    
+    return this.http.get(url, {
+      headers: this.getHeaders(),
+      responseType: 'blob'
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+}

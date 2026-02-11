@@ -7,7 +7,6 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { AgGridModule } from 'ag-grid-angular';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 
-// Register all community modules before using ag-grid-angular
 ModuleRegistry.registerModules([AllCommunityModule]);
 bootstrapApplication(AppComponent, {
   providers: [
