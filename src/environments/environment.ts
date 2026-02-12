@@ -4,5 +4,5 @@
 export const environment = {
   production: false,
   // IMPORTANT: Update this to match your actual API server port
-  apiUrl: 'http://localhost:7236/api'
+  apiUrl: 'https://localhost:7236/api'
 };
