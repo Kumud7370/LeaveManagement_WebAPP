@@ -1,0 +1,393 @@
+<div class="employee-form-container">
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading employee data...</p>
+    </div>
+  </div>
+
+  <!-- Form Content -->
+  <div class="form-content" *ngIf="!isLoading">
+    <!-- Header -->
+    <div class="form-header">
+      <div class="header-content">
+        <button class="btn-back" (click)="cancel()">
+          <i class="fas fa-arrow-left"></i>
+          <span>Back to List</span>
+        </button>
+        <h1 class="form-title">
+          <i class="fas fa-user-plus"></i>
+          {{ isEditMode ? 'Edit Employee' : 'Add New Employee' }}
+        </h1>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()" class="employee-form">
+      <!-- Personal Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2><i class="fas fa-user-circle"></i> Personal Information</h2>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required">Employee Code</label>
+              <input
+                type="text"
+                formControlName="employeeCode"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('employeeCode')"
+                placeholder="e.g., EMP001"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('employeeCode')">
+                {{ getFieldError('employeeCode') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label class="required">First Name</label>
+              <input
+                type="text"
+                formControlName="firstName"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('firstName')"
+                placeholder="Enter first name"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('firstName')">
+                {{ getFieldError('firstName') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label>Middle Name</label>
+              <input
+                type="text"
+                formControlName="middleName"
+                class="form-control"
+                placeholder="Enter middle name (optional)"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="required">Last Name</label>
+              <input
+                type="text"
+                formControlName="lastName"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('lastName')"
+                placeholder="Enter last name"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('lastName')">
+                {{ getFieldError('lastName') }}
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required">Date of Birth</label>
+              <input
+                type="date"
+                formControlName="dateOfBirth"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('dateOfBirth')"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('dateOfBirth')">
+                {{ getFieldError('dateOfBirth') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label class="required">Gender</label>
+              <select
+                formControlName="gender"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('gender')"
+              >
+                <option *ngFor="let option of genderOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2><i class="fas fa-phone-alt"></i> Contact Information</h2>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required">Email</label>
+              <input
+                type="email"
+                formControlName="email"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('email')"
+                placeholder="employee@example.com"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('email')">
+                {{ getFieldError('email') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label class="required">Phone Number</label>
+              <input
+                type="tel"
+                formControlName="phoneNumber"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('phoneNumber')"
+                placeholder="+1234567890"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('phoneNumber')">
+                {{ getFieldError('phoneNumber') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label>Alternate Phone Number</label>
+              <input
+                type="tel"
+                formControlName="alternatePhoneNumber"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('alternatePhoneNumber')"
+                placeholder="+1234567890 (optional)"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('alternatePhoneNumber')">
+                {{ getFieldError('alternatePhoneNumber') }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2><i class="fas fa-map-marker-alt"></i> Address</h2>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label class="required">Street</label>
+              <input
+                type="text"
+                formControlName="street"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('street')"
+                placeholder="Enter street address"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('street')">
+                {{ getFieldError('street') }}
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required">City</label>
+              <input
+                type="text"
+                formControlName="city"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('city')"
+                placeholder="Enter city"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('city')">
+                {{ getFieldError('city') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label class="required">State</label>
+              <input
+                type="text"
+                formControlName="state"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('state')"
+                placeholder="Enter state"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('state')">
+                {{ getFieldError('state') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label class="required">Country</label>
+              <input
+                type="text"
+                formControlName="country"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('country')"
+                placeholder="Enter country"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('country')">
+                {{ getFieldError('country') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label class="required">Postal Code</label>
+              <input
+                type="text"
+                formControlName="postalCode"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('postalCode')"
+                placeholder="Enter postal code"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('postalCode')">
+                {{ getFieldError('postalCode') }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employment Details Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2><i class="fas fa-briefcase"></i> Employment Details</h2>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required">Department</label>
+              <input
+                type="text"
+                formControlName="departmentId"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('departmentId')"
+                placeholder="Enter department ID"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('departmentId')">
+                {{ getFieldError('departmentId') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label class="required">Designation</label>
+              <input
+                type="text"
+                formControlName="designationId"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('designationId')"
+                placeholder="Enter designation ID"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('designationId')">
+                {{ getFieldError('designationId') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label>Manager</label>
+              <input
+                type="text"
+                formControlName="managerId"
+                class="form-control"
+                placeholder="Enter manager ID (optional)"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required">Date of Joining</label>
+              <input
+                type="date"
+                formControlName="dateOfJoining"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('dateOfJoining')"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('dateOfJoining')">
+                {{ getFieldError('dateOfJoining') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label>Date of Leaving</label>
+              <input
+                type="date"
+                formControlName="dateOfLeaving"
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="required">Employment Type</label>
+              <select
+                formControlName="employmentType"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('employmentType')"
+              >
+                <option *ngFor="let option of employmentTypeOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="required">Employee Status</label>
+              <select
+                formControlName="employeeStatus"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('employeeStatus')"
+              >
+                <option *ngFor="let option of employeeStatusOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2><i class="fas fa-info-circle"></i> Additional Information</h2>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Profile Image URL</label>
+              <input
+                type="text"
+                formControlName="profileImageUrl"
+                class="form-control"
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+
+            <div class="form-group">
+              <label>Biometric ID</label>
+              <input
+                type="text"
+                formControlName="biometricId"
+                class="form-control"
+                placeholder="Enter biometric ID (optional)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancel()" [disabled]="isSaving">
+          <i class="fas fa-times"></i>
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+          <i class="fas" [class.fa-spinner]="isSaving" [class.fa-spin]="isSaving" [class.fa-save]="!isSaving"></i>
+          {{ isSaving ? 'Saving...' : (isEditMode ? 'Update Employee' : 'Create Employee') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

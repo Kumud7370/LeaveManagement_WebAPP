@@ -62,6 +62,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   navItems: NavItem[] = [
     { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
+    {
+      label: "Employees",
+      route: "/employees",
+      icon: "fas fa-users"
+    },
     { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
     { label: "Departments", route: "/departments", icon: "fas fa-sitemap" }, // NEW MENU ITEM
     { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
@@ -271,7 +276,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     // Remove trailing slashes for comparison
     const currentRoute = this.activeRoute.replace(/\/$/, '');
     const compareRoute = route.replace(/\/$/, '');
-    
+
     // Exact match for the route
     return currentRoute === compareRoute;
   }
