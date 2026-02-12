@@ -1,0 +1,285 @@
+<div class="department-details-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading department details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-state">
+    <i class="icon-alert-circle"></i>
+    <p>{{ error }}</p>
+    <button class="btn btn-outline" (click)="loadDepartmentDetails()">Try Again</button>
+    <button class="btn btn-text" (click)="goBack()">Go Back</button>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading && !error && department" class="details-content">
+    <!-- Header -->
+    <div class="details-header">
+      <button class="btn-back" (click)="goBack()">
+        <i class="icon-arrow-left"></i>
+        Back to Departments
+      </button>
+
+      <div class="header-main">
+        <div class="title-section">
+          <h1 class="department-title">{{ department.departmentName }}</h1>
+          <span class="department-code">{{ department.departmentCode }}</span>
+          <span class="status-badge" [class.active]="department.isActive" [class.inactive]="!department.isActive">
+            {{ department.isActive ? 'Active' : 'Inactive' }}
+          </span>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-outline" (click)="editDepartment()">
+            <i class="icon-edit"></i>
+            Edit
+          </button>
+          <button class="btn btn-outline" (click)="toggleStatus()">
+            <i [class]="department.isActive ? 'icon-toggle-left' : 'icon-toggle-right'"></i>
+            {{ department.isActive ? 'Deactivate' : 'Activate' }}
+          </button>
+          <button class="btn btn-danger" (click)="deleteDepartment()">
+            <i class="icon-trash"></i>
+            Delete
+          </button>
+        </div>
+      </div>
+
+      <p *ngIf="department.description" class="department-description">
+        {{ department.description }}
+      </p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <i class="icon-users stat-icon"></i>
+        <div class="stat-content">
+          <div class="stat-value">{{ department.employeeCount }}</div>
+          <div class="stat-label">Employees</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <i class="icon-git-branch stat-icon"></i>
+        <div class="stat-content">
+          <div class="stat-value">{{ department.childDepartmentCount }}</div>
+          <div class="stat-label">Sub-Departments</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <i class="icon-layers stat-icon"></i>
+        <div class="stat-content">
+          <div class="stat-value">Level {{ department.level }}</div>
+          <div class="stat-label">Hierarchy Level</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <i class="icon-hash stat-icon"></i>
+        <div class="stat-content">
+          <div class="stat-value">{{ department.displayOrder }}</div>
+          <div class="stat-label">Display Order</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+      <div class="tabs-header">
+        <button
+          class="tab-button"
+          [class.active]="activeTab === 'overview'"
+          (click)="setActiveTab('overview')"
+        >
+          <i class="icon-info"></i>
+          Overview
+        </button>
+        <button
+          class="tab-button"
+          [class.active]="activeTab === 'employees'"
+          (click)="setActiveTab('employees')"
+        >
+          <i class="icon-users"></i>
+          Employees
+          <span class="badge">{{ department.employeeCount }}</span>
+        </button>
+        <button
+          class="tab-button"
+          [class.active]="activeTab === 'children'"
+          (click)="setActiveTab('children')"
+        >
+          <i class="icon-git-branch"></i>
+          Sub-Departments
+          <span class="badge">{{ department.childDepartmentCount }}</span>
+        </button>
+        <button
+          class="tab-button"
+          [class.active]="activeTab === 'audit'"
+          (click)="setActiveTab('audit')"
+        >
+          <i class="icon-clock"></i>
+          Audit Info
+        </button>
+      </div>
+
+      <div class="tabs-content">
+        <!-- Overview Tab -->
+        <div *ngIf="activeTab === 'overview'" class="tab-panel">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Full Path</label>
+              <div class="value">{{ department.fullPath }}</div>
+            </div>
+
+            <div class="info-item">
+              <label>Parent Department</label>
+              <div class="value">
+                {{ department.parentDepartmentName || 'None (Root Level)' }}
+              </div>
+            </div>
+
+            <div class="info-item" *ngIf="department.departmentHead">
+              <label>Department Head</label>
+              <div class="value head-info">
+                <img
+                  *ngIf="department.departmentHead.profileImageUrl"
+                  [src]="department.departmentHead.profileImageUrl"
+                  [alt]="department.departmentHead.fullName"
+                  class="head-avatar"
+                />
+                <div class="head-default-avatar" *ngIf="!department.departmentHead.profileImageUrl">
+                  {{ department.departmentHead.fullName.charAt(0) }}
+                </div>
+                <div class="head-details">
+                  <div class="head-name">{{ department.departmentHead.fullName }}</div>
+                  <div class="head-email">{{ department.departmentHead.email }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-item" *ngIf="!department.departmentHead">
+              <label>Department Head</label>
+              <div class="value text-muted">Not assigned</div>
+            </div>
+
+            <div class="info-item">
+              <label>Created</label>
+              <div class="value">{{ formattedCreatedDate }}</div>
+            </div>
+
+            <div class="info-item" *ngIf="department.updatedAt">
+              <label>Last Updated</label>
+              <div class="value">{{ formattedUpdatedDate }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Employees Tab -->
+        <div *ngIf="activeTab === 'employees'" class="tab-panel">
+          <div *ngIf="department.employees && department.employees.length > 0" class="employees-list">
+            <div
+              *ngFor="let employee of department.employees"
+              class="employee-card"
+              (click)="viewEmployee(employee.employeeId)"
+            >
+              <img
+                *ngIf="employee.profileImageUrl"
+                [src]="employee.profileImageUrl"
+                [alt]="employee.fullName"
+                class="employee-avatar"
+              />
+              <div class="employee-default-avatar" *ngIf="!employee.profileImageUrl">
+                {{ employee.fullName.charAt(0) }}
+              </div>
+              <div class="employee-info">
+                <div class="employee-name">{{ employee.fullName }}</div>
+                <div class="employee-code">{{ employee.employeeCode }}</div>
+                <div class="employee-designation" *ngIf="employee.designation">
+                  {{ employee.designation }}
+                </div>
+                <div class="employee-email">{{ employee.email }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="!department.employees || department.employees.length === 0" class="empty-state">
+            <i class="icon-users"></i>
+            <h3>No employees in this department</h3>
+            <p>This department currently has no employees assigned to it.</p>
+          </div>
+        </div>
+
+        <!-- Child Departments Tab -->
+        <div *ngIf="activeTab === 'children'" class="tab-panel">
+          <div *ngIf="department.childDepartments && department.childDepartments.length > 0" class="children-list">
+            <div
+              *ngFor="let child of department.childDepartments"
+              class="child-card"
+              (click)="viewChildDepartment(child.departmentId)"
+            >
+              <div class="child-header">
+                <div class="child-title">
+                  <h3>{{ child.departmentName }}</h3>
+                  <span class="child-code">{{ child.departmentCode }}</span>
+                </div>
+                <span class="status-badge" [class.active]="child.isActive" [class.inactive]="!child.isActive">
+                  {{ child.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </div>
+              <p *ngIf="child.description" class="child-description">{{ child.description }}</p>
+              <div class="child-stats">
+                <span class="stat">
+                  <i class="icon-users"></i>
+                  {{ child.employeeCount }} employees
+                </span>
+                <span class="stat">
+                  <i class="icon-git-branch"></i>
+                  {{ child.childDepartmentCount }} sub-depts
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="!department.childDepartments || department.childDepartments.length === 0" class="empty-state">
+            <i class="icon-git-branch"></i>
+            <h3>No sub-departments</h3>
+            <p>This department has no child departments.</p>
+          </div>
+        </div>
+
+        <!-- Audit Info Tab -->
+        <div *ngIf="activeTab === 'audit'" class="tab-panel">
+          <div class="audit-info" *ngIf="department.auditInfo">
+            <div class="audit-item">
+              <label>Created At</label>
+              <div class="value">
+                {{ department.auditInfo.createdAt | date: 'medium' }}
+              </div>
+            </div>
+
+            <div class="audit-item" *ngIf="department.auditInfo.createdByName">
+              <label>Created By</label>
+              <div class="value">{{ department.auditInfo.createdByName }}</div>
+            </div>
+
+            <div class="audit-item" *ngIf="department.auditInfo.updatedAt">
+              <label>Last Updated At</label>
+              <div class="value">
+                {{ department.auditInfo.updatedAt | date: 'medium' }}
+              </div>
+            </div>
+
+            <div class="audit-item" *ngIf="department.auditInfo.updatedByName">
+              <label>Updated By</label>
+              <div class="value">{{ department.auditInfo.updatedByName }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -3,15 +3,16 @@ import { MainLayoutComponent } from 'src/app/Layout/main-layout/main-layout.comp
 import { AuthGuard } from './modules/login/auth.guard';
 import { LoginComponent } from './modules/login/login.component';
 
-
 export const routes: Routes = [
-
-
   {
-    path: "login", component: LoginComponent,
-    // loadComponent: () => import("./modules/login/login.component").then((m) => m.LoginComponent),
+    path: "login", 
+    component: LoginComponent,
   },
-  { path: "", redirectTo: "login", pathMatch: "full" },
+  { 
+    path: "", 
+    redirectTo: "login", 
+    pathMatch: "full" 
+  },
   {
     path: "",
     component: MainLayoutComponent,
@@ -52,7 +53,14 @@ export const routes: Routes = [
           },
         ]
       },
-      // { path: "", redirectTo: "dashboard2", pathMatch: "full" },
+      
+      {
+        path: "departments",
+        loadChildren: () => import("./modules/departments/department.module").then((m) => m.DepartmentModule),
+        data: { breadcrumb: "Departments" },
+      },
+
+      // Uncomment these as needed
       // {
       //   path: "dashboard2",
       //   loadComponent: () => import("./modules/dashboard2/dashboard.component").then((m) => m.DashboardComponent),
@@ -115,14 +123,12 @@ export const routes: Routes = [
       //   loadComponent: () => import("./modules/verifications/verification.component").then((m) => m.VerificationComponent),
       //   data: { breadcrumb: "Verification" },
       // },
-
       // {
       //   path: "vehiclelist",
       //   loadComponent: () =>
       //     import("./modules/vehicle-master/vehicle-master.component").then((m) => m.VehicleMasterComponent),
       //   data: { breadcrumb: "Vehicle List" },
       // },
-
       // {
       //   path: "agencylist",
       //   loadComponent: () =>
@@ -131,5 +137,4 @@ export const routes: Routes = [
       // },
     ],
   },
-
-]
+];

@@ -1,0 +1,188 @@
+<div class="department-form-container">
+  <!-- Header -->
+  <div class="page-header">
+    <button class="btn-back" (click)="onCancel()">
+      <i class="icon-arrow-left"></i>
+      Back
+    </button>
+    <div class="header-content">
+      <h1 class="page-title">{{ isEditMode ? 'Edit Department' : 'Create Department' }}</h1>
+      <p class="page-subtitle">
+        {{ isEditMode ? 'Update department information' : 'Add a new department to your organization' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading department...</p>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error && !loading" class="alert alert-error">
+    <i class="icon-alert-circle"></i>
+    <span>{{ error }}</span>
+    <button class="close-btn" (click)="error = null">
+      <i class="icon-x"></i>
+    </button>
+  </div>
+
+  <!-- Form -->
+  <form *ngIf="!loading" [formGroup]="departmentForm" (ngSubmit)="onSubmit()" class="department-form">
+    <div class="form-grid">
+      <!-- Department Code -->
+      <div class="form-group">
+        <label for="departmentCode" class="required">Department Code</label>
+        <input
+          id="departmentCode"
+          type="text"
+          formControlName="departmentCode"
+          placeholder="e.g., IT, HR, FIN"
+          class="form-control"
+          [class.error]="isFieldInvalid('departmentCode')"
+        />
+        <small class="hint">Use uppercase letters, numbers, underscores, and hyphens only</small>
+        <div *ngIf="isFieldInvalid('departmentCode')" class="error-message">
+          {{ getErrorMessage('departmentCode') }}
+        </div>
+      </div>
+
+      <!-- Department Name -->
+      <div class="form-group">
+        <label for="departmentName" class="required">Department Name</label>
+        <input
+          id="departmentName"
+          type="text"
+          formControlName="departmentName"
+          placeholder="e.g., Information Technology"
+          class="form-control"
+          [class.error]="isFieldInvalid('departmentName')"
+        />
+        <div *ngIf="isFieldInvalid('departmentName')" class="error-message">
+          {{ getErrorMessage('departmentName') }}
+        </div>
+      </div>
+
+      <!-- Parent Department -->
+      <div class="form-group">
+        <label for="parentDepartmentId">Parent Department</label>
+        <select
+          id="parentDepartmentId"
+          formControlName="parentDepartmentId"
+          class="form-control"
+        >
+          <option [ngValue]="null">None (Root Level)</option>
+          <option *ngFor="let dept of parentDepartments" [ngValue]="dept.departmentId">
+            {{ dept.departmentName }} ({{ dept.departmentCode }})
+          </option>
+        </select>
+        <small class="hint">Leave blank for root-level department</small>
+      </div>
+
+      <!-- Head of Department -->
+      <div class="form-group">
+        <label for="headOfDepartment">Head of Department</label>
+        <select
+          id="headOfDepartment"
+          formControlName="headOfDepartment"
+          class="form-control"
+        >
+          <option [ngValue]="null">Not Assigned</option>
+          <option *ngFor="let emp of employees" [ngValue]="emp.employeeId">
+            {{ emp.fullName }} ({{ emp.employeeCode }})
+          </option>
+        </select>
+        <small class="hint">Select the department head</small>
+      </div>
+
+      <!-- Display Order -->
+      <div class="form-group">
+        <label for="displayOrder">Display Order</label>
+        <input
+          id="displayOrder"
+          type="number"
+          formControlName="displayOrder"
+          placeholder="0"
+          class="form-control"
+          [class.error]="isFieldInvalid('displayOrder')"
+          min="0"
+        />
+        <small class="hint">Lower numbers appear first</small>
+        <div *ngIf="isFieldInvalid('displayOrder')" class="error-message">
+          {{ getErrorMessage('displayOrder') }}
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            formControlName="isActive"
+            class="checkbox-input"
+          />
+          <span class="checkbox-text">Active</span>
+        </label>
+        <small class="hint">Inactive departments are hidden from selection</small>
+      </div>
+
+      <!-- Description (Full Width) -->
+      <div class="form-group full-width">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          placeholder="Enter department description (optional)"
+          rows="4"
+          class="form-control"
+          [class.error]="isFieldInvalid('description')"
+        ></textarea>
+        <div class="char-count">
+          {{ departmentForm.get('description')?.value?.length || 0 }} / 500
+        </div>
+        <div *ngIf="isFieldInvalid('description')" class="error-message">
+          {{ getErrorMessage('description') }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="submitting"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="submitting || departmentForm.invalid"
+      >
+        <span *ngIf="!submitting">{{ isEditMode ? 'Update Department' : 'Create Department' }}</span>
+        <span *ngIf="submitting" class="btn-loading">
+          <span class="spinner-small"></span>
+          {{ isEditMode ? 'Updating...' : 'Creating...' }}
+        </span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Info Card -->
+  <div class="info-card" *ngIf="!loading">
+    <div class="info-header">
+      <i class="icon-info"></i>
+      <h3>Guidelines</h3>
+    </div>
+    <ul class="info-list">
+      <li>Department codes must be unique and cannot be changed later</li>
+      <li>Use descriptive names that clearly identify the department's purpose</li>
+      <li>Parent departments help organize your organizational structure</li>
+      <li>Display order controls how departments appear in lists (lower = higher priority)</li>
+      <li>Inactive departments won't appear in dropdowns but preserve historical data</li>
+    </ul>
+  </div>
+</div>

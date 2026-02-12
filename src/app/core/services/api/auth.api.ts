@@ -1,62 +1,70 @@
-
-import { Injectable } from "@angular/core"
+import { Injectable, Inject, PLATFORM_ID } from "@angular/core"
 import { Router } from "@angular/router"
+import { isPlatformBrowser } from "@angular/common"
 
 @Injectable({
     providedIn: "root",
 })
 export class AuthService {
-    // In-memory flag that persists only during the current application session
-    private isAuthenticated = false
+    private isBrowser: boolean
 
-    constructor(private router: Router) { }
+    constructor(
+        private router: Router,
+        @Inject(PLATFORM_ID) private platformId: Object
+    ) {
+        this.isBrowser = isPlatformBrowser(this.platformId)
+    }
 
     login(username: string, password: string): boolean {
         // Static credentials check
         if (username === "admin" && password === "password") {
-            this.isAuthenticated = true
             return true
         }
         return false
     }
 
     isLoggedIn(): boolean {
-        return this.isAuthenticated
+        if (!this.isBrowser) return false
+        
+        const token = sessionStorage.getItem("token") || localStorage.getItem("accessToken")
+        return !!token
     }
 
     redirectToLogin(): void {
-        if (!this.isAuthenticated) {
+        if (!this.isLoggedIn()) {
             this.router.navigate(["/login"])
         }
     }
 
     redirectToDashboard(): void {
-        if (this.isAuthenticated) {
+        if (this.isLoggedIn()) {
             this.router.navigate(["/dashboard"])
         }
     }
 
     logout(reason?: "idle" | "expired" | "manual"): void {
+        if (!this.isBrowser) return
+
         try {
-            // Clear session/local storage keys used by login flow
+            // Clear all auth-related storage
             sessionStorage.removeItem("UserId")
             sessionStorage.removeItem("SiteName")
             sessionStorage.removeItem("RoleName")
             sessionStorage.removeItem("token")
-            sessionStorage.removeItem('deviceId');
-            // localStorage.removeItem("token")
-            // localStorage.removeItem("username")
-            // localStorage.removeItem("role")
+            sessionStorage.removeItem("refreshToken")
+            sessionStorage.removeItem("username")
+            sessionStorage.removeItem("role")
+            sessionStorage.removeItem("deviceId")
+            
+            localStorage.removeItem("accessToken")
+            localStorage.removeItem("refreshToken")
         } catch (_) {
             // ignore storage errors
         }
 
-        this.isAuthenticated = false
-
         const queryParams: any = {}
         if (reason) queryParams["reason"] = reason
 
-        // Avoid duplicate navigations: always route user back to login
         this.router.navigate(["/login"], { queryParams })
     }
 }
