@@ -1,0 +1,324 @@
+<!-- Employee List Component HTML -->
+<!-- src/app/modules/dashboard/employees/components/employee-list/employee-list.component.html -->
+
+<div class="employee-list-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-title-section">
+        <h1 class="page-title">
+          <i class="fas fa-users"></i>
+          Employee Management
+        </h1>
+        <p class="page-subtitle">Manage and monitor all employees</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="addNewEmployee()">
+          <i class="fas fa-plus"></i>
+          <span>Add Employee</span>
+        </button>
+        <button class="btn btn-secondary filter-toggle" (click)="toggleFilter()">
+          <i class="fas fa-filter"></i>
+          <span>Filters</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Panel -->
+  <div class="filter-panel" *ngIf="isFilterVisible">
+    <div class="filter-header">
+      <h3><i class="fas fa-sliders-h"></i> Advanced Filters</h3>
+      <button class="btn-close" (click)="toggleFilter()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="filter-body">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Search</label>
+          <input
+            type="text"
+            [(ngModel)]="filter.searchTerm"
+            placeholder="Search by name, code, or email"
+            class="form-control"
+            (input)="onSearchChange()"
+          />
+        </div>
+
+        <div class="filter-group">
+          <label>Employee Status</label>
+          <select [(ngModel)]="filter.employeeStatus" class="form-control">
+            <option [ngValue]="undefined">All Statuses</option>
+            <option *ngFor="let key of employeeStatusKeys" [ngValue]="+key">
+              {{ getEnumName(key, EmployeeStatus) }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Employment Type</label>
+          <select [(ngModel)]="filter.employmentType" class="form-control">
+            <option [ngValue]="undefined">All Types</option>
+            <option *ngFor="let key of employmentTypeKeys" [ngValue]="+key">
+              {{ getEnumName(key, EmploymentType) }}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Gender</label>
+          <select [(ngModel)]="filter.gender" class="form-control">
+            <option [ngValue]="undefined">All Genders</option>
+            <option *ngFor="let key of genderKeys" [ngValue]="+key">
+              {{ getEnumName(key, Gender) }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Joining Date From</label>
+          <input
+            type="date"
+            [(ngModel)]="filter.joiningDateFrom"
+            class="form-control"
+          />
+        </div>
+
+        <div class="filter-group">
+          <label>Joining Date To</label>
+          <input
+            type="date"
+            [(ngModel)]="filter.joiningDateTo"
+            class="form-control"
+          />
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn btn-secondary" (click)="resetFilter()">
+          <i class="fas fa-redo"></i> Reset
+        </button>
+        <button class="btn btn-primary" (click)="applyFilter()">
+          <i class="fas fa-search"></i> Apply Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Search Bar -->
+  <div class="search-bar" *ngIf="!isFilterVisible">
+    <div class="search-input-wrapper">
+      <i class="fas fa-search search-icon"></i>
+      <input
+        type="text"
+        [(ngModel)]="filter.searchTerm"
+        placeholder="Quick search by name, code, or email..."
+        class="search-input"
+        (input)="onSearchChange()"
+      />
+      <button
+        *ngIf="filter.searchTerm"
+        class="clear-search"
+        (click)="filter.searchTerm = ''; onSearchChange()"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading employees...</p>
+    </div>
+  </div>
+
+  <!-- Employee Table -->
+  <div class="table-container" *ngIf="!isLoading">
+    <div class="table-wrapper">
+      <table class="employee-table">
+        <thead>
+          <tr>
+            <th (click)="sortBy('EmployeeCode')" class="sortable">
+              <div class="th-content">
+                Employee Code
+                <i class="fas fa-sort" *ngIf="filter.sortBy !== 'EmployeeCode'"></i>
+                <i class="fas fa-sort-up" *ngIf="filter.sortBy === 'EmployeeCode' && !filter.sortDescending"></i>
+                <i class="fas fa-sort-down" *ngIf="filter.sortBy === 'EmployeeCode' && filter.sortDescending"></i>
+              </div>
+            </th>
+            <th (click)="sortBy('FirstName')" class="sortable">
+              <div class="th-content">
+                Full Name
+                <i class="fas fa-sort" *ngIf="filter.sortBy !== 'FirstName'"></i>
+                <i class="fas fa-sort-up" *ngIf="filter.sortBy === 'FirstName' && !filter.sortDescending"></i>
+                <i class="fas fa-sort-down" *ngIf="filter.sortBy === 'FirstName' && filter.sortDescending"></i>
+              </div>
+            </th>
+            <th (click)="sortBy('Email')" class="sortable">
+              <div class="th-content">
+                Email
+                <i class="fas fa-sort" *ngIf="filter.sortBy !== 'Email'"></i>
+                <i class="fas fa-sort-up" *ngIf="filter.sortBy === 'Email' && !filter.sortDescending"></i>
+                <i class="fas fa-sort-down" *ngIf="filter.sortBy === 'Email' && filter.sortDescending"></i>
+              </div>
+            </th>
+            <th>Phone</th>
+            <th>Department</th>
+            <th>Designation</th>
+            <th>Employment Type</th>
+            <th>Status</th>
+            <th (click)="sortBy('DateOfJoining')" class="sortable">
+              <div class="th-content">
+                Joining Date
+                <i class="fas fa-sort" *ngIf="filter.sortBy !== 'DateOfJoining'"></i>
+                <i class="fas fa-sort-up" *ngIf="filter.sortBy === 'DateOfJoining' && !filter.sortDescending"></i>
+                <i class="fas fa-sort-down" *ngIf="filter.sortBy === 'DateOfJoining' && filter.sortDescending"></i>
+              </div>
+            </th>
+            <th class="actions-column">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let employee of employees" class="employee-row">
+            <td>
+              <span class="employee-code">{{ employee.employeeCode }}</span>
+            </td>
+            <td>
+              <div class="employee-name-cell">
+                <div class="avatar" *ngIf="employee.profileImageUrl">
+                  <img [src]="employee.profileImageUrl" [alt]="employee.fullName" />
+                </div>
+                <div class="avatar avatar-placeholder" *ngIf="!employee.profileImageUrl">
+                  {{ employee.firstName.charAt(0) }}{{ employee.lastName.charAt(0) }}
+                </div>
+                <span class="employee-name">{{ employee.fullName }}</span>
+              </div>
+            </td>
+            <td>
+              <a [href]="'mailto:' + employee.email" class="email-link">
+                {{ employee.email }}
+              </a>
+            </td>
+            <td>
+              <span class="phone-number">{{ employee.phoneNumber }}</span>
+            </td>
+            <td>
+              <span class="department-name">{{ employee.departmentName || 'N/A' }}</span>
+            </td>
+            <td>
+              <span class="designation-name">{{ employee.designationName || 'N/A' }}</span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="getEmploymentTypeBadgeClass(employee.employmentType)">
+                {{ employee.employmentTypeName }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="getStatusBadgeClass(employee.employeeStatus)">
+                {{ employee.employeeStatusName }}
+              </span>
+            </td>
+            <td>
+              <span class="date">{{ formatDate(employee.dateOfJoining) }}</span>
+            </td>
+            <td class="actions-cell">
+              <div class="action-buttons">
+                <button
+                  class="btn-action btn-view"
+                  (click)="viewEmployee(employee.id)"
+                  title="View Details"
+                >
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button
+                  class="btn-action btn-edit"
+                  (click)="editEmployee(employee.id)"
+                  title="Edit Employee"
+                >
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button
+                  class="btn-action btn-delete"
+                  (click)="deleteEmployee(employee)"
+                  title="Delete Employee"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- No Data Row -->
+          <tr *ngIf="employees.length === 0" class="no-data-row">
+            <td colspan="10">
+              <div class="no-data-message">
+                <i class="fas fa-inbox"></i>
+                <p>No employees found</p>
+                <button class="btn btn-primary" (click)="addNewEmployee()">
+                  <i class="fas fa-plus"></i> Add First Employee
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="employees.length > 0">
+      <div class="pagination-info">
+        Showing {{ (currentPage - 1) * pageSize + 1 }} to
+        {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }} employees
+      </div>
+
+      <div class="pagination-controls">
+        <div class="page-size-selector">
+          <label>Items per page:</label>
+          <select (change)="changePageSize($event)" [value]="pageSize">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+
+        <div class="page-navigation">
+          <button
+            class="btn-page"
+            (click)="previousPage()"
+            [disabled]="currentPage === 1"
+          >
+            <i class="fas fa-chevron-left"></i>
+          </button>
+
+          <div class="page-numbers">
+            <button
+              *ngFor="let page of [].constructor(totalPages); let i = index"
+              class="btn-page-number"
+              [class.active]="currentPage === i + 1"
+              (click)="goToPage(i + 1)"
+              [hidden]="totalPages > 7 && (i + 1 < currentPage - 2 || i + 1 > currentPage + 2) && i !== 0 && i !== totalPages - 1"
+            >
+              {{ i + 1 }}
+            </button>
+          </div>
+
+          <button
+            class="btn-page"
+            (click)="nextPage()"
+            [disabled]="currentPage === totalPages"
+          >
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

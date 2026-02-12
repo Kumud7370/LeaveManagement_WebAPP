@@ -1,0 +1,342 @@
+<!-- Employee Details Component HTML -->
+<!-- src/app/modules/dashboard/employees/components/employee-details/employee-details.component.html -->
+
+<div class="employee-details-container">
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading employee details...</p>
+    </div>
+  </div>
+
+  <!-- Employee Details Content -->
+  <div class="details-content" *ngIf="!isLoading && employee">
+    <!-- Header Section -->
+    <div class="details-header">
+      <div class="header-top">
+        <button class="btn-back" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i>
+          <span>Back to List</span>
+        </button>
+        <div class="header-actions">
+          <button class="btn-action btn-print" (click)="printEmployeeDetails()" title="Print">
+            <i class="fas fa-print"></i>
+          </button>
+          <button class="btn-action btn-download" (click)="downloadEmployeeCard()" title="Download Card">
+            <i class="fas fa-download"></i>
+          </button>
+          <button class="btn-action btn-edit" (click)="editEmployee()" title="Edit">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn-action btn-delete" (click)="deleteEmployee()" title="Delete">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-main">
+        <div class="employee-avatar-section">
+          <div class="avatar-wrapper">
+            <img 
+              *ngIf="employee.profileImageUrl" 
+              [src]="employee.profileImageUrl" 
+              [alt]="employee.fullName"
+              class="employee-avatar"
+            />
+            <div class="avatar-placeholder" *ngIf="!employee.profileImageUrl">
+              {{ employee.firstName.charAt(0) }}{{ employee.lastName.charAt(0) }}
+            </div>
+            <div class="status-indicator" [class.online]="employee.isCurrentlyEmployed"></div>
+          </div>
+        </div>
+
+        <div class="employee-info-section">
+          <h1 class="employee-name">{{ employee.fullName }}</h1>
+          <p class="employee-code"><i class="fas fa-id-badge"></i> {{ employee.employeeCode }}</p>
+          
+          <div class="employee-badges">
+            <span class="badge" [ngClass]="getStatusBadgeClass(employee.employeeStatus)">
+              {{ employee.employeeStatusName }}
+            </span>
+            <span class="badge" [ngClass]="getEmploymentTypeBadgeClass(employee.employmentType)">
+              {{ employee.employmentTypeName }}
+            </span>
+          </div>
+
+          <div class="quick-info">
+            <div class="info-item">
+              <i class="fas fa-envelope"></i>
+              <a [href]="'mailto:' + employee.email">{{ employee.email }}</a>
+            </div>
+            <div class="info-item">
+              <i class="fas fa-phone"></i>
+              <a [href]="'tel:' + employee.phoneNumber">{{ employee.phoneNumber }}</a>
+            </div>
+            <div class="info-item">
+              <i [class]="getGenderIcon(employee.gender)"></i>
+              <span>{{ employee.genderName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="details-tabs">
+      <button class="tab-button active">
+        <i class="fas fa-user"></i>
+        <span>Personal Info</span>
+      </button>
+      <button class="tab-button">
+        <i class="fas fa-briefcase"></i>
+        <span>Employment</span>
+      </button>
+      <button class="tab-button">
+        <i class="fas fa-map-marker-alt"></i>
+        <span>Contact & Address</span>
+      </button>
+      <button class="tab-button">
+        <i class="fas fa-history"></i>
+        <span>Activity Log</span>
+      </button>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="details-grid">
+      <!-- Personal Information Card -->
+      <div class="info-card">
+        <div class="card-header">
+          <h3><i class="fas fa-user-circle"></i> Personal Information</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <div class="info-label">First Name:</div>
+            <div class="info-value">{{ employee.firstName }}</div>
+          </div>
+          <div class="info-row" *ngIf="employee.middleName">
+            <div class="info-label">Middle Name:</div>
+            <div class="info-value">{{ employee.middleName }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Last Name:</div>
+            <div class="info-value">{{ employee.lastName }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Date of Birth:</div>
+            <div class="info-value">{{ formatDate(employee.dateOfBirth) }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Age:</div>
+            <div class="info-value">{{ employee.age }} years</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Gender:</div>
+            <div class="info-value">
+              <i [class]="getGenderIcon(employee.gender)"></i>
+              {{ employee.genderName }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employment Information Card -->
+      <div class="info-card">
+        <div class="card-header">
+          <h3><i class="fas fa-briefcase"></i> Employment Details</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <div class="info-label">Employee Code:</div>
+            <div class="info-value">
+              <span class="highlight">{{ employee.employeeCode }}</span>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Department:</div>
+            <div class="info-value">{{ employee.departmentName || 'N/A' }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Designation:</div>
+            <div class="info-value">{{ employee.designationName || 'N/A' }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Manager:</div>
+            <div class="info-value">{{ employee.managerName || 'N/A' }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Employment Type:</div>
+            <div class="info-value">
+              <span class="badge" [ngClass]="getEmploymentTypeBadgeClass(employee.employmentType)">
+                {{ employee.employmentTypeName }}
+              </span>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Status:</div>
+            <div class="info-value">
+              <span class="badge" [ngClass]="getStatusBadgeClass(employee.employeeStatus)">
+                {{ employee.employeeStatusName }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Information Card -->
+      <div class="info-card">
+        <div class="card-header">
+          <h3><i class="fas fa-phone-alt"></i> Contact Information</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <div class="info-label">Email:</div>
+            <div class="info-value">
+              <a [href]="'mailto:' + employee.email" class="link">{{ employee.email }}</a>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Phone Number:</div>
+            <div class="info-value">
+              <a [href]="'tel:' + employee.phoneNumber" class="link">{{ employee.phoneNumber }}</a>
+            </div>
+          </div>
+          <div class="info-row" *ngIf="employee.alternatePhoneNumber">
+            <div class="info-label">Alternate Phone:</div>
+            <div class="info-value">
+              <a [href]="'tel:' + employee.alternatePhoneNumber" class="link">{{ employee.alternatePhoneNumber }}</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address Information Card -->
+      <div class="info-card">
+        <div class="card-header">
+          <h3><i class="fas fa-map-marker-alt"></i> Address</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <div class="info-label">Street:</div>
+            <div class="info-value">{{ employee.address.street }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">City:</div>
+            <div class="info-value">{{ employee.address.city }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">State:</div>
+            <div class="info-value">{{ employee.address.state }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Country:</div>
+            <div class="info-value">{{ employee.address.country }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Postal Code:</div>
+            <div class="info-value">{{ employee.address.postalCode }}</div>
+          </div>
+          <div class="info-row full-width">
+            <div class="info-label">Full Address:</div>
+            <div class="info-value">{{ getFullAddress() }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employment Timeline Card -->
+      <div class="info-card">
+        <div class="card-header">
+          <h3><i class="fas fa-calendar-alt"></i> Employment Timeline</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <div class="info-label">Date of Joining:</div>
+            <div class="info-value">
+              <i class="fas fa-calendar-check"></i>
+              {{ formatDate(employee.dateOfJoining) }}
+            </div>
+          </div>
+          <div class="info-row" *ngIf="employee.dateOfLeaving">
+            <div class="info-label">Date of Leaving:</div>
+            <div class="info-value">
+              <i class="fas fa-calendar-times"></i>
+              {{ formatDate(employee.dateOfLeaving) }}
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Currently Employed:</div>
+            <div class="info-value">
+              <span class="badge" [ngClass]="employee.isCurrentlyEmployed ? 'badge-success' : 'badge-danger'">
+                {{ employee.isCurrentlyEmployed ? 'Yes' : 'No' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Information Card -->
+      <div class="info-card">
+        <div class="card-header">
+          <h3><i class="fas fa-info-circle"></i> Additional Information</h3>
+        </div>
+        <div class="card-body">
+          <div class="info-row" *ngIf="employee.biometricId">
+            <div class="info-label">Biometric ID:</div>
+            <div class="info-value">{{ employee.biometricId }}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Created At:</div>
+            <div class="info-value">{{ formatDate(employee.createdAt) }}</div>
+          </div>
+          <div class="info-row" *ngIf="employee.updatedAt">
+            <div class="info-label">Last Updated:</div>
+            <div class="info-value">{{ formatDate(employee.updatedAt) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Change Actions Card -->
+      <div class="info-card action-card">
+        <div class="card-header">
+          <h3><i class="fas fa-tasks"></i> Quick Actions</h3>
+        </div>
+        <div class="card-body">
+          <div class="action-buttons-grid">
+            <button 
+              class="action-btn btn-success"
+              (click)="changeStatus(EmployeeStatus.Active)"
+              [disabled]="employee.employeeStatus === EmployeeStatus.Active"
+            >
+              <i class="fas fa-check-circle"></i>
+              Mark Active
+            </button>
+            <button 
+              class="action-btn btn-warning"
+              (click)="changeStatus(EmployeeStatus.OnLeave)"
+              [disabled]="employee.employeeStatus === EmployeeStatus.OnLeave"
+            >
+              <i class="fas fa-plane"></i>
+              On Leave
+            </button>
+            <button 
+              class="action-btn btn-secondary"
+              (click)="changeStatus(EmployeeStatus.Inactive)"
+              [disabled]="employee.employeeStatus === EmployeeStatus.Inactive"
+            >
+              <i class="fas fa-pause-circle"></i>
+              Inactive
+            </button>
+            <button 
+              class="action-btn btn-danger"
+              (click)="changeStatus(EmployeeStatus.Suspended)"
+              [disabled]="employee.employeeStatus === EmployeeStatus.Suspended"
+            >
+              <i class="fas fa-ban"></i>
+              Suspend
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
