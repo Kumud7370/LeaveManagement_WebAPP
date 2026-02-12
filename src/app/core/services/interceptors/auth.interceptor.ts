@@ -58,7 +58,12 @@ function handle401Error(
       return apiClient.refreshToken().pipe(
         switchMap((response: any) => {
           isRefreshing = false;
-          const newToken = response.accessToken || response.token;
+          const newToken = response.accessToken || response.token || response.data?.accessToken;
+          
+          if (!newToken) {
+            throw new Error('No access token in refresh response');
+          }
+          
           refreshTokenSubject.next(newToken);
 
           const clonedRequest = request.clone({
@@ -70,18 +75,20 @@ function handle401Error(
         }),
         catchError((err) => {
           isRefreshing = false;
+          refreshTokenSubject.next(null);
           apiClient.clearTokens();
-          router.navigate(['/login']);
+          router.navigate(['/login'], { queryParams: { reason: 'expired' } });
           return throwError(() => err);
         })
       );
     } else {
       isRefreshing = false;
       apiClient.clearTokens();
-      router.navigate(['/login']);
+      router.navigate(['/login'], { queryParams: { reason: 'expired' } });
       return throwError(() => new Error('No refresh token available'));
     }
   } else {
+    // Wait for the token refresh to complete
     return refreshTokenSubject.pipe(
       filter(token => token !== null),
       take(1),
