@@ -1,5 +1,6 @@
 import { HttpInterceptorFn, HttpErrorResponse, HttpRequest, HttpHandlerFn, HttpEvent } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { catchError, throwError, switchMap, BehaviorSubject, filter, take, Observable } from 'rxjs';
 import { ApiClientService } from '../api/apiClient';
@@ -10,9 +11,15 @@ const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const apiClient = inject(ApiClientService);
   const router = inject(Router);
+  const platformId = inject(PLATFORM_ID);
+  const isBrowser = isPlatformBrowser(platformId);
 
-  // Check both sessionStorage and localStorage for token
-  const token = sessionStorage.getItem('token') || localStorage.getItem('accessToken');
+  let token: string | null = null;
+  
+  if (isBrowser) {
+    token = sessionStorage.getItem('token') || localStorage.getItem('accessToken');
+  }
+
   const isAuthEndpoint = req.url.includes('/Auth/');
 
   let authReq = req;
@@ -26,7 +33,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && !isAuthEndpoint) {
+      if (error.status === 401 && !isAuthEndpoint && isBrowser) {
         return handle401Error(authReq, next, apiClient, router);
       }
 

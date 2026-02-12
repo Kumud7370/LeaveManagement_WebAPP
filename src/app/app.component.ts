@@ -12,6 +12,6 @@ import { AuthService } from "./core/services/api/auth.api"
   template: "<router-outlet></router-outlet>",
 })
 export class AppComponent {
-  title = "SWM-WMS" 
+  title = "AbelAttendanceWebAPP" 
 }
 

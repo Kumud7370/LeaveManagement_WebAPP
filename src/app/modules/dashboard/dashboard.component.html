@@ -1,0 +1,224 @@
+<div class="AbelAttendanceWebAPP-dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <div class="header-title">
+        <i class="fas fa-chart-bar"></i>
+        <h1>AbelAttendanceWebAPP</h1>
+      </div>
+      <!-- <div class="header-date">
+        <span class="date-label">Refuse Report:</span>
+        <span class="date-value">{{yDate}}</span>
+      </div> -->
+    </div>
+  </div>
+
+  <!-- Loading Indicator with BMC Logo -->
+  <div class="loading-overlay" *ngIf="isLoadingWardData">
+    <div class="loading-spinner">
+      <div class="logo-container">
+        <img src="assets/images/mcgmlogo.png" alt="BMC Logo" class="loading-logo">
+        <div class="loading-ring"></div>
+      </div>
+      <span class="loading-text">Loading dashboard data...</span>
+    </div>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-content" *ngIf="!isLoadingWardData">
+    
+    <!-- ✅ Empty State Section -->
+    <div class="empty-state" *ngIf="!hasData && !isLoadingWardData">
+      <div class="empty-state-content">
+        <div class="empty-state-icon">
+          <i class="fas fa-inbox"></i>
+        </div>
+        <h3>No Data Available</h3>
+        <p>There is currently no data to display for the selected period.</p>
+        <button class="retry-btn" (click)="retryLoadData()">
+          <i class="fas fa-sync-alt"></i>
+          Retry
+        </button>
+      </div>
+    </div>
+
+    <!-- Existing content - only show when hasData is true -->
+    <ng-container *ngIf="hasData">
+      <!-- SWM Sites Cards Section -->
+      <div class="cards-wrapper">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-recycle"></i>
+            <span>AbelAttendanceWebAPP Sites</span>
+          </h2>
+        </div>
+        <div class="location-cards-section">
+          <div class="location-card" *ngFor="let card of swmSites" [ngStyle]="{'--card-color': card.colorCode }">
+            <div class="card-header">
+              <h3>{{ card.siteName }}</h3>
+              <i class="fas fa-truck"></i>
+            </div>
+            <div class="card-stats">
+              <div class="stat-item">
+                <div class="stat-value">{{ card.vehicleCount }}</div>
+                <div class="stat-label">Trips</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">{{ card.netWeight | number:'1.2-2' }}</div>
+                <div class="stat-label">Net Weight (MT)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RTS Sites Cards Section -->
+      <div class="cards-wrapper">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="fas fa-warehouse"></i>
+            <span>RTS Sites</span>
+          </h2>
+        </div>
+        <div class="location-cards-section">
+          <div class="location-card" *ngFor="let card of rtsSites" [ngStyle]="{'--card-color': card.colorCode }">
+            <div class="card-header">
+              <h3>{{ card.siteName }}</h3>
+              <i class="fas fa-truck"></i>
+            </div>
+            <div class="card-stats">
+              <div class="stat-item">
+                <div class="stat-value">{{ card.vehicleCount }}</div>
+                <div class="stat-label">Trips</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">{{ card.netWeight | number:'1.2-2' }}</div>
+                <div class="stat-label">Net Weight (MT)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Enhanced Tab Section -->
+      <div class="tab-section-wrapper">
+        <div class="tab-section-header">
+          <div class="tab-section-title">
+            <i class="fas fa-layer-group"></i>
+            <span>Site Analysis</span>
+          </div>
+          <div class="site-tabs">
+            <button class="tab-button" [class.active]="selectedSite === 'AbelAttendanceWebAPP'" (click)="switchSite('AbelAttendanceWebAPP')" type="button">
+              <i class="fas fa-recycle"></i>
+              <span class="tab-label">AbelAttendanceWebAPP</span>
+              <span class="tab-badge" *ngIf="swmSites.length > 0">{{swmSites.length}}</span>
+            </button>
+            <button class="tab-button" [class.active]="selectedSite === 'RTS'" (click)="switchSite('RTS')" type="button">
+              <i class="fas fa-warehouse"></i>
+              <span class="tab-label">RTS Sites</span>
+              <span class="tab-badge" *ngIf="rtsSites.length > 0">{{rtsSites.length}}</span>
+            </button>
+          </div>
+          <div class="tab-loading" *ngIf="isLoadingCumulative">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading data...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ward-wise Cumulative Net Weight Summary Chart (Last 30 Days) -->
+      <div class="summary-section">
+        <div class="summary-card">
+          <div class="summary-header">
+            <div class="summary-title-group">
+              <h3>Ward-wise Cumulative Net Weight Summary (Last 30 Days)</h3>
+              <div class="summary-subtitle">
+                <span class="site-indicator" [class.swm-indicator]="selectedSite === 'AbelAttendanceWebAPP'"
+                  [class.rts-indicator]="selectedSite === 'RTS'">
+                  {{selectedSite}} Sites
+                </span>
+              </div>
+            </div>
+            <div class="summary-actions">
+              <!-- Enhanced expand button visibility and labeling -->
+              <button class="expand-btn" (click)="openFullscreenChart()" *ngIf="isMobileView" aria-label="Expand Chart">
+                <i class="fas fa-expand-arrows-alt"></i>
+                <span>View Details</span>
+              </button>
+              <i class="fas fa-chart-column desktop-icon"></i>
+            </div>
+          </div>
+          <div class="chart-container" #chartContainer>
+            <!-- Improved visual feedback for horizontal scrolling -->
+            <div class="chart-scroll-hint" *ngIf="isMobileView">
+              <div class="hint-item" [class.active]="isSwiping">
+                <i class="fas fa-arrows-alt-h swipe-icon"></i>
+                <span>Swipe to Explore Data</span>
+              </div>
+              <div class="hint-item">
+                <i class="fas fa-search-plus zoom-icon"></i>
+                <span>Pinch to Zoom</span>
+              </div>
+            </div>
+            <div class="chart-wrapper" [class.zoomed]="isChartZoomed" [style.width]="chartWidth">
+              <apx-chart [series]="wardChartOptions.series" [chart]="wardChartOptions.chart"
+                [xaxis]="wardChartOptions.xaxis" [yaxis]="wardChartOptions.yaxis"
+                [dataLabels]="wardChartOptions.dataLabels" [colors]="wardChartOptions.colors"
+                [legend]="wardChartOptions.legend" [grid]="wardChartOptions.grid"
+                [plotOptions]="wardChartOptions.plotOptions" [stroke]="wardChartOptions.stroke"
+                [markers]="wardChartOptions.markers" [responsive]="wardChartOptions.responsive || []">
+              </apx-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Fullscreen Chart Modal for Mobile -->
+<div class="chart-modal" *ngIf="showFullscreenChart" (click)="closeFullscreenChart()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Ward-wise Summary - {{selectedSite}} Sites</h3>
+      <button class="close-btn" (click)="closeFullscreenChart()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <!-- Improved zoom control visibility -->
+      <div class="zoom-controls">
+        <button class="zoom-btn" (click)="zoomOut()" aria-label="Zoom Out">
+          <i class="fas fa-minus"></i>
+        </button>
+        <div class="zoom-indicator">
+          <i class="fas fa-search"></i>
+          <span>{{zoomLevel}}%</span>
+        </div>
+        <button class="zoom-btn" (click)="zoomIn()" aria-label="Zoom In">
+          <i class="fas fa-plus"></i>
+        </button>
+        <button class="zoom-btn reset" (click)="resetZoom()" title="Reset Zoom">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+      <!-- Container for zoomed view -->
+      <div class="fullscreen-viewport">
+        <!-- Replaced CSS scale transform with dynamic width calculation for true data separation -->
+        <div class="fullscreen-chart-container" #fullscreenChartContainer [style.width]="fullscreenChartWidth">
+          <apx-chart [series]="wardChartOptions.series" [chart]="fullscreenChartOptions.chart"
+            [xaxis]="fullscreenChartOptions.xaxis" [yaxis]="fullscreenChartOptions.yaxis"
+            [dataLabels]="fullscreenChartOptions.dataLabels" [colors]="fullscreenChartOptions.colors"
+            [legend]="fullscreenChartOptions.legend" [grid]="fullscreenChartOptions.grid"
+            [plotOptions]="fullscreenChartOptions.plotOptions" [stroke]="fullscreenChartOptions.stroke"
+            [markers]="fullscreenChartOptions.markers">
+          </apx-chart>
+        </div>
+      </div>
+      <div class="modal-instructions">
+        <i class="fas fa-info-circle"></i>
+        <span>Use zoom controls or pinch gesture to zoom • Swipe to scroll</span>
+      </div>
+    </div>
+  </div>
+</div>

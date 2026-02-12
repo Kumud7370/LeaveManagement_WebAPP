@@ -1,5 +1,5 @@
 {
-  "name": "swmwns19",
+  "name": "AbelAttendanceWebAPP",
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
@@ -8,7 +8,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:SWMWNS19": "node dist/swmwns19/server/server.mjs"
+    "serve:ssr:AbelAttendanceWebAPP": "node dist/AbelAttendanceWebAPP/server/server.mjs"
   },
   "private": true,
   "dependencies": {
@@ -42,7 +42,7 @@
     "ng-apexcharts": "^1.7.5",
     "ng2-charts": "^4.1.1",
     "rxjs": "~7.8.0",
-    "sweetalert2": "^11.21.2",
+    "sweetalert2": "^11.26.18",
     "tslib": "^2.3.0",
     "xlsx": "^0.18.5",
     "zone.js": "~0.15.0"

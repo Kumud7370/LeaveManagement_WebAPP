@@ -6,23 +6,23 @@ import { LoginComponent } from './modules/login/login.component';
 
 export const routes: Routes = [
 
- 
+
   {
-    path: "login",component: LoginComponent,
-   // loadComponent: () => import("./modules/login/login.component").then((m) => m.LoginComponent),
+    path: "login", component: LoginComponent,
+    // loadComponent: () => import("./modules/login/login.component").then((m) => m.LoginComponent),
   },
-   { path: "", redirectTo: "login", pathMatch: "full" },
+  { path: "", redirectTo: "login", pathMatch: "full" },
   {
     path: "",
     component: MainLayoutComponent,
     canActivate: [AuthGuard],
     canActivateChild: [AuthGuard],
     children: [
-      // {
-      //   path: "dashboard",
-      //   loadComponent: () => import("./modules/dashboard/dashboard.component").then((m) => m.DashboardComponent),
-      //   data: { breadcrumb: "Dashboard" },
-      // },
+      {
+        path: "dashboard",
+        loadComponent: () => import("./modules/dashboard/dashboard.component").then((m) => m.DashboardComponent),
+        data: { breadcrumb: "Dashboard" },
+      },
       // { path: "", redirectTo: "dashboard2", pathMatch: "full" },
       // {
       //   path: "dashboard2",
