@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
+import { Observable, map } from 'rxjs';
+import { ApiClientService } from './apiClient';
 import {
   Department,
   DepartmentDetail,
@@ -18,63 +17,63 @@ import {
   providedIn: 'root'
 })
 export class DepartmentService {
-  private apiUrl = `${environment.apiUrl}/api/Department`;
+  private endpoint = 'Department';
 
-  constructor(private http: HttpClient) {}
+  constructor(private apiClient: ApiClientService) {}
 
   createDepartment(request: CreateDepartmentRequest): Observable<ApiResponse<Department>> {
-    return this.http.post<ApiResponse<Department>>(`${this.apiUrl}`, request);
+    return this.apiClient.post<ApiResponse<Department>>(this.endpoint, request);
   }
 
   getDepartmentById(id: string): Observable<ApiResponse<Department>> {
-    return this.http.get<ApiResponse<Department>>(`${this.apiUrl}/${id}`);
+    return this.apiClient.get<ApiResponse<Department>>(`${this.endpoint}/${id}`);
   }
 
   getDepartmentByCode(departmentCode: string): Observable<ApiResponse<Department>> {
-    return this.http.get<ApiResponse<Department>>(`${this.apiUrl}/code/${departmentCode}`);
+    return this.apiClient.get<ApiResponse<Department>>(`${this.endpoint}/code/${departmentCode}`);
   }
 
   getDepartmentDetails(id: string): Observable<ApiResponse<DepartmentDetail>> {
-    return this.http.get<ApiResponse<DepartmentDetail>>(`${this.apiUrl}/${id}/details`);
+    return this.apiClient.get<ApiResponse<DepartmentDetail>>(`${this.endpoint}/${id}/details`);
   }
 
   getFilteredDepartments(filter: DepartmentFilterRequest): Observable<ApiResponse<PaginatedResponse<Department>>> {
-    return this.http.post<ApiResponse<PaginatedResponse<Department>>>(`${this.apiUrl}/filter`, filter);
+    return this.apiClient.post<ApiResponse<PaginatedResponse<Department>>>(`${this.endpoint}/filter`, filter);
   }
 
   getChildDepartments(parentId: string): Observable<ApiResponse<Department[]>> {
-    return this.http.get<ApiResponse<Department[]>>(`${this.apiUrl}/${parentId}/children`);
+    return this.apiClient.get<ApiResponse<Department[]>>(`${this.endpoint}/${parentId}/children`);
   }
 
   getRootDepartments(): Observable<ApiResponse<Department[]>> {
-    return this.http.get<ApiResponse<Department[]>>(`${this.apiUrl}/root`);
+    return this.apiClient.get<ApiResponse<Department[]>>(`${this.endpoint}/root`);
   }
 
   getActiveDepartments(): Observable<ApiResponse<Department[]>> {
-    return this.http.get<ApiResponse<Department[]>>(`${this.apiUrl}/active`);
+    return this.apiClient.get<ApiResponse<Department[]>>(`${this.endpoint}/active`);
   }
 
   getDepartmentHierarchy(): Observable<ApiResponse<DepartmentHierarchy[]>> {
-    return this.http.get<ApiResponse<DepartmentHierarchy[]>>(`${this.apiUrl}/hierarchy`);
+    return this.apiClient.get<ApiResponse<DepartmentHierarchy[]>>(`${this.endpoint}/hierarchy`);
   }
 
   updateDepartment(request: UpdateDepartmentRequest): Observable<ApiResponse<Department>> {
-    return this.http.put<ApiResponse<Department>>(`${this.apiUrl}`, request);
+    return this.apiClient.put<ApiResponse<Department>>(this.endpoint, request);
   }
 
   deleteDepartment(id: string): Observable<ApiResponse<boolean>> {
-    return this.http.delete<ApiResponse<boolean>>(`${this.apiUrl}/${id}`);
+    return this.apiClient.delete<ApiResponse<boolean>>(`${this.endpoint}/${id}`);
   }
 
   toggleDepartmentStatus(id: string): Observable<ApiResponse<boolean>> {
-    return this.http.patch<ApiResponse<boolean>>(`${this.apiUrl}/${id}/toggle-status`, {});
+    return this.apiClient.patch<ApiResponse<boolean>>(`${this.endpoint}/${id}/toggle-status`, {});
   }
 
   getDepartmentStatistics(): Observable<ApiResponse<DepartmentStatistics>> {
-    return this.http.get<ApiResponse<DepartmentStatistics>>(`${this.apiUrl}/statistics`);
+    return this.apiClient.get<ApiResponse<DepartmentStatistics>>(`${this.endpoint}/statistics`);
   }
 
   canDeleteDepartment(id: string): Observable<ApiResponse<boolean>> {
-    return this.http.get<ApiResponse<boolean>>(`${this.apiUrl}/${id}/can-delete`);
+    return this.apiClient.get<ApiResponse<boolean>>(`${this.endpoint}/${id}/can-delete`);
   }
 }
