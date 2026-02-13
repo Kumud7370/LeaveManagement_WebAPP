@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
 import { DepartmentService } from '../../../core/services/api/department.api';
 import { Department } from '../../../../app/core/Models/department.model';
 import Swal from 'sweetalert2';
@@ -14,9 +13,13 @@ import Swal from 'sweetalert2';
   styleUrls: ['./department-form.component.scss']
 })
 export class DepartmentFormComponent implements OnInit {
+  @Input() isModal = false;
+  @Input() departmentId: string | null = null;
+  @Input() isEditMode = false;
+  @Output() formCancelled = new EventEmitter<void>();
+  @Output() formSubmitted = new EventEmitter<void>();
+
   departmentForm!: FormGroup;
-  isEditMode = false;
-  departmentId: string | null = null;
   loading = false;
   submitting = false;
   error: string | null = null;
@@ -26,14 +29,11 @@ export class DepartmentFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private departmentService: DepartmentService,
-    private route: ActivatedRoute,
-    private router: Router
+    private departmentService: DepartmentService
   ) {}
 
   ngOnInit(): void {
     this.initializeForm();
-    this.departmentId = this.route.snapshot.paramMap.get('id');
     
     if (this.departmentId) {
       this.isEditMode = true;
@@ -117,7 +117,6 @@ export class DepartmentFormComponent implements OnInit {
 
     const formValue = this.departmentForm.value;
     
-    // Clean up the request - convert empty strings to null/undefined
     const requestData = {
       departmentCode: formValue.departmentCode,
       departmentName: formValue.departmentName,
@@ -143,7 +142,7 @@ export class DepartmentFormComponent implements OnInit {
               icon: 'success',
               confirmButtonColor: '#3b82f6'
             }).then(() => {
-              this.router.navigate(['/departments']);
+              this.formSubmitted.emit();
             });
           } else {
             this.error = response.message || 'Failed to update department';
@@ -178,7 +177,7 @@ export class DepartmentFormComponent implements OnInit {
               icon: 'success',
               confirmButtonColor: '#3b82f6'
             }).then(() => {
-              this.router.navigate(['/departments']);
+              this.formSubmitted.emit();
             });
           } else {
             this.error = response.message || 'Failed to create department';
@@ -207,7 +206,7 @@ export class DepartmentFormComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.router.navigate(['/departments']);
+    this.formCancelled.emit();
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
