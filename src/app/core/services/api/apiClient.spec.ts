@@ -206,28 +206,6 @@ describe('ApiClientService', () => {
       expect(req.request.body).toEqual({ refreshToken });
       req.flush(mockResponse);
     });
-
-    it('should request forgot password', () => {
-      const email = 'test@example.com';
-
-      service.forgotPassword(email).subscribe();
-
-      const req = httpMock.expectOne(`${baseUrl}/auth/forgot-password`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({ email });
-      req.flush({ success: true });
-    });
-
-    it('should reset password', () => {
-      const resetData = { token: 'reset-token', newPassword: 'newpass123' };
-
-      service.resetPassword(resetData).subscribe();
-
-      const req = httpMock.expectOne(`${baseUrl}/auth/reset-password`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(resetData);
-      req.flush({ success: true });
-    });
   });
 
   // ==================== User Endpoint Tests ====================

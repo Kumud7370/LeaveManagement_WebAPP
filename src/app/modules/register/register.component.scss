@@ -20,7 +20,7 @@ $transition-speed: 0.3s;
 $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
 // Main container - ORIGINAL GRADIENT from reference image
-.login-container {
+.register-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -96,14 +96,16 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 // Login card
-.login-card {
+.register-card {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: $border-radius-lg;
-  padding: 3rem;
+  padding: 2.5rem;
   width: 100%;
-  max-width: 450px;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: $shadow-xl;
   position: relative;
   z-index: 10;
@@ -133,9 +135,9 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 // Header
-.login-header {
+.register-header {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 
   .logo-container {
     display: inline-flex;
@@ -168,7 +170,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
   }
 
-  .login-title {
+  .register-title {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.5rem;
     font-weight: 700;
@@ -177,7 +179,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   }
 
-  .login-title-app {
+  .register-title-app {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.35rem;
     font-weight: 700;
@@ -189,7 +191,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     hyphens: auto;
   }
 
-  .login-subtitle {
+  .register-subtitle {
     color: $text-muted;
     font-size: 1rem;
     margin: 0;
@@ -198,7 +200,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 // Form styles
-.login-form {
+.register-form {
   .form-group {
     margin-bottom: 1.5rem;
 
@@ -341,7 +343,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 // Login button
-.login-button {
+.register-button {
   width: 100%;
   padding: 1rem 2rem;
   background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
@@ -399,7 +401,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 // Error message
-.login-error {
+.register-error {
   background: rgba($danger-color, 0.1);
   border: 1px solid rgba($danger-color, 0.3);
   color: $danger-color;
@@ -431,7 +433,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 // Footer
-.login-footer {
+.register-footer {
   text-align: center;
   padding-top: 1.5rem;
   border-top: 1px solid rgba($border-color, 0.5);
@@ -459,7 +461,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
-.login-info {
+.register-info {
   background: rgba($warning-color, 0.1);
   border: 1px solid rgba($warning-color, 0.4);
   color: $warning-color;
@@ -479,21 +481,21 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
 // Responsive design
 @media (max-width: 768px) {
-  .login-container {
+  .register-container {
     padding: 1rem;
   }
 
-  .login-card {
+  .register-card {
     padding: 2rem;
     max-width: 100%;
   }
 
-  .login-header {
-    .login-title {
+  .register-header {
+    .register-title {
       font-size: 1.35rem;
     }
 
-    .login-title-app {
+    .register-title-app {
       font-size: 1.15rem;
     }
 
@@ -511,18 +513,18 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 @media (max-width: 480px) {
-  .login-card {
+  .register-card {
     padding: 1.5rem;
   }
 
-  .login-header {
+  .register-header {
     margin-bottom: 2rem;
 
-    .login-title {
+    .register-title {
       font-size: 1.2rem;
     }
 
-    .login-title-app {
+    .register-title-app {
       font-size: 1rem;
     }
   }
@@ -532,7 +534,7 @@ $transition-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     font-size: 0.875rem;
   }
 
-  .login-button {
+  .register-button {
     padding: 0.875rem 1.5rem;
     font-size: 0.875rem;
   }
