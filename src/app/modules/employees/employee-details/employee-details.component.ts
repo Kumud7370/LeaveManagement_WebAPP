@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
-import { EmployeeService } from '../../../../../core/services/api/employee.api';
+import { EmployeeService } from '../../../../app/core/services/api/employee.api';
 import {
   EmployeeResponseDto,
   EmployeeStatus,
   EmploymentType,
   Gender
-} from '../../../../../core/Models/employee.model';
+} from '../../../../app/core/Models/employee.model';
 
 @Component({
   selector: 'app-employee-details',
