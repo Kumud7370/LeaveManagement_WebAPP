@@ -5,13 +5,21 @@ import { LoginComponent } from './modules/login/login.component';
 
 export const routes: Routes = [
   {
-    path: "login", 
+    path: "login",
     component: LoginComponent,
   },
-  { 
-    path: "", 
-    redirectTo: "login", 
-    pathMatch: "full" 
+  {
+    path: "register",
+    loadComponent: () => import('./modules/register/register.component').then(m => m.RegisterComponent),
+  },
+  {
+    path: "forgot-password",
+    loadComponent: () => import('./modules/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
+  },
+  {
+    path: "",
+    redirectTo: "login",
+    pathMatch: "full"
   },
   {
     path: "",
@@ -24,7 +32,7 @@ export const routes: Routes = [
         loadComponent: () => import("./modules/dashboard/dashboard.component").then((m) => m.DashboardComponent),
         data: { breadcrumb: "Dashboard" },
       },
-       {
+      {
         path: "employees",
         children: [
           {
@@ -53,7 +61,7 @@ export const routes: Routes = [
           },
         ]
       },
-      
+
       {
         path: "departments",
         loadChildren: () => import("./modules/departments/department.module").then((m) => m.DepartmentModule),
