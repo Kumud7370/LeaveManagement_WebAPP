@@ -1,10 +1,25 @@
-<div class="department-form-container">
+<div class="department-form-container" [class.modal-form]="isModal">
   <!-- Header -->
-  <div class="page-header">
+  <div class="page-header" *ngIf="!isModal">
     <button class="btn-back" (click)="onCancel()">
       <i class="bi bi-arrow-left"></i>
       Back
     </button>
+    <div class="header-content">
+      <h1 class="page-title">
+        {{ isEditMode ? "Edit Department" : "Create Department" }}
+      </h1>
+      <p class="page-subtitle">
+        {{
+          isEditMode
+            ? "Update department information"
+            : "Add a new department to your organization"
+        }}
+      </p>
+    </div>
+  </div>
+
+  <div class="page-header" *ngIf="isModal">
     <div class="header-content">
       <h1 class="page-title">
         {{ isEditMode ? "Edit Department" : "Create Department" }}
@@ -192,7 +207,7 @@
   </form>
 
   <!-- Info Card -->
-  <div class="info-card" *ngIf="!loading">
+  <div class="info-card" *ngIf="!loading && !isModal">
     <div class="info-header">
       <i class="bi bi-info-circle"></i>
       <h3>Guidelines</h3>
