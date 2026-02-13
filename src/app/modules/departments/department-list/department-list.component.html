@@ -197,3 +197,19 @@
     </div>
   </div>
 </div>
+
+<!-- Modal for Department Form -->
+<div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeFormModal()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <app-department-form
+      [isModal]="true"
+      [departmentId]="selectedDepartmentId"
+      [isEditMode]="formMode === 'edit'"
+      (formCancelled)="closeFormModal()"
+      (formSubmitted)="onFormSuccess()"
+    ></app-department-form>
+  </div>
+</div>

@@ -13,11 +13,12 @@ import {
 import Swal from 'sweetalert2';
 import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
 import { StatusCellRendererComponent } from '../../../shared/status-cell-renderer.component';
+import { DepartmentFormComponent } from '../department-form/department-form.component';
 
 @Component({
   selector: 'app-department-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, AgGridAngular],
+  imports: [CommonModule, FormsModule, AgGridAngular, DepartmentFormComponent],
   templateUrl: './department-list.component.html',
   styleUrls: ['./department-list.component.scss']
 })
@@ -42,6 +43,11 @@ export class DepartmentListComponent implements OnInit {
   // UI States
   showFilters = false;
   selectedDepartments: Set<string> = new Set();
+
+  // Modal States
+  showFormModal = false;
+  formMode: 'create' | 'edit' = 'create';
+  selectedDepartmentId: string | null = null;
 
   // AG Grid
   columnDefs: ColDef[] = [];
@@ -237,7 +243,9 @@ export class DepartmentListComponent implements OnInit {
   }
 
   editDepartment(department: Department): void {
-    this.router.navigate(['/departments', 'edit', department.departmentId]);
+    this.formMode = 'edit';
+    this.selectedDepartmentId = department.departmentId;
+    this.showFormModal = true;
   }
 
   async toggleStatus(department: Department): Promise<void> {
@@ -354,7 +362,19 @@ export class DepartmentListComponent implements OnInit {
   }
 
   createDepartment(): void {
-    this.router.navigate(['/departments', 'create']);
+    this.formMode = 'create';
+    this.selectedDepartmentId = null;
+    this.showFormModal = true;
+  }
+
+  closeFormModal(): void {
+    this.showFormModal = false;
+    this.selectedDepartmentId = null;
+  }
+
+  onFormSuccess(): void {
+    this.closeFormModal();
+    this.loadDepartments();
   }
 
   clearFilters(): void {

@@ -4,6 +4,10 @@
   padding: 2rem;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
+  &.modal-form {
+    padding: 2rem 2rem 1rem 2rem;
+  }
+
   .page-header {
     margin-bottom: 2rem;
 
@@ -339,6 +343,22 @@
         }
       }
     }
+  }
+}
+
+// Modal specific styles
+.department-form-container.modal-form {
+  .page-header .btn-back {
+    display: none;
+  }
+
+  .department-form {
+    border: none;
+    box-shadow: none;
+  }
+
+  .info-card {
+    display: none;
   }
 }
 
