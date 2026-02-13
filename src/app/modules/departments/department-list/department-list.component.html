@@ -5,44 +5,27 @@
       <h1 class="page-title">Departments</h1>
       <p class="page-subtitle">Manage your organization's departments</p>
     </div>
-    <button class="btn btn-primary" (click)="createDepartment()">
-      <i class="bi bi-plus-circle"></i>
-      Create Department
-    </button>
   </div>
 
-  <!-- Filters -->
-  <div class="filters-section">
+  <!-- Search and Action Buttons -->
+  <div class="search-action-section">
     <div class="search-bar">
       <input
         type="text"
         placeholder="Search departments..."
         [(ngModel)]="searchTerm"
-        (keyup.enter)="onSearch()"
+        (keyup)="onSearch()"
         class="search-input"
       />
-      <button
-        *ngIf="searchTerm"
-        (click)="searchTerm = ''; onSearch()"
-        class="clear-btn"
-      >
-        <i class="bi bi-x"></i>
-      </button>
     </div>
 
-    <button class="btn btn-outline" (click)="showFilters = !showFilters">
-      <i class="bi bi-funnel"></i>
-      Filters
-      <span
-        *ngIf="isActiveFilter !== null || rootLevelOnly"
-        class="filter-badge"
-        >Active</span
-      >
-    </button>
+    <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
 
-    <button class="btn btn-outline" (click)="loadDepartments()">
-      <i class="bi bi-arrow-clockwise"></i>
-      Refresh
+    <button class="btn btn-refresh" (click)="loadDepartments()">Refresh</button>
+
+    <button class="btn btn-primary" (click)="createDepartment()">
+      <i class="bi bi-plus-circle"></i>
+      Add Department
     </button>
   </div>
 
@@ -123,147 +106,8 @@
     </button>
   </div>
 
-  <!-- Table -->
-  <div *ngIf="!loading && !error" class="table-container">
-    <table class="departments-table">
-      <thead>
-        <tr>
-          <th class="checkbox-cell">
-            <input
-              type="checkbox"
-              [checked]="
-                selectedDepartments.size === departments.length &&
-                departments.length > 0
-              "
-              (change)="selectAll()"
-            />
-          </th>
-          <th (click)="onSort('DepartmentCode')" class="sortable">
-            Code
-            <i
-              class="bi"
-              [ngClass]="
-                sortBy === 'DepartmentCode'
-                  ? sortDirection === 'asc'
-                    ? 'bi-sort-alpha-down'
-                    : 'bi-sort-alpha-up'
-                  : 'bi-filter'
-              "
-            ></i>
-          </th>
-          <th (click)="onSort('DepartmentName')" class="sortable">
-            Department Name
-            <i
-              class="bi"
-              [ngClass]="
-                sortBy === 'DepartmentName'
-                  ? sortDirection === 'asc'
-                    ? 'bi-sort-alpha-down'
-                    : 'bi-sort-alpha-up'
-                  : 'bi-filter'
-              "
-            ></i>
-          </th>
-          <th>Parent Department</th>
-          <th>Head of Department</th>
-          <th class="text-center">Employees</th>
-          <th class="text-center">Sub-Depts</th>
-          <th class="text-center">Status</th>
-          <th class="text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          *ngFor="let dept of departments"
-          [class.selected]="selectedDepartments.has(dept.departmentId)"
-        >
-          <td class="checkbox-cell">
-            <input
-              type="checkbox"
-              [checked]="selectedDepartments.has(dept.departmentId)"
-              (change)="toggleSelection(dept.departmentId)"
-            />
-          </td>
-          <td>
-            <span class="dept-code">{{ dept.departmentCode }}</span>
-          </td>
-          <td>
-            <div class="dept-name-cell">
-              <span class="dept-name">{{ dept.departmentName }}</span>
-              <span *ngIf="dept.description" class="dept-description">{{
-                dept.description
-              }}</span>
-            </div>
-          </td>
-          <td>
-            <span *ngIf="dept.parentDepartmentName" class="parent-dept">
-              {{ dept.parentDepartmentName }}
-            </span>
-            <span *ngIf="!dept.parentDepartmentName" class="text-muted">—</span>
-          </td>
-          <td>
-            <span *ngIf="dept.headOfDepartmentName" class="head-name">
-              {{ dept.headOfDepartmentName }}
-            </span>
-            <span *ngIf="!dept.headOfDepartmentName" class="text-muted">—</span>
-          </td>
-          <td class="text-center">
-            <span class="badge badge-info">{{ dept.employeeCount }}</span>
-          </td>
-          <td class="text-center">
-            <span class="badge badge-secondary">{{
-              dept.childDepartmentCount
-            }}</span>
-          </td>
-          <td class="text-center">
-            <span
-              class="status-badge"
-              [class.active]="dept.isActive"
-              [class.inactive]="!dept.isActive"
-            >
-              {{ dept.isActive ? "Active" : "Inactive" }}
-            </span>
-          </td>
-          <td class="actions-cell">
-            <div class="action-buttons">
-              <button
-                class="btn-icon"
-                (click)="viewDetails(dept)"
-                title="View Details"
-              >
-                <i class="bi bi-eye"></i>
-              </button>
-              <button
-                class="btn-icon"
-                (click)="editDepartment(dept)"
-                title="Edit"
-              >
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button
-                class="btn-icon"
-                (click)="toggleStatus(dept)"
-                [title]="dept.isActive ? 'Deactivate' : 'Activate'"
-              >
-                <i
-                  [class]="
-                    dept.isActive ? 'bi bi-toggle-on' : 'bi bi-toggle-off'
-                  "
-                ></i>
-              </button>
-              <button
-                class="btn-icon btn-danger"
-                (click)="deleteDepartment(dept)"
-                title="Delete"
-              >
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
+  <!-- AG Grid Table -->
+  <div *ngIf="!loading && !error" class="grid-container">
     <!-- Empty State -->
     <div *ngIf="departments.length === 0" class="empty-state">
       <i class="bi bi-inbox"></i>
@@ -273,6 +117,21 @@
         Create Department
       </button>
     </div>
+
+    <!-- AG Grid -->
+    <ag-grid-angular
+      *ngIf="departments.length > 0"
+      class="ag-theme-quartz"
+      [rowData]="departments"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      [gridOptions]="gridOptions"
+      (gridReady)="onGridReady($event)"
+      [rowHeight]="60"
+      [headerHeight]="50"
+      [domLayout]="'autoHeight'"
+    >
+    </ag-grid-angular>
   </div>
 
   <!-- Pagination -->
