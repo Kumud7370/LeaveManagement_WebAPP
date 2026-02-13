@@ -2,7 +2,7 @@
   <!-- Header -->
   <div class="page-header">
     <button class="btn-back" (click)="onCancel()">
-      <i class="icon-arrow-left"></i>
+      <i class="bi bi-arrow-left"></i>
       Back
     </button>
     <div class="header-content">
@@ -21,10 +21,10 @@
 
   <!-- Error Alert -->
   <div *ngIf="error && !loading" class="alert alert-error">
-    <i class="icon-alert-circle"></i>
+    <i class="bi bi-exclamation-circle"></i>
     <span>{{ error }}</span>
     <button class="close-btn" (click)="error = null">
-      <i class="icon-x"></i>
+      <i class="bi bi-x"></i>
     </button>
   </div>
 
@@ -174,7 +174,7 @@
   <!-- Info Card -->
   <div class="info-card" *ngIf="!loading">
     <div class="info-header">
-      <i class="icon-info"></i>
+      <i class="bi bi-info-circle"></i>
       <h3>Guidelines</h3>
     </div>
     <ul class="info-list">

@@ -20,9 +20,8 @@ export class DepartmentFormComponent implements OnInit {
   submitting = false;
   error: string | null = null;
 
-  // Dropdown data
   parentDepartments: Department[] = [];
-  employees: any[] = []; // You'll need to create employee service
+  employees: any[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -33,13 +32,14 @@ export class DepartmentFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
-    this.loadDropdownData();
-    
     this.departmentId = this.route.snapshot.paramMap.get('id');
+    
     if (this.departmentId) {
       this.isEditMode = true;
       this.loadDepartment();
     }
+    
+    this.loadDropdownData();
   }
 
   initializeForm(): void {
@@ -64,7 +64,6 @@ export class DepartmentFormComponent implements OnInit {
   }
 
   loadDropdownData(): void {
-    // Load parent departments
     this.departmentService.getActiveDepartments().subscribe({
       next: (response) => {
         if (response.success) {
@@ -77,10 +76,6 @@ export class DepartmentFormComponent implements OnInit {
         console.error('Failed to load parent departments', err);
       }
     });
-
-    // Load employees for head of department
-    // You'll need to implement this with your employee service
-    // this.employeeService.getActiveEmployees().subscribe(...)
   }
 
   loadDepartment(): void {
@@ -120,16 +115,28 @@ export class DepartmentFormComponent implements OnInit {
     this.error = null;
 
     const formValue = this.departmentForm.value;
+    
+    // Clean up the request - convert empty strings to null/undefined
+    const requestData = {
+      departmentCode: formValue.departmentCode,
+      departmentName: formValue.departmentName,
+      description: formValue.description || undefined,
+      headOfDepartment: formValue.headOfDepartment || undefined,
+      parentDepartmentId: formValue.parentDepartmentId || undefined,
+      displayOrder: formValue.displayOrder || 0,
+      isActive: formValue.isActive
+    };
 
     if (this.isEditMode && this.departmentId) {
       const updateRequest = {
         departmentId: this.departmentId,
-        ...formValue
+        ...requestData
       };
 
       this.departmentService.updateDepartment(updateRequest).subscribe({
         next: (response) => {
           if (response.success) {
+            alert('Department updated successfully!');
             this.router.navigate(['/departments']);
           } else {
             this.error = response.message || 'Failed to update department';
@@ -137,14 +144,16 @@ export class DepartmentFormComponent implements OnInit {
           }
         },
         error: (err) => {
-          this.error = err.error?.message || 'An error occurred';
+          console.error('Update error:', err);
+          this.error = err.error?.message || err.message || 'An error occurred while updating department';
           this.submitting = false;
         }
       });
     } else {
-      this.departmentService.createDepartment(formValue).subscribe({
+      this.departmentService.createDepartment(requestData).subscribe({
         next: (response) => {
           if (response.success) {
+            alert('Department created successfully!');
             this.router.navigate(['/departments']);
           } else {
             this.error = response.message || 'Failed to create department';
@@ -152,7 +161,8 @@ export class DepartmentFormComponent implements OnInit {
           }
         },
         error: (err) => {
-          this.error = err.error?.message || 'An error occurred';
+          console.error('Create error:', err);
+          this.error = err.error?.message || err.message || 'An error occurred while creating department';
           this.submitting = false;
         }
       });
@@ -172,10 +182,6 @@ export class DepartmentFormComponent implements OnInit {
         this.markFormGroupTouched(control);
       }
     });
-  }
-
-  get f() {
-    return this.departmentForm.controls;
   }
 
   getErrorMessage(fieldName: string): string {

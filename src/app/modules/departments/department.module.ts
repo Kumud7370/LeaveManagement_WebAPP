@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
 
 import { DepartmentListComponent } from './department-list/department-list.component';
@@ -8,19 +7,32 @@ import { DepartmentFormComponent } from './department-form/department-form.compo
 import { DepartmentDetailsComponent } from './department-details/department-details.component';
 
 const routes: Routes = [
-  { path: '', component: DepartmentListComponent },
-  { path: 'create', component: DepartmentFormComponent },
-  { path: 'edit/:id', component: DepartmentFormComponent },
-  { path: ':id', component: DepartmentDetailsComponent }
+  { 
+    path: '', 
+    component: DepartmentListComponent,
+    data: { breadcrumb: 'Departments' }
+  },
+  { 
+    path: 'create', 
+    component: DepartmentFormComponent,
+    data: { breadcrumb: 'Create Department' }
+  },
+  { 
+    path: 'edit/:id', 
+    component: DepartmentFormComponent,
+    data: { breadcrumb: 'Edit Department' }
+  },
+  { 
+    path: ':id', 
+    component: DepartmentDetailsComponent,
+    data: { breadcrumb: 'Department Details' }
+  }
 ];
 
 @NgModule({
   imports: [
     CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
     RouterModule.forChild(routes),
-    // Import standalone components instead of declaring them
     DepartmentListComponent,
     DepartmentFormComponent,
     DepartmentDetailsComponent
