@@ -8,6 +8,7 @@ import {
   DepartmentFilterRequest,
   PaginatedResponse
 } from '../../../../app/core/Models/department.model';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-department-list',
@@ -124,17 +125,47 @@ export class DepartmentListComponent implements OnInit {
   }
 
   async toggleStatus(department: Department): Promise<void> {
-    if (confirm(`Are you sure you want to ${department.isActive ? 'deactivate' : 'activate'} this department?`)) {
+    const action = department.isActive ? 'deactivate' : 'activate';
+    
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you want to ${action} "${department.departmentName}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: `Yes, ${action} it!`,
+      cancelButtonText: 'Cancel'
+    });
+
+    if (result.isConfirmed) {
       this.departmentService.toggleDepartmentStatus(department.departmentId).subscribe({
         next: (response) => {
           if (response.success) {
+            Swal.fire({
+              title: 'Success!',
+              text: `Department has been ${action}d successfully.`,
+              icon: 'success',
+              confirmButtonColor: '#3b82f6',
+              timer: 2000
+            });
             this.loadDepartments();
           } else {
-            alert(response.message || 'Failed to update department status');
+            Swal.fire({
+              title: 'Error!',
+              text: response.message || 'Failed to update department status',
+              icon: 'error',
+              confirmButtonColor: '#ef4444'
+            });
           }
         },
         error: (err) => {
-          alert(err.error?.message || 'An error occurred');
+          Swal.fire({
+            title: 'Error!',
+            text: err.error?.message || 'An error occurred',
+            icon: 'error',
+            confirmButtonColor: '#ef4444'
+          });
         }
       });
     }
@@ -143,28 +174,66 @@ export class DepartmentListComponent implements OnInit {
   async deleteDepartment(department: Department): Promise<void> {
     // First check if can delete
     this.departmentService.canDeleteDepartment(department.departmentId).subscribe({
-      next: (canDeleteResponse) => {
+      next: async (canDeleteResponse) => {
         if (canDeleteResponse.success && canDeleteResponse.data) {
-          if (confirm(`Are you sure you want to delete "${department.departmentName}"?`)) {
+          const result = await Swal.fire({
+            title: 'Are you sure?',
+            html: `You are about to delete <strong>"${department.departmentName}"</strong>.<br>This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+          });
+
+          if (result.isConfirmed) {
             this.departmentService.deleteDepartment(department.departmentId).subscribe({
               next: (response) => {
                 if (response.success) {
+                  Swal.fire({
+                    title: 'Deleted!',
+                    text: 'Department has been deleted successfully.',
+                    icon: 'success',
+                    confirmButtonColor: '#3b82f6',
+                    timer: 2000
+                  });
                   this.loadDepartments();
                 } else {
-                  alert(response.message || 'Failed to delete department');
+                  Swal.fire({
+                    title: 'Error!',
+                    text: response.message || 'Failed to delete department',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                  });
                 }
               },
               error: (err) => {
-                alert(err.error?.message || 'An error occurred');
+                Swal.fire({
+                  title: 'Error!',
+                  text: err.error?.message || 'An error occurred',
+                  icon: 'error',
+                  confirmButtonColor: '#ef4444'
+                });
               }
             });
           }
         } else {
-          alert('Cannot delete this department. It has employees or child departments.');
+          Swal.fire({
+            title: 'Cannot Delete',
+            text: 'This department cannot be deleted. It has employees or child departments assigned.',
+            icon: 'warning',
+            confirmButtonColor: '#3b82f6'
+          });
         }
       },
       error: (err) => {
-        alert(err.error?.message || 'An error occurred');
+        Swal.fire({
+          title: 'Error!',
+          text: err.error?.message || 'An error occurred',
+          icon: 'error',
+          confirmButtonColor: '#ef4444'
+        });
       }
     });
   }

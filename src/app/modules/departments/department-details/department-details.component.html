@@ -7,9 +7,11 @@
 
   <!-- Error State -->
   <div *ngIf="error && !loading" class="error-state">
-    <i class="icon-alert-circle"></i>
+    <i class="bi bi-exclamation-circle"></i>
     <p>{{ error }}</p>
-    <button class="btn btn-outline" (click)="loadDepartmentDetails()">Try Again</button>
+    <button class="btn btn-outline" (click)="loadDepartmentDetails()">
+      Try Again
+    </button>
     <button class="btn btn-text" (click)="goBack()">Go Back</button>
   </div>
 
@@ -18,7 +20,7 @@
     <!-- Header -->
     <div class="details-header">
       <button class="btn-back" (click)="goBack()">
-        <i class="icon-arrow-left"></i>
+        <i class="bi bi-arrow-left"></i>
         Back to Departments
       </button>
 
@@ -26,22 +28,30 @@
         <div class="title-section">
           <h1 class="department-title">{{ department.departmentName }}</h1>
           <span class="department-code">{{ department.departmentCode }}</span>
-          <span class="status-badge" [class.active]="department.isActive" [class.inactive]="!department.isActive">
-            {{ department.isActive ? 'Active' : 'Inactive' }}
+          <span
+            class="status-badge"
+            [class.active]="department.isActive"
+            [class.inactive]="!department.isActive"
+          >
+            {{ department.isActive ? "Active" : "Inactive" }}
           </span>
         </div>
 
         <div class="action-buttons">
           <button class="btn btn-outline" (click)="editDepartment()">
-            <i class="icon-edit"></i>
+            <i class="bi bi-pencil"></i>
             Edit
           </button>
           <button class="btn btn-outline" (click)="toggleStatus()">
-            <i [class]="department.isActive ? 'icon-toggle-left' : 'icon-toggle-right'"></i>
-            {{ department.isActive ? 'Deactivate' : 'Activate' }}
+            <i
+              [class]="
+                department.isActive ? 'bi bi-toggle-on' : 'bi bi-toggle-off'
+              "
+            ></i>
+            {{ department.isActive ? "Deactivate" : "Activate" }}
           </button>
           <button class="btn btn-danger" (click)="deleteDepartment()">
-            <i class="icon-trash"></i>
+            <i class="bi bi-trash"></i>
             Delete
           </button>
         </div>
@@ -55,7 +65,7 @@
     <!-- Stats Cards -->
     <div class="stats-grid">
       <div class="stat-card">
-        <i class="icon-users stat-icon"></i>
+        <i class="bi bi-people stat-icon"></i>
         <div class="stat-content">
           <div class="stat-value">{{ department.employeeCount }}</div>
           <div class="stat-label">Employees</div>
@@ -63,7 +73,7 @@
       </div>
 
       <div class="stat-card">
-        <i class="icon-git-branch stat-icon"></i>
+        <i class="bi bi-diagram-3 stat-icon"></i>
         <div class="stat-content">
           <div class="stat-value">{{ department.childDepartmentCount }}</div>
           <div class="stat-label">Sub-Departments</div>
@@ -71,7 +81,7 @@
       </div>
 
       <div class="stat-card">
-        <i class="icon-layers stat-icon"></i>
+        <i class="bi bi-layers stat-icon"></i>
         <div class="stat-content">
           <div class="stat-value">Level {{ department.level }}</div>
           <div class="stat-label">Hierarchy Level</div>
@@ -79,7 +89,7 @@
       </div>
 
       <div class="stat-card">
-        <i class="icon-hash stat-icon"></i>
+        <i class="bi bi-hash stat-icon"></i>
         <div class="stat-content">
           <div class="stat-value">{{ department.displayOrder }}</div>
           <div class="stat-label">Display Order</div>
@@ -95,7 +105,7 @@
           [class.active]="activeTab === 'overview'"
           (click)="setActiveTab('overview')"
         >
-          <i class="icon-info"></i>
+          <i class="bi bi-info-circle"></i>
           Overview
         </button>
         <button
@@ -103,7 +113,7 @@
           [class.active]="activeTab === 'employees'"
           (click)="setActiveTab('employees')"
         >
-          <i class="icon-users"></i>
+          <i class="bi bi-people"></i>
           Employees
           <span class="badge">{{ department.employeeCount }}</span>
         </button>
@@ -112,7 +122,7 @@
           [class.active]="activeTab === 'children'"
           (click)="setActiveTab('children')"
         >
-          <i class="icon-git-branch"></i>
+          <i class="bi bi-diagram-3"></i>
           Sub-Departments
           <span class="badge">{{ department.childDepartmentCount }}</span>
         </button>
@@ -121,7 +131,7 @@
           [class.active]="activeTab === 'audit'"
           (click)="setActiveTab('audit')"
         >
-          <i class="icon-clock"></i>
+          <i class="bi bi-clock-history"></i>
           Audit Info
         </button>
       </div>
@@ -138,7 +148,7 @@
             <div class="info-item">
               <label>Parent Department</label>
               <div class="value">
-                {{ department.parentDepartmentName || 'None (Root Level)' }}
+                {{ department.parentDepartmentName || "None (Root Level)" }}
               </div>
             </div>
 
@@ -151,12 +161,19 @@
                   [alt]="department.departmentHead.fullName"
                   class="head-avatar"
                 />
-                <div class="head-default-avatar" *ngIf="!department.departmentHead.profileImageUrl">
+                <div
+                  class="head-default-avatar"
+                  *ngIf="!department.departmentHead.profileImageUrl"
+                >
                   {{ department.departmentHead.fullName.charAt(0) }}
                 </div>
                 <div class="head-details">
-                  <div class="head-name">{{ department.departmentHead.fullName }}</div>
-                  <div class="head-email">{{ department.departmentHead.email }}</div>
+                  <div class="head-name">
+                    {{ department.departmentHead.fullName }}
+                  </div>
+                  <div class="head-email">
+                    {{ department.departmentHead.email }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -180,7 +197,10 @@
 
         <!-- Employees Tab -->
         <div *ngIf="activeTab === 'employees'" class="tab-panel">
-          <div *ngIf="department.employees && department.employees.length > 0" class="employees-list">
+          <div
+            *ngIf="department.employees && department.employees.length > 0"
+            class="employees-list"
+          >
             <div
               *ngFor="let employee of department.employees"
               class="employee-card"
@@ -192,7 +212,10 @@
                 [alt]="employee.fullName"
                 class="employee-avatar"
               />
-              <div class="employee-default-avatar" *ngIf="!employee.profileImageUrl">
+              <div
+                class="employee-default-avatar"
+                *ngIf="!employee.profileImageUrl"
+              >
                 {{ employee.fullName.charAt(0) }}
               </div>
               <div class="employee-info">
@@ -206,8 +229,11 @@
             </div>
           </div>
 
-          <div *ngIf="!department.employees || department.employees.length === 0" class="empty-state">
-            <i class="icon-users"></i>
+          <div
+            *ngIf="!department.employees || department.employees.length === 0"
+            class="empty-state"
+          >
+            <i class="bi bi-people"></i>
             <h3>No employees in this department</h3>
             <p>This department currently has no employees assigned to it.</p>
           </div>
@@ -215,7 +241,13 @@
 
         <!-- Child Departments Tab -->
         <div *ngIf="activeTab === 'children'" class="tab-panel">
-          <div *ngIf="department.childDepartments && department.childDepartments.length > 0" class="children-list">
+          <div
+            *ngIf="
+              department.childDepartments &&
+              department.childDepartments.length > 0
+            "
+            class="children-list"
+          >
             <div
               *ngFor="let child of department.childDepartments"
               class="child-card"
@@ -226,26 +258,38 @@
                   <h3>{{ child.departmentName }}</h3>
                   <span class="child-code">{{ child.departmentCode }}</span>
                 </div>
-                <span class="status-badge" [class.active]="child.isActive" [class.inactive]="!child.isActive">
-                  {{ child.isActive ? 'Active' : 'Inactive' }}
+                <span
+                  class="status-badge"
+                  [class.active]="child.isActive"
+                  [class.inactive]="!child.isActive"
+                >
+                  {{ child.isActive ? "Active" : "Inactive" }}
                 </span>
               </div>
-              <p *ngIf="child.description" class="child-description">{{ child.description }}</p>
+              <p *ngIf="child.description" class="child-description">
+                {{ child.description }}
+              </p>
               <div class="child-stats">
                 <span class="stat">
-                  <i class="icon-users"></i>
+                  <i class="bi bi-people"></i>
                   {{ child.employeeCount }} employees
                 </span>
                 <span class="stat">
-                  <i class="icon-git-branch"></i>
+                  <i class="bi bi-diagram-3"></i>
                   {{ child.childDepartmentCount }} sub-depts
                 </span>
               </div>
             </div>
           </div>
 
-          <div *ngIf="!department.childDepartments || department.childDepartments.length === 0" class="empty-state">
-            <i class="icon-git-branch"></i>
+          <div
+            *ngIf="
+              !department.childDepartments ||
+              department.childDepartments.length === 0
+            "
+            class="empty-state"
+          >
+            <i class="bi bi-diagram-3"></i>
             <h3>No sub-departments</h3>
             <p>This department has no child departments.</p>
           </div>
@@ -257,7 +301,7 @@
             <div class="audit-item">
               <label>Created At</label>
               <div class="value">
-                {{ department.auditInfo.createdAt | date: 'medium' }}
+                {{ department.auditInfo.createdAt | date: "medium" }}
               </div>
             </div>
 
@@ -269,7 +313,7 @@
             <div class="audit-item" *ngIf="department.auditInfo.updatedAt">
               <label>Last Updated At</label>
               <div class="value">
-                {{ department.auditInfo.updatedAt | date: 'medium' }}
+                {{ department.auditInfo.updatedAt | date: "medium" }}
               </div>
             </div>
 
