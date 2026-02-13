@@ -5,13 +5,21 @@ import { LoginComponent } from './modules/login/login.component';
 
 export const routes: Routes = [
   {
-    path: "login", 
+    path: "login",
     component: LoginComponent,
   },
-  { 
-    path: "", 
-    redirectTo: "login", 
-    pathMatch: "full" 
+  {
+    path: "register",
+    loadComponent: () => import('./modules/register/register.component').then(m => m.RegisterComponent),
+  },
+  {
+    path: "forgot-password",
+    loadComponent: () => import('./modules/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
+  },
+  {
+    path: "",
+    redirectTo: "login",
+    pathMatch: "full"
   },
   {
     path: "",
@@ -24,36 +32,36 @@ export const routes: Routes = [
         loadComponent: () => import("./modules/dashboard/dashboard.component").then((m) => m.DashboardComponent),
         data: { breadcrumb: "Dashboard" },
       },
-       {
+      {
         path: "employees",
         children: [
           {
             path: "",
-            loadComponent: () => import("./modules/dashboard/employees/components/employee-list/employee-list.component")
+            loadComponent: () => import("./modules/employees/employee-list/employee-list.component")
               .then((m) => m.EmployeeListComponent),
             data: { breadcrumb: "Employees" },
           },
           {
             path: "create",
-            loadComponent: () => import("./modules/dashboard/employees/components/employee-form/employee-form.component")
+            loadComponent: () => import("./modules/employees/employee-form/employee-form.component")
               .then((m) => m.EmployeeFormComponent),
             data: { breadcrumb: "Add Employee" },
           },
           {
             path: "edit/:id",
-            loadComponent: () => import("./modules/dashboard/employees/components/employee-form/employee-form.component")
+            loadComponent: () => import("./modules/employees/employee-form/employee-form.component")
               .then((m) => m.EmployeeFormComponent),
             data: { breadcrumb: "Edit Employee" },
           },
           {
             path: ":id",
-            loadComponent: () => import("./modules/dashboard/employees/components/employee-details/employee-details.component")
+            loadComponent: () => import("./modules/employees/employee-details/employee-details.component")
               .then((m) => m.EmployeeDetailsComponent),
             data: { breadcrumb: "Employee Details" },
           },
         ]
       },
-      
+
       {
         path: "departments",
         loadChildren: () => import("./modules/departments/department.module").then((m) => m.DepartmentModule),

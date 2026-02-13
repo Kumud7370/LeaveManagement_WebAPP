@@ -249,14 +249,6 @@ export class ApiClientService {
   );
 }
 
-  public forgotPassword(email: string): Observable<any> {
-    return this.post('Auth/forgot-password', { email });
-  }
-
-  public resetPassword(data: { token: string; newPassword: string }): Observable<any> {
-    return this.post('Auth/reset-password', data);
-  }
-
   public changePassword(data: { currentPassword: string; newPassword: string }): Observable<any> {
     return this.post('Auth/change-password', data);
   }
