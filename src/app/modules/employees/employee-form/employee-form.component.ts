@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
-import { EmployeeService } from '../../../../../core/services/api/employee.api';
+import { EmployeeService } from '../../../core/services/api/employee.api';
 import {
   CreateEmployeeDto,
   UpdateEmployeeDto,
@@ -12,7 +12,7 @@ import {
   EmployeeStatus,
   EmploymentType,
   Gender
-} from '../../../../../core/Models/employee.model';
+} from '../../../../app/core/Models/employee.model';
 
 @Component({
   selector: 'app-employee-form',

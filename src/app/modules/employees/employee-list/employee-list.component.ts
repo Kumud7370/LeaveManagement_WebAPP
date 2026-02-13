@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
-import { EmployeeService } from '../../../../../core/services/api/employee.api';
+import { EmployeeService } from '../../../../app/core/services/api/employee.api';
 import {
     EmployeeResponseDto,
     EmployeeFilterDto,
@@ -12,14 +12,14 @@ import {
     EmployeeStatus,
     EmploymentType,
     Gender
-} from '../../../../../core/Models/employee.model';
+} from '../../../core/Models/employee.model';
 
 @Component({
     selector: 'app-employee-list',
     standalone: true,
     imports: [CommonModule, FormsModule],
     templateUrl: './employee-list.component.html',
-    styles: [] // Removed styleUrls to avoid file not found error
+    styles: [] // Changed from styleUrls to inline styles to avoid file not found error
 })
 export class EmployeeListComponent implements OnInit, OnDestroy {
     private destroy$ = new Subject<void>();
@@ -63,11 +63,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     employmentTypeKeys: number[];
     genderKeys: number[];
 
-    // Enum values for iteration
-    employeeStatusValues = Object.values(EmployeeStatus);
-    employmentTypeValues = Object.values(EmploymentType);
-    genderValues = Object.values(Gender);
-
     constructor(
         private employeeService: EmployeeService,
         private router: Router
@@ -87,6 +82,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        console.log('Employee List Component Initialized');
         this.loadEmployees();
     }
 
@@ -100,14 +96,18 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         this.filter.pageNumber = this.currentPage;
         this.filter.pageSize = this.pageSize;
 
+        console.log('Loading employees with filter:', this.filter);
+
         this.employeeService.getFilteredEmployees(this.filter)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
                 next: (result: PagedResultDto<EmployeeResponseDto>) => {
+                    console.log('Employee data received:', result);
                     this.employees = result.items || [];
                     this.totalItems = result.totalCount || 0;
                     this.totalPages = result.totalPages || 0;
                     this.isLoading = false;
+                    console.log(`Loaded ${this.employees.length} employees`);
                 },
                 error: (error) => {
                     console.error('Error loading employees:', error);
@@ -150,6 +150,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
             sortDescending: false
         };
         this.currentPage = 1;
+        this.pageSize = 10;
         this.loadEmployees();
     }
 
@@ -293,7 +294,8 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         }
     }
 
-    formatDate(date: Date): string {
+    formatDate(date: Date | undefined): string {
+        if (!date) return 'N/A';
         return new Date(date).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -301,8 +303,36 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         });
     }
 
-    // Fixed: Now accepts two parameters - key and enum type
     getEnumName(key: number, enumType: any): string {
         return enumType[key] || '';
+    }
+
+    getPageNumbers(): number[] {
+        const pages: number[] = [];
+        const maxPagesToShow = 5;
+        
+        if (this.totalPages <= maxPagesToShow) {
+            for (let i = 1; i <= this.totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            if (this.currentPage <= 3) {
+                for (let i = 1; i <= 4; i++) pages.push(i);
+                pages.push(-1); // Ellipsis
+                pages.push(this.totalPages);
+            } else if (this.currentPage >= this.totalPages - 2) {
+                pages.push(1);
+                pages.push(-1); // Ellipsis
+                for (let i = this.totalPages - 3; i <= this.totalPages; i++) pages.push(i);
+            } else {
+                pages.push(1);
+                pages.push(-1); // Ellipsis
+                for (let i = this.currentPage - 1; i <= this.currentPage + 1; i++) pages.push(i);
+                pages.push(-1); // Ellipsis
+                pages.push(this.totalPages);
+            }
+        }
+        
+        return pages;
     }
 }
