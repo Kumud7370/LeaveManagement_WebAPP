@@ -1,5 +1,3 @@
-<!-- components/department-list/department-list.component.html -->
-
 <div class="department-list-container">
   <!-- Header -->
   <div class="page-header">
@@ -8,7 +6,7 @@
       <p class="page-subtitle">Manage your organization's departments</p>
     </div>
     <button class="btn btn-primary" (click)="createDepartment()">
-      <i class="icon-plus"></i>
+      <i class="bi bi-plus-circle"></i>
       Create Department
     </button>
   </div>
@@ -16,7 +14,6 @@
   <!-- Filters -->
   <div class="filters-section">
     <div class="search-bar">
-      <i class="icon-search"></i>
       <input
         type="text"
         placeholder="Search departments..."
@@ -24,19 +21,27 @@
         (keyup.enter)="onSearch()"
         class="search-input"
       />
-      <button *ngIf="searchTerm" (click)="searchTerm = ''; onSearch()" class="clear-btn">
-        <i class="icon-x"></i>
+      <button
+        *ngIf="searchTerm"
+        (click)="searchTerm = ''; onSearch()"
+        class="clear-btn"
+      >
+        <i class="bi bi-x"></i>
       </button>
     </div>
 
     <button class="btn btn-outline" (click)="showFilters = !showFilters">
-      <i class="icon-filter"></i>
+      <i class="bi bi-funnel"></i>
       Filters
-      <span *ngIf="isActiveFilter !== null || rootLevelOnly" class="filter-badge">Active</span>
+      <span
+        *ngIf="isActiveFilter !== null || rootLevelOnly"
+        class="filter-badge"
+        >Active</span
+      >
     </button>
 
     <button class="btn btn-outline" (click)="loadDepartments()">
-      <i class="icon-refresh"></i>
+      <i class="bi bi-arrow-clockwise"></i>
       Refresh
     </button>
   </div>
@@ -46,7 +51,11 @@
     <div class="filter-grid">
       <div class="filter-item">
         <label>Status</label>
-        <select [(ngModel)]="isActiveFilter" (change)="onFilterChange()" class="filter-select">
+        <select
+          [(ngModel)]="isActiveFilter"
+          (change)="onFilterChange()"
+          class="filter-select"
+        >
           <option [ngValue]="null">All</option>
           <option [ngValue]="true">Active Only</option>
           <option [ngValue]="false">Inactive Only</option>
@@ -68,7 +77,11 @@
 
       <div class="filter-item">
         <label>Sort By</label>
-        <select [(ngModel)]="sortBy" (change)="onFilterChange()" class="filter-select">
+        <select
+          [(ngModel)]="sortBy"
+          (change)="onFilterChange()"
+          class="filter-select"
+        >
           <option value="DepartmentName">Name</option>
           <option value="DepartmentCode">Code</option>
           <option value="DisplayOrder">Display Order</option>
@@ -79,7 +92,11 @@
 
       <div class="filter-item">
         <label>Direction</label>
-        <select [(ngModel)]="sortDirection" (change)="onFilterChange()" class="filter-select">
+        <select
+          [(ngModel)]="sortDirection"
+          (change)="onFilterChange()"
+          class="filter-select"
+        >
           <option value="asc">Ascending</option>
           <option value="desc">Descending</option>
         </select>
@@ -99,9 +116,11 @@
 
   <!-- Error State -->
   <div *ngIf="error && !loading" class="error-state">
-    <i class="icon-alert-circle"></i>
+    <i class="bi bi-exclamation-circle"></i>
     <p>{{ error }}</p>
-    <button class="btn btn-outline" (click)="loadDepartments()">Try Again</button>
+    <button class="btn btn-outline" (click)="loadDepartments()">
+      Try Again
+    </button>
   </div>
 
   <!-- Table -->
@@ -112,17 +131,38 @@
           <th class="checkbox-cell">
             <input
               type="checkbox"
-              [checked]="selectedDepartments.size === departments.length && departments.length > 0"
+              [checked]="
+                selectedDepartments.size === departments.length &&
+                departments.length > 0
+              "
               (change)="selectAll()"
             />
           </th>
           <th (click)="onSort('DepartmentCode')" class="sortable">
             Code
-            <i class="sort-icon" [class.active]="sortBy === 'DepartmentCode'"></i>
+            <i
+              class="bi"
+              [ngClass]="
+                sortBy === 'DepartmentCode'
+                  ? sortDirection === 'asc'
+                    ? 'bi-sort-alpha-down'
+                    : 'bi-sort-alpha-up'
+                  : 'bi-filter'
+              "
+            ></i>
           </th>
           <th (click)="onSort('DepartmentName')" class="sortable">
             Department Name
-            <i class="sort-icon" [class.active]="sortBy === 'DepartmentName'"></i>
+            <i
+              class="bi"
+              [ngClass]="
+                sortBy === 'DepartmentName'
+                  ? sortDirection === 'asc'
+                    ? 'bi-sort-alpha-down'
+                    : 'bi-sort-alpha-up'
+                  : 'bi-filter'
+              "
+            ></i>
           </th>
           <th>Parent Department</th>
           <th>Head of Department</th>
@@ -133,7 +173,10 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let dept of departments" [class.selected]="selectedDepartments.has(dept.departmentId)">
+        <tr
+          *ngFor="let dept of departments"
+          [class.selected]="selectedDepartments.has(dept.departmentId)"
+        >
           <td class="checkbox-cell">
             <input
               type="checkbox"
@@ -147,7 +190,9 @@
           <td>
             <div class="dept-name-cell">
               <span class="dept-name">{{ dept.departmentName }}</span>
-              <span *ngIf="dept.description" class="dept-description">{{ dept.description }}</span>
+              <span *ngIf="dept.description" class="dept-description">{{
+                dept.description
+              }}</span>
             </div>
           </td>
           <td>
@@ -166,11 +211,17 @@
             <span class="badge badge-info">{{ dept.employeeCount }}</span>
           </td>
           <td class="text-center">
-            <span class="badge badge-secondary">{{ dept.childDepartmentCount }}</span>
+            <span class="badge badge-secondary">{{
+              dept.childDepartmentCount
+            }}</span>
           </td>
           <td class="text-center">
-            <span class="status-badge" [class.active]="dept.isActive" [class.inactive]="!dept.isActive">
-              {{ dept.isActive ? 'Active' : 'Inactive' }}
+            <span
+              class="status-badge"
+              [class.active]="dept.isActive"
+              [class.inactive]="!dept.isActive"
+            >
+              {{ dept.isActive ? "Active" : "Inactive" }}
             </span>
           </td>
           <td class="actions-cell">
@@ -180,28 +231,32 @@
                 (click)="viewDetails(dept)"
                 title="View Details"
               >
-                <i class="icon-eye"></i>
+                <i class="bi bi-eye"></i>
               </button>
               <button
                 class="btn-icon"
                 (click)="editDepartment(dept)"
                 title="Edit"
               >
-                <i class="icon-edit"></i>
+                <i class="bi bi-pencil"></i>
               </button>
               <button
                 class="btn-icon"
                 (click)="toggleStatus(dept)"
                 [title]="dept.isActive ? 'Deactivate' : 'Activate'"
               >
-                <i [class]="dept.isActive ? 'icon-toggle-right' : 'icon-toggle-left'"></i>
+                <i
+                  [class]="
+                    dept.isActive ? 'bi bi-toggle-on' : 'bi bi-toggle-off'
+                  "
+                ></i>
               </button>
               <button
                 class="btn-icon btn-danger"
                 (click)="deleteDepartment(dept)"
                 title="Delete"
               >
-                <i class="icon-trash"></i>
+                <i class="bi bi-trash"></i>
               </button>
             </div>
           </td>
@@ -211,7 +266,7 @@
 
     <!-- Empty State -->
     <div *ngIf="departments.length === 0" class="empty-state">
-      <i class="icon-inbox"></i>
+      <i class="bi bi-inbox"></i>
       <h3>No departments found</h3>
       <p>Try adjusting your filters or create a new department</p>
       <button class="btn btn-primary" (click)="createDepartment()">
@@ -223,11 +278,17 @@
   <!-- Pagination -->
   <div *ngIf="!loading && departments.length > 0" class="pagination-container">
     <div class="pagination-info">
-      Showing {{ ((currentPage - 1) * pageSize) + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} departments
+      Showing {{ (currentPage - 1) * pageSize + 1 }} to
+      {{ Math.min(currentPage * pageSize, totalCount) }} of
+      {{ totalCount }} departments
     </div>
 
     <div class="pagination-controls">
-      <select [(ngModel)]="pageSize" (change)="onPageSizeChange($event)" class="page-size-select">
+      <select
+        [(ngModel)]="pageSize"
+        (change)="onPageSizeChange($event)"
+        class="page-size-select"
+      >
         <option [value]="10">10 per page</option>
         <option [value]="25">25 per page</option>
         <option [value]="50">50 per page</option>
@@ -240,14 +301,14 @@
           [disabled]="currentPage === 1"
           (click)="onPageChange(1)"
         >
-          <i class="icon-chevrons-left"></i>
+          <i class="bi bi-chevron-bar-left"></i>
         </button>
         <button
           class="btn-page"
           [disabled]="currentPage === 1"
           (click)="onPageChange(currentPage - 1)"
         >
-          <i class="icon-chevron-left"></i>
+          <i class="bi bi-chevron-left"></i>
         </button>
 
         <button
@@ -264,14 +325,14 @@
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(currentPage + 1)"
         >
-          <i class="icon-chevron-right"></i>
+          <i class="bi bi-chevron-right"></i>
         </button>
         <button
           class="btn-page"
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(totalPages)"
         >
-          <i class="icon-chevrons-right"></i>
+          <i class="bi bi-chevron-bar-right"></i>
         </button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { DepartmentService } from '../../../core/services/api/department.api';
 import { Department } from '../../../../app/core/Models/department.model';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-department-form',
@@ -136,34 +137,70 @@ export class DepartmentFormComponent implements OnInit {
       this.departmentService.updateDepartment(updateRequest).subscribe({
         next: (response) => {
           if (response.success) {
-            alert('Department updated successfully!');
-            this.router.navigate(['/departments']);
+            Swal.fire({
+              title: 'Success!',
+              text: 'Department updated successfully!',
+              icon: 'success',
+              confirmButtonColor: '#3b82f6'
+            }).then(() => {
+              this.router.navigate(['/departments']);
+            });
           } else {
             this.error = response.message || 'Failed to update department';
             this.submitting = false;
+            Swal.fire({
+              title: 'Error!',
+              text: this.error || 'Failed to update department',
+              icon: 'error',
+              confirmButtonColor: '#ef4444'
+            });
           }
         },
         error: (err) => {
           console.error('Update error:', err);
           this.error = err.error?.message || err.message || 'An error occurred while updating department';
           this.submitting = false;
+          Swal.fire({
+            title: 'Error!',
+            text: this.error || 'An error occurred while updating department',
+            icon: 'error',
+            confirmButtonColor: '#ef4444'
+          });
         }
       });
     } else {
       this.departmentService.createDepartment(requestData).subscribe({
         next: (response) => {
           if (response.success) {
-            alert('Department created successfully!');
-            this.router.navigate(['/departments']);
+            Swal.fire({
+              title: 'Success!',
+              text: 'Department created successfully!',
+              icon: 'success',
+              confirmButtonColor: '#3b82f6'
+            }).then(() => {
+              this.router.navigate(['/departments']);
+            });
           } else {
             this.error = response.message || 'Failed to create department';
             this.submitting = false;
+            Swal.fire({
+              title: 'Error!',
+              text: this.error || 'Failed to create department',
+              icon: 'error',
+              confirmButtonColor: '#ef4444'
+            });
           }
         },
         error: (err) => {
           console.error('Create error:', err);
           this.error = err.error?.message || err.message || 'An error occurred while creating department';
           this.submitting = false;
+          Swal.fire({
+            title: 'Error!',
+            text: this.error || 'An error occurred while creating department',
+            icon: 'error',
+            confirmButtonColor: '#ef4444'
+          });
         }
       });
     }
