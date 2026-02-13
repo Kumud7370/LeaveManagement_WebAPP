@@ -1,8 +1,8 @@
-<!-- src/app/modules/dashboard/employees/components/employee-list/employee-list.component.html -->
+<!-- src/app/modules/dashboard/employees/employee-list/employee-list.component.html -->
 
 <div class="employee-list-container">
   <!-- Header -->
-  <div class="page-header">
+  <div class="header-section">
     <div class="header-content">
       <h1 class="page-title">Employee Management</h1>
       <p class="page-subtitle">Manage your organization's employees</p>
@@ -13,281 +13,231 @@
     </button>
   </div>
 
-  <!-- Filters Section -->
-  <div class="filters-section">
-    <div class="search-bar">
-      <i class="fas fa-search"></i>
-      <input
-        type="text"
-        placeholder="Search employees..."
-        [(ngModel)]="filter.searchTerm"
-        (input)="onSearchChange()"
-        class="search-input"
-      />
-      <button
-        *ngIf="filter.searchTerm"
-        (click)="filter.searchTerm = ''; onSearchChange()"
-        class="clear-btn"
-      >
-        <i class="fas fa-times"></i>
-      </button>
+  <!-- AG Grid with Toolbar -->
+  <div class="grid-wrapper">
+    <!-- Integrated Toolbar -->
+    <div class="grid-toolbar">
+      <div class="toolbar-row">
+        <!-- Search Bar -->
+        <div class="search-container">
+          <i class="fas fa-search search-icon"></i>
+          <input
+            type="text"
+            placeholder="Search employees..."
+            [(ngModel)]="filter.searchTerm"
+            (input)="onSearchChange()"
+            class="search-input"
+          />
+          <button
+            *ngIf="filter.searchTerm"
+            (click)="clearSearch()"
+            class="clear-search-btn"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button (click)="toggleFilter()" class="btn btn-outline" title="Toggle filters">
+            <i class="fas fa-filter"></i>
+            <span class="btn-text">Filters</span>
+            <span *ngIf="isFilterVisible" class="filter-badge">Active</span>
+          </button>
+
+          <button (click)="handleClearFilters()" class="btn btn-clear" title="Clear all filters">
+            <i class="fas fa-times-circle"></i>
+            <span class="btn-text">Clear</span>
+          </button>
+
+          <button (click)="loadEmployees()" class="btn btn-refresh" title="Refresh data">
+            <i class="fas fa-sync-alt"></i>
+            <span class="btn-text">Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Advanced Filters -->
+      <div *ngIf="isFilterVisible" class="advanced-filters">
+        <div class="filter-grid">
+          <div class="filter-item">
+            <label>Employee Status</label>
+            <select [(ngModel)]="filter.employeeStatus" (change)="applyFilter()" class="filter-select">
+              <option [ngValue]="undefined">All Statuses</option>
+              <option *ngFor="let key of employeeStatusKeys" [ngValue]="+key">
+                {{ getEnumName(key, EmployeeStatus) }}
+              </option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label>Employment Type</label>
+            <select [(ngModel)]="filter.employmentType" (change)="applyFilter()" class="filter-select">
+              <option [ngValue]="undefined">All Types</option>
+              <option *ngFor="let key of employmentTypeKeys" [ngValue]="+key">
+                {{ getEnumName(key, EmploymentType) }}
+              </option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label>Gender</label>
+            <select [(ngModel)]="filter.gender" (change)="applyFilter()" class="filter-select">
+              <option [ngValue]="undefined">All Genders</option>
+              <option *ngFor="let key of genderKeys" [ngValue]="+key">
+                {{ getEnumName(key, Gender) }}
+              </option>
+            </select>
+          </div>
+
+          <div class="filter-item">
+            <label>Joining Date From</label>
+            <input
+              type="date"
+              [(ngModel)]="filter.joiningDateFrom"
+              (change)="applyFilter()"
+              class="filter-select"
+            />
+          </div>
+
+          <div class="filter-item">
+            <label>Joining Date To</label>
+            <input
+              type="date"
+              [(ngModel)]="filter.joiningDateTo"
+              (change)="applyFilter()"
+              class="filter-select"
+            />
+          </div>
+        </div>
+
+        <button class="btn btn-text" (click)="resetFilter()">
+          Clear All Filters
+        </button>
+      </div>
+
+      <!-- Active Filters Display -->
+      <div *ngIf="activeFilters.hasActiveFilters" class="active-filters">
+        <span class="filter-label">Active Filters:</span>
+        <span *ngFor="let filter of activeFilters.filters" class="filter-badge-display">
+          {{ filter }}
+        </span>
+      </div>
     </div>
 
-    <button class="btn btn-outline" (click)="toggleFilter()">
-      <i class="fas fa-filter"></i>
-      Filters
-      <span *ngIf="isFilterVisible" class="filter-badge">Active</span>
-    </button>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading employees...</p>
+    </div>
 
-    <button class="btn btn-outline" (click)="loadEmployees()">
-      <i class="fas fa-sync-alt"></i>
-      Refresh
-    </button>
-  </div>
+    <!-- AG Grid -->
+    <div *ngIf="!isLoading" class="grid-container">
+      <ag-grid-angular
+        #agGrid
+        style="width: 100%; height: 500px;"
+        class="ag-theme-quartz"
+        [rowData]="rowData"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [pagination]="false"
+        [animateRows]="true"
+        [rowSelection]="'multiple'"
+        [enableCellTextSelection]="true"
+        [suppressRowClickSelection]="true"
+        [rowHeight]="70"
+        [headerHeight]="48"
+        [suppressMenuHide]="true"
+        [enableBrowserTooltips]="true"
+        [suppressColumnVirtualisation]="true"
+        [suppressRowVirtualisation]="false"
+        [rowBuffer]="10"
+        [suppressLoadingOverlay]="false"
+        [suppressNoRowsOverlay]="false"
+        (gridReady)="onGridReady($event)"
+        [context]="context">
+      </ag-grid-angular>
 
-  <!-- Advanced Filters -->
-  <div class="advanced-filters" *ngIf="isFilterVisible">
-    <div class="filter-grid">
-      <div class="filter-item">
-        <label>Employee Status</label>
-        <select [(ngModel)]="filter.employeeStatus" (change)="applyFilter()" class="filter-select">
-          <option [ngValue]="undefined">All Statuses</option>
-          <option *ngFor="let key of employeeStatusKeys" [ngValue]="+key">
-            {{ getEnumName(key, EmployeeStatus) }}
-          </option>
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label>Employment Type</label>
-        <select [(ngModel)]="filter.employmentType" (change)="applyFilter()" class="filter-select">
-          <option [ngValue]="undefined">All Types</option>
-          <option *ngFor="let key of employmentTypeKeys" [ngValue]="+key">
-            {{ getEnumName(key, EmploymentType) }}
-          </option>
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label>Gender</label>
-        <select [(ngModel)]="filter.gender" (change)="applyFilter()" class="filter-select">
-          <option [ngValue]="undefined">All Genders</option>
-          <option *ngFor="let key of genderKeys" [ngValue]="+key">
-            {{ getEnumName(key, Gender) }}
-          </option>
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label>Joining Date From</label>
-        <input
-          type="date"
-          [(ngModel)]="filter.joiningDateFrom"
-          (change)="applyFilter()"
-          class="filter-select"
-        />
-      </div>
-
-      <div class="filter-item">
-        <label>Joining Date To</label>
-        <input
-          type="date"
-          [(ngModel)]="filter.joiningDateTo"
-          (change)="applyFilter()"
-          class="filter-select"
-        />
+      <!-- Empty State -->
+      <div *ngIf="rowData.length === 0" class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h3>No employees found</h3>
+        <p>Try adjusting your filters or add a new employee</p>
+        <button class="btn btn-primary" (click)="addNewEmployee()">
+          <i class="fas fa-plus"></i>
+          Add Employee
+        </button>
       </div>
     </div>
 
-    <button class="btn btn-text" (click)="resetFilter()">
-      Clear All Filters
-    </button>
-  </div>
+    <!-- Pagination -->
+    <div *ngIf="!isLoading && rowData.length > 0" class="custom-pagination">
+      <div class="pagination-controls">
+        <!-- Page Size Selector -->
+        <div class="page-size-selector">
+          <label for="pageSize">Show:</label>
+          <select id="pageSize" [(ngModel)]="pageSize" (change)="onPageSizeChanged(pageSize)" class="page-size-select">
+            <option [value]="10">10</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </div>
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading employees...</p>
-  </div>
+        <!-- Page Range Display -->
+        <div class="pagination-info">
+          <span class="pagination-text">
+            {{ rowData.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0 }}
+            to {{ Math.min(currentPage * pageSize, totalItems) }}
+            of {{ totalItems }}
+          </span>
+        </div>
 
-  <!-- Table -->
-  <div *ngIf="!isLoading" class="table-container">
-    <table class="employees-table">
-      <thead>
-        <tr>
-          <th (click)="sortBy('EmployeeCode')" class="sortable">
-            Employee Code
-            <i class="fas fa-sort" *ngIf="filter.sortBy !== 'EmployeeCode'"></i>
-            <i class="fas fa-sort-up" *ngIf="filter.sortBy === 'EmployeeCode' && !filter.sortDescending"></i>
-            <i class="fas fa-sort-down" *ngIf="filter.sortBy === 'EmployeeCode' && filter.sortDescending"></i>
-          </th>
-          <th (click)="sortBy('FirstName')" class="sortable">
-            Full Name
-            <i class="fas fa-sort" *ngIf="filter.sortBy !== 'FirstName'"></i>
-            <i class="fas fa-sort-up" *ngIf="filter.sortBy === 'FirstName' && !filter.sortDescending"></i>
-            <i class="fas fa-sort-down" *ngIf="filter.sortBy === 'FirstName' && filter.sortDescending"></i>
-          </th>
-          <th (click)="sortBy('Email')" class="sortable">
-            Email
-            <i class="fas fa-sort" *ngIf="filter.sortBy !== 'Email'"></i>
-            <i class="fas fa-sort-up" *ngIf="filter.sortBy === 'Email' && !filter.sortDescending"></i>
-            <i class="fas fa-sort-down" *ngIf="filter.sortBy === 'Email' && filter.sortDescending"></i>
-          </th>
-          <th>Phone</th>
-          <th>Department</th>
-          <th>Designation</th>
-          <th class="text-center">Employment Type</th>
-          <th class="text-center">Status</th>
-          <th (click)="sortBy('DateOfJoining')" class="sortable">
-            Joining Date
-            <i class="fas fa-sort" *ngIf="filter.sortBy !== 'DateOfJoining'"></i>
-            <i class="fas fa-sort-up" *ngIf="filter.sortBy === 'DateOfJoining' && !filter.sortDescending"></i>
-            <i class="fas fa-sort-down" *ngIf="filter.sortBy === 'DateOfJoining' && filter.sortDescending"></i>
-          </th>
-          <th class="text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let employee of employees">
-          <td>
-            <span class="employee-code">{{ employee.employeeCode }}</span>
-          </td>
-          <td>
-            <div class="employee-name-cell">
-              <div class="avatar" *ngIf="employee.profileImageUrl">
-                <img [src]="employee.profileImageUrl" [alt]="employee.fullName" />
-              </div>
-              <div class="avatar avatar-placeholder" *ngIf="!employee.profileImageUrl">
-                {{ employee.firstName?.charAt(0) || '' }}{{ employee.lastName?.charAt(0) || '' }}
-              </div>
-              <span class="employee-name">{{ employee.fullName }}</span>
-            </div>
-          </td>
-          <td>
-            <a [href]="'mailto:' + employee.email" class="email-link">
-              {{ employee.email }}
-            </a>
-          </td>
-          <td>
-            <span class="text-regular">{{ employee.phoneNumber || '—' }}</span>
-          </td>
-          <td>
-            <span class="text-regular">{{ employee.departmentName || '—' }}</span>
-          </td>
-          <td>
-            <span class="text-regular">{{ employee.designationName || '—' }}</span>
-          </td>
-          <td class="text-center">
-            <span class="badge" [ngClass]="getEmploymentTypeBadgeClass(employee.employmentType)">
-              {{ employee.employmentTypeName }}
-            </span>
-          </td>
-          <td class="text-center">
-            <span class="status-badge" [ngClass]="getStatusBadgeClass(employee.employeeStatus)">
-              {{ employee.employeeStatusName }}
-            </span>
-          </td>
-          <td>
-            <span class="date-text">{{ formatDate(employee.dateOfJoining) }}</span>
-          </td>
-          <td class="text-center actions-cell">
-            <div class="action-buttons">
-              <button
-                class="btn-icon"
-                (click)="viewEmployee(employee.id)"
-                title="View Details"
-              >
-                <i class="fas fa-eye"></i>
-              </button>
-              <button
-                class="btn-icon"
-                (click)="editEmployee(employee.id)"
-                title="Edit Employee"
-              >
-                <i class="fas fa-edit"></i>
-              </button>
-              <button
-                class="btn-icon btn-danger"
-                (click)="deleteEmployee(employee)"
-                title="Delete Employee"
-              >
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+        <!-- Page Number Display -->
+        <div class="pagination-page-info">
+          <span class="pagination-text">
+            Page {{ currentPage }} of {{ totalPages || 1 }}
+          </span>
+        </div>
 
-    <!-- Empty State -->
-    <div *ngIf="employees.length === 0" class="empty-state">
-      <i class="fas fa-inbox"></i>
-      <h3>No employees found</h3>
-      <p>Try adjusting your filters or add a new employee</p>
-      <button class="btn btn-primary" (click)="addNewEmployee()">
-        <i class="fas fa-plus"></i>
-        Add Employee
-      </button>
-    </div>
-  </div>
+        <!-- Pagination Buttons -->
+        <div class="pagination-buttons">
+          <!-- First Page -->
+          <button
+            (click)="goToPage(1)"
+            [disabled]="currentPage === 1"
+            class="pagination-btn pagination-btn-first"
+            title="First page">
+            <i class="fas fa-angle-double-left"></i>
+          </button>
 
-  <!-- Pagination -->
-  <div *ngIf="!isLoading && employees.length > 0" class="pagination-container">
-    <div class="pagination-info">
-      Showing {{ (currentPage - 1) * pageSize + 1 }} to
-      {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }} employees
-    </div>
+          <!-- Previous Page -->
+          <button
+            (click)="previousPage()"
+            [disabled]="currentPage === 1"
+            class="pagination-btn pagination-btn-prev"
+            title="Previous page">
+            <i class="fas fa-chevron-left"></i>
+          </button>
 
-    <div class="pagination-controls">
-      <select [(ngModel)]="pageSize" (change)="changePageSize($event)" class="page-size-select">
-        <option [value]="10">10 per page</option>
-        <option [value]="25">25 per page</option>
-        <option [value]="50">50 per page</option>
-        <option [value]="100">100 per page</option>
-      </select>
+          <!-- Next Page -->
+          <button
+            (click)="nextPage()"
+            [disabled]="currentPage === totalPages || totalPages === 0"
+            class="pagination-btn pagination-btn-next"
+            title="Next page">
+            <i class="fas fa-chevron-right"></i>
+          </button>
 
-      <div class="pagination-buttons">
-        <button
-          class="btn-page"
-          [disabled]="currentPage === 1"
-          (click)="goToPage(1)"
-        >
-          <i class="fas fa-angle-double-left"></i>
-        </button>
-        <button
-          class="btn-page"
-          [disabled]="currentPage === 1"
-          (click)="previousPage()"
-        >
-          <i class="fas fa-chevron-left"></i>
-        </button>
-
-        <button
-          *ngFor="let page of getPageNumbers()"
-          class="btn-page"
-          [class.active]="page === currentPage"
-          [class.ellipsis]="page === -1"
-          (click)="page !== -1 && goToPage(page)"
-          [disabled]="page === -1"
-        >
-          <span *ngIf="page !== -1">{{ page }}</span>
-          <span *ngIf="page === -1">...</span>
-        </button>
-
-        <button
-          class="btn-page"
-          [disabled]="currentPage === totalPages"
-          (click)="nextPage()"
-        >
-          <i class="fas fa-chevron-right"></i>
-        </button>
-        <button
-          class="btn-page"
-          [disabled]="currentPage === totalPages"
-          (click)="goToPage(totalPages)"
-        >
-          <i class="fas fa-angle-double-right"></i>
-        </button>
+          <!-- Last Page -->
+          <button
+            (click)="goToPage(totalPages)"
+            [disabled]="currentPage === totalPages || totalPages === 0"
+            class="pagination-btn pagination-btn-last"
+            title="Last page">
+            <i class="fas fa-angle-double-right"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
