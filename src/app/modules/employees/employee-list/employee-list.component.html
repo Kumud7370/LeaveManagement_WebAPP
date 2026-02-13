@@ -2,242 +2,208 @@
 
 <div class="employee-list-container">
   <!-- Header -->
-  <div class="header-section">
+  <div class="page-header">
     <div class="header-content">
       <h1 class="page-title">Employee Management</h1>
       <p class="page-subtitle">Manage your organization's employees</p>
     </div>
+  </div>
+
+  <!-- Search and Action Buttons -->
+  <div class="search-action-section">
+    <div class="search-bar">
+      <input
+        type="text"
+        placeholder="Search employees..."
+        [(ngModel)]="filter.searchTerm"
+        (keyup)="onSearchChange()"
+        class="search-input"
+      />
+    </div>
+
+    <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
+
+    <button class="btn btn-refresh" (click)="loadEmployees()">Refresh</button>
+
     <button class="btn btn-primary" (click)="addNewEmployee()">
-      <i class="fas fa-plus"></i>
+      <i class="bi bi-plus-circle"></i>
       Add Employee
     </button>
   </div>
 
-  <!-- AG Grid with Toolbar -->
-  <div class="grid-wrapper">
-    <!-- Integrated Toolbar -->
-    <div class="grid-toolbar">
-      <div class="toolbar-row">
-        <!-- Search Bar -->
-        <div class="search-container">
-          <i class="fas fa-search search-icon"></i>
-          <input
-            type="text"
-            placeholder="Search employees..."
-            [(ngModel)]="filter.searchTerm"
-            (input)="onSearchChange()"
-            class="search-input"
-          />
-          <button
-            *ngIf="filter.searchTerm"
-            (click)="clearSearch()"
-            class="clear-search-btn"
-          >
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-          <button (click)="toggleFilter()" class="btn btn-outline" title="Toggle filters">
-            <i class="fas fa-filter"></i>
-            <span class="btn-text">Filters</span>
-            <span *ngIf="isFilterVisible" class="filter-badge">Active</span>
-          </button>
-
-          <button (click)="handleClearFilters()" class="btn btn-clear" title="Clear all filters">
-            <i class="fas fa-times-circle"></i>
-            <span class="btn-text">Clear</span>
-          </button>
-
-          <button (click)="loadEmployees()" class="btn btn-refresh" title="Refresh data">
-            <i class="fas fa-sync-alt"></i>
-            <span class="btn-text">Refresh</span>
-          </button>
-        </div>
+  <!-- Advanced Filters -->
+  <div class="advanced-filters" *ngIf="isFilterVisible">
+    <div class="filter-grid">
+      <div class="filter-item">
+        <label>Employee Status</label>
+        <select
+          [(ngModel)]="filter.employeeStatus"
+          (change)="applyFilter()"
+          class="filter-select"
+        >
+          <option [ngValue]="undefined">All Statuses</option>
+          <option *ngFor="let key of employeeStatusKeys" [ngValue]="+key">
+            {{ getEnumName(key, EmployeeStatus) }}
+          </option>
+        </select>
       </div>
 
-      <!-- Advanced Filters -->
-      <div *ngIf="isFilterVisible" class="advanced-filters">
-        <div class="filter-grid">
-          <div class="filter-item">
-            <label>Employee Status</label>
-            <select [(ngModel)]="filter.employeeStatus" (change)="applyFilter()" class="filter-select">
-              <option [ngValue]="undefined">All Statuses</option>
-              <option *ngFor="let key of employeeStatusKeys" [ngValue]="+key">
-                {{ getEnumName(key, EmployeeStatus) }}
-              </option>
-            </select>
-          </div>
-
-          <div class="filter-item">
-            <label>Employment Type</label>
-            <select [(ngModel)]="filter.employmentType" (change)="applyFilter()" class="filter-select">
-              <option [ngValue]="undefined">All Types</option>
-              <option *ngFor="let key of employmentTypeKeys" [ngValue]="+key">
-                {{ getEnumName(key, EmploymentType) }}
-              </option>
-            </select>
-          </div>
-
-          <div class="filter-item">
-            <label>Gender</label>
-            <select [(ngModel)]="filter.gender" (change)="applyFilter()" class="filter-select">
-              <option [ngValue]="undefined">All Genders</option>
-              <option *ngFor="let key of genderKeys" [ngValue]="+key">
-                {{ getEnumName(key, Gender) }}
-              </option>
-            </select>
-          </div>
-
-          <div class="filter-item">
-            <label>Joining Date From</label>
-            <input
-              type="date"
-              [(ngModel)]="filter.joiningDateFrom"
-              (change)="applyFilter()"
-              class="filter-select"
-            />
-          </div>
-
-          <div class="filter-item">
-            <label>Joining Date To</label>
-            <input
-              type="date"
-              [(ngModel)]="filter.joiningDateTo"
-              (change)="applyFilter()"
-              class="filter-select"
-            />
-          </div>
-        </div>
-
-        <button class="btn btn-text" (click)="resetFilter()">
-          Clear All Filters
-        </button>
+      <div class="filter-item">
+        <label>Employment Type</label>
+        <select
+          [(ngModel)]="filter.employmentType"
+          (change)="applyFilter()"
+          class="filter-select"
+        >
+          <option [ngValue]="undefined">All Types</option>
+          <option *ngFor="let key of employmentTypeKeys" [ngValue]="+key">
+            {{ getEnumName(key, EmploymentType) }}
+          </option>
+        </select>
       </div>
 
-      <!-- Active Filters Display -->
-      <div *ngIf="activeFilters.hasActiveFilters" class="active-filters">
-        <span class="filter-label">Active Filters:</span>
-        <span *ngFor="let filter of activeFilters.filters" class="filter-badge-display">
-          {{ filter }}
-        </span>
+      <div class="filter-item">
+        <label>Gender</label>
+        <select
+          [(ngModel)]="filter.gender"
+          (change)="applyFilter()"
+          class="filter-select"
+        >
+          <option [ngValue]="undefined">All Genders</option>
+          <option *ngFor="let key of genderKeys" [ngValue]="+key">
+            {{ getEnumName(key, Gender) }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label>Joining Date From</label>
+        <input
+          type="date"
+          [(ngModel)]="filter.joiningDateFrom"
+          (change)="applyFilter()"
+          class="filter-select"
+        />
+      </div>
+
+      <div class="filter-item">
+        <label>Joining Date To</label>
+        <input
+          type="date"
+          [(ngModel)]="filter.joiningDateTo"
+          (change)="applyFilter()"
+          class="filter-select"
+        />
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-state">
-      <div class="spinner"></div>
-      <p>Loading employees...</p>
+    <button class="btn btn-text" (click)="resetFilter()">
+      Clear All Filters
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading employees...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="error-state">
+    <i class="bi bi-exclamation-circle"></i>
+    <p>{{ error }}</p>
+    <button class="btn btn-outline" (click)="loadEmployees()">
+      Try Again
+    </button>
+  </div>
+
+  <!-- AG Grid Table -->
+  <div *ngIf="!isLoading && !error" class="grid-container">
+    <!-- Empty State -->
+    <div *ngIf="rowData.length === 0" class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <h3>No employees found</h3>
+      <p>Try adjusting your filters or add a new employee</p>
+      <button class="btn btn-primary" (click)="addNewEmployee()">
+        Create Employee
+      </button>
     </div>
 
     <!-- AG Grid -->
-    <div *ngIf="!isLoading" class="grid-container">
-      <ag-grid-angular
-        #agGrid
-        style="width: 100%; height: 500px;"
-        class="ag-theme-quartz"
-        [rowData]="rowData"
-        [columnDefs]="columnDefs"
-        [defaultColDef]="defaultColDef"
-        [pagination]="false"
-        [animateRows]="true"
-        [rowSelection]="'multiple'"
-        [enableCellTextSelection]="true"
-        [suppressRowClickSelection]="true"
-        [rowHeight]="70"
-        [headerHeight]="48"
-        [suppressMenuHide]="true"
-        [enableBrowserTooltips]="true"
-        [suppressColumnVirtualisation]="true"
-        [suppressRowVirtualisation]="false"
-        [rowBuffer]="10"
-        [suppressLoadingOverlay]="false"
-        [suppressNoRowsOverlay]="false"
-        (gridReady)="onGridReady($event)"
-        [context]="context">
-      </ag-grid-angular>
+    <ag-grid-angular
+      *ngIf="rowData.length > 0"
+      class="ag-theme-quartz"
+      [rowData]="rowData"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      [gridOptions]="gridOptions"
+      (gridReady)="onGridReady($event)"
+      [rowHeight]="70"
+      [headerHeight]="50"
+      [domLayout]="'autoHeight'"
+    >
+    </ag-grid-angular>
+  </div>
 
-      <!-- Empty State -->
-      <div *ngIf="rowData.length === 0" class="empty-state">
-        <i class="fas fa-inbox"></i>
-        <h3>No employees found</h3>
-        <p>Try adjusting your filters or add a new employee</p>
-        <button class="btn btn-primary" (click)="addNewEmployee()">
-          <i class="fas fa-plus"></i>
-          Add Employee
-        </button>
-      </div>
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && rowData.length > 0" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ (currentPage - 1) * pageSize + 1 }} to
+      {{ Math.min(currentPage * pageSize, totalItems) }} of
+      {{ totalItems }} employees
     </div>
 
-    <!-- Pagination -->
-    <div *ngIf="!isLoading && rowData.length > 0" class="custom-pagination">
-      <div class="pagination-controls">
-        <!-- Page Size Selector -->
-        <div class="page-size-selector">
-          <label for="pageSize">Show:</label>
-          <select id="pageSize" [(ngModel)]="pageSize" (change)="onPageSizeChanged(pageSize)" class="page-size-select">
-            <option [value]="10">10</option>
-            <option [value]="20">20</option>
-            <option [value]="50">50</option>
-            <option [value]="100">100</option>
-          </select>
-        </div>
+    <div class="pagination-controls">
+      <select
+        [(ngModel)]="pageSize"
+        (change)="onPageSizeChanged(pageSize)"
+        class="page-size-select"
+      >
+        <option [value]="10">10 per page</option>
+        <option [value]="20">20 per page</option>
+        <option [value]="50">50 per page</option>
+        <option [value]="100">100 per page</option>
+      </select>
 
-        <!-- Page Range Display -->
-        <div class="pagination-info">
-          <span class="pagination-text">
-            {{ rowData.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0 }}
-            to {{ Math.min(currentPage * pageSize, totalItems) }}
-            of {{ totalItems }}
-          </span>
-        </div>
+      <div class="pagination-buttons">
+        <button
+          class="btn-page"
+          [disabled]="currentPage === 1"
+          (click)="goToPage(1)"
+        >
+          <i class="bi bi-chevron-bar-left"></i>
+        </button>
+        <button
+          class="btn-page"
+          [disabled]="currentPage === 1"
+          (click)="previousPage()"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
 
-        <!-- Page Number Display -->
-        <div class="pagination-page-info">
-          <span class="pagination-text">
-            Page {{ currentPage }} of {{ totalPages || 1 }}
-          </span>
-        </div>
+        <button
+          *ngFor="let page of pages"
+          class="btn-page"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+        >
+          {{ page }}
+        </button>
 
-        <!-- Pagination Buttons -->
-        <div class="pagination-buttons">
-          <!-- First Page -->
-          <button
-            (click)="goToPage(1)"
-            [disabled]="currentPage === 1"
-            class="pagination-btn pagination-btn-first"
-            title="First page">
-            <i class="fas fa-angle-double-left"></i>
-          </button>
-
-          <!-- Previous Page -->
-          <button
-            (click)="previousPage()"
-            [disabled]="currentPage === 1"
-            class="pagination-btn pagination-btn-prev"
-            title="Previous page">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-
-          <!-- Next Page -->
-          <button
-            (click)="nextPage()"
-            [disabled]="currentPage === totalPages || totalPages === 0"
-            class="pagination-btn pagination-btn-next"
-            title="Next page">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-
-          <!-- Last Page -->
-          <button
-            (click)="goToPage(totalPages)"
-            [disabled]="currentPage === totalPages || totalPages === 0"
-            class="pagination-btn pagination-btn-last"
-            title="Last page">
-            <i class="fas fa-angle-double-right"></i>
-          </button>
-        </div>
+        <button
+          class="btn-page"
+          [disabled]="currentPage === totalPages"
+          (click)="nextPage()"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button
+          class="btn-page"
+          [disabled]="currentPage === totalPages"
+          (click)="goToPage(totalPages)"
+        >
+          <i class="bi bi-chevron-bar-right"></i>
+        </button>
       </div>
     </div>
   </div>
