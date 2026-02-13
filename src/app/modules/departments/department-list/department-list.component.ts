@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AgGridAngular } from 'ag-grid-angular';
+import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { DepartmentService } from '../../../core/services/api/department.api';
 import {
   Department,
@@ -9,11 +11,13 @@ import {
   PaginatedResponse
 } from '../../../../app/core/Models/department.model';
 import Swal from 'sweetalert2';
+import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
+import { StatusCellRendererComponent } from '../../../shared/status-cell-renderer.component';
 
 @Component({
   selector: 'app-department-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AgGridAngular],
   templateUrl: './department-list.component.html',
   styleUrls: ['./department-list.component.scss']
 })
@@ -39,16 +43,132 @@ export class DepartmentListComponent implements OnInit {
   showFilters = false;
   selectedDepartments: Set<string> = new Set();
 
+  // AG Grid
+  columnDefs: ColDef[] = [];
+  defaultColDef: ColDef = {
+    sortable: true,
+    filter: true,
+    resizable: true,
+    flex: 1,
+    minWidth: 100,
+  };
+  gridOptions: GridOptions = {
+    pagination: false,
+    rowSelection: 'multiple',
+    suppressRowClickSelection: true,
+    domLayout: 'autoHeight',
+    context: { componentParent: this }
+  };
+
   // Make Math available in template
   Math = Math;
 
   constructor(
     private departmentService: DepartmentService,
     private router: Router
-  ) {}
+  ) {
+    this.initializeColumnDefs();
+  }
 
   ngOnInit(): void {
     this.loadDepartments();
+  }
+
+  initializeColumnDefs(): void {
+    this.columnDefs = [
+      {
+        headerName: '',
+        checkboxSelection: true,
+        headerCheckboxSelection: true,
+        width: 50,
+        minWidth: 50,
+        maxWidth: 50,
+        pinned: 'left',
+        lockPosition: true,
+        sortable: false,
+        filter: false,
+        resizable: false
+      },
+      {
+        headerName: 'Code',
+        field: 'departmentCode',
+        width: 120,
+        cellStyle: { 
+          fontFamily: 'Monaco, Courier New, monospace',
+          fontWeight: '600'
+        },
+        cellClass: 'dept-code-cell'
+      },
+      {
+        headerName: 'Department Name',
+        field: 'departmentName',
+        width: 250,
+        cellRenderer: (params: any) => {
+          if (!params.value) return '';
+          const description = params.data.description 
+            ? `<span class="dept-description">${params.data.description}</span>` 
+            : '';
+          return `
+            <div class="dept-name-cell">
+              <span class="dept-name">${params.value}</span>
+              ${description}
+            </div>
+          `;
+        }
+      },
+      {
+        headerName: 'Parent Department',
+        field: 'parentDepartmentName',
+        width: 200,
+        valueFormatter: (params) => params.value || '—'
+      },
+      {
+        headerName: 'Head of Department',
+        field: 'headOfDepartmentName',
+        width: 200,
+        valueFormatter: (params) => params.value || '—'
+      },
+      {
+        headerName: 'Employees',
+        field: 'employeeCount',
+        width: 120,
+        type: 'numericColumn',
+        cellStyle: { textAlign: 'center' },
+        cellRenderer: (params: any) => {
+          return `<span class="badge badge-info">${params.value || 0}</span>`;
+        }
+      },
+      {
+        headerName: 'Sub-Depts',
+        field: 'childDepartmentCount',
+        width: 120,
+        type: 'numericColumn',
+        cellStyle: { textAlign: 'center' },
+        cellRenderer: (params: any) => {
+          return `<span class="badge badge-secondary">${params.value || 0}</span>`;
+        }
+      },
+      {
+        headerName: 'Status',
+        field: 'isActive',
+        width: 120,
+        cellRenderer: StatusCellRendererComponent,
+        cellStyle: { textAlign: 'center' }
+      },
+      {
+        headerName: 'Actions',
+        width: 200,
+        cellRenderer: ActionCellRendererComponent,
+        sortable: false,
+        filter: false,
+        pinned: 'right',
+        cellStyle: { textAlign: 'center' }
+      }
+    ];
+  }
+
+  onGridReady(params: GridReadyEvent): void {
+    params.api.sizeColumnsToFit();
   }
 
   loadDepartments(): void {
@@ -90,18 +210,14 @@ export class DepartmentListComponent implements OnInit {
     this.loadDepartments();
   }
 
-  onFilterChange(): void {
+  clearSearch(): void {
+    this.searchTerm = '';
     this.currentPage = 1;
     this.loadDepartments();
   }
 
-  onSort(column: string): void {
-    if (this.sortBy === column) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = column;
-      this.sortDirection = 'asc';
-    }
+  onFilterChange(): void {
+    this.currentPage = 1;
     this.loadDepartments();
   }
 
@@ -172,7 +288,6 @@ export class DepartmentListComponent implements OnInit {
   }
 
   async deleteDepartment(department: Department): Promise<void> {
-    // First check if can delete
     this.departmentService.canDeleteDepartment(department.departmentId).subscribe({
       next: async (canDeleteResponse) => {
         if (canDeleteResponse.success && canDeleteResponse.data) {
@@ -248,22 +363,6 @@ export class DepartmentListComponent implements OnInit {
     this.rootLevelOnly = false;
     this.currentPage = 1;
     this.loadDepartments();
-  }
-
-  toggleSelection(departmentId: string): void {
-    if (this.selectedDepartments.has(departmentId)) {
-      this.selectedDepartments.delete(departmentId);
-    } else {
-      this.selectedDepartments.add(departmentId);
-    }
-  }
-
-  selectAll(): void {
-    if (this.selectedDepartments.size === this.departments.length) {
-      this.selectedDepartments.clear();
-    } else {
-      this.departments.forEach(dept => this.selectedDepartments.add(dept.departmentId));
-    }
   }
 
   get hasSelection(): boolean {
