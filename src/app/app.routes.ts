@@ -68,6 +68,20 @@ export const routes: Routes = [
         data: { breadcrumb: "Departments" },
       },
 
+      {
+        path: "admin-invitations",
+        loadChildren: () => import("./modules/admin-invitations/admin-invitation.module")
+          .then((m) => m.AdminInvitationModule),
+        data: { breadcrumb: "Admin Invitations" },
+      },
+
+      // Public route (outside AuthGuard):
+      {
+        path: "accept-invitation",
+        loadComponent: () => import('./modules/admin-invitations/accept-invitation/accept-invitation.component')
+          .then(m => m.AcceptInvitationComponent),
+      },
+
       // Uncomment these as needed
       // {
       //   path: "dashboard2",
