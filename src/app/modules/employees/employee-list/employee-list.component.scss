@@ -178,6 +178,20 @@
       }
     }
 
+    // NEW: Export Button Style
+    &.btn-export {
+      background: #3b82f6;
+      color: white;
+      border: 2px solid #3b82f6;
+
+      &:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+    }
+
     &.btn-outline {
       background: white;
       color: #374151;

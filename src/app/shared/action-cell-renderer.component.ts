@@ -10,6 +10,13 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="action-buttons">
       <button
+        class="btn-icon btn-view"
+        (click)="onView()"
+        title="View"
+      >
+        <i class="bi bi-eye"></i>
+      </button>
+      <button
         class="btn-icon btn-edit"
         (click)="onEdit()"
         title="Edit"
@@ -19,7 +26,7 @@ import { CommonModule } from '@angular/common';
       <button
         class="btn-icon btn-toggle"
         (click)="onToggleStatus()"
-        [title]="params.data.isActive ? 'Deactivate' : 'Activate'"
+        [title]="params.data.employeeStatus === 1 ? 'Deactivate' : 'Activate'"
       >
         <i class="bi bi-power"></i>
       </button>
@@ -42,19 +49,26 @@ import { CommonModule } from '@angular/common';
     }
 
     .btn-icon {
-      width: 2.25rem;
-      height: 2.25rem;
+      width: 2rem;
+      height: 2rem;
       border: none;
-      border-radius: 0.5rem;
+      border-radius: 0.375rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+    }
 
-      i {
-        font-size: 0.95rem;
+    .btn-view {
+      background: #dbeafe;
+      color: #1e40af;
+
+      &:hover {
+        background: #3b82f6;
+        color: white;
+        transform: scale(1.1);
       }
     }
 
@@ -63,20 +77,20 @@ import { CommonModule } from '@angular/common';
       color: #92400e;
 
       &:hover {
-        background: #fde047;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(234, 179, 8, 0.3);
+        background: #f59e0b;
+        color: white;
+        transform: scale(1.1);
       }
     }
 
     .btn-toggle {
-      background: #dbeafe;
-      color: #1e40af;
+      background: #e0e7ff;
+      color: #4338ca;
 
       &:hover {
-        background: #93c5fd;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        background: #6366f1;
+        color: white;
+        transform: scale(1.1);
       }
     }
 
@@ -85,9 +99,9 @@ import { CommonModule } from '@angular/common';
       color: #991b1b;
 
       &:hover {
-        background: #fca5a5;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        background: #ef4444;
+        color: white;
+        transform: scale(1.1);
       }
     }
   `]
@@ -102,6 +116,12 @@ export class ActionCellRendererComponent implements ICellRendererAngularComp {
   refresh(params: ICellRendererParams): boolean {
     this.params = params;
     return true;
+  }
+
+  onView(): void {
+    if (this.params.context?.componentParent?.viewDetails) {
+      this.params.context.componentParent.viewDetails(this.params.data);
+    }
   }
 
   onEdit(): void {
