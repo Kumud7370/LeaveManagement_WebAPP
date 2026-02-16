@@ -23,6 +23,12 @@
 
     <button class="btn btn-refresh" (click)="loadEmployees()">Refresh</button>
 
+    <!-- NEW: Export Button -->
+    <button class="btn btn-export" (click)="exportToExcel()">
+      <i class="bi bi-download"></i>
+      Export
+    </button>
+
     <button class="btn btn-primary" (click)="addNewEmployee()">
       <i class="bi bi-plus-circle"></i>
       Add Employee
