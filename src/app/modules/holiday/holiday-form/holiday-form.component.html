@@ -1,0 +1,172 @@
+<div class="modal-backdrop" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">{{ modalTitle }}</h2>
+      <button class="close-button" (click)="onClose()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <form [formGroup]="holidayForm" (ngSubmit)="onSubmit()">
+        <!-- Holiday Name -->
+        <div class="form-group">
+          <label class="form-label">
+            Holiday Name <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('holidayName')"
+            formControlName="holidayName"
+            placeholder="Enter holiday name"
+          />
+          <div class="error-message" *ngIf="isFieldInvalid('holidayName')">
+            {{ getErrorMessage("holidayName") }}
+          </div>
+        </div>
+
+        <!-- Holiday Date -->
+        <div class="form-group">
+          <label class="form-label">
+            Holiday Date <span class="required">*</span>
+          </label>
+          <input
+            type="date"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('holidayDate')"
+            formControlName="holidayDate"
+          />
+          <div class="error-message" *ngIf="isFieldInvalid('holidayDate')">
+            {{ getErrorMessage("holidayDate") }}
+          </div>
+        </div>
+
+        <!-- Holiday Type -->
+        <div class="form-group">
+          <label class="form-label">
+            Holiday Type <span class="required">*</span>
+          </label>
+          <select
+            class="form-control"
+            [class.invalid]="isFieldInvalid('holidayType')"
+            formControlName="holidayType"
+          >
+            <option *ngFor="let type of holidayTypes" [value]="type">
+              {{ type }}
+            </option>
+          </select>
+          <div class="error-message" *ngIf="isFieldInvalid('holidayType')">
+            {{ getErrorMessage("holidayType") }}
+          </div>
+        </div>
+
+        <!-- Is Optional Checkbox -->
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              class="checkbox-input"
+              formControlName="isOptional"
+            />
+            <span class="checkbox-text">This is an optional holiday</span>
+          </label>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea
+            class="form-control"
+            [class.invalid]="isFieldInvalid('description')"
+            formControlName="description"
+            rows="3"
+            placeholder="Enter holiday description (optional)"
+          ></textarea>
+          <div class="error-message" *ngIf="isFieldInvalid('description')">
+            {{ getErrorMessage("description") }}
+          </div>
+        </div>
+
+        <!-- Applicable Departments (only for Regional/Optional) -->
+        <div class="form-group" *ngIf="!isNationalHoliday">
+          <label class="form-label">
+            Applicable Departments <span class="required">*</span>
+          </label>
+          <div class="departments-grid" *ngIf="departments.length > 0">
+            <label
+              *ngFor="let dept of departments"
+              class="department-checkbox"
+              [class.selected]="isDepartmentSelected(dept.id)"
+            >
+              <input
+                type="checkbox"
+                [checked]="isDepartmentSelected(dept.id)"
+                (change)="toggleDepartment(dept.id)"
+              />
+              <span class="department-name">{{ dept.departmentName }}</span>
+              <span class="department-code">{{ dept.departmentCode }}</span>
+            </label>
+          </div>
+          <div class="info-message" *ngIf="isNationalHoliday">
+            National holidays apply to all departments automatically.
+          </div>
+        </div>
+
+        <!-- View Mode Info -->
+        <div class="info-box" *ngIf="mode === 'view' && holiday">
+          <div class="info-row">
+            <span class="info-label">Status:</span>
+            <span
+              [class]="
+                holiday.isUpcoming
+                  ? 'badge badge-success'
+                  : 'badge badge-secondary'
+              "
+            >
+              {{ holiday.isUpcoming ? "Upcoming" : "Past" }}
+            </span>
+          </div>
+          <div class="info-row" *ngIf="holiday.isUpcoming">
+            <span class="info-label">Days Until:</span>
+            <span class="info-value">{{ holiday.daysUntilHoliday }} days</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Created:</span>
+            <span class="info-value">{{ formatDate(holiday.createdAt) }}</span>
+          </div>
+          <div class="info-row" *ngIf="holiday.updatedAt">
+            <span class="info-label">Last Updated:</span>
+            <span class="info-value">{{ formatDate(holiday.updatedAt) }}</span>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="onClose()"
+            [disabled]="isSubmitting"
+          >
+            {{ mode === "view" ? "Close" : "Cancel" }}
+          </button>
+          <button
+            *ngIf="mode !== 'view'"
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="holidayForm.invalid || isSubmitting"
+          >
+            <span *ngIf="!isSubmitting">{{ submitButtonText }}</span>
+            <span *ngIf="isSubmitting" class="spinner-container">
+              <span class="spinner"></span>
+              Saving...
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
