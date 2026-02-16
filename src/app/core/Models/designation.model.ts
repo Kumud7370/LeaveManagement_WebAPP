@@ -1,7 +1,3 @@
-// ============================================================================
-// CORE DESIGNATION INTERFACES
-// ============================================================================
-
 export interface DesignationResponseDto {
   designationId: string;
   designationCode: string;
@@ -45,10 +41,6 @@ export interface DesignationFilterDto {
   pageSize: number;
 }
 
-// ============================================================================
-// API RESPONSE WRAPPERS
-// ============================================================================
-
 export interface ApiResponse<T> {
   data: T;
   message: string;
@@ -69,3 +61,21 @@ export interface PagedResultDto<T> {
   data: T[];
   pagination: PaginationDto;
 }
+
+export interface CreateDesignationDto {
+  designationCode: string;
+  designationName: string;
+  description?: string;
+  level: number;
+  isActive?: boolean;
+}
+
+export interface UpdateDesignationDto {
+  designationCode: string;
+  designationName: string;
+  description?: string;
+  level: number;
+  isActive?: boolean;
+}
+
+
