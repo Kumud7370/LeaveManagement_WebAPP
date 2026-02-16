@@ -1,4 +1,4 @@
-<div class="employee-form-container">
+<div class="employee-form-container" [class.modal-form]="isModal">
   <!-- Loading State -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="spinner-container">
@@ -12,7 +12,7 @@
     <!-- Header -->
     <div class="form-header">
       <div class="header-content">
-        <button class="btn-back" (click)="cancel()">
+        <button class="btn-back" (click)="cancel()" *ngIf="!isModal">
           <i class="fas fa-arrow-left"></i>
           <span>Back to List</span>
         </button>

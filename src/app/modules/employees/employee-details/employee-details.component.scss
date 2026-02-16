@@ -1,12 +1,26 @@
-// Employee Details Component Styles
-// src/app/modules/dashboard/employees/components/employee-details/employee-details.component.scss
-
 .employee-details-container {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
   background: #f8f9fa;
   min-height: calc(100vh - 70px);
+
+  // Modal specific styles
+  &.modal-details {
+    background: white;
+    padding: 2rem 2rem 1rem 2rem;
+    min-height: auto;
+
+    .details-header {
+      margin-bottom: 1rem;
+
+      .header-top {
+        .btn-back {
+          display: none;
+        }
+      }
+    }
+  }
 
   // Loading Overlay
   .loading-overlay {
@@ -530,6 +544,10 @@
   .employee-details-container {
     padding: 1rem;
 
+    &.modal-details {
+      padding: 1rem;
+    }
+
     .details-header {
       .header-top {
         flex-direction: column;
@@ -552,6 +570,13 @@
             gap: 0.75rem;
           }
         }
+      }
+    }
+
+    .details-tabs {
+      .tab-button {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
       }
     }
 
@@ -583,6 +608,9 @@
 // Print Styles
 @media print {
   .employee-details-container {
+    background: white;
+    padding: 1rem;
+
     .details-header {
       .header-top {
         display: none;
@@ -595,6 +623,8 @@
 
     .info-card {
       page-break-inside: avoid;
+      box-shadow: none;
+      border: 1px solid #e5e7eb;
 
       &.action-card {
         display: none;

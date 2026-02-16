@@ -1,7 +1,7 @@
 <!-- Employee Details Component HTML -->
 <!-- src/app/modules/dashboard/employees/components/employee-details/employee-details.component.html -->
 
-<div class="employee-details-container">
+<div class="employee-details-container" [class.modal-details]="isModal">
   <!-- Loading State -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="spinner-container">
