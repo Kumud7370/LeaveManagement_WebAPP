@@ -119,6 +119,11 @@ export const routes: Routes = [
     },
   ]
 },
+{
+  path: "holidays",
+  loadChildren: () => import("./modules/holiday/holiday.module").then((m) => m.HolidayModule),
+  data: { breadcrumb: "Holidays" },
+}
     ],
   },
 ];
