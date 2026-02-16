@@ -1,5 +1,3 @@
-// src/app/modules/dashboard/employees/employee-list/employee-list.component.ts
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,11 +18,13 @@ import {
 } from '../../../core/Models/employee.model';
 
 import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
+import { EmployeeFormComponent } from '../employee-form/employee-form.component';
+import { EmployeeDetailsComponent } from '../employee-details/employee-details.component';
 
 @Component({
     selector: 'app-employee-list',
     standalone: true,
-    imports: [CommonModule, FormsModule, AgGridAngular],
+    imports: [CommonModule, FormsModule, AgGridAngular, EmployeeFormComponent, EmployeeDetailsComponent],
     templateUrl: './employee-list.component.html',
     styleUrl: './employee-list.component.scss'
 })
@@ -58,6 +58,12 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         sortBy: 'EmployeeCode',
         sortDescending: false
     };
+
+    // Modal States
+    showFormModal = false;
+    showDetailsModal = false;
+    formMode: 'create' | 'edit' = 'create';
+    selectedEmployeeId: string | null = null;
 
     // Enums for dropdowns
     EmployeeStatus = EmployeeStatus;
@@ -390,11 +396,14 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
 
     // Navigation methods called by ActionCellRendererComponent
     viewDetails(employee: EmployeeResponseDto): void {
-        this.router.navigate(['/employees', employee.id]);
+        this.selectedEmployeeId = employee.id;
+        this.showDetailsModal = true;
     }
 
     editDepartment(employee: EmployeeResponseDto): void {
-        this.router.navigate(['/employees', 'edit', employee.id]);
+        this.formMode = 'edit';
+        this.selectedEmployeeId = employee.id;
+        this.showFormModal = true;
     }
 
     async deleteDepartment(employee: EmployeeResponseDto): Promise<void> {
@@ -464,6 +473,35 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     }
 
     addNewEmployee(): void {
-        this.router.navigate(['/employees', 'create']);
+        this.formMode = 'create';
+        this.selectedEmployeeId = null;
+        this.showFormModal = true;
+    }
+
+    closeFormModal(): void {
+        this.showFormModal = false;
+        this.selectedEmployeeId = null;
+    }
+
+    closeDetailsModal(): void {
+        this.showDetailsModal = false;
+        this.selectedEmployeeId = null;
+    }
+
+    onFormSuccess(): void {
+        this.closeFormModal();
+        this.loadEmployees();
+    }
+
+    onEditFromDetails(employeeId: string): void {
+        this.closeDetailsModal();
+        this.formMode = 'edit';
+        this.selectedEmployeeId = employeeId;
+        this.showFormModal = true;
+    }
+
+    onDeleteFromDetails(employeeId: string): void {
+        this.closeDetailsModal();
+        this.loadEmployees();
     }
 }

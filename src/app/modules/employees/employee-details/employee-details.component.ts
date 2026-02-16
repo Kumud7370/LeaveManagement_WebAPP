@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
@@ -21,9 +21,14 @@ import {
 export class EmployeeDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   
+  @Input() isModal = false;
+  @Input() employeeId: string | null = null;
+  @Output() modalClosed = new EventEmitter<void>();
+  @Output() editRequested = new EventEmitter<string>();
+  @Output() deleteRequested = new EventEmitter<string>();
+  
   employee: EmployeeResponseDto | null = null;
   isLoading = true;
-  employeeId: string = '';
 
   // Enums for display
   EmployeeStatus = EmployeeStatus;
@@ -37,12 +42,19 @@ export class EmployeeDetailsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      this.employeeId = params['id'];
-      if (this.employeeId) {
-        this.loadEmployeeDetails();
-      }
-    });
+    // If modal mode with employeeId, load the employee
+    if (this.isModal && this.employeeId) {
+      this.loadEmployeeDetails();
+    } 
+    // If not modal mode, check route params
+    else if (!this.isModal) {
+      this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
+        this.employeeId = params['id'];
+        if (this.employeeId) {
+          this.loadEmployeeDetails();
+        }
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -51,6 +63,8 @@ export class EmployeeDetailsComponent implements OnInit, OnDestroy {
   }
 
   loadEmployeeDetails(): void {
+    if (!this.employeeId) return;
+
     this.isLoading = true;
     this.employeeService.getEmployeeById(this.employeeId)
       .pipe(takeUntil(this.destroy$))
@@ -68,22 +82,36 @@ export class EmployeeDetailsComponent implements OnInit, OnDestroy {
             text: 'Failed to load employee details.',
             confirmButtonColor: '#1a2a6c'
           }).then(() => {
-            this.router.navigate(['/employees']);
+            if (this.isModal) {
+              this.goBack();
+            } else {
+              this.router.navigate(['/employees']);
+            }
           });
         }
       });
   }
 
   goBack(): void {
-    this.router.navigate(['/employees']);
+    if (this.isModal) {
+      this.modalClosed.emit();
+    } else {
+      this.router.navigate(['/employees']);
+    }
   }
 
   editEmployee(): void {
-    this.router.navigate(['/employees', 'edit', this.employeeId]);
+    if (!this.employeeId) return;
+
+    if (this.isModal) {
+      this.editRequested.emit(this.employeeId);
+    } else {
+      this.router.navigate(['/employees', 'edit', this.employeeId]);
+    }
   }
 
   deleteEmployee(): void {
-    if (!this.employee) return;
+    if (!this.employee || !this.employeeId) return;
 
     Swal.fire({
       title: 'Are you sure?',
@@ -102,6 +130,8 @@ export class EmployeeDetailsComponent implements OnInit, OnDestroy {
   }
 
   private performDelete(): void {
+    if (!this.employeeId) return;
+
     this.employeeService.deleteEmployee(this.employeeId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -113,7 +143,12 @@ export class EmployeeDetailsComponent implements OnInit, OnDestroy {
             timer: 2000,
             showConfirmButton: false
           });
-          this.router.navigate(['/employees']);
+          
+          if (this.isModal) {
+            this.deleteRequested.emit(this.employeeId!);
+          } else {
+            this.router.navigate(['/employees']);
+          }
         },
         error: (error) => {
           console.error('Error deleting employee:', error);
@@ -128,7 +163,7 @@ export class EmployeeDetailsComponent implements OnInit, OnDestroy {
   }
 
   changeStatus(newStatus: EmployeeStatus): void {
-    if (!this.employee) return;
+    if (!this.employee || !this.employeeId) return;
 
     Swal.fire({
       title: 'Change Employee Status?',
@@ -147,6 +182,8 @@ export class EmployeeDetailsComponent implements OnInit, OnDestroy {
   }
 
   private performStatusChange(newStatus: EmployeeStatus): void {
+    if (!this.employeeId) return;
+
     this.employeeService.changeEmployeeStatus(this.employeeId, newStatus)
       .pipe(takeUntil(this.destroy$))
       .subscribe({

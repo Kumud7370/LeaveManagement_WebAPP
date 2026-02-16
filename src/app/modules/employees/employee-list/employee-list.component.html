@@ -1,5 +1,3 @@
-<!-- src/app/modules/dashboard/employees/employee-list/employee-list.component.html -->
-
 <div class="employee-list-container">
   <!-- Header -->
   <div class="page-header">
@@ -206,5 +204,37 @@
         </button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal for Employee Form -->
+<div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeFormModal()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <app-employee-form
+      [isModal]="true"
+      [employeeId]="selectedEmployeeId"
+      [isEditMode]="formMode === 'edit'"
+      (formCancelled)="closeFormModal()"
+      (formSubmitted)="onFormSuccess()"
+    ></app-employee-form>
+  </div>
+</div>
+
+<!-- Modal for Employee Details -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+  <div class="modal-container modal-container-large" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeDetailsModal()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <app-employee-details
+      [isModal]="true"
+      [employeeId]="selectedEmployeeId"
+      (modalClosed)="closeDetailsModal()"
+      (editRequested)="onEditFromDetails($event)"
+      (deleteRequested)="onDeleteFromDetails($event)"
+    ></app-employee-details>
   </div>
 </div>
