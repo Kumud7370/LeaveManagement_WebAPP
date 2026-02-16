@@ -1,0 +1,161 @@
+<div class="form-container">
+  <!-- Header -->
+  <div class="form-header">
+    <div>
+      <h1 class="form-title">
+        <i class="bi bi-award"></i>
+        {{ isEditMode ? "Edit Designation" : "Create New Designation" }}
+      </h1>
+      <p class="form-subtitle">
+        {{
+          isEditMode
+            ? "Update designation information"
+            : "Add a new designation to the system"
+        }}
+      </p>
+    </div>
+    <button class="btn-back" (click)="onCancel()">
+      <i class="bi bi-arrow-left"></i>
+      Back to List
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading designation details...</p>
+  </div>
+
+  <!-- Form -->
+  <form
+    *ngIf="!isLoading"
+    [formGroup]="designationForm"
+    (ngSubmit)="onSubmit()"
+    class="designation-form"
+  >
+    <div class="form-card">
+      <h2 class="section-title">
+        <i class="bi bi-info-circle"></i>
+        Basic Information
+      </h2>
+
+      <div class="form-grid">
+        <!-- Designation Code -->
+        <div class="form-group">
+          <label for="designationCode" class="required">Designation Code</label>
+          <input
+            type="text"
+            id="designationCode"
+            class="form-control"
+            formControlName="designationCode"
+            placeholder="e.g., MGR-001"
+            [class.is-invalid]="isFieldInvalid('designationCode')"
+          />
+          <small class="form-hint"
+            >Use uppercase letters, numbers, hyphens, and underscores
+            only</small
+          >
+          <div *ngIf="isFieldInvalid('designationCode')" class="error-message">
+            {{ getErrorMessage("designationCode") }}
+          </div>
+        </div>
+
+        <!-- Designation Name -->
+        <div class="form-group">
+          <label for="designationName" class="required">Designation Name</label>
+          <input
+            type="text"
+            id="designationName"
+            class="form-control"
+            formControlName="designationName"
+            placeholder="e.g., Senior Manager"
+            [class.is-invalid]="isFieldInvalid('designationName')"
+          />
+          <div *ngIf="isFieldInvalid('designationName')" class="error-message">
+            {{ getErrorMessage("designationName") }}
+          </div>
+        </div>
+
+        <!-- Level -->
+        <div class="form-group">
+          <label for="level" class="required">Hierarchy Level</label>
+          <input
+            type="number"
+            id="level"
+            class="form-control"
+            formControlName="level"
+            min="1"
+            max="100"
+            placeholder="1-100"
+            [class.is-invalid]="isFieldInvalid('level')"
+          />
+          <small class="form-hint"
+            >Lower numbers indicate higher positions</small
+          >
+          <div *ngIf="isFieldInvalid('level')" class="error-message">
+            {{ getErrorMessage("level") }}
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="form-group">
+          <label for="isActive">Status</label>
+          <div class="toggle-container">
+            <label class="toggle-switch">
+              <input type="checkbox" id="isActive" formControlName="isActive" />
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">
+              {{
+                designationForm.get("isActive")?.value ? "Active" : "Inactive"
+              }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group full-width">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          class="form-control"
+          formControlName="description"
+          rows="4"
+          placeholder="Enter designation description (optional)..."
+          [class.is-invalid]="isFieldInvalid('description')"
+        ></textarea>
+        <div *ngIf="isFieldInvalid('description')" class="error-message">
+          {{ getErrorMessage("description") }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="onCancel()"
+        [disabled]="isSubmitting"
+      >
+        <i class="bi bi-x-circle"></i>
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="designationForm.invalid || isSubmitting"
+      >
+        <span *ngIf="!isSubmitting">
+          <i class="bi bi-check-circle"></i>
+          {{ isEditMode ? "Update Designation" : "Create Designation" }}
+        </span>
+        <span *ngIf="isSubmitting">
+          <i class="bi bi-arrow-repeat spin"></i>
+          {{ isEditMode ? "Updating..." : "Creating..." }}
+        </span>
+      </button>
+    </div>
+  </form>
+</div>

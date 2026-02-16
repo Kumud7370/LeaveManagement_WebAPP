@@ -68,81 +68,29 @@ export const routes: Routes = [
         data: { breadcrumb: "Departments" },
       },
 
-      // Uncomment these as needed
-      // {
-      //   path: "dashboard2",
-      //   loadComponent: () => import("./modules/dashboard2/dashboard.component").then((m) => m.DashboardComponent),
-      //   data: { breadcrumb: "Dashboard2" },
-      // },
-      // {
-      //   path: "search-report",
-      //   loadComponent: () =>
-      //     import("./modules/search-report/search-report.component").then((m) => m.SearchReportComponent),
-      //   data: { breadcrumb: "Search Report" },
-      // },
-      // {
-      //   path: "export",
-      //   loadComponent: () => import("./modules/export/export.component").then((m) => m.ExportComponent),
-      //   data: { breadcrumb: "Export to Excel" },
-      // },
-      // {
-      //   path: "ward-report",
-      //   loadComponent: () => import("./modules/ward-report/ward-report.component").then((m) => m.WardReportComponent),
-      //   data: { breadcrumb: "Wardwise Report" },
-      // },
-      // {
-      //   path: "shift-report",
-      //   loadComponent: () =>
-      //     import("./modules/shift-report/shift-report.component").then((m) => m.ShiftReportComponent),
-      //   data: { breadcrumb: "Shiftwise Report" },
-      // },
-      // {
-      //   path: "logsheet",
-      //   children: [
-      //     { path: "", redirectTo: "generatelogsheet", pathMatch: "full" },
-      //     {
-      //       path: "generatelogsheet",
-      //       loadComponent: () =>
-      //         import("./modules/logsheet/generatelogsheet/generatelogsheet.component").then(
-      //           (m) => m.GeneratelogsheetComponent,
-      //         ),
-      //       data: { breadcrumb: "Generate Logsheet" },
-      //     },
-      //     {
-      //       path: "logsheetlist",
-      //       loadComponent: () =>
-      //         import("./modules/logsheet/logsheetlist/logsheetlist.component").then((m) => m.LogsheetlistComponent),
-      //       data: { breadcrumb: "Logsheet Report" },
-      //     },
-      //   ],
-      // },
-      // {
-      //   path: "remarks",
-      //   loadComponent: () => import("./modules/remarks/remarks.component").then((m) => m.RemarkFilterComponent),
-      //   data: { breadcrumb: "Remarks & Correction" },
-      // },
-      // {
-      //   path: "billing-report",
-      //   loadComponent: () => import("./modules/billing-report/billing-report.component").then((m) => m.BillingReportComponent),
-      //   data: { breadcrumb: "Billing Report" },
-      // },
-      // {
-      //   path: "verifications",
-      //   loadComponent: () => import("./modules/verifications/verification.component").then((m) => m.VerificationComponent),
-      //   data: { breadcrumb: "Verification" },
-      // },
-      // {
-      //   path: "vehiclelist",
-      //   loadComponent: () =>
-      //     import("./modules/vehicle-master/vehicle-master.component").then((m) => m.VehicleMasterComponent),
-      //   data: { breadcrumb: "Vehicle List" },
-      // },
-      // {
-      //   path: "agencylist",
-      //   loadComponent: () =>
-      //     import("./modules/agency-master/agency-master.component").then((m) => m.AgencyMasterComponent),
-      //   data: { breadcrumb: "Agency List" },
-      // },
+      {
+  path: "designations",
+  children: [
+    {
+      path: "",
+      loadComponent: () => import("./modules/designation/designation-list/designation-list.component")
+        .then((m) => m.DesignationListComponent),
+      data: { breadcrumb: "Designations" },
+    },
+    {
+      path: "create",
+      loadComponent: () => import("./modules/designation/designation-form/designation-form.component")
+        .then((m) => m.DesignationFormComponent),
+      data: { breadcrumb: "Add Designation" },
+    },
+    {
+      path: "edit/:id",
+      loadComponent: () => import("./modules/designation/designation-form/designation-form.component")
+        .then((m) => m.DesignationFormComponent),
+      data: { breadcrumb: "Edit Designation" },
+    },
+  ]
+},
     ],
   },
 ];
