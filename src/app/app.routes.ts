@@ -17,6 +17,11 @@ export const routes: Routes = [
     loadComponent: () => import('./modules/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
   },
   {
+    path: "accept-invitation",
+    loadComponent: () => import('./modules/admin-invitations/accept-invitation/accept-invitation.component')
+      .then(m => m.AcceptInvitationComponent),
+  },
+  {
     path: "",
     redirectTo: "login",
     pathMatch: "full"

@@ -399,6 +399,7 @@
                 display: flex;
                 align-items: center;
                 gap: 1rem;
+                width: 100%;
 
                 .recipient-avatar {
                     width: 2.5rem;
@@ -411,6 +412,12 @@
                     justify-content: center;
                     font-weight: 600;
                     font-size: 0.9rem;
+                    flex-shrink: 0;
+                }
+
+                .recipient-info {
+                    flex: 1;
+                    min-width: 0;
                 }
 
                 .recipient-email {
