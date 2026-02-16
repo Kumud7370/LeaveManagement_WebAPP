@@ -6,6 +6,7 @@ import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
+import * as XLSX from 'xlsx';
 
 import { EmployeeService } from '../../../core/services/api/employee.api';
 import {
@@ -130,9 +131,9 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
             // Actions column FIRST
             {
                 headerName: 'Actions',
-                width: 150,
-                minWidth: 150,
-                maxWidth: 150,
+                width: 180,
+                minWidth: 180,
+                maxWidth: 180,
                 cellRenderer: ActionCellRendererComponent,
                 sortable: false,
                 filter: false,
@@ -293,6 +294,138 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
             });
     }
 
+    // NEW: Export to Excel functionality
+    exportToExcel(): void {
+        if (this.rowData.length === 0) {
+            Swal.fire({
+                title: 'No Data',
+                text: 'There are no employees to export.',
+                icon: 'info',
+                confirmButtonColor: '#3b82f6'
+            });
+            return;
+        }
+
+        // Show loading
+        Swal.fire({
+            title: 'Exporting...',
+            text: 'Please wait while we prepare your file.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Prepare data for export
+        const exportData = this.rowData.map(emp => ({
+            'Employee Code': emp.employeeCode,
+            'Full Name': emp.fullName,
+            'First Name': emp.firstName,
+            'Middle Name': emp.middleName || '—',
+            'Last Name': emp.lastName,
+            'Email': emp.email,
+            'Phone Number': emp.phoneNumber,
+            'Alternate Phone': emp.alternatePhoneNumber || '—',
+            'Date of Birth': emp.dateOfBirth ? new Date(emp.dateOfBirth).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }) : '—',
+            'Age': emp.age || '—',
+            'Gender': emp.genderName,
+            'Department': emp.departmentName || '—',
+            'Designation': emp.designationName || '—',
+            'Manager': emp.managerName || '—',
+            'Employment Type': emp.employmentTypeName,
+            'Status': emp.employeeStatusName,
+            'Date of Joining': emp.dateOfJoining ? new Date(emp.dateOfJoining).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }) : '—',
+            'Date of Leaving': emp.dateOfLeaving ? new Date(emp.dateOfLeaving).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }) : '—',
+            'Currently Employed': emp.isCurrentlyEmployed ? 'Yes' : 'No',
+            'Street': emp.address?.street || '—',
+            'City': emp.address?.city || '—',
+            'State': emp.address?.state || '—',
+            'Country': emp.address?.country || '—',
+            'Postal Code': emp.address?.postalCode || '—',
+            'Biometric ID': emp.biometricId || '—',
+            'Created At': emp.createdAt ? new Date(emp.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : '—',
+            'Updated At': emp.updatedAt ? new Date(emp.updatedAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : '—'
+        }));
+
+        // Create workbook and worksheet
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        
+        // Set column widths
+        const columnWidths = [
+            { wch: 15 }, // Employee Code
+            { wch: 25 }, // Full Name
+            { wch: 15 }, // First Name
+            { wch: 15 }, // Middle Name
+            { wch: 15 }, // Last Name
+            { wch: 30 }, // Email
+            { wch: 15 }, // Phone Number
+            { wch: 15 }, // Alternate Phone
+            { wch: 20 }, // Date of Birth
+            { wch: 8 },  // Age
+            { wch: 12 }, // Gender
+            { wch: 20 }, // Department
+            { wch: 20 }, // Designation
+            { wch: 20 }, // Manager
+            { wch: 15 }, // Employment Type
+            { wch: 12 }, // Status
+            { wch: 20 }, // Date of Joining
+            { wch: 20 }, // Date of Leaving
+            { wch: 18 }, // Currently Employed
+            { wch: 30 }, // Street
+            { wch: 15 }, // City
+            { wch: 15 }, // State
+            { wch: 15 }, // Country
+            { wch: 12 }, // Postal Code
+            { wch: 15 }, // Biometric ID
+            { wch: 25 }, // Created At
+            { wch: 25 }  // Updated At
+        ];
+        worksheet['!cols'] = columnWidths;
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Employees');
+
+        // Generate file name with timestamp
+        const timestamp = new Date().toISOString().slice(0, 10);
+        const fileName = `Employees_Export_${timestamp}.xlsx`;
+
+        // Save file
+        XLSX.writeFile(workbook, fileName);
+
+        // Close loading and show success
+        Swal.fire({
+            title: 'Export Successful!',
+            text: `File "${fileName}" has been downloaded.`,
+            icon: 'success',
+            confirmButtonColor: '#3b82f6',
+            timer: 3000
+        });
+    }
+
     // Filter operations
     toggleFilter(): void {
         this.isFilterVisible = !this.isFilterVisible;
@@ -394,23 +527,13 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         this.showFormModal = true;
     }
 
-    // FIXED: Toggle Status Method for Active/Inactive button
     async toggleStatus(employee: EmployeeResponseDto): Promise<void> {
         if (!employee || !employee.id) return;
 
-        // Determine current status and new status
         const isCurrentlyActive = employee.employeeStatus === EmployeeStatus.Active;
         const newStatus = isCurrentlyActive ? EmployeeStatus.Inactive : EmployeeStatus.Active;
         const statusText = isCurrentlyActive ? 'deactivate' : 'activate';
         const statusAction = isCurrentlyActive ? 'deactivated' : 'activated';
-
-        console.log('Toggle Status Debug:');
-        console.log('Employee:', employee);
-        console.log('Current Status:', employee.employeeStatus);
-        console.log('EmployeeStatus.Active:', EmployeeStatus.Active);
-        console.log('Is Currently Active:', isCurrentlyActive);
-        console.log('New Status:', newStatus);
-        console.log('Status Text:', statusText);
 
         const result = await Swal.fire({
             title: 'Change Employee Status?',
@@ -424,7 +547,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         });
 
         if (result.isConfirmed) {
-            // Create update DTO with new status
             const updateDto = {
                 firstName: employee.firstName,
                 middleName: employee.middleName,
@@ -441,12 +563,10 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
                 dateOfJoining: employee.dateOfJoining,
                 dateOfLeaving: employee.dateOfLeaving,
                 employmentType: employee.employmentType,
-                employeeStatus: newStatus, // This is the changed field
+                employeeStatus: newStatus,
                 profileImageUrl: employee.profileImageUrl,
                 biometricId: employee.biometricId
             };
-
-            console.log('Sending update DTO:', updateDto);
 
             this.employeeService.updateEmployee(employee.id, updateDto)
                 .pipe(takeUntil(this.destroy$))
@@ -528,7 +648,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         return enumType[key] || '';
     }
 
-    // Additional method for backward compatibility
     viewEmployee(employee: EmployeeResponseDto): void {
         this.viewDetails(employee);
     }
