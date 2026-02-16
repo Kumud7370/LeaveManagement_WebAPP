@@ -1,0 +1,294 @@
+<div class="designation-list-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Designation Management</h1>
+      <p class="page-subtitle">Manage your organization's designations</p>
+    </div>
+  </div>
+
+  <!-- Search and Actions Bar -->
+  <div class="search-actions-bar">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input
+        type="text"
+        placeholder="Search designations..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+      />
+    </div>
+
+    <div class="action-buttons-group">
+      <button class="btn-action-bar btn-clear" (click)="clearFilters()">
+        <i class="bi bi-x-circle"></i>
+        Clear
+      </button>
+      <button class="btn-action-bar btn-refresh" (click)="refreshData()">
+        <i class="bi bi-arrow-clockwise"></i>
+        Refresh
+      </button>
+      <button class="btn-action-bar btn-export" (click)="exportData()">
+        <i class="bi bi-download"></i>
+        Export
+      </button>
+      <button class="btn-action-bar btn-add" (click)="openCreateModal()">
+        <i class="bi bi-plus-circle"></i>
+        Add Designation
+      </button>
+    </div>
+  </div>
+
+  <!-- Grid Container -->
+  <div class="grid-container">
+    <!-- Loading Overlay -->
+    <div *ngIf="isLoading" class="loading-overlay">
+      <div class="spinner-border"></div>
+      <p>Loading designations...</p>
+    </div>
+
+    <!-- AG Grid -->
+    <ag-grid-angular
+      *ngIf="!isLoading"
+      class="ag-theme-alpine custom-grid"
+      [rowData]="rowData"
+      [columnDefs]="columnDefs"
+      [gridOptions]="gridOptions"
+      [animateRows]="true"
+    >
+    </ag-grid-angular>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && rowData.length === 0" class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <h3>No Designations Found</h3>
+      <p>Get started by creating your first designation</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="!isLoading && rowData.length > 0">
+    <div class="pagination-info">
+      Showing {{ startRecord }} to {{ endRecord }} of
+      {{ totalCount }} designations
+    </div>
+
+    <div class="pagination-controls">
+      <select
+        class="page-size-select"
+        [value]="pageSize"
+        (change)="onPageSizeChange($event)"
+      >
+        <option [value]="10">10 per page</option>
+        <option [value]="25">25 per page</option>
+        <option [value]="50">50 per page</option>
+        <option [value]="100">100 per page</option>
+      </select>
+
+      <div class="pagination-buttons">
+        <button
+          class="btn-page"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(1)"
+        >
+          <i class="bi bi-chevron-double-left"></i>
+        </button>
+
+        <button
+          class="btn-page"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <button
+          *ngFor="let page of visiblePages"
+          class="btn-page"
+          [class.active]="page === currentPage"
+          (click)="onPageChange(page)"
+        >
+          {{ page }}
+        </button>
+
+        <button
+          class="btn-page"
+          [disabled]="currentPage === totalPages"
+          (click)="onPageChange(currentPage + 1)"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+
+        <button
+          class="btn-page"
+          [disabled]="currentPage === totalPages"
+          (click)="onPageChange(totalPages)"
+        >
+          <i class="bi bi-chevron-double-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>
+        <i class="bi bi-award"></i>
+        {{ isEditMode ? "Edit Designation" : "Create New Designation" }}
+      </h2>
+      <button class="btn-close-modal" (click)="closeModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Loading State -->
+      <div *ngIf="isLoadingForm" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading designation details...</p>
+      </div>
+
+      <!-- Form -->
+      <form
+        *ngIf="!isLoadingForm"
+        [formGroup]="designationForm"
+        (ngSubmit)="onSubmit()"
+      >
+        <div class="form-grid">
+          <!-- Designation Code -->
+          <div class="form-group">
+            <label for="designationCode" class="required"
+              >Designation Code</label
+            >
+            <input
+              type="text"
+              id="designationCode"
+              class="form-control"
+              formControlName="designationCode"
+              placeholder="e.g., MGR-001"
+              [class.is-invalid]="isFieldInvalid('designationCode')"
+            />
+            <small class="form-hint"
+              >Use uppercase letters, numbers, hyphens, and underscores
+              only</small
+            >
+            <div
+              *ngIf="isFieldInvalid('designationCode')"
+              class="error-message"
+            >
+              {{ getErrorMessage("designationCode") }}
+            </div>
+          </div>
+
+          <!-- Designation Name -->
+          <div class="form-group">
+            <label for="designationName" class="required"
+              >Designation Name</label
+            >
+            <input
+              type="text"
+              id="designationName"
+              class="form-control"
+              formControlName="designationName"
+              placeholder="e.g., Senior Manager"
+              [class.is-invalid]="isFieldInvalid('designationName')"
+            />
+            <div
+              *ngIf="isFieldInvalid('designationName')"
+              class="error-message"
+            >
+              {{ getErrorMessage("designationName") }}
+            </div>
+          </div>
+
+          <!-- Level -->
+          <div class="form-group">
+            <label for="level" class="required">Hierarchy Level</label>
+            <input
+              type="number"
+              id="level"
+              class="form-control"
+              formControlName="level"
+              min="1"
+              max="100"
+              placeholder="1-100"
+              [class.is-invalid]="isFieldInvalid('level')"
+            />
+            <small class="form-hint"
+              >Lower numbers indicate higher positions</small
+            >
+            <div *ngIf="isFieldInvalid('level')" class="error-message">
+              {{ getErrorMessage("level") }}
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="form-group">
+            <label for="isActive">Status</label>
+            <div class="toggle-container">
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  formControlName="isActive"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-label">
+                {{
+                  designationForm.get("isActive")?.value ? "Active" : "Inactive"
+                }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group full-width">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            class="form-control"
+            formControlName="description"
+            rows="4"
+            placeholder="Enter designation description (optional)..."
+            [class.is-invalid]="isFieldInvalid('description')"
+          ></textarea>
+          <div *ngIf="isFieldInvalid('description')" class="error-message">
+            {{ getErrorMessage("description") }}
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button
+            type="button"
+            class="btn-secondary"
+            (click)="closeModal()"
+            [disabled]="isSubmitting"
+          >
+            <i class="bi bi-x-circle"></i>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="btn-primary"
+            [disabled]="designationForm.invalid || isSubmitting"
+          >
+            <span *ngIf="!isSubmitting">
+              <i class="bi bi-check-circle"></i>
+              {{ isEditMode ? "Update Designation" : "Create Designation" }}
+            </span>
+            <span *ngIf="isSubmitting">
+              <i class="bi bi-arrow-repeat spin"></i>
+              {{ isEditMode ? "Updating..." : "Creating..." }}
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

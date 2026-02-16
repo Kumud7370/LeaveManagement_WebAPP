@@ -69,6 +69,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: "fas fa-users"
     },
     { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
+    { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
+    { label: "Designations", route: "/designations", icon: "fas fa-award" },
     { label: "Departments", route: "/departments", icon: "fas fa-sitemap" }, // NEW MENU ITEM
      { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" },
     { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
