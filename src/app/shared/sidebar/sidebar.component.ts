@@ -69,7 +69,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: "fas fa-users"
     },
     { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
-    { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
+    { label: "Departments", route: "/departments", icon: "fas fa-sitemap" }, // NEW MENU ITEM
+     { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" },
     { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
     { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marked-alt" },
     { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
@@ -222,6 +223,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
         { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
         { label: "Departments", route: "/departments", icon: "fas fa-sitemap" }, 
+        { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" },
         { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
         { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marked-alt" },
         { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
