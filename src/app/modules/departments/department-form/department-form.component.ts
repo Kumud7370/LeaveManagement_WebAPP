@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
 import { DepartmentService } from '../../../core/services/api/department.api';
 import { Department } from '../../../../app/core/Models/department.model';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-department-form',
@@ -13,9 +13,13 @@ import { Department } from '../../../../app/core/Models/department.model';
   styleUrls: ['./department-form.component.scss']
 })
 export class DepartmentFormComponent implements OnInit {
+  @Input() isModal = false;
+  @Input() departmentId: string | null = null;
+  @Input() isEditMode = false;
+  @Output() formCancelled = new EventEmitter<void>();
+  @Output() formSubmitted = new EventEmitter<void>();
+
   departmentForm!: FormGroup;
-  isEditMode = false;
-  departmentId: string | null = null;
   loading = false;
   submitting = false;
   error: string | null = null;
@@ -25,14 +29,11 @@ export class DepartmentFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private departmentService: DepartmentService,
-    private route: ActivatedRoute,
-    private router: Router
+    private departmentService: DepartmentService
   ) {}
 
   ngOnInit(): void {
     this.initializeForm();
-    this.departmentId = this.route.snapshot.paramMap.get('id');
     
     if (this.departmentId) {
       this.isEditMode = true;
@@ -116,7 +117,6 @@ export class DepartmentFormComponent implements OnInit {
 
     const formValue = this.departmentForm.value;
     
-    // Clean up the request - convert empty strings to null/undefined
     const requestData = {
       departmentCode: formValue.departmentCode,
       departmentName: formValue.departmentName,
@@ -136,41 +136,77 @@ export class DepartmentFormComponent implements OnInit {
       this.departmentService.updateDepartment(updateRequest).subscribe({
         next: (response) => {
           if (response.success) {
-            alert('Department updated successfully!');
-            this.router.navigate(['/departments']);
+            Swal.fire({
+              title: 'Success!',
+              text: 'Department updated successfully!',
+              icon: 'success',
+              confirmButtonColor: '#3b82f6'
+            }).then(() => {
+              this.formSubmitted.emit();
+            });
           } else {
             this.error = response.message || 'Failed to update department';
             this.submitting = false;
+            Swal.fire({
+              title: 'Error!',
+              text: this.error || 'Failed to update department',
+              icon: 'error',
+              confirmButtonColor: '#ef4444'
+            });
           }
         },
         error: (err) => {
           console.error('Update error:', err);
           this.error = err.error?.message || err.message || 'An error occurred while updating department';
           this.submitting = false;
+          Swal.fire({
+            title: 'Error!',
+            text: this.error || 'An error occurred while updating department',
+            icon: 'error',
+            confirmButtonColor: '#ef4444'
+          });
         }
       });
     } else {
       this.departmentService.createDepartment(requestData).subscribe({
         next: (response) => {
           if (response.success) {
-            alert('Department created successfully!');
-            this.router.navigate(['/departments']);
+            Swal.fire({
+              title: 'Success!',
+              text: 'Department created successfully!',
+              icon: 'success',
+              confirmButtonColor: '#3b82f6'
+            }).then(() => {
+              this.formSubmitted.emit();
+            });
           } else {
             this.error = response.message || 'Failed to create department';
             this.submitting = false;
+            Swal.fire({
+              title: 'Error!',
+              text: this.error || 'Failed to create department',
+              icon: 'error',
+              confirmButtonColor: '#ef4444'
+            });
           }
         },
         error: (err) => {
           console.error('Create error:', err);
           this.error = err.error?.message || err.message || 'An error occurred while creating department';
           this.submitting = false;
+          Swal.fire({
+            title: 'Error!',
+            text: this.error || 'An error occurred while creating department',
+            icon: 'error',
+            confirmButtonColor: '#ef4444'
+          });
         }
       });
     }
   }
 
   onCancel(): void {
-    this.router.navigate(['/departments']);
+    this.formCancelled.emit();
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {

@@ -1,14 +1,35 @@
-<div class="department-form-container">
+<div class="department-form-container" [class.modal-form]="isModal">
   <!-- Header -->
-  <div class="page-header">
+  <div class="page-header" *ngIf="!isModal">
     <button class="btn-back" (click)="onCancel()">
       <i class="bi bi-arrow-left"></i>
       Back
     </button>
     <div class="header-content">
-      <h1 class="page-title">{{ isEditMode ? 'Edit Department' : 'Create Department' }}</h1>
+      <h1 class="page-title">
+        {{ isEditMode ? "Edit Department" : "Create Department" }}
+      </h1>
       <p class="page-subtitle">
-        {{ isEditMode ? 'Update department information' : 'Add a new department to your organization' }}
+        {{
+          isEditMode
+            ? "Update department information"
+            : "Add a new department to your organization"
+        }}
+      </p>
+    </div>
+  </div>
+
+  <div class="page-header" *ngIf="isModal">
+    <div class="header-content">
+      <h1 class="page-title">
+        {{ isEditMode ? "Edit Department" : "Create Department" }}
+      </h1>
+      <p class="page-subtitle">
+        {{
+          isEditMode
+            ? "Update department information"
+            : "Add a new department to your organization"
+        }}
       </p>
     </div>
   </div>
@@ -29,7 +50,12 @@
   </div>
 
   <!-- Form -->
-  <form *ngIf="!loading" [formGroup]="departmentForm" (ngSubmit)="onSubmit()" class="department-form">
+  <form
+    *ngIf="!loading"
+    [formGroup]="departmentForm"
+    (ngSubmit)="onSubmit()"
+    class="department-form"
+  >
     <div class="form-grid">
       <!-- Department Code -->
       <div class="form-group">
@@ -42,9 +68,11 @@
           class="form-control"
           [class.error]="isFieldInvalid('departmentCode')"
         />
-        <small class="hint">Use uppercase letters, numbers, underscores, and hyphens only</small>
+        <small class="hint"
+          >Use uppercase letters, numbers, underscores, and hyphens only</small
+        >
         <div *ngIf="isFieldInvalid('departmentCode')" class="error-message">
-          {{ getErrorMessage('departmentCode') }}
+          {{ getErrorMessage("departmentCode") }}
         </div>
       </div>
 
@@ -60,7 +88,7 @@
           [class.error]="isFieldInvalid('departmentName')"
         />
         <div *ngIf="isFieldInvalid('departmentName')" class="error-message">
-          {{ getErrorMessage('departmentName') }}
+          {{ getErrorMessage("departmentName") }}
         </div>
       </div>
 
@@ -73,7 +101,10 @@
           class="form-control"
         >
           <option [ngValue]="null">None (Root Level)</option>
-          <option *ngFor="let dept of parentDepartments" [ngValue]="dept.departmentId">
+          <option
+            *ngFor="let dept of parentDepartments"
+            [ngValue]="dept.departmentId"
+          >
             {{ dept.departmentName }} ({{ dept.departmentCode }})
           </option>
         </select>
@@ -110,7 +141,7 @@
         />
         <small class="hint">Lower numbers appear first</small>
         <div *ngIf="isFieldInvalid('displayOrder')" class="error-message">
-          {{ getErrorMessage('displayOrder') }}
+          {{ getErrorMessage("displayOrder") }}
         </div>
       </div>
 
@@ -124,7 +155,9 @@
           />
           <span class="checkbox-text">Active</span>
         </label>
-        <small class="hint">Inactive departments are hidden from selection</small>
+        <small class="hint"
+          >Inactive departments are hidden from selection</small
+        >
       </div>
 
       <!-- Description (Full Width) -->
@@ -139,10 +172,10 @@
           [class.error]="isFieldInvalid('description')"
         ></textarea>
         <div class="char-count">
-          {{ departmentForm.get('description')?.value?.length || 0 }} / 500
+          {{ departmentForm.get("description")?.value?.length || 0 }} / 500
         </div>
         <div *ngIf="isFieldInvalid('description')" class="error-message">
-          {{ getErrorMessage('description') }}
+          {{ getErrorMessage("description") }}
         </div>
       </div>
     </div>
@@ -162,27 +195,37 @@
         class="btn btn-primary"
         [disabled]="submitting || departmentForm.invalid"
       >
-        <span *ngIf="!submitting">{{ isEditMode ? 'Update Department' : 'Create Department' }}</span>
+        <span *ngIf="!submitting">{{
+          isEditMode ? "Update Department" : "Create Department"
+        }}</span>
         <span *ngIf="submitting" class="btn-loading">
           <span class="spinner-small"></span>
-          {{ isEditMode ? 'Updating...' : 'Creating...' }}
+          {{ isEditMode ? "Updating..." : "Creating..." }}
         </span>
       </button>
     </div>
   </form>
 
   <!-- Info Card -->
-  <div class="info-card" *ngIf="!loading">
+  <div class="info-card" *ngIf="!loading && !isModal">
     <div class="info-header">
       <i class="bi bi-info-circle"></i>
       <h3>Guidelines</h3>
     </div>
     <ul class="info-list">
       <li>Department codes must be unique and cannot be changed later</li>
-      <li>Use descriptive names that clearly identify the department's purpose</li>
+      <li>
+        Use descriptive names that clearly identify the department's purpose
+      </li>
       <li>Parent departments help organize your organizational structure</li>
-      <li>Display order controls how departments appear in lists (lower = higher priority)</li>
-      <li>Inactive departments won't appear in dropdowns but preserve historical data</li>
+      <li>
+        Display order controls how departments appear in lists (lower = higher
+        priority)
+      </li>
+      <li>
+        Inactive departments won't appear in dropdowns but preserve historical
+        data
+      </li>
     </ul>
   </div>
 </div>

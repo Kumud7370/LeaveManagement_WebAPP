@@ -1,93 +1,43 @@
-<!-- components/department-list/department-list.component.html -->
-
 <div class="department-list-container">
   <!-- Header -->
   <div class="page-header">
     <div class="header-content">
-      <h1 class="page-title">Departments</h1>
+      <h1 class="page-title">Department Management</h1>
       <p class="page-subtitle">Manage your organization's departments</p>
     </div>
-    <button class="btn btn-primary" (click)="createDepartment()">
-      <i class="icon-plus"></i>
-      Create Department
-    </button>
   </div>
 
-  <!-- Filters -->
-  <div class="filters-section">
+  <!-- Search and Action Buttons -->
+  <div class="search-action-section">
     <div class="search-bar">
-      <i class="icon-search"></i>
+      <i class="bi bi-search search-icon"></i>
       <input
         type="text"
         placeholder="Search departments..."
         [(ngModel)]="searchTerm"
-        (keyup.enter)="onSearch()"
+        (keyup)="onSearch()"
         class="search-input"
       />
-      <button *ngIf="searchTerm" (click)="searchTerm = ''; onSearch()" class="clear-btn">
-        <i class="icon-x"></i>
-      </button>
     </div>
 
-    <button class="btn btn-outline" (click)="showFilters = !showFilters">
-      <i class="icon-filter"></i>
-      Filters
-      <span *ngIf="isActiveFilter !== null || rootLevelOnly" class="filter-badge">Active</span>
+    <button class="btn btn-clear" (click)="clearSearch()">
+      <i class="bi bi-funnel"></i>
+      Clear
     </button>
 
-    <button class="btn btn-outline" (click)="loadDepartments()">
-      <i class="icon-refresh"></i>
+    <button class="btn btn-refresh" (click)="loadDepartments()">
+      <i class="bi bi-arrow-clockwise"></i>
       Refresh
     </button>
-  </div>
 
-  <!-- Advanced Filters -->
-  <div class="advanced-filters" *ngIf="showFilters">
-    <div class="filter-grid">
-      <div class="filter-item">
-        <label>Status</label>
-        <select [(ngModel)]="isActiveFilter" (change)="onFilterChange()" class="filter-select">
-          <option [ngValue]="null">All</option>
-          <option [ngValue]="true">Active Only</option>
-          <option [ngValue]="false">Inactive Only</option>
-        </select>
-      </div>
+    <button class="btn btn-export" (click)="exportToExcel()">
+      <i class="bi bi-download"></i>
+      Export
+    </button>
 
-      <div class="filter-item">
-        <label>Level</label>
-        <div class="checkbox-wrapper">
-          <input
-            type="checkbox"
-            id="rootOnly"
-            [(ngModel)]="rootLevelOnly"
-            (change)="onFilterChange()"
-          />
-          <label for="rootOnly">Root Level Only</label>
-        </div>
-      </div>
-
-      <div class="filter-item">
-        <label>Sort By</label>
-        <select [(ngModel)]="sortBy" (change)="onFilterChange()" class="filter-select">
-          <option value="DepartmentName">Name</option>
-          <option value="DepartmentCode">Code</option>
-          <option value="DisplayOrder">Display Order</option>
-          <option value="CreatedAt">Created Date</option>
-          <option value="UpdatedAt">Updated Date</option>
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label>Direction</label>
-        <select [(ngModel)]="sortDirection" (change)="onFilterChange()" class="filter-select">
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-      </div>
-    </div>
-
-    <button class="btn btn-text" (click)="clearFilters()">
-      Clear All Filters
+    <button class="btn btn-primary" (click)="createDepartment()">
+      <i class="bi bi-plus-circle"></i>
+      Add Department
     </button>
   </div>
 
@@ -99,135 +49,55 @@
 
   <!-- Error State -->
   <div *ngIf="error && !loading" class="error-state">
-    <i class="icon-alert-circle"></i>
+    <i class="bi bi-exclamation-circle"></i>
     <p>{{ error }}</p>
-    <button class="btn btn-outline" (click)="loadDepartments()">Try Again</button>
+    <button class="btn btn-outline" (click)="loadDepartments()">
+      Try Again
+    </button>
   </div>
 
-  <!-- Table -->
-  <div *ngIf="!loading && !error" class="table-container">
-    <table class="departments-table">
-      <thead>
-        <tr>
-          <th class="checkbox-cell">
-            <input
-              type="checkbox"
-              [checked]="selectedDepartments.size === departments.length && departments.length > 0"
-              (change)="selectAll()"
-            />
-          </th>
-          <th (click)="onSort('DepartmentCode')" class="sortable">
-            Code
-            <i class="sort-icon" [class.active]="sortBy === 'DepartmentCode'"></i>
-          </th>
-          <th (click)="onSort('DepartmentName')" class="sortable">
-            Department Name
-            <i class="sort-icon" [class.active]="sortBy === 'DepartmentName'"></i>
-          </th>
-          <th>Parent Department</th>
-          <th>Head of Department</th>
-          <th class="text-center">Employees</th>
-          <th class="text-center">Sub-Depts</th>
-          <th class="text-center">Status</th>
-          <th class="text-center">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let dept of departments" [class.selected]="selectedDepartments.has(dept.departmentId)">
-          <td class="checkbox-cell">
-            <input
-              type="checkbox"
-              [checked]="selectedDepartments.has(dept.departmentId)"
-              (change)="toggleSelection(dept.departmentId)"
-            />
-          </td>
-          <td>
-            <span class="dept-code">{{ dept.departmentCode }}</span>
-          </td>
-          <td>
-            <div class="dept-name-cell">
-              <span class="dept-name">{{ dept.departmentName }}</span>
-              <span *ngIf="dept.description" class="dept-description">{{ dept.description }}</span>
-            </div>
-          </td>
-          <td>
-            <span *ngIf="dept.parentDepartmentName" class="parent-dept">
-              {{ dept.parentDepartmentName }}
-            </span>
-            <span *ngIf="!dept.parentDepartmentName" class="text-muted">—</span>
-          </td>
-          <td>
-            <span *ngIf="dept.headOfDepartmentName" class="head-name">
-              {{ dept.headOfDepartmentName }}
-            </span>
-            <span *ngIf="!dept.headOfDepartmentName" class="text-muted">—</span>
-          </td>
-          <td class="text-center">
-            <span class="badge badge-info">{{ dept.employeeCount }}</span>
-          </td>
-          <td class="text-center">
-            <span class="badge badge-secondary">{{ dept.childDepartmentCount }}</span>
-          </td>
-          <td class="text-center">
-            <span class="status-badge" [class.active]="dept.isActive" [class.inactive]="!dept.isActive">
-              {{ dept.isActive ? 'Active' : 'Inactive' }}
-            </span>
-          </td>
-          <td class="actions-cell">
-            <div class="action-buttons">
-              <button
-                class="btn-icon"
-                (click)="viewDetails(dept)"
-                title="View Details"
-              >
-                <i class="icon-eye"></i>
-              </button>
-              <button
-                class="btn-icon"
-                (click)="editDepartment(dept)"
-                title="Edit"
-              >
-                <i class="icon-edit"></i>
-              </button>
-              <button
-                class="btn-icon"
-                (click)="toggleStatus(dept)"
-                [title]="dept.isActive ? 'Deactivate' : 'Activate'"
-              >
-                <i [class]="dept.isActive ? 'icon-toggle-right' : 'icon-toggle-left'"></i>
-              </button>
-              <button
-                class="btn-icon btn-danger"
-                (click)="deleteDepartment(dept)"
-                title="Delete"
-              >
-                <i class="icon-trash"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
+  <!-- AG Grid Table -->
+  <div *ngIf="!loading && !error" class="grid-container">
     <!-- Empty State -->
     <div *ngIf="departments.length === 0" class="empty-state">
-      <i class="icon-inbox"></i>
+      <i class="bi bi-inbox"></i>
       <h3>No departments found</h3>
       <p>Try adjusting your filters or create a new department</p>
       <button class="btn btn-primary" (click)="createDepartment()">
         Create Department
       </button>
     </div>
+
+    <!-- AG Grid -->
+    <ag-grid-angular
+      *ngIf="departments.length > 0"
+      class="ag-theme-quartz"
+      [rowData]="departments"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      [gridOptions]="gridOptions"
+      (gridReady)="onGridReady($event)"
+      [rowHeight]="60"
+      [headerHeight]="50"
+      [domLayout]="'autoHeight'"
+    >
+    </ag-grid-angular>
   </div>
 
   <!-- Pagination -->
   <div *ngIf="!loading && departments.length > 0" class="pagination-container">
     <div class="pagination-info">
-      Showing {{ ((currentPage - 1) * pageSize) + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} departments
+      Showing {{ (currentPage - 1) * pageSize + 1 }} to
+      {{ Math.min(currentPage * pageSize, totalCount) }} of
+      {{ totalCount }} departments
     </div>
 
     <div class="pagination-controls">
-      <select [(ngModel)]="pageSize" (change)="onPageSizeChange($event)" class="page-size-select">
+      <select
+        [(ngModel)]="pageSize"
+        (change)="onPageSizeChange($event)"
+        class="page-size-select"
+      >
         <option [value]="10">10 per page</option>
         <option [value]="25">25 per page</option>
         <option [value]="50">50 per page</option>
@@ -240,14 +110,14 @@
           [disabled]="currentPage === 1"
           (click)="onPageChange(1)"
         >
-          <i class="icon-chevrons-left"></i>
+          <i class="bi bi-chevron-bar-left"></i>
         </button>
         <button
           class="btn-page"
           [disabled]="currentPage === 1"
           (click)="onPageChange(currentPage - 1)"
         >
-          <i class="icon-chevron-left"></i>
+          <i class="bi bi-chevron-left"></i>
         </button>
 
         <button
@@ -264,16 +134,32 @@
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(currentPage + 1)"
         >
-          <i class="icon-chevron-right"></i>
+          <i class="bi bi-chevron-right"></i>
         </button>
         <button
           class="btn-page"
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(totalPages)"
         >
-          <i class="icon-chevrons-right"></i>
+          <i class="bi bi-chevron-bar-right"></i>
         </button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal for Department Form -->
+<div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeFormModal()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <app-department-form
+      [isModal]="true"
+      [departmentId]="selectedDepartmentId"
+      [isEditMode]="formMode === 'edit'"
+      (formCancelled)="closeFormModal()"
+      (formSubmitted)="onFormSuccess()"
+    ></app-department-form>
   </div>
 </div>

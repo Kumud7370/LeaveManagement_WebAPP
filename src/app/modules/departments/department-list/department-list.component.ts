@@ -2,17 +2,24 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AgGridAngular } from 'ag-grid-angular';
+import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { DepartmentService } from '../../../core/services/api/department.api';
 import {
   Department,
   DepartmentFilterRequest,
   PaginatedResponse
 } from '../../../../app/core/Models/department.model';
+import Swal from 'sweetalert2';
+import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
+import { StatusCellRendererComponent } from '../../../shared/status-cell-renderer.component';
+import { DepartmentFormComponent } from '../department-form/department-form.component';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-department-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AgGridAngular, DepartmentFormComponent],
   templateUrl: './department-list.component.html',
   styleUrls: ['./department-list.component.scss']
 })
@@ -27,6 +34,7 @@ export class DepartmentListComponent implements OnInit {
   totalPages = 0;
   totalCount = 0;
   
+  
   // Filters
   searchTerm = '';
   isActiveFilter: boolean | null = null;
@@ -38,16 +46,139 @@ export class DepartmentListComponent implements OnInit {
   showFilters = false;
   selectedDepartments: Set<string> = new Set();
 
+  // Modal States
+  showFormModal = false;
+  formMode: 'create' | 'edit' = 'create';
+  selectedDepartmentId: string | null = null;
+
+  // AG Grid
+  columnDefs: ColDef[] = [];
+  defaultColDef: ColDef = {
+    sortable: true,
+    filter: true,
+    resizable: true,
+    flex: 1,
+    minWidth: 100,
+  };
+  gridOptions: GridOptions = {
+    pagination: false,
+    rowSelection: 'multiple',
+    suppressRowClickSelection: true,
+    domLayout: 'autoHeight',
+    context: { componentParent: this }
+  };
+
   // Make Math available in template
   Math = Math;
 
   constructor(
     private departmentService: DepartmentService,
     private router: Router
-  ) {}
+  ) {
+    this.initializeColumnDefs();
+  }
 
   ngOnInit(): void {
     this.loadDepartments();
+    this.loadStats();
+  }
+
+  initializeColumnDefs(): void {
+    this.columnDefs = [
+      {
+        headerName: 'ACTIONS',
+        width: 150,
+        cellRenderer: ActionCellRendererComponent,
+        sortable: false,
+        filter: false,
+        pinned: 'left',
+        cellStyle: { textAlign: 'center' }
+      },
+      {
+        headerName: 'CODE',
+        field: 'departmentCode',
+        width: 140,
+        cellClass: 'dept-code-cell',
+        cellStyle: { 
+          fontFamily: 'Monaco, Courier New, monospace',
+          fontWeight: '600'
+        }
+      },
+      {
+        headerName: 'DEPARTMENT NAME',
+        field: 'departmentName',
+        width: 280,
+        cellRenderer: (params: any) => {
+          if (!params.value) return '';
+          const description = params.data.description 
+            ? `<span class="dept-description">${params.data.description}</span>` 
+            : '';
+          return `
+            <div class="dept-name-cell">
+              <span class="dept-name">${params.value}</span>
+              ${description}
+            </div>
+          `;
+        }
+      },
+      {
+        headerName: 'PARENT DEPARTMENT',
+        field: 'parentDepartmentName',
+        width: 200,
+        valueFormatter: (params) => params.value || '—'
+      },
+      {
+        headerName: 'HEAD OF DEPARTMENT',
+        field: 'headOfDepartmentName',
+        width: 220,
+        valueFormatter: (params) => params.value || '—'
+      },
+      {
+        headerName: 'EMPLOYEES',
+        field: 'employeeCount',
+        width: 120,
+        type: 'numericColumn',
+        cellStyle: { textAlign: 'center' },
+        cellRenderer: (params: any) => {
+          return `<span class="badge badge-info">${params.value || 0}</span>`;
+        }
+      },
+      {
+        headerName: 'SUB-DEPTS',
+        field: 'childDepartmentCount',
+        width: 120,
+        type: 'numericColumn',
+        cellStyle: { textAlign: 'center' },
+        cellRenderer: (params: any) => {
+          return `<span class="badge badge-secondary">${params.value || 0}</span>`;
+        }
+      },
+      {
+        headerName: 'STATUS',
+        field: 'isActive',
+        width: 120,
+        cellRenderer: StatusCellRendererComponent,
+        cellStyle: { textAlign: 'center' }
+      },
+      {
+        headerName: 'CREATED',
+        field: 'createdAt',
+        width: 140,
+        valueFormatter: (params) => {
+          if (!params.value) return '—';
+          const date = new Date(params.value);
+          return date.toLocaleDateString('en-US', { 
+            day: 'numeric', 
+            month: 'short', 
+            year: 'numeric' 
+          });
+        }
+      }
+    ];
+  }
+
+  onGridReady(params: GridReadyEvent): void {
+    params.api.sizeColumnsToFit();
   }
 
   loadDepartments(): void {
@@ -84,23 +215,116 @@ export class DepartmentListComponent implements OnInit {
     });
   }
 
+  loadStats(): void {
+    // Load all departments for stats calculation
+    const statsFilter: DepartmentFilterRequest = {
+      pageNumber: 1,
+      pageSize: 10000, // Get all departments for stats
+      sortBy: 'DepartmentName',
+      sortDirection: 'asc'
+    };
+
+  }
+  exportToExcel(): void {
+    if (this.departments.length === 0) {
+      Swal.fire({
+        title: 'No Data',
+        text: 'There are no departments to export.',
+        icon: 'info',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    // Show loading
+    Swal.fire({
+      title: 'Exporting...',
+      text: 'Please wait while we prepare your file.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Prepare data for export
+    const exportData = this.departments.map(dept => ({
+      'Department Code': dept.departmentCode,
+      'Department Name': dept.departmentName,
+      'Description': dept.description || '—',
+      'Parent Department': dept.parentDepartmentName || '—',
+      'Head of Department': dept.headOfDepartmentName || '—',
+      'Employees': dept.employeeCount || 0,
+      'Sub-Departments': dept.childDepartmentCount || 0,
+      'Status': dept.isActive ? 'Active' : 'Inactive',
+      'Display Order': dept.displayOrder || 0,
+      'Created At': dept.createdAt ? new Date(dept.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : '—',
+      'Updated At': dept.updatedAt ? new Date(dept.updatedAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : '—'
+    }));
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    
+    // Set column widths
+    const columnWidths = [
+      { wch: 18 }, // Department Code
+      { wch: 30 }, // Department Name
+      { wch: 40 }, // Description
+      { wch: 25 }, // Parent Department
+      { wch: 25 }, // Head of Department
+      { wch: 12 }, // Employees
+      { wch: 15 }, // Sub-Departments
+      { wch: 10 }, // Status
+      { wch: 14 }, // Display Order
+      { wch: 25 }, // Created At
+      { wch: 25 }  // Updated At
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Departments');
+
+    // Generate file name with timestamp
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const fileName = `Departments_Export_${timestamp}.xlsx`;
+
+    // Save file
+    XLSX.writeFile(workbook, fileName);
+
+    // Close loading and show success
+    Swal.fire({
+      title: 'Export Successful!',
+      text: `File "${fileName}" has been downloaded.`,
+      icon: 'success',
+      confirmButtonColor: '#3b82f6',
+      timer: 3000
+    });
+  }
+
   onSearch(): void {
+    this.currentPage = 1;
+    this.loadDepartments();
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
     this.currentPage = 1;
     this.loadDepartments();
   }
 
   onFilterChange(): void {
     this.currentPage = 1;
-    this.loadDepartments();
-  }
-
-  onSort(column: string): void {
-    if (this.sortBy === column) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = column;
-      this.sortDirection = 'asc';
-    }
     this.loadDepartments();
   }
 
@@ -120,57 +344,141 @@ export class DepartmentListComponent implements OnInit {
   }
 
   editDepartment(department: Department): void {
-    this.router.navigate(['/departments', 'edit', department.departmentId]);
+    this.formMode = 'edit';
+    this.selectedDepartmentId = department.departmentId;
+    this.showFormModal = true;
   }
 
   async toggleStatus(department: Department): Promise<void> {
-    if (confirm(`Are you sure you want to ${department.isActive ? 'deactivate' : 'activate'} this department?`)) {
+    const action = department.isActive ? 'deactivate' : 'activate';
+    
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you want to ${action} "${department.departmentName}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: `Yes, ${action} it!`,
+      cancelButtonText: 'Cancel'
+    });
+
+    if (result.isConfirmed) {
       this.departmentService.toggleDepartmentStatus(department.departmentId).subscribe({
         next: (response) => {
           if (response.success) {
+            Swal.fire({
+              title: 'Success!',
+              text: `Department has been ${action}d successfully.`,
+              icon: 'success',
+              confirmButtonColor: '#3b82f6',
+              timer: 2000
+            });
             this.loadDepartments();
+            this.loadStats();
           } else {
-            alert(response.message || 'Failed to update department status');
+            Swal.fire({
+              title: 'Error!',
+              text: response.message || 'Failed to update department status',
+              icon: 'error',
+              confirmButtonColor: '#ef4444'
+            });
           }
         },
         error: (err) => {
-          alert(err.error?.message || 'An error occurred');
+          Swal.fire({
+            title: 'Error!',
+            text: err.error?.message || 'An error occurred',
+            icon: 'error',
+            confirmButtonColor: '#ef4444'
+          });
         }
       });
     }
   }
 
   async deleteDepartment(department: Department): Promise<void> {
-    // First check if can delete
     this.departmentService.canDeleteDepartment(department.departmentId).subscribe({
-      next: (canDeleteResponse) => {
+      next: async (canDeleteResponse) => {
         if (canDeleteResponse.success && canDeleteResponse.data) {
-          if (confirm(`Are you sure you want to delete "${department.departmentName}"?`)) {
+          const result = await Swal.fire({
+            title: 'Are you sure?',
+            html: `You are about to delete <strong>"${department.departmentName}"</strong>.<br>This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+          });
+
+          if (result.isConfirmed) {
             this.departmentService.deleteDepartment(department.departmentId).subscribe({
               next: (response) => {
                 if (response.success) {
+                  Swal.fire({
+                    title: 'Deleted!',
+                    text: 'Department has been deleted successfully.',
+                    icon: 'success',
+                    confirmButtonColor: '#3b82f6',
+                    timer: 2000
+                  });
                   this.loadDepartments();
+                  this.loadStats();
                 } else {
-                  alert(response.message || 'Failed to delete department');
+                  Swal.fire({
+                    title: 'Error!',
+                    text: response.message || 'Failed to delete department',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                  });
                 }
               },
               error: (err) => {
-                alert(err.error?.message || 'An error occurred');
+                Swal.fire({
+                  title: 'Error!',
+                  text: err.error?.message || 'An error occurred',
+                  icon: 'error',
+                  confirmButtonColor: '#ef4444'
+                });
               }
             });
           }
         } else {
-          alert('Cannot delete this department. It has employees or child departments.');
+          Swal.fire({
+            title: 'Cannot Delete',
+            text: 'This department cannot be deleted. It has employees or child departments assigned.',
+            icon: 'warning',
+            confirmButtonColor: '#3b82f6'
+          });
         }
       },
       error: (err) => {
-        alert(err.error?.message || 'An error occurred');
+        Swal.fire({
+          title: 'Error!',
+          text: err.error?.message || 'An error occurred',
+          icon: 'error',
+          confirmButtonColor: '#ef4444'
+        });
       }
     });
   }
 
   createDepartment(): void {
-    this.router.navigate(['/departments', 'create']);
+    this.formMode = 'create';
+    this.selectedDepartmentId = null;
+    this.showFormModal = true;
+  }
+
+  closeFormModal(): void {
+    this.showFormModal = false;
+    this.selectedDepartmentId = null;
+  }
+
+  onFormSuccess(): void {
+    this.closeFormModal();
+    this.loadDepartments();
+    this.loadStats();
   }
 
   clearFilters(): void {
@@ -179,22 +487,6 @@ export class DepartmentListComponent implements OnInit {
     this.rootLevelOnly = false;
     this.currentPage = 1;
     this.loadDepartments();
-  }
-
-  toggleSelection(departmentId: string): void {
-    if (this.selectedDepartments.has(departmentId)) {
-      this.selectedDepartments.delete(departmentId);
-    } else {
-      this.selectedDepartments.add(departmentId);
-    }
-  }
-
-  selectAll(): void {
-    if (this.selectedDepartments.size === this.departments.length) {
-      this.selectedDepartments.clear();
-    } else {
-      this.departments.forEach(dept => this.selectedDepartments.add(dept.departmentId));
-    }
   }
 
   get hasSelection(): boolean {
