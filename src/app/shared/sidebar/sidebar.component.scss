@@ -519,6 +519,20 @@
         transform: translateY(0);
       }
 
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
       &.logout-btn {
         color: #ff6b6b;
         background: rgba(255, 107, 107, 0.1);
@@ -539,6 +553,6223 @@
     text-align: center;
     color: rgba(255, 255, 255, 0.5);
     margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
+  }
+}
+
+// Footer
+.sidebar-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    .footer-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 0.85rem;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // NEW: Pin Button Style
+      &.pin-btn {
+        color: #00ffcc;
+        background: rgba(0, 255, 204, 0.1);
+
+        &:hover {
+          background: rgba(0, 255, 204, 0.2);
+        }
+
+        i {
+          transition: transform 0.3s ease;
+        }
+      }
+
+      &.logout-btn {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+
+        &:hover {
+          background: rgba(255, 107, 107, 0.2);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+}
+
+// NEW: Footer Collapsed State
+.sidebar-footer-collapsed {
+  flex-shrink: 0;
+  padding: 1rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .footer-btn-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 204, 0.1);
+    border: none;
+    color: #00ffcc;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: rgba(0, 255, 204, 0.2);
+      transform: scale(1.05);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    i {
+      transition: transform 0.3s ease;
+    }
+  }
+}
+
+// NEW: Pinned state - prevent auto-collapse on hover leave
+.sidebar.pinned:not(.mobile) {
+  &:hover {
+    width: 260px;
   }
 }
 
