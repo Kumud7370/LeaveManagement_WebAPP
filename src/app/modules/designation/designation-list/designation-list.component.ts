@@ -6,7 +6,8 @@ import { Router } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridOptions } from 'ag-grid-community';
 import Swal from 'sweetalert2';
-import { DesignationService, DesignationResponseDto, DesignationFilterDto } from '../../../core/services/api/designation.api';
+import { DesignationService } from '../../../core/services/api/designation.api';
+import { DesignationResponseDto, DesignationFilterDto } from '../../../core/Models/designation.model';
 
 @Component({
   selector: 'app-designation-list',
@@ -312,7 +313,7 @@ export class DesignationListComponent implements OnInit {
     console.log('🔧 Opening edit modal for:', designation);
     this.isModalOpen = true;
     this.isEditMode = true;
-    this.selectedDesignationId = designation.designationId;  // Changed from id to designationId
+    this.selectedDesignationId = designation.designationId;
     this.isLoadingForm = true;
 
     this.designationService.getDesignationById(designation.designationId).subscribe({
