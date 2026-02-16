@@ -18,11 +18,14 @@ import { CommonModule } from '@angular/common';
   `,
   styles: [`
     .status-badge {
-      display: inline-block;
-      padding: 0.35rem 0.85rem;
-      border-radius: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.4rem 1rem;
+      border-radius: 0.5rem;
       font-size: 0.8rem;
       font-weight: 600;
+      text-transform: capitalize;
     }
 
     .status-badge.active {

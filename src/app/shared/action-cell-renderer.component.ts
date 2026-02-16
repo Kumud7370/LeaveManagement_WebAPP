@@ -10,13 +10,6 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="action-buttons">
       <button
-        class="btn-icon btn-view"
-        (click)="onView()"
-        title="View Details"
-      >
-        <i class="bi bi-eye"></i>
-      </button>
-      <button
         class="btn-icon btn-edit"
         (click)="onEdit()"
         title="Edit"
@@ -28,9 +21,7 @@ import { CommonModule } from '@angular/common';
         (click)="onToggleStatus()"
         [title]="params.data.isActive ? 'Deactivate' : 'Activate'"
       >
-        <i
-          [class]="params.data.isActive ? 'bi bi-toggle-on' : 'bi bi-toggle-off'"
-        ></i>
+        <i class="bi bi-power"></i>
       </button>
       <button
         class="btn-icon btn-delete"
@@ -51,60 +42,53 @@ import { CommonModule } from '@angular/common';
     }
 
     .btn-icon {
-      width: 2rem;
-      height: 2rem;
+      width: 2.25rem;
+      height: 2.25rem;
       border: none;
-      border-radius: 0.375rem;
+      border-radius: 0.5rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s;
-      font-size: 0.9rem;
-    }
+      font-size: 0.95rem;
 
-    .btn-view {
-      background: #dbeafe;
-      color: #1e40af;
-    }
-
-    .btn-view:hover {
-      background: #3b82f6;
-      color: white;
-      transform: scale(1.1);
+      i {
+        font-size: 0.95rem;
+      }
     }
 
     .btn-edit {
       background: #fef3c7;
       color: #92400e;
-    }
 
-    .btn-edit:hover {
-      background: #f59e0b;
-      color: white;
-      transform: scale(1.1);
+      &:hover {
+        background: #fde047;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(234, 179, 8, 0.3);
+      }
     }
 
     .btn-toggle {
-      background: #e0e7ff;
-      color: #4338ca;
-    }
+      background: #dbeafe;
+      color: #1e40af;
 
-    .btn-toggle:hover {
-      background: #6366f1;
-      color: white;
-      transform: scale(1.1);
+      &:hover {
+        background: #93c5fd;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+      }
     }
 
     .btn-delete {
       background: #fee2e2;
       color: #991b1b;
-    }
 
-    .btn-delete:hover {
-      background: #ef4444;
-      color: white;
-      transform: scale(1.1);
+      &:hover {
+        background: #fca5a5;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+      }
     }
   `]
 })
@@ -118,12 +102,6 @@ export class ActionCellRendererComponent implements ICellRendererAngularComp {
   refresh(params: ICellRendererParams): boolean {
     this.params = params;
     return true;
-  }
-
-  onView(): void {
-    if (this.params.context?.componentParent?.viewDetails) {
-      this.params.context.componentParent.viewDetails(this.params.data);
-    }
   }
 
   onEdit(): void {
