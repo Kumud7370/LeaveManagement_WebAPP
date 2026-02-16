@@ -7,242 +7,252 @@
     <div class="shape shape-3"></div>
   </div>
 
-  <!-- Register Card -->
+  <!-- Split Screen Card -->
   <div class="register-card">
-    <!-- Header -->
-    <div class="register-header">
-      <div class="logo-container">
-        <img src="assets/images/mcgmlogo.png" alt="App Logo" class="logo-image" />
-      </div>
-      <h1 class="register-title">Create Account</h1>
-      <p class="register-subtitle">Sign up to get started</p>
-    </div>
-
-    <!-- Registration Form -->
-    <form class="register-form" [formGroup]="registerForm" (ngSubmit)="onRegister()">
-      <!-- First Name -->
-      <div class="form-group">
-        <label for="firstName" class="form-label">
-          <i class="fas fa-user"></i>
-          First Name
-        </label>
-        <div class="input-wrapper">
-          <input 
-            type="text" 
-            id="firstName" 
-            formControlName="firstName" 
-            class="form-control" 
-            placeholder="Enter your first name"
-            autocomplete="given-name"
-            [disabled]="isLoading"
-          />
-          <div class="input-focus-border"></div>
-        </div>
-        <div *ngIf="f['firstName'].touched && f['firstName'].invalid" class="error-message">
-          <div *ngIf="f['firstName'].errors?.['required']">
-            <i class="fas fa-exclamation-circle"></i>
-            First name is required
-          </div>
-          <div *ngIf="f['firstName'].errors?.['minlength']">
-            <i class="fas fa-exclamation-circle"></i>
-            First name must be at least 2 characters
-          </div>
+    
+    <!-- LEFT SIDE - Form Section with Scrollbar -->
+    <div class="register-form-section">
+      <!-- Logo -->
+      <div class="register-logo">
+        <div class="logo-icon">
+          <img src="assets/images/mcgmlogo.png" alt="ABEL Logo" />
         </div>
       </div>
 
-      <!-- Last Name -->
-      <div class="form-group">
-        <label for="lastName" class="form-label">
-          <i class="fas fa-user"></i>
-          Last Name
-        </label>
-        <div class="input-wrapper">
-          <input 
-            type="text" 
-            id="lastName" 
-            formControlName="lastName" 
-            class="form-control" 
-            placeholder="Enter your last name"
-            autocomplete="family-name"
-            [disabled]="isLoading"
-          />
-          <div class="input-focus-border"></div>
-        </div>
-        <div *ngIf="f['lastName'].touched && f['lastName'].invalid" class="error-message">
-          <div *ngIf="f['lastName'].errors?.['required']">
-            <i class="fas fa-exclamation-circle"></i>
-            Last name is required
-          </div>
-          <div *ngIf="f['lastName'].errors?.['minlength']">
-            <i class="fas fa-exclamation-circle"></i>
-            Last name must be at least 2 characters
-          </div>
-        </div>
+      <!-- Header -->
+      <div class="register-header">
+        <h1 class="welcome-title">Create Account</h1>
+        <p class="welcome-subtitle">Please register to get started</p>
       </div>
 
-      <!-- Email -->
-      <div class="form-group">
-        <label for="email" class="form-label">
-          <i class="fas fa-envelope"></i>
-          Email Address
-        </label>
-        <div class="input-wrapper">
-          <input 
-            type="email" 
-            id="email" 
-            formControlName="email" 
-            class="form-control" 
-            placeholder="Enter your email"
-            autocomplete="email"
-            [disabled]="isLoading"
-          />
-          <div class="input-focus-border"></div>
-        </div>
-        <div *ngIf="f['email'].touched && f['email'].invalid" class="error-message">
-          <div *ngIf="f['email'].errors?.['required']">
-            <i class="fas fa-exclamation-circle"></i>
-            Email is required
+      <!-- Registration Form -->
+      <form class="register-form" [formGroup]="registerForm" (ngSubmit)="onRegister()">
+        <!-- First Name -->
+        <div class="form-group">
+          <label for="firstName" class="form-label">First Name</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="firstName" 
+              formControlName="firstName" 
+              class="form-control" 
+              placeholder="Enter your first name"
+              autocomplete="given-name"
+              [disabled]="isLoading"
+            />
           </div>
-          <div *ngIf="f['email'].errors?.['email']">
+          <div *ngIf="f['firstName'].touched && f['firstName'].invalid" class="error-message">
             <i class="fas fa-exclamation-circle"></i>
-            Please enter a valid email address
+            <span *ngIf="f['firstName'].errors?.['required']">First name is required</span>
           </div>
         </div>
-      </div>
 
-      <!-- Username -->
-      <div class="form-group">
-        <label for="username" class="form-label">
-          <i class="fas fa-user-circle"></i>
-          Username
-        </label>
-        <div class="input-wrapper">
-          <input 
-            type="text" 
-            id="username" 
-            formControlName="username" 
-            class="form-control" 
-            placeholder="Choose a username"
-            autocomplete="username"
-            [disabled]="isLoading"
-          />
-          <div class="input-focus-border"></div>
-        </div>
-        <div *ngIf="f['username'].touched && f['username'].invalid" class="error-message">
-          <div *ngIf="f['username'].errors?.['required']">
-            <i class="fas fa-exclamation-circle"></i>
-            Username is required
+        <!-- Last Name -->
+        <div class="form-group">
+          <label for="lastName" class="form-label">Last Name</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="lastName" 
+              formControlName="lastName" 
+              class="form-control" 
+              placeholder="Enter your last name"
+              autocomplete="family-name"
+              [disabled]="isLoading"
+            />
           </div>
-          <div *ngIf="f['username'].errors?.['minlength']">
+          <div *ngIf="f['lastName'].touched && f['lastName'].invalid" class="error-message">
             <i class="fas fa-exclamation-circle"></i>
-            Username must be at least 3 characters
+            <span *ngIf="f['lastName'].errors?.['required']">Last name is required</span>
           </div>
         </div>
-      </div>
 
-      <!-- Password -->
-      <div class="form-group">
-        <label for="password" class="form-label">
-          <i class="fas fa-lock"></i>
-          Password
-        </label>
-        <div class="input-wrapper">
-          <input 
-            [type]="showPassword ? 'text' : 'password'" 
-            id="password" 
-            formControlName="password" 
-            class="form-control" 
-            placeholder="Create a password"
-            autocomplete="new-password"
-            [disabled]="isLoading"
-          />
-          <button 
-            type="button" 
-            class="password-toggle" 
-            (click)="togglePasswordVisibility('password')"
-            aria-label="Toggle password visibility"
-          >
-            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-          </button>
-          <div class="input-focus-border"></div>
-        </div>
-        <div *ngIf="f['password'].touched && f['password'].invalid" class="error-message">
-          <div *ngIf="f['password'].errors?.['required']">
-            <i class="fas fa-exclamation-circle"></i>
-            Password is required
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <div class="input-wrapper">
+            <input 
+              type="email" 
+              id="email" 
+              formControlName="email" 
+              class="form-control" 
+              placeholder="johndoe@gmail.com"
+              autocomplete="email"
+              [disabled]="isLoading"
+            />
           </div>
-          <div *ngIf="f['password'].errors?.['minlength']">
+          <div *ngIf="f['email'].touched && f['email'].invalid" class="error-message">
             <i class="fas fa-exclamation-circle"></i>
-            Password must be at least 6 characters
+            <span *ngIf="f['email'].errors?.['required']">Email is required</span>
+            <span *ngIf="f['email'].errors?.['email']">Please enter a valid email</span>
           </div>
         </div>
-      </div>
 
-      <!-- Confirm Password -->
-      <div class="form-group">
-        <label for="confirmPassword" class="form-label">
-          <i class="fas fa-lock"></i>
-          Confirm Password
-        </label>
-        <div class="input-wrapper">
-          <input 
-            [type]="showConfirmPassword ? 'text' : 'password'" 
-            id="confirmPassword" 
-            formControlName="confirmPassword" 
-            class="form-control" 
-            placeholder="Confirm your password"
-            autocomplete="new-password"
-            [disabled]="isLoading"
-          />
-          <button 
-            type="button" 
-            class="password-toggle" 
-            (click)="togglePasswordVisibility('confirm')"
-            aria-label="Toggle password visibility"
-          >
-            <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-          </button>
-          <div class="input-focus-border"></div>
+        <!-- Username -->
+        <div class="form-group">
+          <label for="username" class="form-label">Username</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="username" 
+              formControlName="username" 
+              class="form-control" 
+              placeholder="Choose a username"
+              autocomplete="username"
+              [disabled]="isLoading"
+            />
+          </div>
+          <div *ngIf="f['username'].touched && f['username'].invalid" class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span *ngIf="f['username'].errors?.['required']">Username is required</span>
+          </div>
         </div>
-        <div *ngIf="registerForm.errors?.['passwordMismatch'] && f['confirmPassword'].touched" class="error-message">
-          <i class="fas fa-exclamation-circle"></i>
-          Passwords do not match
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-wrapper">
+            <input 
+              [type]="showPassword ? 'text' : 'password'" 
+              id="password" 
+              formControlName="password" 
+              class="form-control" 
+              placeholder="Create a password"
+              autocomplete="new-password"
+              [disabled]="isLoading"
+            />
+            <button 
+              type="button" 
+              class="password-toggle" 
+              (click)="togglePasswordVisibility('password')"
+              aria-label="Toggle password visibility"
+            >
+              <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <div *ngIf="f['password'].touched && f['password'].invalid" class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span *ngIf="f['password'].errors?.['required']">Password is required</span>
+            <span *ngIf="f['password'].errors?.['minlength']">Password must be at least 6 characters</span>
+          </div>
         </div>
-      </div>
 
-      <!-- Register Button -->
-      <button type="submit" class="register-button" [disabled]="registerForm.invalid || isLoading">
-        <span *ngIf="!isLoading" class="button-content">
-          <i class="fas fa-user-plus"></i>
-          Create Account
-        </span>
-        <span *ngIf="isLoading" class="button-loading">
-          <i class="fas fa-spinner fa-spin"></i>
-          Creating Account...
-        </span>
-      </button>
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <label for="confirmPassword" class="form-label">Confirm Password</label>
+          <div class="input-wrapper">
+            <input 
+              [type]="showConfirmPassword ? 'text' : 'password'" 
+              id="confirmPassword" 
+              formControlName="confirmPassword" 
+              class="form-control" 
+              placeholder="Confirm your password"
+              autocomplete="new-password"
+              [disabled]="isLoading"
+            />
+            <button 
+              type="button" 
+              class="password-toggle" 
+              (click)="togglePasswordVisibility('confirm')"
+              aria-label="Toggle password visibility"
+            >
+              <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <div *ngIf="registerForm.errors?.['passwordMismatch'] && f['confirmPassword'].touched" class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            Passwords do not match
+          </div>
+        </div>
 
-      <!-- Error Message -->
-      <div *ngIf="error" class="alert alert-error">
-        <i class="fas fa-exclamation-triangle"></i>
-        {{ error }}
-      </div>
-
-      <!-- Success Message -->
-      <div *ngIf="success" class="alert alert-success">
-        <i class="fas fa-check-circle"></i>
-        {{ success }}
-      </div>
-    </form>
-
-    <!-- Footer -->
-    <div class="register-footer">
-      <p class="footer-text">
-        Already have an account?
-        <button type="button" (click)="navigateToLogin()" class="login-link">
-          Login
+        <!-- Register Button -->
+        <button type="submit" class="register-button" [disabled]="registerForm.invalid || isLoading">
+          <span *ngIf="!isLoading" class="button-content">
+            Create Account
+          </span>
+          <span *ngIf="isLoading" class="button-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            Creating Account...
+          </span>
         </button>
-      </p>
+
+        <!-- Error/Success Messages -->
+        <div *ngIf="error" class="alert alert-error">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{ error }}
+        </div>
+
+        <div *ngIf="success" class="alert alert-success">
+          <i class="fas fa-check-circle"></i>
+          {{ success }}
+        </div>
+      </form>
+
+      <!-- Social Login -->
+      <div class="social-login">
+        <div class="social-divider">
+          <span>Or continue with</span>
+        </div>
+        <div class="social-buttons">
+          <button type="button" class="social-btn" title="Continue with Google">
+            <i class="fab fa-google"></i>
+          </button>
+          <button type="button" class="social-btn" title="Continue with GitHub">
+            <i class="fab fa-github"></i>
+          </button>
+          <button type="button" class="social-btn" title="Continue with Facebook">
+            <i class="fab fa-facebook-f"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="register-footer">
+        <p>
+          Already have an account?
+          <button type="button" (click)="navigateToLogin()">
+            Login
+          </button>
+        </p>
+      </div>
     </div>
+
+    <!-- RIGHT SIDE - Welcome Section -->
+    <div class="register-testimonial-section">
+      <!-- Welcome Content -->
+      <div class="welcome-content">
+        <div class="welcome-icon">
+          <img src="assets/images/mcgmlogo.png" alt="ABEL" />
+          <!-- Or use an icon: <i class="fas fa-user-plus"></i> -->
+        </div>
+
+        <h2 class="welcome-title">Welcome to ABEL</h2>
+        
+        <p class="welcome-description">
+          Join thousands of organizations using ABEL for efficient attendance management 
+          and workforce tracking. Start your journey with us today.
+        </p>
+
+        <div class="welcome-features">
+          <div class="feature-item">
+            <i class="fas fa-users"></i>
+            <p class="feature-title">Team Management</p>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-calendar-check"></i>
+            <p class="feature-title">Smart Scheduling</p>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-file-alt"></i>
+            <p class="feature-title">Detailed Reports</p>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-headset"></i>
+            <p class="feature-title">24/7 Support</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
