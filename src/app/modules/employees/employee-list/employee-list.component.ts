@@ -89,7 +89,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     };
     gridOptions: GridOptions = {
         pagination: false,
-        rowSelection: 'multiple',
+        rowSelection: undefined,
         suppressRowClickSelection: true,
         domLayout: 'autoHeight',
         context: { componentParent: this }
@@ -127,18 +127,21 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
 
     initializeColumnDefs(): void {
         this.columnDefs = [
+            // Actions column FIRST
             {
-                headerName: '',
-                checkboxSelection: true,
-                headerCheckboxSelection: true,
-                width: 50,
-                minWidth: 50,
-                maxWidth: 50,
-                pinned: 'left',
-                lockPosition: true,
+                headerName: 'Actions',
+                width: 150,
+                minWidth: 150,
+                maxWidth: 150,
+                cellRenderer: ActionCellRendererComponent,
                 sortable: false,
                 filter: false,
-                resizable: false
+                pinned: 'left',
+                cellStyle: { 
+                    textAlign: 'center',
+                    justifyContent: 'center',
+                    padding: '0 8px'
+                }
             },
             {
                 headerName: 'Employee',
@@ -250,21 +253,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
                 minWidth: 140,
                 valueFormatter: (params) => this.formatDate(params.value),
                 cellStyle: { color: '#6b7280', fontSize: '12px' }
-            },
-            {
-                headerName: 'Actions',
-                width: 150,
-                minWidth: 150,
-                maxWidth: 150,
-                cellRenderer: ActionCellRendererComponent,
-                sortable: false,
-                filter: false,
-                pinned: 'right',
-                cellStyle: { 
-                    textAlign: 'center',
-                    justifyContent: 'center',
-                    padding: '0 8px'
-                }
             }
         ];
     }
@@ -404,6 +392,87 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         this.formMode = 'edit';
         this.selectedEmployeeId = employee.id;
         this.showFormModal = true;
+    }
+
+    // FIXED: Toggle Status Method for Active/Inactive button
+    async toggleStatus(employee: EmployeeResponseDto): Promise<void> {
+        if (!employee || !employee.id) return;
+
+        // Determine current status and new status
+        const isCurrentlyActive = employee.employeeStatus === EmployeeStatus.Active;
+        const newStatus = isCurrentlyActive ? EmployeeStatus.Inactive : EmployeeStatus.Active;
+        const statusText = isCurrentlyActive ? 'deactivate' : 'activate';
+        const statusAction = isCurrentlyActive ? 'deactivated' : 'activated';
+
+        console.log('Toggle Status Debug:');
+        console.log('Employee:', employee);
+        console.log('Current Status:', employee.employeeStatus);
+        console.log('EmployeeStatus.Active:', EmployeeStatus.Active);
+        console.log('Is Currently Active:', isCurrentlyActive);
+        console.log('New Status:', newStatus);
+        console.log('Status Text:', statusText);
+
+        const result = await Swal.fire({
+            title: 'Change Employee Status?',
+            html: `Do you want to <strong>${statusText}</strong> employee "${employee?.fullName}"?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: `Yes, ${statusText}!`,
+            cancelButtonText: 'Cancel'
+        });
+
+        if (result.isConfirmed) {
+            // Create update DTO with new status
+            const updateDto = {
+                firstName: employee.firstName,
+                middleName: employee.middleName,
+                lastName: employee.lastName,
+                dateOfBirth: employee.dateOfBirth,
+                gender: employee.gender,
+                email: employee.email,
+                phoneNumber: employee.phoneNumber,
+                alternatePhoneNumber: employee.alternatePhoneNumber,
+                address: employee.address,
+                departmentId: employee.departmentId,
+                designationId: employee.designationId,
+                managerId: employee.managerId,
+                dateOfJoining: employee.dateOfJoining,
+                dateOfLeaving: employee.dateOfLeaving,
+                employmentType: employee.employmentType,
+                employeeStatus: newStatus, // This is the changed field
+                profileImageUrl: employee.profileImageUrl,
+                biometricId: employee.biometricId
+            };
+
+            console.log('Sending update DTO:', updateDto);
+
+            this.employeeService.updateEmployee(employee.id, updateDto)
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                    next: () => {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: `Employee has been ${statusAction} successfully.`,
+                            icon: 'success',
+                            confirmButtonColor: '#3b82f6',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        this.loadEmployees();
+                    },
+                    error: (error: any) => {
+                        console.error('Error changing employee status:', error);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: error.error?.message || 'Failed to change employee status.',
+                            icon: 'error',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    }
+                });
+        }
     }
 
     async deleteDepartment(employee: EmployeeResponseDto): Promise<void> {
