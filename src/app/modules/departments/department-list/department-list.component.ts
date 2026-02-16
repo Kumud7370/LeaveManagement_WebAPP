@@ -14,6 +14,7 @@ import Swal from 'sweetalert2';
 import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
 import { StatusCellRendererComponent } from '../../../shared/status-cell-renderer.component';
 import { DepartmentFormComponent } from '../department-form/department-form.component';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-department-list',
@@ -32,6 +33,7 @@ export class DepartmentListComponent implements OnInit {
   pageSize = 10;
   totalPages = 0;
   totalCount = 0;
+  
   
   // Filters
   searchTerm = '';
@@ -78,37 +80,34 @@ export class DepartmentListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDepartments();
+    this.loadStats();
   }
 
   initializeColumnDefs(): void {
     this.columnDefs = [
       {
-        headerName: '',
-        checkboxSelection: true,
-        headerCheckboxSelection: true,
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
-        pinned: 'left',
-        lockPosition: true,
+        headerName: 'ACTIONS',
+        width: 150,
+        cellRenderer: ActionCellRendererComponent,
         sortable: false,
         filter: false,
-        resizable: false
+        pinned: 'left',
+        cellStyle: { textAlign: 'center' }
       },
       {
-        headerName: 'Code',
+        headerName: 'CODE',
         field: 'departmentCode',
-        width: 120,
+        width: 140,
+        cellClass: 'dept-code-cell',
         cellStyle: { 
           fontFamily: 'Monaco, Courier New, monospace',
           fontWeight: '600'
-        },
-        cellClass: 'dept-code-cell'
+        }
       },
       {
-        headerName: 'Department Name',
+        headerName: 'DEPARTMENT NAME',
         field: 'departmentName',
-        width: 250,
+        width: 280,
         cellRenderer: (params: any) => {
           if (!params.value) return '';
           const description = params.data.description 
@@ -123,19 +122,19 @@ export class DepartmentListComponent implements OnInit {
         }
       },
       {
-        headerName: 'Parent Department',
+        headerName: 'PARENT DEPARTMENT',
         field: 'parentDepartmentName',
         width: 200,
         valueFormatter: (params) => params.value || '—'
       },
       {
-        headerName: 'Head of Department',
+        headerName: 'HEAD OF DEPARTMENT',
         field: 'headOfDepartmentName',
-        width: 200,
+        width: 220,
         valueFormatter: (params) => params.value || '—'
       },
       {
-        headerName: 'Employees',
+        headerName: 'EMPLOYEES',
         field: 'employeeCount',
         width: 120,
         type: 'numericColumn',
@@ -145,7 +144,7 @@ export class DepartmentListComponent implements OnInit {
         }
       },
       {
-        headerName: 'Sub-Depts',
+        headerName: 'SUB-DEPTS',
         field: 'childDepartmentCount',
         width: 120,
         type: 'numericColumn',
@@ -155,20 +154,25 @@ export class DepartmentListComponent implements OnInit {
         }
       },
       {
-        headerName: 'Status',
+        headerName: 'STATUS',
         field: 'isActive',
         width: 120,
         cellRenderer: StatusCellRendererComponent,
         cellStyle: { textAlign: 'center' }
       },
       {
-        headerName: 'Actions',
-        width: 200,
-        cellRenderer: ActionCellRendererComponent,
-        sortable: false,
-        filter: false,
-        pinned: 'right',
-        cellStyle: { textAlign: 'center' }
+        headerName: 'CREATED',
+        field: 'createdAt',
+        width: 140,
+        valueFormatter: (params) => {
+          if (!params.value) return '—';
+          const date = new Date(params.value);
+          return date.toLocaleDateString('en-US', { 
+            day: 'numeric', 
+            month: 'short', 
+            year: 'numeric' 
+          });
+        }
       }
     ];
   }
@@ -208,6 +212,103 @@ export class DepartmentListComponent implements OnInit {
         this.error = err.error?.message || 'An error occurred while loading departments';
         this.loading = false;
       }
+    });
+  }
+
+  loadStats(): void {
+    // Load all departments for stats calculation
+    const statsFilter: DepartmentFilterRequest = {
+      pageNumber: 1,
+      pageSize: 10000, // Get all departments for stats
+      sortBy: 'DepartmentName',
+      sortDirection: 'asc'
+    };
+
+  }
+  exportToExcel(): void {
+    if (this.departments.length === 0) {
+      Swal.fire({
+        title: 'No Data',
+        text: 'There are no departments to export.',
+        icon: 'info',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    // Show loading
+    Swal.fire({
+      title: 'Exporting...',
+      text: 'Please wait while we prepare your file.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Prepare data for export
+    const exportData = this.departments.map(dept => ({
+      'Department Code': dept.departmentCode,
+      'Department Name': dept.departmentName,
+      'Description': dept.description || '—',
+      'Parent Department': dept.parentDepartmentName || '—',
+      'Head of Department': dept.headOfDepartmentName || '—',
+      'Employees': dept.employeeCount || 0,
+      'Sub-Departments': dept.childDepartmentCount || 0,
+      'Status': dept.isActive ? 'Active' : 'Inactive',
+      'Display Order': dept.displayOrder || 0,
+      'Created At': dept.createdAt ? new Date(dept.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : '—',
+      'Updated At': dept.updatedAt ? new Date(dept.updatedAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : '—'
+    }));
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    
+    // Set column widths
+    const columnWidths = [
+      { wch: 18 }, // Department Code
+      { wch: 30 }, // Department Name
+      { wch: 40 }, // Description
+      { wch: 25 }, // Parent Department
+      { wch: 25 }, // Head of Department
+      { wch: 12 }, // Employees
+      { wch: 15 }, // Sub-Departments
+      { wch: 10 }, // Status
+      { wch: 14 }, // Display Order
+      { wch: 25 }, // Created At
+      { wch: 25 }  // Updated At
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Departments');
+
+    // Generate file name with timestamp
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const fileName = `Departments_Export_${timestamp}.xlsx`;
+
+    // Save file
+    XLSX.writeFile(workbook, fileName);
+
+    // Close loading and show success
+    Swal.fire({
+      title: 'Export Successful!',
+      text: `File "${fileName}" has been downloaded.`,
+      icon: 'success',
+      confirmButtonColor: '#3b82f6',
+      timer: 3000
     });
   }
 
@@ -274,6 +375,7 @@ export class DepartmentListComponent implements OnInit {
               timer: 2000
             });
             this.loadDepartments();
+            this.loadStats();
           } else {
             Swal.fire({
               title: 'Error!',
@@ -322,6 +424,7 @@ export class DepartmentListComponent implements OnInit {
                     timer: 2000
                   });
                   this.loadDepartments();
+                  this.loadStats();
                 } else {
                   Swal.fire({
                     title: 'Error!',
@@ -375,6 +478,7 @@ export class DepartmentListComponent implements OnInit {
   onFormSuccess(): void {
     this.closeFormModal();
     this.loadDepartments();
+    this.loadStats();
   }
 
   clearFilters(): void {

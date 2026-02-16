@@ -2,7 +2,7 @@
   <!-- Header -->
   <div class="page-header">
     <div class="header-content">
-      <h1 class="page-title">Departments</h1>
+      <h1 class="page-title">Department Management</h1>
       <p class="page-subtitle">Manage your organization's departments</p>
     </div>
   </div>
@@ -10,6 +10,7 @@
   <!-- Search and Action Buttons -->
   <div class="search-action-section">
     <div class="search-bar">
+      <i class="bi bi-search search-icon"></i>
       <input
         type="text"
         placeholder="Search departments..."
@@ -19,75 +20,24 @@
       />
     </div>
 
-    <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
+    <button class="btn btn-clear" (click)="clearSearch()">
+      <i class="bi bi-funnel"></i>
+      Clear
+    </button>
 
-    <button class="btn btn-refresh" (click)="loadDepartments()">Refresh</button>
+    <button class="btn btn-refresh" (click)="loadDepartments()">
+      <i class="bi bi-arrow-clockwise"></i>
+      Refresh
+    </button>
+
+    <button class="btn btn-export" (click)="exportToExcel()">
+      <i class="bi bi-download"></i>
+      Export
+    </button>
 
     <button class="btn btn-primary" (click)="createDepartment()">
       <i class="bi bi-plus-circle"></i>
       Add Department
-    </button>
-  </div>
-
-  <!-- Advanced Filters -->
-  <div class="advanced-filters" *ngIf="showFilters">
-    <div class="filter-grid">
-      <div class="filter-item">
-        <label>Status</label>
-        <select
-          [(ngModel)]="isActiveFilter"
-          (change)="onFilterChange()"
-          class="filter-select"
-        >
-          <option [ngValue]="null">All</option>
-          <option [ngValue]="true">Active Only</option>
-          <option [ngValue]="false">Inactive Only</option>
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label>Level</label>
-        <div class="checkbox-wrapper">
-          <input
-            type="checkbox"
-            id="rootOnly"
-            [(ngModel)]="rootLevelOnly"
-            (change)="onFilterChange()"
-          />
-          <label for="rootOnly">Root Level Only</label>
-        </div>
-      </div>
-
-      <div class="filter-item">
-        <label>Sort By</label>
-        <select
-          [(ngModel)]="sortBy"
-          (change)="onFilterChange()"
-          class="filter-select"
-        >
-          <option value="DepartmentName">Name</option>
-          <option value="DepartmentCode">Code</option>
-          <option value="DisplayOrder">Display Order</option>
-          <option value="CreatedAt">Created Date</option>
-          <option value="UpdatedAt">Updated Date</option>
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label>Direction</label>
-        <select
-          [(ngModel)]="sortDirection"
-          (change)="onFilterChange()"
-          class="filter-select"
-        >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-      </div>
-    </div>
-
-    <button class="btn btn-text" (click)="clearFilters()">
-      Clear All Filters
     </button>
   </div>
 
