@@ -49,6 +49,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   isExpanded = false
   isMobile = false
   activeRoute = ""
+  isPinned = false // NEW: Pin state
   private isUserInteraction = false
   private hoverTimeout: any
 
@@ -68,7 +69,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: "fas fa-users"
     },
     { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
-    { label: "Departments", route: "/departments", icon: "fas fa-sitemap" }, // NEW MENU ITEM
+    { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
     { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
     { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marked-alt" },
     { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
@@ -94,6 +95,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
+    
+    // NEW: Load pin state from localStorage
+    if (this.isBrowser) {
+      const savedPinState = localStorage.getItem('sidebarPinned');
+      this.isPinned = savedPinState === 'true';
+    }
   }
 
   ngOnInit() {
@@ -101,6 +108,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.checkScreenSize()
       this.setupUserProfile()
       this.setupMenuItems()
+      
+      // NEW: Set initial state based on pin
+      if (this.isPinned && !this.isMobile) {
+        this.sidebarService.expand()
+      }
     }
 
     this.subscriptions.push(
@@ -115,7 +127,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.activeRoute = event.urlAfterRedirects
           this.updateExpandedStates()
 
-          // Close mobile sidebar on navigation
           if (this.isMobile && this.isExpanded) {
             this.sidebarService.collapse()
           }
@@ -146,15 +157,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
       const wasMobile = this.isMobile
       this.isMobile = window.innerWidth < 768
 
-      // Handle transition between mobile and desktop
       if (wasMobile !== this.isMobile) {
         if (this.isMobile) {
           this.sidebarService.collapse()
           this.isUserInteraction = false
         } else {
-          // On desktop, start collapsed for hover-to-expand behavior
-          this.sidebarService.collapse()
-          this.isUserInteraction = false
+          // On desktop, respect pin state
+          if (this.isPinned) {
+            this.sidebarService.expand()
+          } else {
+            this.sidebarService.collapse()
+            this.isUserInteraction = false
+          }
         }
       }
     }
@@ -234,6 +248,27 @@ export class SidebarComponent implements OnInit, OnDestroy {
     });
   }
 
+  // NEW: Toggle Pin State
+  togglePin() {
+    this.isPinned = !this.isPinned;
+    this.isUserInteraction = this.isPinned;
+    
+    // Save pin state to localStorage
+    if (this.isBrowser) {
+      localStorage.setItem('sidebarPinned', String(this.isPinned));
+    }
+    
+    // If pinned, expand sidebar
+    if (this.isPinned) {
+      this.sidebarService.expand();
+    } else {
+      // If unpinned and mouse not hovering, collapse
+      if (!this.isExpanded) {
+        this.sidebarService.collapse();
+      }
+    }
+  }
+
   toggleSidebar() {
     this.isUserInteraction = true
     this.sidebarService.toggle()
@@ -242,13 +277,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
   onSidebarPointerEnter() {
     if (this.isMobile) return;
 
-    // Clear any pending collapse
     if (this.hoverTimeout) {
       clearTimeout(this.hoverTimeout)
     }
 
-    // Only expand on hover if user hasn't manually interacted
-    if (!this.isExpanded && !this.isUserInteraction) {
+    // Expand on hover if not pinned
+    if (!this.isExpanded && !this.isPinned) {
       this.sidebarService.expand()
     }
   }
@@ -256,9 +290,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   onSidebarPointerLeave() {
     if (this.isMobile) return;
 
-    // Only collapse if user hasn't manually expanded
-    if (this.isExpanded && !this.isUserInteraction) {
-      // Add small delay to prevent flickering
+    // Only collapse if not pinned
+    if (this.isExpanded && !this.isPinned) {
       this.hoverTimeout = setTimeout(() => {
         this.sidebarService.collapse()
       }, 300)
@@ -271,13 +304,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
   }
 
-  // UPDATED METHOD: Fixed to match exact routes only
   isActive(route: string): boolean {
-    // Remove trailing slashes for comparison
     const currentRoute = this.activeRoute.replace(/\/$/, '');
     const compareRoute = route.replace(/\/$/, '');
-
-    // Exact match for the route
     return currentRoute === compareRoute;
   }
 
