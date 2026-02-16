@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -24,11 +24,15 @@ import {
 export class EmployeeFormComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   
+  @Input() isModal = false;
+  @Input() employeeId: string | null = null;
+  @Input() isEditMode = false;
+  @Output() formCancelled = new EventEmitter<void>();
+  @Output() formSubmitted = new EventEmitter<void>();
+  
   employeeForm: FormGroup;
-  isEditMode = false;
   isLoading = false;
   isSaving = false;
-  employeeId: string = '';
   
   // Enums for dropdowns
   genderOptions = Object.values(Gender).map(value => ({
@@ -56,13 +60,21 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      if (params['id']) {
-        this.isEditMode = true;
-        this.employeeId = params['id'];
-        this.loadEmployeeData();
-      }
-    });
+    // If modal mode with employeeId, load the employee
+    if (this.isModal && this.employeeId) {
+      this.isEditMode = true;
+      this.loadEmployeeData();
+    } 
+    // If not modal mode, check route params
+    else if (!this.isModal) {
+      this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
+        if (params['id']) {
+          this.isEditMode = true;
+          this.employeeId = params['id'];
+          this.loadEmployeeData();
+        }
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -108,6 +120,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   }
 
   private loadEmployeeData(): void {
+    if (!this.employeeId) return;
+
     this.isLoading = true;
     this.employeeService.getEmployeeById(this.employeeId)
       .pipe(takeUntil(this.destroy$))
@@ -128,7 +142,11 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
             text: 'Failed to load employee data.',
             confirmButtonColor: '#1a2a6c'
           }).then(() => {
-            this.router.navigate(['/employees']);
+            if (this.isModal) {
+              this.cancel();
+            } else {
+              this.router.navigate(['/employees']);
+            }
           });
         }
       });
@@ -224,7 +242,12 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
             timer: 2000,
             showConfirmButton: false
           });
-          this.router.navigate(['/employees']);
+          
+          if (this.isModal) {
+            this.formSubmitted.emit();
+          } else {
+            this.router.navigate(['/employees']);
+          }
         },
         error: (error) => {
           console.error('Error creating employee:', error);
@@ -240,6 +263,8 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   }
 
   private updateEmployee(): void {
+    if (!this.employeeId) return;
+
     const formValue = this.employeeForm.getRawValue();
     const dto: UpdateEmployeeDto = {
       firstName: formValue.firstName,
@@ -279,7 +304,12 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
             timer: 2000,
             showConfirmButton: false
           });
-          this.router.navigate(['/employees']);
+          
+          if (this.isModal) {
+            this.formSubmitted.emit();
+          } else {
+            this.router.navigate(['/employees']);
+          }
         },
         error: (error) => {
           console.error('Error updating employee:', error);
@@ -295,7 +325,11 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   }
 
   cancel(): void {
-    this.router.navigate(['/employees']);
+    if (this.isModal) {
+      this.formCancelled.emit();
+    } else {
+      this.router.navigate(['/employees']);
+    }
   }
 
   private formatDateForInput(date: Date): string {
