@@ -7,124 +7,180 @@
     <div class="shape shape-3"></div>
   </div>
 
-  <!-- Login Card -->
+  <!-- Split Screen Card -->
   <div class="login-card">
-    <!-- Header -->
-    <div class="login-header">
-      <div class="logo-container">
-        <img src="assets/images/mcgmlogo.png" alt="App Logo" class="logo-image" />
-      </div>
-      <h1 class="login-title">Welcome to</h1>
-      <h1 class="login-title-app">AbelAttendanceWebApp</h1>
-      <p class="login-subtitle">Sign in to your account to continue</p>
-    </div>
-
-    <!-- Session info -->
-    <div *ngIf="loginInfo" class="login-info">
-      <i class="fas fa-info-circle"></i>
-      {{ loginInfo }}
-    </div>
-
-    <!-- Login Form -->
-    <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onLogin()">
-      <!-- Username Field -->
-      <div class="form-group">
-        <label for="username" class="form-label">
-          <i class="fas fa-user"></i>
-          Username
-        </label>
-        <div class="input-wrapper">
-          <input 
-            type="text" 
-            id="username" 
-            formControlName="username" 
-            class="form-control"
-            placeholder="Enter your username" 
-            autocomplete="username"
-            [disabled]="isLoading"
-          />
-          <div class="input-focus-border"></div>
+    
+    <!-- LEFT SIDE - Form Section -->
+    <div class="login-form-section">
+      <!-- Logo -->
+      <div class="login-logo">
+        <div class="logo-icon">
+          <img src="assets/images/mcgmlogo.png" alt="ABEL Logo" />
+          <!-- Or use icon if no image -->
+          <!-- <i class="fas fa-bolt"></i> -->
         </div>
-        <div *ngIf="f['username'].touched && f['username'].invalid" class="error-message">
-          <div *ngIf="f['username'].errors?.['required']">
+      </div>
+
+      <!-- Header -->
+      <div class="login-header">
+        <h1 class="welcome-title">Welcome Back</h1>
+        <p class="welcome-subtitle">Please log in to continue</p>
+      </div>
+
+      <!-- Session Info -->
+      <div *ngIf="loginInfo" class="login-info">
+        <i class="fas fa-info-circle"></i>
+        {{ loginInfo }}
+      </div>
+
+      <!-- Login Form -->
+      <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onLogin()">
+        <!-- Email/Username Field -->
+        <div class="form-group">
+          <label for="username" class="form-label">Email</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="username" 
+              formControlName="username" 
+              class="form-control"
+              placeholder="johndoe@gmail.com" 
+              autocomplete="username"
+              [disabled]="isLoading"
+            />
+          </div>
+          <div *ngIf="f['username'].touched && f['username'].invalid" class="error-message">
             <i class="fas fa-exclamation-circle"></i>
-            Username is required
+            <span *ngIf="f['username'].errors?.['required']">Email is required</span>
           </div>
         </div>
-      </div>
 
-      <!-- Password Field -->
-      <div class="form-group">
-        <label for="password" class="form-label">
-          <i class="fas fa-lock"></i>
-          Password
-        </label>
-        <div class="input-wrapper">
-          <input 
-            [type]="showPassword ? 'text' : 'password'" 
-            id="password" 
-            formControlName="password"
-            class="form-control" 
-            placeholder="Enter your password" 
-            autocomplete="current-password"
-            [disabled]="isLoading"
-          />
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-wrapper">
+            <input 
+              [type]="showPassword ? 'text' : 'password'" 
+              id="password" 
+              formControlName="password"
+              class="form-control" 
+              placeholder="••••••••" 
+              autocomplete="current-password"
+              [disabled]="isLoading"
+            />
+            <button 
+              type="button" 
+              class="password-toggle" 
+              (click)="togglePasswordVisibility()"
+              aria-label="Toggle password visibility"
+            >
+              <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+          <div *ngIf="f['password'].touched && f['password'].invalid" class="error-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <span *ngIf="f['password'].errors?.['required']">Password is required</span>
+          </div>
+        </div>
+
+        <!-- Form Options -->
+        <div class="form-options">
+          <label class="remember-me">
+            <input type="checkbox" />
+            <span>Keep me logged in</span>
+          </label>
           <button 
             type="button" 
-            class="password-toggle" 
-            (click)="togglePasswordVisibility()"
-            aria-label="Toggle password visibility"
+            class="forgot-password-link" 
+            (click)="navigateToForgotPassword()"
           >
-            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            Forgot Password?
           </button>
-          <div class="input-focus-border"></div>
         </div>
-        <div *ngIf="f['password'].touched && f['password'].invalid" class="error-message">
-          <div *ngIf="f['password'].errors?.['required']">
-            <i class="fas fa-exclamation-circle"></i>
-            Password is required
+
+        <!-- Sign In Button -->
+        <button type="submit" class="login-button" [disabled]="loginForm.invalid || isLoading">
+          <span *ngIf="!isLoading" class="button-content">
+            Sign in
+          </span>
+          <span *ngIf="isLoading" class="button-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            Signing In...
+          </span>
+        </button>
+
+        <!-- Error Message -->
+        <div *ngIf="loginError" class="login-error">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{ loginError }}
+        </div>
+      </form>
+
+      <!-- Social Login -->
+      <div class="social-login">
+        <div class="social-divider">
+          <span>Or continue with</span>
+        </div>
+        <div class="social-buttons">
+          <button type="button" class="social-btn" title="Continue with Google">
+            <i class="fab fa-google"></i>
+          </button>
+          <button type="button" class="social-btn" title="Continue with GitHub">
+            <i class="fab fa-github"></i>
+          </button>
+          <button type="button" class="social-btn" title="Continue with Facebook">
+            <i class="fab fa-facebook-f"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <p>
+          Don't have an account?
+          <button type="button" (click)="navigateToRegister()">
+            Register
+          </button>
+        </p>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE - Welcome Section -->
+    <div class="login-testimonial-section">
+      <!-- Welcome Content -->
+      <div class="welcome-content">
+        <div class="welcome-icon">
+          <img src="assets/images/mcgmlogo.png" alt="ABEL" />
+          <!-- Or use an icon: <i class="fas fa-user-check"></i> -->
+        </div>
+
+        <h2 class="welcome-title">Welcome to ABEL</h2>
+        
+        <p class="welcome-description">
+          Your comprehensive solution for attendance management and workforce tracking. 
+          Streamline your operations with our intuitive and reliable platform.
+        </p>
+
+        <div class="welcome-features">
+          <div class="feature-item">
+            <i class="fas fa-clock"></i>
+            <p class="feature-title">Real-time Tracking</p>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-chart-line"></i>
+            <p class="feature-title">Analytics & Reports</p>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-shield-alt"></i>
+            <p class="feature-title">Secure & Reliable</p>
+          </div>
+          <div class="feature-item">
+            <i class="fas fa-mobile-alt"></i>
+            <p class="feature-title">Mobile Access</p>
           </div>
         </div>
       </div>
-
-      <!-- Forgot Password Link -->
-      <div class="form-options">
-        <button 
-          type="button" 
-          class="forgot-password-link" 
-          (click)="navigateToForgotPassword()"
-        >
-          Forgot Password?
-        </button>
-      </div>
-
-      <!-- Login Button -->
-      <button type="submit" class="login-button" [disabled]="loginForm.invalid || isLoading">
-        <span *ngIf="!isLoading" class="button-content">
-          <i class="fas fa-sign-in-alt"></i>
-          Sign In
-        </span>
-        <span *ngIf="isLoading" class="button-loading">
-          <i class="fas fa-spinner fa-spin"></i>
-          Signing In...
-        </span>
-      </button>
-
-      <!-- Error Message -->
-      <div *ngIf="loginError" class="login-error">
-        <i class="fas fa-exclamation-triangle"></i>
-        {{ loginError }}
-      </div>
-    </form>
-
-    <!-- Footer -->
-    <div class="login-footer">
-      <p class="footer-text">
-        Don't have an account?
-        <button type="button" (click)="navigateToRegister()" class="signup-link">
-          Sign Up
-        </button>
-      </p>
     </div>
+
   </div>
 </div>
