@@ -62,6 +62,7 @@ export class InvitationListComponent implements OnInit {
     gridOptions: GridOptions = {
         pagination: false,
         domLayout: 'autoHeight',
+        context: { componentParent: this }
     };
 
     // Stats
@@ -136,19 +137,17 @@ export class InvitationListComponent implements OnInit {
             {
                 headerName: 'RECIPIENT',
                 field: 'email',
-                width: 300,
-                flex: 2, 
+                minWidth: 250,
+                flex: 2,
                 cellRenderer: (params: any) => {
                     if (!params.value) return '';
-                    const initials = params.value.substring(0, 2).toUpperCase();
                     return `
-      <div class="recipient-cell">
-        <div class="recipient-avatar">${initials}</div>
-        <div class="recipient-info">
-          <div class="recipient-email" title="${params.value}">${params.value}</div>
-        </div>
-      </div>
-    `;
+          <div class="recipient-cell">
+            <div class="recipient-info">
+              <div class="recipient-email" title="${params.value}">${params.value}</div>
+            </div>
+          </div>
+        `;
                 }
             },
             {
