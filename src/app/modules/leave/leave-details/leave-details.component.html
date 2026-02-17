@@ -1,0 +1,170 @@
+<div class="leave-details-container">
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="details-loading">
+    <div class="spinner"></div>
+    <p>Loading leave details...</p>
+  </div>
+
+  <ng-container *ngIf="!loading && leave">
+
+    <!-- Header Band -->
+    <div class="details-header" [ngClass]="getStatusClass(leave.leaveStatus)">
+      <div class="header-left">
+        <div class="leave-type-pill" [style.background]="leave.leaveTypeColor + '33'" [style.color]="leave.leaveTypeColor">
+          {{ leave.leaveTypeName }}
+        </div>
+        <h2>{{ leave.employeeName }}</h2>
+        <p class="emp-code">{{ leave.employeeCode }}</p>
+      </div>
+      <div class="header-right">
+        <span class="status-badge" [ngClass]="getStatusClass(leave.leaveStatus)">
+          <i class="bi" [ngClass]="getStatusIcon(leave.leaveStatus)"></i>
+          {{ leave.leaveStatusName }}
+        </span>
+        <span class="emergency-badge" *ngIf="leave.isEmergencyLeave">
+          🚨 Emergency
+        </span>
+        <span class="active-badge" *ngIf="leave.isActiveLeave">
+          ● Active Now
+        </span>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="details-body">
+
+      <!-- Date & Duration Card -->
+      <div class="info-card highlight-card">
+        <div class="date-block">
+          <div class="date-item">
+            <span class="date-label">From</span>
+            <span class="date-value">{{ leave.startDate | date: 'EEEE, d MMM yyyy' }}</span>
+          </div>
+          <div class="date-arrow"><i class="bi bi-arrow-right"></i></div>
+          <div class="date-item">
+            <span class="date-label">To</span>
+            <span class="date-value">{{ leave.endDate | date: 'EEEE, d MMM yyyy' }}</span>
+          </div>
+          <div class="duration-bubble">
+            <span class="duration-num">{{ leave.totalDays }}</span>
+            <span class="duration-lbl">{{ leave.totalDays === 1 ? 'Day' : 'Days' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-Column Details -->
+      <div class="details-grid">
+
+        <!-- Left Column -->
+        <div class="info-card">
+          <h4 class="card-title"><i class="bi bi-file-text"></i> Leave Details</h4>
+
+          <div class="detail-row">
+            <span class="detail-label">Leave Type</span>
+            <span class="detail-value">
+              <span class="type-dot" [style.background]="leave.leaveTypeColor"></span>
+              {{ leave.leaveTypeName }} ({{ leave.leaveTypeCode }})
+            </span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Applied On</span>
+            <span class="detail-value">{{ leave.appliedDate | date: 'd MMM yyyy, h:mm a' }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Reason</span>
+            <span class="detail-value reason-text">{{ leave.reason }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="leave.attachmentUrl">
+            <span class="detail-label">Attachment</span>
+            <a [href]="leave.attachmentUrl" target="_blank" class="attachment-link">
+              <i class="bi bi-paperclip"></i> View Document
+            </a>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="info-card">
+          <h4 class="card-title"><i class="bi bi-person-check"></i> Approval Details</h4>
+
+          <ng-container *ngIf="leave.leaveStatus === 1">
+            <div class="detail-row">
+              <span class="detail-label">Approved By</span>
+              <span class="detail-value">{{ leave.approvedByName || '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Approved On</span>
+              <span class="detail-value">{{ leave.approvedDate ? (leave.approvedDate | date: 'd MMM yyyy, h:mm a') : '—' }}</span>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="leave.leaveStatus === 2">
+            <div class="detail-row">
+              <span class="detail-label">Rejected By</span>
+              <span class="detail-value">{{ leave.rejectedByName || '—' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Rejected On</span>
+              <span class="detail-value">{{ leave.rejectedDate ? (leave.rejectedDate | date: 'd MMM yyyy, h:mm a') : '—' }}</span>
+            </div>
+            <div class="detail-row" *ngIf="leave.rejectionReason">
+              <span class="detail-label">Rejection Reason</span>
+              <span class="detail-value reason-text alert-text">{{ leave.rejectionReason }}</span>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="leave.leaveStatus === 3">
+            <div class="detail-row">
+              <span class="detail-label">Cancelled On</span>
+              <span class="detail-value">{{ leave.cancelledDate ? (leave.cancelledDate | date: 'd MMM yyyy, h:mm a') : '—' }}</span>
+            </div>
+            <div class="detail-row" *ngIf="leave.cancellationReason">
+              <span class="detail-label">Cancellation Reason</span>
+              <span class="detail-value reason-text">{{ leave.cancellationReason }}</span>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="leave.leaveStatus === 0">
+            <div class="pending-note">
+              <i class="bi bi-hourglass-split"></i>
+              <span>This leave request is awaiting approval.</span>
+            </div>
+          </ng-container>
+
+          <div class="detail-row" style="margin-top: auto; padding-top: 1rem; border-top: 1px solid #f1f5f9;">
+            <span class="detail-label">Created At</span>
+            <span class="detail-value">{{ leave.createdAt | date: 'd MMM yyyy' }}</span>
+          </div>
+          <div class="detail-row" *ngIf="leave.updatedAt">
+            <span class="detail-label">Last Updated</span>
+            <span class="detail-value">{{ leave.updatedAt | date: 'd MMM yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="details-actions" *ngIf="leave.leaveStatus === 0 || leave.canBeCancelled">
+        <button *ngIf="leave.leaveStatus === 0" class="btn btn-approve" (click)="onApprove()">
+          <i class="bi bi-check-lg"></i> Approve
+        </button>
+        <button *ngIf="leave.leaveStatus === 0" class="btn btn-reject" (click)="onReject()">
+          <i class="bi bi-x-lg"></i> Reject
+        </button>
+        <button *ngIf="leave.canBeCancelled" class="btn btn-cancel" (click)="onCancel()">
+          <i class="bi bi-slash-circle"></i> Cancel Leave
+        </button>
+      </div>
+
+    </div>
+  </ng-container>
+
+  <!-- Error -->
+  <div *ngIf="!loading && !leave" class="details-error">
+    <i class="bi bi-exclamation-circle"></i>
+    <p>Failed to load leave details.</p>
+  </div>
+
+</div>
