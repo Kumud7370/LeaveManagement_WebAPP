@@ -165,33 +165,39 @@ export const routes: Routes = [
       },
 
       {
-  path: "designations",
-  children: [
-    {
-      path: "",
-      loadComponent: () => import("./modules/designation/designation-list/designation-list.component")
-        .then((m) => m.DesignationListComponent),
-      data: { breadcrumb: "Designations" },
-    },
-    {
-      path: "create",
-      loadComponent: () => import("./modules/designation/designation-form/designation-form.component")
-        .then((m) => m.DesignationFormComponent),
-      data: { breadcrumb: "Add Designation" },
-    },
-    {
-      path: "edit/:id",
-      loadComponent: () => import("./modules/designation/designation-form/designation-form.component")
-        .then((m) => m.DesignationFormComponent),
-      data: { breadcrumb: "Edit Designation" },
-    },
-  ]
-},
-{
-  path: "holidays",
-  loadChildren: () => import("./modules/holiday/holiday.module").then((m) => m.HolidayModule),
-  data: { breadcrumb: "Holidays" },
-}
+        path: "designations",
+        children: [
+          {
+            path: "",
+            loadComponent: () => import("./modules/designation/designation-list/designation-list.component")
+              .then((m) => m.DesignationListComponent),
+            data: { breadcrumb: "Designations" },
+          },
+          {
+            path: "create",
+            loadComponent: () => import("./modules/designation/designation-form/designation-form.component")
+              .then((m) => m.DesignationFormComponent),
+            data: { breadcrumb: "Add Designation" },
+          },
+          {
+            path: "edit/:id",
+            loadComponent: () => import("./modules/designation/designation-form/designation-form.component")
+              .then((m) => m.DesignationFormComponent),
+            data: { breadcrumb: "Edit Designation" },
+          },
+        ]
+      },
+      {
+        path: "holidays",
+        loadChildren: () => import("./modules/holiday/holiday.module").then((m) => m.HolidayModule),
+        data: { breadcrumb: "Holidays" },
+      },
+ {
+        path: "shifts",
+        loadChildren: () =>
+          import("./modules/shift/shift.module").then(m => m.ShiftModule),
+        data: { breadcrumb: "Shifts" },
+      },
     ],
   },
 ];
