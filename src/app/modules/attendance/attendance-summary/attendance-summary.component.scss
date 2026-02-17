@@ -1,0 +1,450 @@
+.attendance-summary-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+
+    .title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 0.5rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+
+      i {
+        color: #3b82f6;
+      }
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #6b7280;
+      margin: 0;
+    }
+  }
+
+  .date-range-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .date-inputs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 1rem;
+
+      .input-group {
+        label {
+          display: block;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #374151;
+          margin-bottom: 0.5rem;
+        }
+
+        .date-input {
+          width: 100%;
+          padding: 0.75rem;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 0.95rem;
+          transition: all 0.2s;
+
+          &:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+        }
+      }
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+
+      .btn-quick {
+        padding: 0.625rem 1.25rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: white;
+        color: #374151;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          border-color: #3b82f6;
+          color: #3b82f6;
+          background: #eff6ff;
+        }
+      }
+    }
+  }
+
+  .loading-overlay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 0;
+
+    .spinner-container {
+      text-align: center;
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #e5e7eb;
+        border-top-color: #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+      }
+
+      p {
+        color: #6b7280;
+        font-size: 0.95rem;
+      }
+    }
+  }
+
+  .summary-content {
+    .employee-info-card {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .employee-details {
+        h2 {
+          font-size: 1.75rem;
+          font-weight: 700;
+          margin: 0 0 0.5rem 0;
+        }
+
+        .employee-code {
+          font-size: 1rem;
+          opacity: 0.9;
+          margin: 0;
+        }
+      }
+
+      .date-range {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+        opacity: 0.9;
+
+        i {
+          font-size: 1.25rem;
+        }
+      }
+    }
+
+    .percentage-card {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+
+      .percentage-circle {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 8px solid;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        .percentage-value {
+          font-size: 2.5rem;
+          font-weight: 700;
+        }
+
+        .percentage-label {
+          font-size: 0.875rem;
+          color: #6b7280;
+          margin-top: 0.25rem;
+        }
+      }
+
+      .percentage-info {
+        h3 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #111827;
+          margin: 0 0 0.5rem 0;
+        }
+
+        p {
+          font-size: 1rem;
+          color: #6b7280;
+          margin: 0;
+        }
+      }
+    }
+
+    .statistics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+
+      .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-icon {
+          width: 60px;
+          height: 60px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.75rem;
+        }
+
+        .stat-content {
+          .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #111827;
+          }
+
+          .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+          }
+        }
+
+        &.present .stat-icon {
+          background: #d1fae5;
+          color: #065f46;
+        }
+
+        &.absent .stat-icon {
+          background: #fee2e2;
+          color: #991b1b;
+        }
+
+        &.half-day .stat-icon {
+          background: #fef3c7;
+          color: #92400e;
+        }
+
+        &.leave .stat-icon {
+          background: #dbeafe;
+          color: #1e40af;
+        }
+
+        &.late .stat-icon {
+          background: #fed7aa;
+          color: #9a3412;
+        }
+
+        &.early-leave .stat-icon {
+          background: #fce7f3;
+          color: #831843;
+        }
+      }
+    }
+
+    .working-hours-card {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 1.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        i {
+          color: #3b82f6;
+        }
+      }
+
+      .hours-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+
+        .hours-item {
+          .hours-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+          }
+
+          .hours-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+
+            &.primary {
+              color: #3b82f6;
+            }
+
+            &.secondary {
+              color: #10b981;
+            }
+
+            &.overtime {
+              color: #8b5cf6;
+            }
+          }
+        }
+      }
+    }
+
+    .additional-info {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f3f4f6;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .info-label {
+          font-size: 0.95rem;
+          color: #6b7280;
+        }
+
+        .info-value {
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: #111827;
+        }
+      }
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+
+    i {
+      font-size: 4rem;
+      color: #d1d5db;
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 0.5rem 0;
+    }
+
+    p {
+      color: #6b7280;
+      margin: 0;
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1024px) {
+  .attendance-summary-container {
+    .summary-content {
+      .statistics-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .working-hours-card .hours-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .attendance-summary-container {
+    padding: 1rem;
+
+    .date-range-section {
+      .date-inputs {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-actions {
+        flex-direction: column;
+
+        .btn-quick {
+          width: 100%;
+        }
+      }
+    }
+
+    .summary-content {
+      .employee-info-card {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .percentage-card {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .statistics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}

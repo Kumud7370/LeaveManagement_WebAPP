@@ -49,7 +49,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   isExpanded = false
   isMobile = false
   activeRoute = ""
-  isPinned = false // NEW: Pin state
+  isPinned = false
   private isUserInteraction = false
   private hoverTimeout: any
 
@@ -67,6 +67,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
       label: "Employees",
       route: "/employees",
       icon: "fas fa-users"
+    },
+    {
+      label: "Attendance",
+      icon: "fas fa-calendar-check",
+      expanded: false,
+      children: [
+        { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
+        { label: "Attendance List", route: "/attendance/list", icon: "fas fa-list" },
+        { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
+        { label: "Regularization", route: "/attendance-regularization/list", icon: "fas fa-edit" }
+      ]
     },
     { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
     { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
@@ -98,8 +109,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
-    
-    // NEW: Load pin state from localStorage
+
     if (this.isBrowser) {
       const savedPinState = localStorage.getItem('sidebarPinned');
       this.isPinned = savedPinState === 'true';
@@ -111,8 +121,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.checkScreenSize()
       this.setupUserProfile()
       this.setupMenuItems()
-      
-      // NEW: Set initial state based on pin
+
       if (this.isPinned && !this.isMobile) {
         this.sidebarService.expand()
       }
@@ -165,7 +174,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
           this.sidebarService.collapse()
           this.isUserInteraction = false
         } else {
-          // On desktop, respect pin state
           if (this.isPinned) {
             this.sidebarService.expand()
           } else {
@@ -223,6 +231,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
     } else if (uRoleName?.toLowerCase() === 'admin') {
       this.menuItems = [
         { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
+        { label: "Employees", route: "/employees", icon: "fas fa-users" },
+        {
+          label: "Attendance",
+          icon: "fas fa-calendar-check",
+          expanded: false,
+          children: [
+            { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
+            { label: "Attendance List", route: "/attendance/list", icon: "fas fa-list" },
+            { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
+            { label: "Regularization", route: "/attendance-regularization/list", icon: "fas fa-edit" }
+          ]
+        },
         { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
         { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
         { label: "Designations", route: "/designations", icon: "fas fa-award" },
@@ -240,6 +260,22 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
         { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
       ]
+    } else if (uRoleName?.toLowerCase() === 'employee') {
+      // ✅ Menu for regular employees
+      this.menuItems = [
+        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
+        {
+          label: "Attendance",
+          icon: "fas fa-calendar-check",
+          expanded: false,
+          children: [
+            { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
+            { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
+            { label: "Request Regularization", route: "/attendance-regularization/create", icon: "fas fa-plus-circle" },
+            { label: "My Requests", route: "/attendance-regularization/list", icon: "fas fa-list-alt" }
+          ]
+        },
+      ]
     } else {
       this.menuItems = this.navItems;
     }
@@ -254,21 +290,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
     });
   }
 
-  // NEW: Toggle Pin State
   togglePin() {
     this.isPinned = !this.isPinned;
     this.isUserInteraction = this.isPinned;
-    
-    // Save pin state to localStorage
+
     if (this.isBrowser) {
       localStorage.setItem('sidebarPinned', String(this.isPinned));
     }
-    
-    // If pinned, expand sidebar
+
     if (this.isPinned) {
       this.sidebarService.expand();
     } else {
-      // If unpinned and mouse not hovering, collapse
       if (!this.isExpanded) {
         this.sidebarService.collapse();
       }
@@ -287,7 +319,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
       clearTimeout(this.hoverTimeout)
     }
 
-    // Expand on hover if not pinned
     if (!this.isExpanded && !this.isPinned) {
       this.sidebarService.expand()
     }
@@ -296,7 +327,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   onSidebarPointerLeave() {
     if (this.isMobile) return;
 
-    // Only collapse if not pinned
     if (this.isExpanded && !this.isPinned) {
       this.hoverTimeout = setTimeout(() => {
         this.sidebarService.collapse()
@@ -346,6 +376,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     sessionStorage.removeItem("RoleName")
     sessionStorage.removeItem("token")
     sessionStorage.removeItem('deviceId');
+    sessionStorage.removeItem('username');
     this.router.navigate(['/login']);
   }
 }

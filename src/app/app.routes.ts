@@ -67,6 +67,90 @@ export const routes: Routes = [
         ]
       },
 
+      // ==================== ATTENDANCE MODULE ====================
+      {
+        path: "attendance",
+        children: [
+          {
+            path: "",
+            redirectTo: "check-in-out",
+            pathMatch: "full"
+          },
+          {
+            path: "check-in-out",
+            loadComponent: () => import("./modules/attendance/check-in-out/check-in-out.component")
+              .then((m) => m.CheckInOutComponent),
+            data: { breadcrumb: "Check In/Out" },
+          },
+          {
+            path: "list",
+            loadComponent: () => import("./modules/attendance/attendance-list/attendance-list.component")
+              .then((m) => m.AttendanceListComponent),
+            data: { breadcrumb: "Attendance List" },
+          },
+          {
+            path: "summary",
+            loadComponent: () => import("./modules/attendance/attendance-summary/attendance-summary.component")
+              .then((m) => m.AttendanceSummaryComponent),
+            data: { breadcrumb: "My Summary" },
+          },
+          {
+            path: "create",
+            loadComponent: () => import("./modules/attendance/attendance-form/attendance-form.component")
+              .then((m) => m.AttendanceFormComponent),
+            data: { breadcrumb: "Mark Attendance" },
+          },
+          {
+            path: "edit/:id",
+            loadComponent: () => import("./modules/attendance/attendance-form/attendance-form.component")
+              .then((m) => m.AttendanceFormComponent),
+            data: { breadcrumb: "Edit Attendance" },
+          },
+          {
+            path: "details/:id",
+            loadComponent: () => import("./modules/attendance/attendance-details/attendance-details.component")
+              .then((m) => m.AttendanceDetailsComponent),
+            data: { breadcrumb: "Attendance Details" },
+          }
+        ]
+      },
+
+      // ==================== ATTENDANCE REGULARIZATION MODULE ====================
+      {
+        path: "attendance-regularization",
+        children: [
+          {
+            path: "",
+            redirectTo: "list",
+            pathMatch: "full"
+          },
+          {
+            path: "list",
+            loadComponent: () => import("./modules/attendance-regularization/regularization-list/regularization-list.component")
+              .then((m) => m.RegularizationListComponent),
+            data: { breadcrumb: "Regularization Requests" },
+          },
+          {
+            path: "create",
+            loadComponent: () => import("./modules/attendance-regularization/regularization-form/regularization-form.component")
+              .then((m) => m.RegularizationFormComponent),
+            data: { breadcrumb: "Request Regularization" },
+          },
+          {
+            path: "edit/:id",
+            loadComponent: () => import("./modules/attendance-regularization/regularization-form/regularization-form.component")
+              .then((m) => m.RegularizationFormComponent),
+            data: { breadcrumb: "Edit Regularization" },
+          },
+          {
+            path: "details/:id",
+            loadComponent: () => import("./modules/attendance-regularization/regularization-details/regularization-details.component")
+              .then((m) => m.RegularizationDetailsComponent),
+            data: { breadcrumb: "Regularization Details" },
+          }
+        ]
+      },
+
       {
         path: "departments",
         loadChildren: () => import("./modules/departments/department.module").then((m) => m.DepartmentModule),

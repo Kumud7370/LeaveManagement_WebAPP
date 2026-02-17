@@ -52,7 +52,7 @@ export class ApiClientService {
 
   public clearTokens(): void {
     if (!this.isBrowser) return;
-    
+
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('UserId');
@@ -61,7 +61,7 @@ export class ApiClientService {
     sessionStorage.removeItem('username');
     sessionStorage.removeItem('role');
     sessionStorage.removeItem('deviceId');
-    
+
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
   }
@@ -102,11 +102,11 @@ export class ApiClientService {
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Network Error: ${error.error.message}`;
     } else if (error.status === 0) {
-      errorMessage = 'Cannot connect to the server. Please ensure the API server is running at ' + 
-                     (error.url?.split('/api')[0] || 'the configured URL');
+      errorMessage = 'Cannot connect to the server. Please ensure the API server is running at ' +
+        (error.url?.split('/api')[0] || 'the configured URL');
     } else {
       errorMessage = `Server Error: ${error.status} - ${error.statusText}`;
-      
+
       if (error.error && typeof error.error === 'object') {
         if (error.error.message) {
           errorMessage = error.error.message;
@@ -124,24 +124,24 @@ export class ApiClientService {
       error: error.error
     });
 
-    return throwError(() => new Error(errorMessage));
+    return throwError(() => error);
   }
 
   // ==================== Authentication Endpoints ====================
 
   public loginUser(credentials: { username: string; password: string; deviceId: string }): Observable<any> {
-    console.log('Attempting login with:', { 
-      username: credentials.username, 
-      endpoint: `${this.baseUrl}/Auth/login` 
+    console.log('Attempting login with:', {
+      username: credentials.username,
+      endpoint: `${this.baseUrl}/Auth/login`
     });
 
     return this.post('Auth/login', credentials).pipe(
       map((response: any) => {
         console.log('Login response received:', response);
-        
+
         // Extract data from the ApiResponseDto wrapper
         const actualData = response.data || response;
-        
+
         // Store tokens if they exist (only in browser)
         if (this.isBrowser) {
           if (actualData.accessToken) {
@@ -150,7 +150,7 @@ export class ApiClientService {
           if (actualData.refreshToken) {
             this.setRefreshToken(actualData.refreshToken);
           }
-          
+
           // Store user info if needed
           if (actualData.user) {
             if (actualData.user.id) {
@@ -164,7 +164,7 @@ export class ApiClientService {
             }
           }
         }
-        
+
         return actualData;
       }),
       catchError((error) => {
@@ -179,7 +179,7 @@ export class ApiClientService {
       map((response: any) => {
         // Extract data from ApiResponseDto wrapper
         const actualData = response.data || response;
-        
+
         if (this.isBrowser) {
           if (actualData.accessToken) {
             this.setAuthToken(actualData.accessToken);
@@ -188,7 +188,7 @@ export class ApiClientService {
             this.setRefreshToken(actualData.refreshToken);
           }
         }
-        
+
         return actualData;
       })
     );
@@ -211,43 +211,43 @@ export class ApiClientService {
     );
   }
 
- public refreshToken(): Observable<any> {
-  if (!this.isBrowser) {
-    return throwError(() => new Error('Not running in browser'));
-  }
-  
-  const refreshToken = sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken');
-  
-  if (!refreshToken) {
-    return throwError(() => new Error('No refresh token available'));
-  }
+  public refreshToken(): Observable<any> {
+    if (!this.isBrowser) {
+      return throwError(() => new Error('Not running in browser'));
+    }
 
-  return this.http.post(`${this.baseUrl}/Auth/refresh-token`, { refreshToken }, {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    })
-  }).pipe(
-    map((response: any) => {
-      // Extract data from ApiResponseDto wrapper
-      const actualData = response.data || response;
-      
-      if (actualData.accessToken) {
-        this.setAuthToken(actualData.accessToken);
-      }
-      if (actualData.refreshToken) {
-        this.setRefreshToken(actualData.refreshToken);
-      }
-      
-      return actualData;
-    }),
-    catchError((error) => {
-      console.error('[API] Token refresh failed:', error);
-      this.clearTokens();
-      return throwError(() => error);
-    })
-  );
-}
+    const refreshToken = sessionStorage.getItem('refreshToken') || localStorage.getItem('refreshToken');
+
+    if (!refreshToken) {
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    return this.http.post(`${this.baseUrl}/Auth/refresh-token`, { refreshToken }, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      })
+    }).pipe(
+      map((response: any) => {
+        // Extract data from ApiResponseDto wrapper
+        const actualData = response.data || response;
+
+        if (actualData.accessToken) {
+          this.setAuthToken(actualData.accessToken);
+        }
+        if (actualData.refreshToken) {
+          this.setRefreshToken(actualData.refreshToken);
+        }
+
+        return actualData;
+      }),
+      catchError((error) => {
+        console.error('[API] Token refresh failed:', error);
+        this.clearTokens();
+        return throwError(() => error);
+      })
+    );
+  }
 
   public changePassword(data: { currentPassword: string; newPassword: string }): Observable<any> {
     return this.post('Auth/change-password', data);

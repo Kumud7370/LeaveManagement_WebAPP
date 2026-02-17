@@ -1,0 +1,216 @@
+<div class="attendance-list-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Attendance Management</h1>
+      <p class="page-subtitle">Track and manage employee attendance records</p>
+    </div>
+  </div>
+
+  <!-- Search and Action Buttons -->
+  <div class="search-action-section">
+    <div class="search-bar">
+      <input
+        type="text"
+        placeholder="Search by employee ID..."
+        [(ngModel)]="filter.employeeId"
+        (keyup)="onSearchChange()"
+        class="search-input"
+      />
+    </div>
+
+    <button class="btn btn-outline" (click)="toggleFilter()">
+      <i class="fas fa-filter"></i>
+      {{ isFilterVisible ? 'Hide Filters' : 'Show Filters' }}
+    </button>
+
+    <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
+
+    <button class="btn btn-refresh" (click)="loadAttendance()">
+      <i class="fas fa-sync-alt"></i>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Advanced Filters -->
+  <div class="advanced-filters" *ngIf="isFilterVisible">
+    <div class="filter-grid">
+      <div class="filter-item">
+        <label>Start Date</label>
+        <input
+          type="date"
+          [(ngModel)]="filter.startDate"
+          (change)="applyFilter()"
+          class="filter-select"
+        />
+      </div>
+
+      <div class="filter-item">
+        <label>End Date</label>
+        <input
+          type="date"
+          [(ngModel)]="filter.endDate"
+          (change)="applyFilter()"
+          class="filter-select"
+        />
+      </div>
+
+      <div class="filter-item">
+        <label>Status</label>
+        <select
+          [(ngModel)]="filter.status"
+          (change)="applyFilter()"
+          class="filter-select"
+        >
+          <option [ngValue]="undefined">All Statuses</option>
+          <option *ngFor="let option of attendanceStatusOptions" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label>Check-In Method</label>
+        <select
+          [(ngModel)]="filter.checkInMethod"
+          (change)="applyFilter()"
+          class="filter-select"
+        >
+          <option [ngValue]="undefined">All Methods</option>
+          <option *ngFor="let option of checkInMethodOptions" [ngValue]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="filter.isLate"
+            (change)="applyFilter()"
+          />
+          Show Late Only
+        </label>
+      </div>
+
+      <div class="filter-item">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="filter.isEarlyLeave"
+            (change)="applyFilter()"
+          />
+          Show Early Leave Only
+        </label>
+      </div>
+    </div>
+
+    <button class="btn btn-text" (click)="resetFilter()">
+      Clear All Filters
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading attendance records...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="error-state">
+    <i class="bi bi-exclamation-circle"></i>
+    <p>{{ error }}</p>
+    <button class="btn btn-outline" (click)="loadAttendance()">
+      Try Again
+    </button>
+  </div>
+
+  <!-- AG Grid Table -->
+  <div *ngIf="!isLoading && !error" class="grid-container">
+    <!-- Empty State -->
+    <div *ngIf="rowData.length === 0" class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <h3>No attendance records found</h3>
+      <p>Try adjusting your filters or check back later</p>
+    </div>
+
+    <!-- AG Grid -->
+    <ag-grid-angular
+      *ngIf="rowData.length > 0"
+      class="ag-theme-quartz"
+      [rowData]="rowData"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      [gridOptions]="gridOptions"
+      (gridReady)="onGridReady($event)"
+      [rowHeight]="60"
+      [headerHeight]="50"
+      [domLayout]="'autoHeight'"
+    >
+    </ag-grid-angular>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && rowData.length > 0" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ (currentPage - 1) * pageSize + 1 }} to
+      {{ Math.min(currentPage * pageSize, totalItems) }} of
+      {{ totalItems }} records
+    </div>
+
+    <div class="pagination-controls">
+      <select
+        [(ngModel)]="pageSize"
+        (change)="onPageSizeChanged(pageSize)"
+        class="page-size-select"
+      >
+        <option [value]="10">10 per page</option>
+        <option [value]="20">20 per page</option>
+        <option [value]="50">50 per page</option>
+        <option [value]="100">100 per page</option>
+      </select>
+
+      <div class="pagination-buttons">
+        <button
+          class="btn-page"
+          [disabled]="currentPage === 1"
+          (click)="goToPage(1)"
+        >
+          <i class="bi bi-chevron-bar-left"></i>
+        </button>
+        <button
+          class="btn-page"
+          [disabled]="currentPage === 1"
+          (click)="previousPage()"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <button
+          *ngFor="let page of pages"
+          class="btn-page"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+
+        <button
+          class="btn-page"
+          [disabled]="currentPage === totalPages"
+          (click)="nextPage()"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button
+          class="btn-page"
+          [disabled]="currentPage === totalPages"
+          (click)="goToPage(totalPages)"
+        >
+          <i class="bi bi-chevron-bar-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

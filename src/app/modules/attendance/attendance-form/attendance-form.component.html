@@ -1,0 +1,197 @@
+<div class="attendance-form-container" [class.modal-form]="isModal">
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <p>Loading attendance data...</p>
+    </div>
+  </div>
+
+  <!-- Form Content -->
+  <div class="form-content" *ngIf="!isLoading">
+    <!-- Header -->
+    <div class="form-header">
+      <div class="header-content">
+        <button class="btn-back" (click)="cancel()" *ngIf="!isModal">
+          <i class="fas fa-arrow-left"></i>
+          <span>Back to List</span>
+        </button>
+        <h1 class="form-title">
+          <i class="fas fa-calendar-check"></i>
+          {{ isEditMode ? 'Edit Attendance' : 'Mark Manual Attendance' }}
+        </h1>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="attendanceForm" (ngSubmit)="onSubmit()" class="attendance-form">
+      <!-- Employee & Date Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2><i class="fas fa-user-clock"></i> Employee & Date Information</h2>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required">Employee ID</label>
+              <input
+                type="text"
+                formControlName="employeeId"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('employeeId')"
+                placeholder="Enter employee ID"
+                [readonly]="isEditMode"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('employeeId')">
+                {{ getFieldError('employeeId') }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label class="required">Attendance Date</label>
+              <input
+                type="date"
+                formControlName="attendanceDate"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('attendanceDate')"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('attendanceDate')">
+                {{ getFieldError('attendanceDate') }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time Information Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2><i class="fas fa-clock"></i> Time Information</h2>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Check-In Time</label>
+              <div class="input-with-button">
+                <input
+                  type="datetime-local"
+                  formControlName="checkInTime"
+                  class="form-control"
+                  [class.invalid]="isFieldInvalid('checkInTime')"
+                />
+                <button
+                  type="button"
+                  class="btn-now"
+                  (click)="setCurrentDateTime('checkInTime')"
+                  title="Set current time"
+                >
+                  <i class="fas fa-clock"></i>
+                  Now
+                </button>
+              </div>
+              <span class="error-message" *ngIf="isFieldInvalid('checkInTime')">
+                {{ getFieldError('checkInTime') }}
+              </span>
+              <span class="help-text">Leave empty for absent status</span>
+            </div>
+
+            <div class="form-group">
+              <label>Check-Out Time</label>
+              <div class="input-with-button">
+                <input
+                  type="datetime-local"
+                  formControlName="checkOutTime"
+                  class="form-control"
+                  [class.invalid]="isFieldInvalid('checkOutTime')"
+                />
+                <button
+                  type="button"
+                  class="btn-now"
+                  (click)="setCurrentDateTime('checkOutTime')"
+                  title="Set current time"
+                >
+                  <i class="fas fa-clock"></i>
+                  Now
+                </button>
+              </div>
+              <span class="error-message" *ngIf="isFieldInvalid('checkOutTime')">
+                {{ getFieldError('checkOutTime') }}
+              </span>
+              <span class="help-text">Leave empty if not checked out yet</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status & Remarks Section -->
+      <div class="form-section">
+        <div class="section-header">
+          <h2><i class="fas fa-info-circle"></i> Status & Remarks</h2>
+        </div>
+        <div class="section-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="required">Attendance Status</label>
+              <select
+                formControlName="status"
+                class="form-control"
+                [class.invalid]="isFieldInvalid('status')"
+                (change)="onStatusChange($any($event.target).value)"
+              >
+                <option *ngFor="let option of attendanceStatusOptions" [value]="option.value">
+                  {{ option.label }}
+                </option>
+              </select>
+              <span class="error-message" *ngIf="isFieldInvalid('status')">
+                {{ getFieldError('status') }}
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label>Remarks</label>
+              <textarea
+                formControlName="remarks"
+                class="form-control"
+                rows="4"
+                [class.invalid]="isFieldInvalid('remarks')"
+                placeholder="Enter any remarks or notes about this attendance record..."
+              ></textarea>
+              <span class="error-message" *ngIf="isFieldInvalid('remarks')">
+                {{ getFieldError('remarks') }}
+              </span>
+              <span class="help-text">Maximum 500 characters</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Information Box -->
+      <div class="info-box">
+        <div class="info-header">
+          <i class="fas fa-info-circle"></i>
+          <span>Important Notes</span>
+        </div>
+        <ul class="info-list">
+          <li>Check-out time must be after check-in time</li>
+          <li>For absent status, leave check-in and check-out times empty</li>
+          <li>Working hours will be calculated automatically based on check-in and check-out times</li>
+          <li>Manual attendance entries require manager or admin approval</li>
+        </ul>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancel()" [disabled]="isSaving">
+          <i class="fas fa-times"></i>
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+          <i class="fas" [class.fa-spinner]="isSaving" [class.fa-spin]="isSaving" [class.fa-save]="!isSaving"></i>
+          {{ isSaving ? 'Saving...' : (isEditMode ? 'Update Attendance' : 'Mark Attendance') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
