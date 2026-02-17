@@ -1,0 +1,249 @@
+<div class="regularization-list-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Attendance Regularization</h1>
+      <p class="page-subtitle">Manage attendance regularization requests</p>
+    </div>
+  </div>
+
+  <!-- Search and Action Buttons -->
+  <div class="search-action-section">
+    <div class="search-bar">
+      <i class="bi bi-search search-icon"></i>
+      <input
+        type="text"
+        placeholder="Search by employee..."
+        [(ngModel)]="searchTerm"
+        (keyup)="onSearch()"
+        class="search-input"
+      />
+    </div>
+
+    <button class="btn btn-clear" (click)="clearSearch()">
+      <i class="bi bi-funnel"></i>
+      Clear
+    </button>
+
+    <button class="btn btn-refresh" (click)="loadRegularizations()">
+      <i class="bi bi-arrow-clockwise"></i>
+      Refresh
+    </button>
+
+    <button class="btn btn-export" (click)="exportToExcel()">
+      <i class="bi bi-download"></i>
+      Export
+    </button>
+
+    <button class="btn btn-primary" (click)="showFilters = !showFilters">
+      <i class="bi bi-funnel-fill"></i>
+      {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+    </button>
+  </div>
+
+  <!-- Filters Panel -->
+  <div class="filters-panel" *ngIf="showFilters">
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>Start Date</label>
+        <input
+          type="date"
+          [(ngModel)]="startDateFilter"
+          (change)="onFilterChange()"
+          class="form-control"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>End Date</label>
+        <input
+          type="date"
+          [(ngModel)]="endDateFilter"
+          (change)="onFilterChange()"
+          class="form-control"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>Type</label>
+        <select
+          [(ngModel)]="regularizationTypeFilter"
+          (change)="onFilterChange()"
+          class="form-control"
+        >
+          <option [ngValue]="option.value" *ngFor="let option of getTypeOptions()">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Status</label>
+        <select
+          [(ngModel)]="statusFilter"
+          (change)="onFilterChange()"
+          class="form-control"
+        >
+          <option [ngValue]="option.value" *ngFor="let option of getStatusOptions()">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <button class="btn btn-secondary" (click)="clearFilters()">
+        <i class="bi bi-x-circle"></i>
+        Clear Filters
+      </button>
+      <button class="btn btn-primary" (click)="onFilterChange()">
+        <i class="bi bi-check-circle"></i>
+        Apply Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading regularization requests...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-state">
+    <i class="bi bi-exclamation-circle"></i>
+    <p>{{ error }}</p>
+    <button class="btn btn-outline" (click)="loadRegularizations()">
+      Try Again
+    </button>
+  </div>
+
+  <!-- AG Grid Table -->
+  <div *ngIf="!loading && !error" class="grid-container">
+    <!-- Empty State -->
+    <div *ngIf="regularizations.length === 0" class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <h3>No regularization requests found</h3>
+      <p>Try adjusting your filters or date range</p>
+    </div>
+
+    <!-- AG Grid -->
+    <ag-grid-angular
+      *ngIf="regularizations.length > 0"
+      class="ag-theme-quartz"
+      [rowData]="regularizations"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      [gridOptions]="gridOptions"
+      (gridReady)="onGridReady($event)"
+      [rowHeight]="60"
+      [headerHeight]="50"
+      [domLayout]="'autoHeight'"
+    >
+    </ag-grid-angular>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && regularizations.length > 0" class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ (currentPage - 1) * pageSize + 1 }} to
+      {{ Math.min(currentPage * pageSize, totalCount) }} of
+      {{ totalCount }} records
+    </div>
+
+    <div class="pagination-controls">
+      <select
+        [(ngModel)]="pageSize"
+        (change)="onPageSizeChange($event)"
+        class="page-size-select"
+      >
+        <option [value]="10">10 per page</option>
+        <option [value]="25">25 per page</option>
+        <option [value]="50">50 per page</option>
+        <option [value]="100">100 per page</option>
+      </select>
+
+      <div class="pagination-buttons">
+        <button
+          class="btn-page"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(1)"
+        >
+          <i class="bi bi-chevron-bar-left"></i>
+        </button>
+        <button
+          class="btn-page"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <button
+          *ngFor="let page of pages"
+          class="btn-page"
+          [class.active]="page === currentPage"
+          (click)="onPageChange(page)"
+        >
+          {{ page }}
+        </button>
+
+        <button
+          class="btn-page"
+          [disabled]="currentPage === totalPages"
+          (click)="onPageChange(currentPage + 1)"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button
+          class="btn-page"
+          [disabled]="currentPage === totalPages"
+          (click)="onPageChange(totalPages)"
+        >
+          <i class="bi bi-chevron-bar-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Rejection Modal -->
+<div class="modal-overlay" *ngIf="showApprovalModal" (click)="closeApprovalModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeApprovalModal()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    
+    <div class="modal-header">
+      <h2>Reject Regularization Request</h2>
+      <p>Please provide a reason for rejection</p>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="rejectionReason">Rejection Reason *</label>
+        <textarea
+          id="rejectionReason"
+          [(ngModel)]="approvalReason"
+          placeholder="Enter reason for rejection..."
+          rows="5"
+          class="form-control"
+        ></textarea>
+        <div class="char-count">{{ approvalReason.length }} / 500</div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" (click)="closeApprovalModal()">
+        Cancel
+      </button>
+      <button 
+        class="btn btn-danger" 
+        (click)="submitRejection()"
+        [disabled]="!approvalReason.trim()"
+      >
+        Reject Request
+      </button>
+    </div>
+  </div>
+</div>

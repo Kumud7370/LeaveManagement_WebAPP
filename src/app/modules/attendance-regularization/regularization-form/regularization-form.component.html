@@ -1,0 +1,204 @@
+<div class="regularization-form-container" [class.modal-form]="isModal">
+  <!-- Header -->
+  <div class="page-header" *ngIf="!isModal">
+    <button class="btn-back" (click)="onCancel()">
+      <i class="bi bi-arrow-left"></i>
+      Back
+    </button>
+    <div class="header-content">
+      <h1 class="page-title">Request Attendance Regularization</h1>
+      <p class="page-subtitle">Submit a request to regularize your attendance</p>
+    </div>
+  </div>
+
+  <div class="page-header" *ngIf="isModal">
+    <div class="header-content">
+      <h1 class="page-title">Request Attendance Regularization</h1>
+      <p class="page-subtitle">Submit a request to regularize your attendance</p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error && !loading" class="alert alert-error">
+    <i class="bi bi-exclamation-circle"></i>
+    <span>{{ error }}</span>
+    <button class="close-btn" (click)="error = null">
+      <i class="bi bi-x"></i>
+    </button>
+  </div>
+
+  <!-- Form -->
+  <form
+    *ngIf="!loading"
+    [formGroup]="regularizationForm"
+    (ngSubmit)="onSubmit()"
+    class="regularization-form"
+  >
+    <div class="form-grid">
+      <!-- Attendance ID -->
+      <div class="form-group">
+        <label for="attendanceId" class="required">Attendance ID</label>
+        <input
+          id="attendanceId"
+          type="text"
+          formControlName="attendanceId"
+          placeholder="Enter attendance record ID"
+          class="form-control"
+          [class.error]="isFieldInvalid('attendanceId')"
+        />
+        <small class="hint">The ID of the attendance record to regularize</small>
+        <div *ngIf="isFieldInvalid('attendanceId')" class="error-message">
+          {{ getErrorMessage("attendanceId") }}
+        </div>
+      </div>
+
+      <!-- Attendance Date -->
+      <div class="form-group">
+        <label for="attendanceDate" class="required">Attendance Date</label>
+        <input
+          id="attendanceDate"
+          type="date"
+          formControlName="attendanceDate"
+          class="form-control"
+          [class.error]="isFieldInvalid('attendanceDate')"
+        />
+        <div *ngIf="isFieldInvalid('attendanceDate')" class="error-message">
+          {{ getErrorMessage("attendanceDate") }}
+        </div>
+      </div>
+
+      <!-- Regularization Type (Full Width) -->
+      <div class="form-group full-width">
+        <label for="regularizationType" class="required">Regularization Type</label>
+        <select
+          id="regularizationType"
+          formControlName="regularizationType"
+          class="form-control"
+          [class.error]="isFieldInvalid('regularizationType')"
+        >
+          <option [ngValue]="option.value" *ngFor="let option of getTypeOptions()">
+            {{ option.label }}
+          </option>
+        </select>
+        <small class="hint type-description" *ngIf="getSelectedTypeDescription()">
+          <i class="bi bi-info-circle"></i>
+          {{ getSelectedTypeDescription() }}
+        </small>
+        <div *ngIf="isFieldInvalid('regularizationType')" class="error-message">
+          {{ getErrorMessage("regularizationType") }}
+        </div>
+      </div>
+
+      <!-- Requested Check In Time -->
+      <div class="form-group" *ngIf="showCheckInField()">
+        <label for="requestedCheckIn" 
+          [class.required]="regularizationForm.get('requestedCheckIn')?.hasError('required')">
+          Requested Check-In Time
+        </label>
+        <input
+          id="requestedCheckIn"
+          type="datetime-local"
+          formControlName="requestedCheckIn"
+          class="form-control"
+          [class.error]="isFieldInvalid('requestedCheckIn')"
+        />
+        <small class="hint">The time you actually checked in or should have checked in</small>
+        <div *ngIf="isFieldInvalid('requestedCheckIn')" class="error-message">
+          {{ getErrorMessage("requestedCheckIn") }}
+        </div>
+      </div>
+
+      <!-- Requested Check Out Time -->
+      <div class="form-group" *ngIf="showCheckOutField()">
+        <label for="requestedCheckOut"
+          [class.required]="regularizationForm.get('requestedCheckOut')?.hasError('required')">
+          Requested Check-Out Time
+        </label>
+        <input
+          id="requestedCheckOut"
+          type="datetime-local"
+          formControlName="requestedCheckOut"
+          class="form-control"
+          [class.error]="isFieldInvalid('requestedCheckOut') || regularizationForm.hasError('invalidTimeRange')"
+        />
+        <small class="hint">The time you actually checked out or should have checked out</small>
+        <div *ngIf="isFieldInvalid('requestedCheckOut') || regularizationForm.hasError('invalidTimeRange')" class="error-message">
+          {{ getErrorMessage("requestedCheckOut") }}
+        </div>
+      </div>
+
+      <!-- Reason (Full Width) -->
+      <div class="form-group full-width">
+        <label for="reason" class="required">Reason</label>
+        <textarea
+          id="reason"
+          formControlName="reason"
+          placeholder="Provide a detailed reason for this regularization request..."
+          rows="5"
+          class="form-control"
+          [class.error]="isFieldInvalid('reason')"
+        ></textarea>
+        <div class="char-count">
+          {{ regularizationForm.get("reason")?.value?.length || 0 }} / 500
+        </div>
+        <div *ngIf="isFieldInvalid('reason')" class="error-message">
+          {{ getErrorMessage("reason") }}
+        </div>
+      </div>
+
+      <!-- Form Error Message -->
+      <div class="form-group full-width" *ngIf="regularizationForm.hasError('fullDayRequired')">
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle"></i>
+          <span>Full day regularization requires both check-in and check-out times</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="onCancel()"
+        [disabled]="submitting"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="submitting || regularizationForm.invalid"
+      >
+        <span *ngIf="!submitting">Submit Request</span>
+        <span *ngIf="submitting" class="btn-loading">
+          <span class="spinner-small"></span>
+          Submitting...
+        </span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Info Card -->
+  <div class="info-card" *ngIf="!loading && !isModal">
+    <div class="info-header">
+      <i class="bi bi-info-circle"></i>
+      <h3>Important Guidelines</h3>
+    </div>
+    <ul class="info-list">
+      <li><strong>Missed Punch:</strong> Use when you forgot to check in or check out</li>
+      <li><strong>Late Entry:</strong> Use when you arrived late and need approval</li>
+      <li><strong>Early Exit:</strong> Use when you left early and need approval</li>
+      <li><strong>Full Day:</strong> Use to regularize both check-in and check-out for a day</li>
+      <li>Provide a clear and detailed reason for your request</li>
+      <li>Requests are subject to manager/admin approval</li>
+      <li>You will be notified once your request is processed</li>
+    </ul>
+  </div>
+</div>
