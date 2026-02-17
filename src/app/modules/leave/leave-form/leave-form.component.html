@@ -1,0 +1,162 @@
+<div class="leave-form-container">
+  <div class="form-header">
+    <h2>{{ isEditMode ? 'Edit Leave Request' : 'Apply for Leave' }}</h2>
+    <p>{{ isEditMode ? 'Update the leave request details below' : 'Fill in the details to submit a leave request' }}</p>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div *ngIf="loadingLeave" class="form-loading">
+    <div class="spinner"></div>
+    <p>Loading leave details...</p>
+  </div>
+
+  <form *ngIf="!loadingLeave" [formGroup]="leaveForm" (ngSubmit)="onSubmit()">
+
+    <!-- Employee + Leave Type Row -->
+    <div class="form-row two-col">
+      <div class="form-group">
+        <label>Employee <span class="required">*</span></label>
+        <select formControlName="employeeId" [class.is-error]="isInvalid('employeeId')">
+          <option value="">Select employee...</option>
+          <option *ngFor="let emp of employees" [value]="emp.id">
+            {{ emp.employeeCode }} — {{ emp.fullName }}
+          </option>
+        </select>
+        <span class="error-msg" *ngIf="isInvalid('employeeId')">{{ getError('employeeId') }}</span>
+      </div>
+
+      <div class="form-group">
+        <label>Leave Type <span class="required">*</span></label>
+        <select formControlName="leaveTypeId" [class.is-error]="isInvalid('leaveTypeId')" (change)="onLeaveTypeChange()">
+          <option value="">Select leave type...</option>
+          <option *ngFor="let lt of leaveTypes" [value]="lt.id">
+            {{ lt.name }} ({{ lt.maxDaysPerYear }} days/year)
+          </option>
+        </select>
+        <span class="error-msg" *ngIf="isInvalid('leaveTypeId')">{{ getError('leaveTypeId') }}</span>
+        <div class="balance-info" *ngIf="remainingDays !== null">
+          <i class="bi bi-info-circle"></i>
+          <span>Remaining balance: <strong>{{ remainingDays }} day(s)</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Date Range Row -->
+    <div class="form-row two-col">
+      <div class="form-group">
+        <label>Start Date <span class="required">*</span></label>
+        <input
+          type="date"
+          formControlName="startDate"
+          [class.is-error]="isInvalid('startDate')"
+          (change)="onDateChange()"
+        />
+        <span class="error-msg" *ngIf="isInvalid('startDate')">{{ getError('startDate') }}</span>
+      </div>
+
+      <div class="form-group">
+        <label>End Date <span class="required">*</span></label>
+        <input
+          type="date"
+          formControlName="endDate"
+          [class.is-error]="isInvalid('endDate')"
+          (change)="onDateChange()"
+        />
+        <span class="error-msg" *ngIf="isInvalid('endDate')">{{ getError('endDate') }}</span>
+      </div>
+    </div>
+
+    <!-- Total Days (computed) -->
+    <div class="form-row two-col">
+      <div class="form-group">
+        <label>Total Days <span class="required">*</span></label>
+        <div class="days-input-wrapper">
+          <input
+            type="number"
+            formControlName="totalDays"
+            [class.is-error]="isInvalid('totalDays')"
+            step="0.5" min="0.5"
+            placeholder="0"
+          />
+          <span class="days-unit">days</span>
+        </div>
+        <span class="error-msg" *ngIf="isInvalid('totalDays')">{{ getError('totalDays') }}</span>
+        <span class="hint-msg" *ngIf="computedDays > 0 && !isInvalid('totalDays')">
+          Auto-computed: {{ computedDays }} calendar day(s)
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label>Attachment URL</label>
+        <input
+          type="url"
+          formControlName="attachmentUrl"
+          placeholder="https://..."
+          [class.is-error]="isInvalid('attachmentUrl')"
+        />
+        <span class="error-msg" *ngIf="isInvalid('attachmentUrl')">{{ getError('attachmentUrl') }}</span>
+        <div class="doc-required-note" *ngIf="selectedLeaveType?.requiresDocument">
+          <i class="bi bi-paperclip"></i>
+          <span>Document required for this leave type</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reason -->
+    <div class="form-group">
+      <label>Reason <span class="required">*</span></label>
+      <textarea
+        formControlName="reason"
+        rows="4"
+        placeholder="Provide a reason for your leave request..."
+        [class.is-error]="isInvalid('reason')"
+      ></textarea>
+      <div class="textarea-footer">
+        <span class="error-msg" *ngIf="isInvalid('reason')">{{ getError('reason') }}</span>
+        <span class="char-count" [class.over]="(leaveForm.get('reason')?.value?.length || 0) > 450">
+          {{ leaveForm.get('reason')?.value?.length || 0 }}/500
+        </span>
+      </div>
+    </div>
+
+    <!-- Emergency toggle -->
+    <div class="form-group">
+      <div class="toggle-group">
+        <label class="toggle-label">
+          <div class="toggle-switch">
+            <input type="checkbox" formControlName="isEmergencyLeave" />
+            <span class="slider"></span>
+          </div>
+          <div class="toggle-text">
+            <span class="toggle-title">Emergency Leave</span>
+            <span class="toggle-desc">Mark this as an emergency / unplanned leave request</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Validation error -->
+    <div class="alert alert-error" *ngIf="formError">
+      <i class="bi bi-exclamation-triangle"></i>
+      <span>{{ formError }}</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="submitting">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-submit" [disabled]="submitting || leaveForm.invalid">
+        <span *ngIf="!submitting">
+          <i class="bi bi-check-circle"></i>
+          {{ isEditMode ? 'Update Leave' : 'Submit Leave Request' }}
+        </span>
+        <span *ngIf="submitting">
+          <div class="btn-spinner"></div>
+          {{ isEditMode ? 'Updating...' : 'Submitting...' }}
+        </span>
+      </button>
+    </div>
+
+  </form>
+</div>

@@ -83,23 +83,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
     { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
     { label: "Designations", route: "/designations", icon: "fas fa-award" },
     { label: "Holidays", route: "/holidays", icon: "fas fa-calendar-alt" },
-    { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" },
-    { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
-    { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marked-alt" },
-    { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
     {
-      label: "Logsheet",
-      icon: "fas fa-clipboard-list",
+      label: "Leave",
+      icon: "fas fa-plane-departure",
       expanded: false,
       children: [
-        { label: "Generate Logsheet", route: "/logsheet/generatelogsheet", icon: "fas fa-plus-circle" },
-        { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
-      ],
+        { label: "Leave Management", route: "/leave/list", icon: "fas fa-list-alt" },
+        { label: "Leave Types", route: "/leave-types", icon: "fas fa-tags" },
+      ]
     },
-    { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
-    { label: "Agency", route: "/agencylist", icon: "fas fa-building" },
-    { label: "Billing Report", route: "/billing-report", icon: "fas fa-file-invoice-dollar" },
-    { label: "Verification", route: "/verifications", icon: "fas fa-check-circle" },
+    { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" }
   ]
 
   menuItems = this.navItems
@@ -247,6 +240,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
         { label: "Designations", route: "/designations", icon: "fas fa-award" },
         { label: "Holidays", route: "/holidays", icon: "fas fa-calendar-alt" },
+        {
+          label: "Leave",
+          icon: "fas fa-plane-departure",
+          expanded: false,
+          children: [
+            { label: "Leave Management", route: "/leave/list", icon: "fas fa-list-alt" },
+            { label: "Leave Types", route: "/leave-types", icon: "fas fa-tags" },
+          ]
+        },
         { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" },
         { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
         { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marked-alt" },
