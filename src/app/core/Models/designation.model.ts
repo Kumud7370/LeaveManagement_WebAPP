@@ -1,11 +1,10 @@
 export interface DesignationResponseDto {
-  designationId: string;
+  designationId: string;   
   designationCode: string;
   designationName: string;
   description?: string;
   level: number;
   isActive: boolean;
-  displayOrder?: number;
   employeeCount: number;
   createdAt: string;
   updatedAt?: string;
@@ -16,16 +15,14 @@ export interface CreateDesignationDto {
   designationName: string;
   description?: string;
   level: number;
-  displayOrder?: number;
   isActive?: boolean;
 }
 
 export interface UpdateDesignationDto {
-  designationCode: string;
-  designationName: string;
+  designationCode?: string;
+  designationName?: string;
   description?: string;
-  level: number;
-  displayOrder?: number;
+  level?: number;
   isActive?: boolean;
 }
 
@@ -44,7 +41,7 @@ export interface DesignationFilterDto {
 export interface ApiResponse<T> {
   data: T;
   message: string;
-  success: boolean;
+  success?: boolean;
   errors?: string[];
 }
 
@@ -60,22 +57,5 @@ export interface PaginationDto {
 export interface PagedResultDto<T> {
   data: T[];
   pagination: PaginationDto;
+  message?: string;
 }
-
-export interface CreateDesignationDto {
-  designationCode: string;
-  designationName: string;
-  description?: string;
-  level: number;
-  isActive?: boolean;
-}
-
-export interface UpdateDesignationDto {
-  designationCode: string;
-  designationName: string;
-  description?: string;
-  level: number;
-  isActive?: boolean;
-}
-
-
