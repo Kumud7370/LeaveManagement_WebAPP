@@ -32,11 +32,16 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
     canActivateChild: [AuthGuard],
     children: [
+
+      // ==================== DASHBOARD ====================
       {
         path: "dashboard",
-        loadComponent: () => import("./modules/dashboard/dashboard.component").then((m) => m.DashboardComponent),
+        loadComponent: () => import("./modules/dashboard/dashboard.component")
+          .then((m) => m.DashboardComponent),
         data: { breadcrumb: "Dashboard" },
       },
+
+      // ==================== EMPLOYEES MODULE ====================
       {
         path: "employees",
         children: [
@@ -151,12 +156,15 @@ export const routes: Routes = [
         ]
       },
 
+      // ==================== DEPARTMENTS MODULE ====================
       {
         path: "departments",
-        loadChildren: () => import("./modules/departments/department.module").then((m) => m.DepartmentModule),
+        loadChildren: () => import("./modules/departments/department.module")
+          .then((m) => m.DepartmentModule),
         data: { breadcrumb: "Departments" },
       },
 
+      // ==================== ADMIN INVITATIONS MODULE ====================
       {
         path: "admin-invitations",
         loadChildren: () => import("./modules/admin-invitations/admin-invitation.module")
@@ -164,6 +172,7 @@ export const routes: Routes = [
         data: { breadcrumb: "Admin Invitations" },
       },
 
+      // ==================== DESIGNATIONS MODULE ====================
       {
         path: "designations",
         children: [
@@ -187,13 +196,23 @@ export const routes: Routes = [
           },
         ]
       },
+
+      // ==================== HOLIDAYS MODULE ====================
       {
         path: "holidays",
-        loadChildren: () => import("./modules/holiday/holiday.module").then((m) => m.HolidayModule),
+        loadChildren: () => import("./modules/holiday/holiday.module")
+          .then((m) => m.HolidayModule),
         data: { breadcrumb: "Holidays" },
-},
+      },
 
- // ==================== LEAVE MODULE ====================
+      {
+        path: "shifts",
+        loadChildren: () => import("./modules/shift/shift.module")
+          .then(m => m.ShiftModule),
+        data: { breadcrumb: "Shifts" },
+      },
+
+      // ==================== LEAVE MODULE ====================
       {
         path: "leave",
         children: [
@@ -207,16 +226,11 @@ export const routes: Routes = [
             loadComponent: () => import("./modules/leave/leave-list/leave-list.component")
               .then((m) => m.LeaveListComponent),
             data: { breadcrumb: "Leave Management" },
-                },
- {
-        path: "shifts",
-        loadChildren: () =>
-          import("./modules/shift/shift.module").then(m => m.ShiftModule),
-        data: { breadcrumb: "Shifts" },
+          },
+        ]
       },
-    ],
-  },
-  // ==================== LEAVE TYPE MODULE ====================
+
+      // ==================== LEAVE TYPE MODULE ====================
       {
         path: "leave-types",
         children: [
@@ -228,6 +242,7 @@ export const routes: Routes = [
           }
         ]
       },
+
     ],
-  }
-];
+  },
+];     
