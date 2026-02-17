@@ -1,0 +1,112 @@
+<div class="shift-management">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Shift Management</h1>
+      <p class="page-subtitle">Configure and manage work shifts for your organization</p>
+    </div>
+  </div>
+
+  <!-- Filters — single row like Department Management -->
+  <div class="filters-container">
+    <div class="filters-row">
+
+      <!-- Search Box -->
+      <div class="search-box">
+        <i class="bi bi-search search-icon"></i>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search shifts..."
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="onSearch()"
+        />
+      </div>
+
+      <!-- Action Buttons — inline after search (Department style) -->
+      <button class="btn btn-clear" (click)="clearFilters()" title="Clear filters">
+        <i class="bi bi-funnel"></i> Clear
+      </button>
+
+      <button class="btn btn-refresh" (click)="loadShifts()" title="Refresh data">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+
+      <button class="btn btn-export" (click)="exportData()" title="Export CSV">
+        <i class="bi bi-download"></i> Export
+      </button>
+
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <i class="bi bi-plus-circle"></i> Add Shift
+      </button>
+
+    </div>
+  </div>
+
+  <!-- AG Grid -->
+  <div class="grid-container">
+    <ag-grid-angular
+      class="ag-theme-alpine"
+      [rowData]="shifts"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      [pagination]="false"
+      [suppressPaginationPanel]="true"
+      [domLayout]="'autoHeight'"
+      [context]="context"
+      (gridReady)="onGridReady($event)"
+      style="width: 100%"
+    ></ag-grid-angular>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination-container" *ngIf="totalRecords > 0">
+    <div class="pagination-info">
+      Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ getMaxRecords() }} of
+      {{ totalRecords }} shifts
+    </div>
+
+    <div class="pagination-controls">
+
+      <select class="page-size-select" [(ngModel)]="pageSize" (change)="onPageSizeChange(pageSize)">
+        <option [value]="10">10 per page</option>
+        <option [value]="20">20 per page</option>
+        <option [value]="50">50 per page</option>
+        <option [value]="100">100 per page</option>
+      </select>
+
+      <div class="page-buttons">
+        <button class="page-btn" [disabled]="currentPage === 1" (click)="onPageChange(1)" title="First page">
+          <i class="bi bi-chevron-double-left"></i>
+        </button>
+        <button class="page-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)" title="Previous page">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <span class="page-number">{{ currentPage }} / {{ totalPages }}</span>
+        <button class="page-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)" title="Next page">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button class="page-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)" title="Last page">
+          <i class="bi bi-chevron-double-right"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner"></div>
+  </div>
+
+</div>
+
+<!-- Shift Form Modal -->
+<app-shift-form
+  *ngIf="showModal"
+  [mode]="modalMode"
+  [shift]="selectedShift"
+  (close)="onModalClose()"
+  (success)="onModalSuccess()"
+></app-shift-form>
