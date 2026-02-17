@@ -5,9 +5,20 @@ import { LeaveService } from '../../../core/services/api/leave.api';
 import { LeaveTypeService } from '../../../core/services/api/leave-type.api';
 import { EmployeeService } from '../../../core/services/api/employee.api';
 import { Leave, CreateLeaveDto, UpdateLeaveDto } from '../../../core/Models/leave.model';
-import { LeaveType } from '../../../core/Models/leave-type.model'; // ✅ import from the correct model
+import { LeaveType } from '../../../core/Models/leave-type.model';
 
-interface EmployeeSummary { id: string; employeeCode: string; fullName: string; }
+interface EmployeeResponseDto {
+  id: string;
+  employeeCode: string;
+  firstName: string;
+  lastName: string;
+}
+
+interface EmployeeSummary {
+  id: string;
+  employeeCode: string;
+  fullName: string;
+}
 
 @Component({
   selector: 'app-leave-form',
@@ -28,10 +39,13 @@ export class LeaveFormComponent implements OnInit {
   employees: EmployeeSummary[] = [];
   selectedLeaveType: LeaveType | null = null;
   remainingDays: number | null = null;
+  balanceLoading = false;        // ✅ shows spinner while fetching balance
+  balanceNotFound = false;       // ✅ true when no balance record exists for employee+type+year
   computedDays = 0;
   submitting = false;
   loadingLeave = false;
   formError: string | null = null;
+  currentYear = new Date().getFullYear();
 
   constructor(
     private fb: FormBuilder,
@@ -50,37 +64,39 @@ export class LeaveFormComponent implements OnInit {
   }
 
   buildForm(): void {
-    this.leaveForm = this.fb.group({
-      employeeId:       ['', Validators.required],
-      leaveTypeId:      ['', Validators.required],
-      startDate:        ['', Validators.required],
-      endDate:          ['', Validators.required],
-      totalDays:        [null, [Validators.required, Validators.min(0.5)]],
-      reason:           ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
-      isEmergencyLeave: [false],
-      attachmentUrl:    ['']
-    }, { validators: this.dateRangeValidator });
+    this.leaveForm = this.fb.group(
+      {
+        employeeId:       ['', Validators.required],
+        leaveTypeId:      ['', Validators.required],
+        startDate:        ['', Validators.required],
+        endDate:          ['', Validators.required],
+        totalDays:        [1, [Validators.required, Validators.min(0.5)]],  // ✅ default 1, not null
+        reason:           ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
+        isEmergencyLeave: [false],
+        attachmentUrl:    ['']
+      },
+      { validators: this.dateRangeValidator }
+    );
   }
 
-  dateRangeValidator(g: FormGroup) {
-    const s = g.get('startDate')?.value;
-    const e = g.get('endDate')?.value;
-    if (s && e && new Date(e) < new Date(s)) {
-      return { dateRange: true };
-    }
+  dateRangeValidator(g: FormGroup): { dateRange: boolean } | null {
+    const s = g.get('startDate')?.value as string;
+    const e = g.get('endDate')?.value as string;
+    if (s && e && new Date(e) < new Date(s)) return { dateRange: true };
     return null;
   }
 
   loadLeaveTypes(): void {
     this.leaveTypeService.getActiveLeaveTypes().subscribe({
-      next: (r) => { if (r.success) this.leaveTypes = r.data; } // ✅ now both sides use leave-type.model LeaveType
+      next: (r) => { if (r.success) this.leaveTypes = r.data; }
     });
   }
 
   loadEmployees(): void {
+    // getActiveEmployees() returns EmployeeResponseDto[] directly — no ApiResponse wrapper
     this.employeeService.getActiveEmployees().subscribe({
-      next: (employees) => { // ✅ plain array — no .success/.data wrapper
-        this.employees = employees.map((e) => ({
+      next: (employees: EmployeeResponseDto[]) => {
+        this.employees = employees.map(e => ({
           id: e.id,
           employeeCode: e.employeeCode,
           fullName: `${e.firstName} ${e.lastName}`
@@ -95,7 +111,7 @@ export class LeaveFormComponent implements OnInit {
     this.leaveService.getLeaveById(id).subscribe({
       next: (r) => {
         if (r.success) {
-          const l = r.data;
+          const l: Leave = r.data;
           this.leaveForm.patchValue({
             employeeId:       l.employeeId,
             leaveTypeId:      l.leaveTypeId,
@@ -115,25 +131,45 @@ export class LeaveFormComponent implements OnInit {
     });
   }
 
+  /** Called when employee OR leave type changes — fetch remaining balance */
   onLeaveTypeChange(): void {
-    const id = this.leaveForm.get('leaveTypeId')?.value;
-    this.selectedLeaveType = this.leaveTypes.find(lt => lt.id === id) || null;
-    const empId = this.leaveForm.get('employeeId')?.value;
-    const year = new Date().getFullYear();
-    if (id && empId) {
-      this.leaveService.getRemainingLeaveDays(empId, id, year).subscribe({
-        next: (r) => { if (r.success) this.remainingDays = r.data; }
+    const typeId = this.leaveForm.get('leaveTypeId')?.value as string;
+    const empId  = this.leaveForm.get('employeeId')?.value as string;
+    this.selectedLeaveType = this.leaveTypes.find(lt => lt.id === typeId) ?? null;
+    this.remainingDays = null;
+    this.balanceNotFound = false;
+
+    if (typeId && empId) {
+      const year = new Date().getFullYear();
+      this.balanceLoading = true;
+      this.leaveService.getRemainingLeaveDays(empId, typeId, year).subscribe({
+        next: (r) => {
+          this.balanceLoading = false;
+          if (r.success) {
+            this.remainingDays = r.data;
+            this.balanceNotFound = false;
+          } else {
+            // API returned success:false — no balance record
+            this.remainingDays = null;
+            this.balanceNotFound = true;
+          }
+        },
+        error: () => {
+          this.balanceLoading = false;
+          // 404 means no balance record initialized for this employee+type+year
+          this.remainingDays = null;
+          this.balanceNotFound = true;
+        }
       });
-    } else {
-      this.remainingDays = null;
     }
   }
 
   onDateChange(): void {
-    const s = this.leaveForm.get('startDate')?.value;
-    const e = this.leaveForm.get('endDate')?.value;
+    const s = this.leaveForm.get('startDate')?.value as string;
+    const e = this.leaveForm.get('endDate')?.value as string;
     if (s && e && new Date(e) >= new Date(s)) {
-      const diff = Math.ceil((new Date(e).getTime() - new Date(s).getTime()) / 86400000) + 1;
+      // +1 because both start and end are inclusive
+      const diff = Math.ceil((new Date(e).getTime() - new Date(s).getTime()) / 86_400_000) + 1;
       this.computedDays = diff;
       this.leaveForm.patchValue({ totalDays: diff }, { emitEvent: false });
     }
@@ -141,45 +177,64 @@ export class LeaveFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.leaveForm.invalid) { this.markAllTouched(); return; }
+
+    // ✅ Guard: block submission if no balance record found
+    if (this.balanceNotFound && !this.isEditMode) {
+      this.formError = 'No leave balance found for this employee and leave type for the current year. Please initialize the leave balance first via the Leave Balance module.';
+      return;
+    }
+
+    // ✅ Guard: block if balance < days requested
+    if (this.remainingDays !== null && !this.isEditMode) {
+      const requested = Number(this.leaveForm.get('totalDays')?.value);
+      if (requested > this.remainingDays) {
+        this.formError = `Insufficient balance. Requested: ${requested} days, Available: ${this.remainingDays} days.`;
+        return;
+      }
+    }
+
     this.submitting = true;
     this.formError = null;
     const v = this.leaveForm.value;
 
     if (this.isEditMode && this.leaveId) {
       const dto: UpdateLeaveDto = {
-        startDate:        v.startDate,
-        endDate:          v.endDate,
-        totalDays:        v.totalDays,
-        reason:           v.reason,
-        isEmergencyLeave: v.isEmergencyLeave,
-        attachmentUrl:    v.attachmentUrl || undefined
+        startDate:        this.toISODateTime(v.startDate as string),
+        endDate:          this.toISODateTime(v.endDate as string),
+        totalDays:        Number(v.totalDays),
+        reason:           (v.reason as string).trim(),
+        isEmergencyLeave: v.isEmergencyLeave as boolean,
+        attachmentUrl:    (v.attachmentUrl as string) || undefined
       };
       this.leaveService.updateLeave(this.leaveId, dto).subscribe({
         next: (r) => {
           this.submitting = false;
           if (r.success) { this.formSubmitted.emit(); }
-          else { this.formError = r.message || 'Failed to update leave'; }
+          else { this.formError = r.message || 'Failed to update leave.'; }
         },
-        error: (e) => { this.submitting = false; this.formError = e.error?.message || 'An error occurred'; }
+        error: (e) => { this.submitting = false; this.formError = this.extractError(e); }
       });
     } else {
       const dto: CreateLeaveDto = {
-        employeeId:       v.employeeId,
-        leaveTypeId:      v.leaveTypeId,
-        startDate:        v.startDate,
-        endDate:          v.endDate,
-        totalDays:        v.totalDays,
-        reason:           v.reason,
-        isEmergencyLeave: v.isEmergencyLeave,
-        attachmentUrl:    v.attachmentUrl || undefined
+        employeeId:       v.employeeId as string,
+        leaveTypeId:      v.leaveTypeId as string,
+        startDate:        this.toISODateTime(v.startDate as string),
+        endDate:          this.toISODateTime(v.endDate as string),
+        totalDays:        Number(v.totalDays),
+        reason:           (v.reason as string).trim(),
+        isEmergencyLeave: v.isEmergencyLeave as boolean,
+        attachmentUrl:    (v.attachmentUrl as string) || undefined
       };
       this.leaveService.createLeave(dto).subscribe({
         next: (r) => {
           this.submitting = false;
           if (r.success) { this.formSubmitted.emit(); }
-          else { this.formError = r.message || 'Failed to submit leave. Check overlapping leaves or insufficient balance.'; }
+          else {
+            // Backend returned success:false with a message — show it directly
+            this.formError = r.message || 'Failed to submit leave.';
+          }
         },
-        error: (e) => { this.submitting = false; this.formError = e.error?.message || 'An error occurred'; }
+        error: (e) => { this.submitting = false; this.formError = this.extractError(e); }
       });
     }
   }
@@ -207,7 +262,28 @@ export class LeaveFormComponent implements OnInit {
     Object.values(this.leaveForm.controls).forEach(c => c.markAsTouched());
   }
 
+ 
+  private toISODateTime(dateStr: string): string {
+    if (!dateStr) return '';
+    if (dateStr.includes('T')) return dateStr; // already ISO
+    return `${dateStr}T00:00:00.000Z`;
+  }
+
   private toInputDate(d: Date | string): string {
     return new Date(d).toISOString().slice(0, 10);
+  }
+
+  private extractError(e: { error?: { errors?: Record<string, string[]>; message?: string; title?: string } }): string {
+    const body = e?.error;
+    if (!body) return 'An unexpected error occurred.';
+    // ASP.NET ValidationProblemDetails
+    if (body.errors && typeof body.errors === 'object') {
+      const messages = Object.entries(body.errors)
+        .map(([field, msgs]) => `${field}: ${(Array.isArray(msgs) ? msgs : [msgs]).join(', ')}`);
+      if (messages.length) return messages.join(' | ');
+    }
+    if (body.message) return body.message;
+    if (body.title)   return body.title;
+    return 'An error occurred. Please try again.';
   }
 }
