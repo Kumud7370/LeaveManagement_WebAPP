@@ -90,6 +90,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       children: [
         { label: "Leave Management", route: "/leave/list", icon: "fas fa-list-alt" },
         { label: "Leave Types", route: "/leave-types", icon: "fas fa-tags" },
+        { label: "Leave Balances",   route: "/leave-balance/list",  icon: "fas fa-wallet" },
       ]
     },
     { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" }
@@ -247,15 +248,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
           children: [
             { label: "Leave Management", route: "/leave/list", icon: "fas fa-list-alt" },
             { label: "Leave Types", route: "/leave-types", icon: "fas fa-tags" },
+            { label: "Leave Balances",   route: "/leave-balance/list",  icon: "fas fa-wallet" },
           ]
         },
         { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" },
-        { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
-        { label: "WardWise Report", route: "/ward-report", icon: "fas fa-map-marked-alt" },
-        { label: "Shiftwise Report", route: "/shift-report", icon: "fas fa-clock" },
-        { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-clipboard-list" },
-        { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
-        { label: "Agency", route: "/agencylist", icon: "fas fa-building" },
       ]
     } else if (uRoleName?.toLowerCase() === 'jo') {
       this.menuItems = [

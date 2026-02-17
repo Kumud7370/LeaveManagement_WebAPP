@@ -222,6 +222,23 @@ export const routes: Routes = [
           }
         ]
       },
+
+      {
+        path: "leave-balance",
+        children: [
+          {
+            path: "",
+            redirectTo: "list",
+            pathMatch: "full"
+          },
+          {
+            path: "list",
+            loadComponent: () => import("./modules/leave-balance/leave-balance-list/leave-balance-list.component")
+              .then((m) => m.LeaveBalanceListComponent),
+            data: { breadcrumb: "Leave Balances" },
+          }
+        ]
+      },
     ],
   }
 ];

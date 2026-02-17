@@ -43,8 +43,8 @@ export interface Leave {
 export interface CreateLeaveDto {
   employeeId: string;
   leaveTypeId: string;
-  startDate: Date;
-  endDate: Date;
+ startDate: string; 
+  endDate: string; 
   totalDays: number;
   reason: string;
   isEmergencyLeave?: boolean;
@@ -52,8 +52,8 @@ export interface CreateLeaveDto {
 }
 
 export interface UpdateLeaveDto {
-  startDate?: Date;
-  endDate?: Date;
+  startDate?: string;  
+  endDate?: string; 
   totalDays?: number;
   reason?: string;
   isEmergencyLeave?: boolean;
