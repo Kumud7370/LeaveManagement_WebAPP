@@ -191,7 +191,23 @@ export const routes: Routes = [
         path: "holidays",
         loadChildren: () => import("./modules/holiday/holiday.module").then((m) => m.HolidayModule),
         data: { breadcrumb: "Holidays" },
-      },
+},
+
+ // ==================== LEAVE MODULE ====================
+      {
+        path: "leave",
+        children: [
+          {
+            path: "",
+            redirectTo: "list",
+            pathMatch: "full"
+          },
+          {
+            path: "list",
+            loadComponent: () => import("./modules/leave/leave-list/leave-list.component")
+              .then((m) => m.LeaveListComponent),
+            data: { breadcrumb: "Leave Management" },
+                },
  {
         path: "shifts",
         loadChildren: () =>
@@ -200,4 +216,18 @@ export const routes: Routes = [
       },
     ],
   },
+  // ==================== LEAVE TYPE MODULE ====================
+      {
+        path: "leave-types",
+        children: [
+          {
+            path: "",
+            loadComponent: () => import("./modules/leave-type/leave-type-list/leave-type-list.component")
+              .then((m) => m.LeaveTypeListComponent),
+            data: { breadcrumb: "Leave Types" },
+          }
+        ]
+      },
+    ],
+  }
 ];

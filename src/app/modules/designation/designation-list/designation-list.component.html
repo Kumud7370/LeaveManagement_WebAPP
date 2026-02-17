@@ -7,67 +7,75 @@
     </div>
   </div>
 
-  <!-- Search and Actions Bar -->
-  <div class="search-actions-bar">
-    <div class="search-box">
-      <i class="bi bi-search"></i>
+  <!-- Search and Action Buttons (single line) -->
+  <div class="search-action-section">
+    <div class="search-bar">
+      <i class="bi bi-search search-icon"></i>
       <input
         type="text"
         placeholder="Search designations..."
         [(ngModel)]="searchTerm"
-        (input)="onSearchChange()"
+        (keyup)="onSearchChange()"
+        class="search-input"
       />
     </div>
 
-    <div class="action-buttons-group">
-      <button class="btn-action-bar btn-clear" (click)="clearFilters()">
-        <i class="bi bi-x-circle"></i>
-        Clear
-      </button>
-      <button class="btn-action-bar btn-refresh" (click)="refreshData()">
-        <i class="bi bi-arrow-clockwise"></i>
-        Refresh
-      </button>
-      <button class="btn-action-bar btn-export" (click)="exportData()">
-        <i class="bi bi-download"></i>
-        Export
-      </button>
-      <button class="btn-action-bar btn-add" (click)="openCreateModal()">
-        <i class="bi bi-plus-circle"></i>
-        Add Designation
-      </button>
-    </div>
+    <button class="btn btn-clear" (click)="clearFilters()">
+      <i class="bi bi-x-circle"></i>
+      Clear
+    </button>
+
+    <button class="btn btn-refresh" (click)="refreshData()">
+      <i class="bi bi-arrow-clockwise"></i>
+      Refresh
+    </button>
+
+    <button class="btn btn-export" (click)="exportData()">
+      <i class="bi bi-download"></i>
+      Export
+    </button>
+
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <i class="bi bi-plus-circle"></i>
+      Add Designation
+    </button>
   </div>
 
-  <!-- Grid Container -->
-  <div class="grid-container">
-    <!-- Loading Overlay -->
-    <div *ngIf="isLoading" class="loading-overlay">
-      <div class="spinner-border"></div>
-      <p>Loading designations...</p>
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading designations...</p>
+  </div>
+
+  <!-- AG Grid Container -->
+  <div *ngIf="!isLoading" class="grid-container">
+    <!-- Empty State -->
+    <div *ngIf="rowData.length === 0" class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <h3>No Designations Found</h3>
+      <p>Get started by creating your first designation</p>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        Create Designation
+      </button>
     </div>
 
     <!-- AG Grid -->
     <ag-grid-angular
-      *ngIf="!isLoading"
-      class="ag-theme-alpine custom-grid"
+      *ngIf="rowData.length > 0"
+      class="ag-theme-quartz"
       [rowData]="rowData"
       [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
       [gridOptions]="gridOptions"
-      [animateRows]="true"
+      [rowHeight]="60"
+      [headerHeight]="50"
+      [domLayout]="'autoHeight'"
     >
     </ag-grid-angular>
-
-    <!-- Empty State -->
-    <div *ngIf="!isLoading && rowData.length === 0" class="empty-state">
-      <i class="bi bi-inbox"></i>
-      <h3>No Designations Found</h3>
-      <p>Get started by creating your first designation</p>
-    </div>
   </div>
 
   <!-- Pagination -->
-  <div class="pagination-container" *ngIf="!isLoading && rowData.length > 0">
+  <div *ngIf="!isLoading && rowData.length > 0" class="pagination-container">
     <div class="pagination-info">
       Showing {{ startRecord }} to {{ endRecord }} of
       {{ totalCount }} designations
@@ -91,9 +99,8 @@
           [disabled]="currentPage === 1"
           (click)="onPageChange(1)"
         >
-          <i class="bi bi-chevron-double-left"></i>
+          <i class="bi bi-chevron-bar-left"></i>
         </button>
-
         <button
           class="btn-page"
           [disabled]="currentPage === 1"
@@ -118,28 +125,40 @@
         >
           <i class="bi bi-chevron-right"></i>
         </button>
-
         <button
           class="btn-page"
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(totalPages)"
         >
-          <i class="bi bi-chevron-double-right"></i>
+          <i class="bi bi-chevron-bar-right"></i>
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Edit/Create Modal -->
 <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>
-        <i class="bi bi-award"></i>
-        {{ isEditMode ? "Edit Designation" : "Create New Designation" }}
-      </h2>
-      <button class="btn-close-modal" (click)="closeModal()">
+      <div class="modal-title-group">
+        <div class="modal-icon">
+          <i class="bi bi-award"></i>
+        </div>
+        <div>
+          <h2 class="modal-title">
+            {{ isEditMode ? "Edit Designation" : "Create New Designation" }}
+          </h2>
+          <p class="modal-subtitle">
+            {{
+              isEditMode
+                ? "Update designation information"
+                : "Add a new designation to the system"
+            }}
+          </p>
+        </div>
+      </div>
+      <button class="modal-close" (click)="closeModal()">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -247,7 +266,7 @@
         </div>
 
         <!-- Description -->
-        <div class="form-group full-width">
+        <div class="form-group">
           <label for="description">Description</label>
           <textarea
             id="description"
@@ -275,7 +294,7 @@
           </button>
           <button
             type="submit"
-            class="btn-primary"
+            class="btn-primary-modal"
             [disabled]="designationForm.invalid || isSubmitting"
           >
             <span *ngIf="!isSubmitting">

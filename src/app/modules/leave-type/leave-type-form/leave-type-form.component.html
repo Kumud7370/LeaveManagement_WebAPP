@@ -1,0 +1,188 @@
+<div class="leave-type-form-container">
+  <div class="form-header">
+    <h2>{{ isEditMode ? 'Edit Leave Type' : 'Create Leave Type' }}</h2>
+    <p>{{ isEditMode ? 'Update the leave type configuration below' : 'Define a new leave type for your organization' }}</p>
+  </div>
+
+  <div *ngIf="loadingLeaveType" class="form-loading">
+    <div class="spinner"></div>
+    <p>Loading leave type...</p>
+  </div>
+
+  <form *ngIf="!loadingLeaveType" [formGroup]="leaveTypeForm" (ngSubmit)="onSubmit()">
+
+    <!-- Name + Code -->
+    <div class="form-row two-col">
+      <div class="form-group">
+        <label>Name <span class="required">*</span></label>
+        <input type="text" formControlName="name" placeholder="e.g. Annual Leave" [class.is-error]="isInvalid('name')" />
+        <span class="error-msg" *ngIf="isInvalid('name')">{{ getError('name') }}</span>
+      </div>
+      <div class="form-group">
+        <label>Code <span class="required">*</span></label>
+        <input type="text" formControlName="code" placeholder="e.g. AL" [class.is-error]="isInvalid('code')"
+          style="text-transform:uppercase" (input)="onCodeInput($event)" />
+        <span class="error-msg" *ngIf="isInvalid('code')">{{ getError('code') }}</span>
+        <span class="hint-msg">Short unique identifier (letters only)</span>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+      <label>Description</label>
+      <textarea formControlName="description" rows="3" placeholder="Brief description of this leave type..." [class.is-error]="isInvalid('description')"></textarea>
+      <div class="textarea-footer">
+        <span class="error-msg" *ngIf="isInvalid('description')">{{ getError('description') }}</span>
+        <span class="char-count" [class.over]="(leaveTypeForm.get('description')?.value?.length || 0) > 450">
+          {{ leaveTypeForm.get('description')?.value?.length || 0 }}/500
+        </span>
+      </div>
+    </div>
+
+    <!-- Max Days + Display Order + Color -->
+    <div class="form-row three-col">
+      <div class="form-group">
+        <label>Max Days / Year <span class="required">*</span></label>
+        <div class="input-with-unit">
+          <input type="number" formControlName="maxDaysPerYear" min="1" max="365" placeholder="0" [class.is-error]="isInvalid('maxDaysPerYear')" />
+          <span class="unit">days</span>
+        </div>
+        <span class="error-msg" *ngIf="isInvalid('maxDaysPerYear')">{{ getError('maxDaysPerYear') }}</span>
+      </div>
+      <div class="form-group">
+        <label>Min Notice Days</label>
+        <div class="input-with-unit">
+          <input type="number" formControlName="minimumNoticeDays" min="0" placeholder="0" [class.is-error]="isInvalid('minimumNoticeDays')" />
+          <span class="unit">days</span>
+        </div>
+        <span class="error-msg" *ngIf="isInvalid('minimumNoticeDays')">{{ getError('minimumNoticeDays') }}</span>
+      </div>
+      <div class="form-group">
+        <label>Display Order</label>
+        <input type="number" formControlName="displayOrder" min="0" placeholder="0" [class.is-error]="isInvalid('displayOrder')" />
+        <span class="error-msg" *ngIf="isInvalid('displayOrder')">{{ getError('displayOrder') }}</span>
+      </div>
+    </div>
+
+    <!-- Color Picker -->
+    <div class="form-group">
+      <label>Color Label</label>
+      <div class="color-picker-row">
+        <input type="color" formControlName="color" class="color-input" />
+        <input type="text" formControlName="color" class="color-hex-input" placeholder="#000000" maxlength="7" />
+        <div class="color-preview">
+          <span class="color-preview-dot" [style.background]="leaveTypeForm.get('color')?.value"></span>
+          <span class="color-preview-label" [style.color]="leaveTypeForm.get('color')?.value">
+            {{ leaveTypeForm.get('name')?.value || 'Preview' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toggle Flags Section -->
+    <div class="toggles-section">
+      <h4 class="section-title">Leave Type Rules</h4>
+      <div class="toggles-grid">
+
+        <!-- Requires Approval -->
+        <div class="toggle-card">
+          <label class="toggle-label">
+            <div class="toggle-switch">
+              <input type="checkbox" formControlName="requiresApproval" />
+              <span class="slider"></span>
+            </div>
+            <div class="toggle-text">
+              <i class="bi bi-person-check toggle-icon approval"></i>
+              <div>
+                <span class="toggle-title">Requires Approval</span>
+                <span class="toggle-desc">Leave requests must be approved by a manager</span>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Requires Document -->
+        <div class="toggle-card">
+          <label class="toggle-label">
+            <div class="toggle-switch">
+              <input type="checkbox" formControlName="requiresDocument" />
+              <span class="slider"></span>
+            </div>
+            <div class="toggle-text">
+              <i class="bi bi-file-earmark-check toggle-icon document"></i>
+              <div>
+                <span class="toggle-title">Requires Document</span>
+                <span class="toggle-desc">Employee must submit supporting documentation</span>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Is Carry Forward -->
+        <div class="toggle-card">
+          <label class="toggle-label">
+            <div class="toggle-switch">
+              <input type="checkbox" formControlName="isCarryForward" (change)="onCarryForwardChange()" />
+              <span class="slider"></span>
+            </div>
+            <div class="toggle-text">
+              <i class="bi bi-arrow-repeat toggle-icon carry-forward"></i>
+              <div>
+                <span class="toggle-title">Carry Forward</span>
+                <span class="toggle-desc">Unused leave can be carried to next year</span>
+              </div>
+            </div>
+          </label>
+          <!-- Max carry forward days (only shown when carry forward is enabled) -->
+          <div class="carry-forward-days" *ngIf="leaveTypeForm.get('isCarryForward')?.value">
+            <label>Max Carry Forward Days</label>
+            <div class="input-with-unit">
+              <input type="number" formControlName="maxCarryForwardDays" min="0" placeholder="0" />
+              <span class="unit">days</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Is Active -->
+        <div class="toggle-card">
+          <label class="toggle-label">
+            <div class="toggle-switch">
+              <input type="checkbox" formControlName="isActive" />
+              <span class="slider"></span>
+            </div>
+            <div class="toggle-text">
+              <i class="bi bi-power toggle-icon active"></i>
+              <div>
+                <span class="toggle-title">Active</span>
+                <span class="toggle-desc">Make this leave type available for use</span>
+              </div>
+            </div>
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Error Alert -->
+    <div class="alert alert-error" *ngIf="formError">
+      <i class="bi bi-exclamation-triangle"></i>
+      <span>{{ formError }}</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="submitting">Cancel</button>
+      <button type="submit" class="btn btn-submit" [disabled]="submitting || leaveTypeForm.invalid">
+        <span *ngIf="!submitting">
+          <i class="bi bi-check-circle"></i>
+          {{ isEditMode ? 'Update Leave Type' : 'Create Leave Type' }}
+        </span>
+        <span *ngIf="submitting" class="submitting-state">
+          <div class="btn-spinner"></div>
+          {{ isEditMode ? 'Updating...' : 'Creating...' }}
+        </span>
+      </button>
+    </div>
+
+  </form>
+</div>

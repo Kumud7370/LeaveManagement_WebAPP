@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AgGridModule } from 'ag-grid-angular';
-import { ColDef, GridApi, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, GridApi, GridReadyEvent, GridOptions } from 'ag-grid-community';
 import { Subject, takeUntil } from 'rxjs';
 import { HolidayService } from '../../../core/services/api/holiday.api';
 import { Holiday, HolidayFilterDto, HolidayType } from '../../../core/Models/holiday.model';
@@ -23,17 +23,11 @@ export class HolidayListComponent implements OnInit, OnDestroy {
 
   holidays: Holiday[] = [];
   searchTerm: string = '';
-  selectedType: string = '';
-  selectedOptional: string = '';
-  selectedYear: number = new Date().getFullYear();
-  
+
   totalRecords = 0;
   currentPage = 1;
   pageSize = 10;
-  
-  holidayTypes = Object.values(HolidayType);
-  years: number[] = [];
-  
+
   isLoading = false;
   showModal = false;
   modalMode: 'create' | 'edit' | 'view' = 'create';
@@ -44,7 +38,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
       headerName: 'Actions',
       field: 'actions',
       cellRenderer: ActionCellRendererComponent,
-      width: 180,
+      width: 160,
       pinned: 'left',
       sortable: false,
       filter: false,
@@ -65,25 +59,36 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     {
       headerName: 'Date',
       field: 'holidayDate',
-      width: 150,
+      width: 160,
       sortable: true,
       valueFormatter: (params) => this.formatDate(params.value)
     },
     {
       headerName: 'Type',
       field: 'holidayTypeName',
-      width: 130,
+      width: 140,
       sortable: true,
       filter: true,
-      cellStyle: (params) => this.getTypeCellStyle(params.value)
+      // ── Badge pill, NOT full-cell background ──
+      cellRenderer: (params: any) => {
+        const type = params.value;
+        if (type === 'National') {
+          return '<span class="type-badge type-national">National</span>';
+        } else if (type === 'Regional') {
+          return '<span class="type-badge type-regional">Regional</span>';
+        } else if (type === 'Optional') {
+          return '<span class="type-badge type-optional">Optional</span>';
+        }
+        return `<span class="type-badge type-national">${type}</span>`;
+      }
     },
     {
       headerName: 'Optional',
       field: 'isOptional',
-      width: 120,
+      width: 100,
       cellRenderer: (params: any) => {
-        return params.value 
-          ? '<span class="badge badge-warning">Yes</span>' 
+        return params.value
+          ? '<span class="badge badge-warning">Yes</span>'
           : '<span class="badge badge-info">No</span>';
       }
     },
@@ -91,40 +96,45 @@ export class HolidayListComponent implements OnInit, OnDestroy {
       headerName: 'Departments',
       field: 'applicableDepartments',
       flex: 1,
-      minWidth: 150,
+      minWidth: 100,
       valueFormatter: (params) => {
-        if (!params.value || params.value.length === 0) {
-          return 'All Departments';
-        }
+        if (!params.value || params.value.length === 0) return 'All Departments';
         return `${params.value.length} Department(s)`;
       }
     },
     {
       headerName: 'Days Until',
       field: 'daysUntilHoliday',
-      width: 120,
+      width: 130,
       sortable: true,
-      cellStyle: (params) => this.getDaysUntilCellStyle(params.value),
-      valueFormatter: (params) => {
-        if (params.data.isToday) return 'Today';
-        if (params.value < 0) return 'Past';
-        return `${params.value} days`;
+      // ── Badge pill for days, NOT full-cell background ──
+      cellRenderer: (params: any) => {
+        if (params.data.isToday) {
+          return '<span class="type-badge type-today">Today</span>';
+        }
+        if (params.value < 0) {
+          return `<span style="color:#6b7280;">Past</span>`;
+        }
+        if (params.value <= 7) {
+          return `<span class="type-badge type-regional">${params.value} days</span>`;
+        }
+        return `<span>${params.value} days</span>`;
       }
     },
     {
       headerName: 'Status',
       field: 'isUpcoming',
-      width: 120,
+      width: 130,
       cellRenderer: (params: any) => {
-        return params.value 
-          ? '<span class="badge badge-success">Upcoming</span>' 
+        return params.value
+          ? '<span class="badge badge-success">Upcoming</span>'
           : '<span class="badge badge-secondary">Past</span>';
       }
     },
     {
       headerName: 'Created',
       field: 'createdAt',
-      width: 150,
+      width: 160,
       sortable: true,
       valueFormatter: (params) => this.formatDate(params.value)
     }
@@ -136,6 +146,12 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     filter: true
   };
 
+  gridOptions: GridOptions = {
+    rowHeight: 60,
+    headerHeight: 50,
+    suppressCellFocus: true
+  };
+
   context = {
     componentParent: this
   };
@@ -143,9 +159,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   constructor(
     private holidayService: HolidayService,
     private router: Router
-  ) {
-    this.initializeYears();
-  }
+  ) {}
 
   ngOnInit(): void {
     this.loadHolidays();
@@ -154,13 +168,6 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  initializeYears(): void {
-    const currentYear = new Date().getFullYear();
-    for (let i = currentYear - 2; i <= currentYear + 5; i++) {
-      this.years.push(i);
-    }
   }
 
   onGridReady(params: GridReadyEvent): void {
@@ -173,9 +180,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
 
     const filter: HolidayFilterDto = {
       searchTerm: this.searchTerm || undefined,
-      holidayType: this.selectedType ? (this.selectedType as HolidayType) : undefined,
-      isOptional: this.selectedOptional ? this.selectedOptional === 'true' : undefined,
-      year: this.selectedYear,
+      year: new Date().getFullYear(),
       pageNumber: this.currentPage,
       pageSize: this.pageSize,
       sortBy: 'HolidayDate',
@@ -189,12 +194,8 @@ export class HolidayListComponent implements OnInit, OnDestroy {
           if (response.success) {
             this.holidays = response.data.items;
             this.totalRecords = response.data.totalCount;
-            
-            // Auto-resize columns after data is loaded
             setTimeout(() => {
-              if (this.gridApi) {
-                this.gridApi.sizeColumnsToFit();
-              }
+              if (this.gridApi) this.gridApi.sizeColumnsToFit();
             }, 100);
           }
           this.isLoading = false;
@@ -214,9 +215,6 @@ export class HolidayListComponent implements OnInit, OnDestroy {
 
   clearFilters(): void {
     this.searchTerm = '';
-    this.selectedType = '';
-    this.selectedOptional = '';
-    this.selectedYear = new Date().getFullYear();
     this.currentPage = 1;
     this.loadHolidays();
   }
@@ -297,27 +295,11 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   formatDate(date: any): string {
     if (!date) return '';
     const d = new Date(date);
-    return d.toLocaleDateString('en-GB', { 
-      day: '2-digit', 
-      month: 'short', 
-      year: 'numeric' 
+    return d.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
     });
-  }
-
-  getTypeCellStyle(type: string): any {
-    const styles: any = {
-      'National': { backgroundColor: '#dbeafe', color: '#1e40af', fontWeight: '600', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' },
-      'Regional': { backgroundColor: '#fef3c7', color: '#92400e', fontWeight: '600', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' },
-      'Optional': { backgroundColor: '#e0e7ff', color: '#4338ca', fontWeight: '600', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' }
-    };
-    return styles[type] || {};
-  }
-
-  getDaysUntilCellStyle(days: number): any {
-    if (days < 0) return { color: '#6b7280' };
-    if (days === 0) return { backgroundColor: '#dcfce7', color: '#166534', fontWeight: '600', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' };
-    if (days <= 7) return { backgroundColor: '#fef3c7', color: '#92400e', fontWeight: '600', padding: '0.25rem 0.5rem', borderRadius: '0.25rem' };
-    return {};
   }
 
   get totalPages(): number {
