@@ -90,7 +90,7 @@
         <div class="info-card">
           <h4 class="card-title"><i class="bi bi-person-check"></i> Approval Details</h4>
 
-          <ng-container *ngIf="leave.leaveStatus === 1">
+          <ng-container *ngIf="leave.leaveStatus === LeaveStatus.Approved">
             <div class="detail-row">
               <span class="detail-label">Approved By</span>
               <span class="detail-value">{{ leave.approvedByName || '—' }}</span>
@@ -101,7 +101,7 @@
             </div>
           </ng-container>
 
-          <ng-container *ngIf="leave.leaveStatus === 2">
+          <ng-container *ngIf="leave.leaveStatus === LeaveStatus.Rejected">
             <div class="detail-row">
               <span class="detail-label">Rejected By</span>
               <span class="detail-value">{{ leave.rejectedByName || '—' }}</span>
@@ -116,7 +116,7 @@
             </div>
           </ng-container>
 
-          <ng-container *ngIf="leave.leaveStatus === 3">
+          <ng-container *ngIf="leave.leaveStatus === LeaveStatus.Cancelled">
             <div class="detail-row">
               <span class="detail-label">Cancelled On</span>
               <span class="detail-value">{{ leave.cancelledDate ? (leave.cancelledDate | date: 'd MMM yyyy, h:mm a') : '—' }}</span>
@@ -127,7 +127,7 @@
             </div>
           </ng-container>
 
-          <ng-container *ngIf="leave.leaveStatus === 0">
+          <ng-container *ngIf="leave.leaveStatus === LeaveStatus.Pending">
             <div class="pending-note">
               <i class="bi bi-hourglass-split"></i>
               <span>This leave request is awaiting approval.</span>
@@ -146,11 +146,11 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="details-actions" *ngIf="leave.leaveStatus === 0 || leave.canBeCancelled">
-        <button *ngIf="leave.leaveStatus === 0" class="btn btn-approve" (click)="onApprove()">
+      <div class="details-actions" *ngIf="leave.leaveStatus === LeaveStatus.Pending || leave.canBeCancelled">
+        <button *ngIf="leave.leaveStatus === LeaveStatus.Pending" class="btn btn-approve" (click)="onApprove()">
           <i class="bi bi-check-lg"></i> Approve
         </button>
-        <button *ngIf="leave.leaveStatus === 0" class="btn btn-reject" (click)="onReject()">
+        <button *ngIf="leave.leaveStatus === LeaveStatus.Pending" class="btn btn-reject" (click)="onReject()">
           <i class="bi bi-x-lg"></i> Reject
         </button>
         <button *ngIf="leave.canBeCancelled" class="btn btn-cancel" (click)="onCancel()">

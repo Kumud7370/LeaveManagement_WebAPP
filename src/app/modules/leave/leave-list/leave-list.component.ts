@@ -6,7 +6,7 @@ import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
 import { LeaveService } from '../../../core/services/api/leave.api';
 import { LeaveTypeService } from '../../../core/services/api/leave-type.api';
 import { Leave, LeaveFilterDto } from '../../../core/Models/leave.model';
-import { LeaveType } from '../../../core/Models/leave-type.model'; // ✅ import from the correct model
+import { LeaveType } from '../../../core/Models/leave-type.model'; 
 import Swal from 'sweetalert2';
 import { LeaveActionCellRendererComponent } from '../leave-action-cell-renderer.component';
 import { LeaveFormComponent } from '../leave-form/leave-form.component';
@@ -22,7 +22,7 @@ import * as XLSX from 'xlsx';
 })
 export class LeaveListComponent implements OnInit {
   leaves: Leave[] = [];
-  leaveTypes: LeaveType[] = [];  // ✅ now uses leave-type.model LeaveType
+  leaveTypes: LeaveType[] = []; 
   loading = false;
   error: string | null = null;
   statistics: { [key: string]: number } = {};
@@ -107,12 +107,18 @@ export class LeaveListComponent implements OnInit {
       },
       {
         headerName: 'STATUS', field: 'leaveStatus', width: 130,
-        cellRenderer: (p: { value: number; data: Leave }) => {
-          const map: Record<number, [string, string]> = {
-            0: ['pending', 'Pending'], 1: ['approved', 'Approved'],
-            2: ['rejected', 'Rejected'], 3: ['cancelled', 'Cancelled']
+        cellRenderer: (p: { value: any; data: Leave }) => {
+          const map: Record<string, [string, string]> = {
+            '1': ['pending', 'Pending'],
+            '2': ['approved', 'Approved'],
+            '3': ['rejected', 'Rejected'],
+            '4': ['cancelled', 'Cancelled'],
+            'Pending': ['pending', 'Pending'],
+            'Approved': ['approved', 'Approved'],
+            'Rejected': ['rejected', 'Rejected'],
+            'Cancelled': ['cancelled', 'Cancelled']
           };
-          const [cls, lbl] = map[p.value] ?? ['pending', 'Pending'];
+          const [cls, lbl] = map[String(p.value)] ?? ['pending', 'Pending'];
           return `<span class="status-chip ${cls}">${lbl}</span>`;
         }
       },
@@ -133,7 +139,7 @@ export class LeaveListComponent implements OnInit {
 
   loadLeaveTypes(): void {
     this.leaveTypeService.getActiveLeaveTypes().subscribe({
-      next: (r) => { if (r.success) this.leaveTypes = r.data; } 
+      next: (r) => { if (r.success) this.leaveTypes = r.data; }
     });
   }
 
@@ -161,11 +167,16 @@ export class LeaveListComponent implements OnInit {
     });
   }
 
-  loadStatistics(): void {
-    this.leaveService.getLeaveStatisticsByStatus().subscribe({
-      next: (r) => { if (r.success) this.statistics = r.data; }
-    });
-  }
+ loadStatistics(): void {
+  this.leaveService.getLeaveStatisticsByStatus().subscribe({
+    next: (r) => {
+      if (r.success) {
+        console.log('Statistics keys:', r.data); 
+        this.statistics = r.data;
+      }
+    }
+  });
+}
 
   onSearch(): void { this.currentPage = 1; this.loadLeaves(); }
   onFilterChange(): void { this.currentPage = 1; this.loadLeaves(); }
@@ -269,18 +280,18 @@ export class LeaveListComponent implements OnInit {
     if (!this.leaves.length) { Swal.fire('No Data', 'Nothing to export.', 'info'); return; }
     Swal.fire({ title: 'Exporting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     const data = this.leaves.map(l => ({
-      'Employee Code':     l.employeeCode || '',
-      'Employee Name':     l.employeeName || '',
-      'Leave Type':        l.leaveTypeName || '',
-      'Start Date':        new Date(l.startDate).toLocaleDateString(),
-      'End Date':          new Date(l.endDate).toLocaleDateString(),
-      'Total Days':        l.totalDays,
-      'Reason':            l.reason,
-      'Status':            l.leaveStatusName,
-      'Emergency':         l.isEmergencyLeave ? 'Yes' : 'No',
-      'Applied Date':      new Date(l.appliedDate).toLocaleDateString(),
-      'Approved By':       l.approvedByName || '',
-      'Rejection Reason':  l.rejectionReason || ''
+      'Employee Code': l.employeeCode || '',
+      'Employee Name': l.employeeName || '',
+      'Leave Type': l.leaveTypeName || '',
+      'Start Date': new Date(l.startDate).toLocaleDateString(),
+      'End Date': new Date(l.endDate).toLocaleDateString(),
+      'Total Days': l.totalDays,
+      'Reason': l.reason,
+      'Status': l.leaveStatusName,
+      'Emergency': l.isEmergencyLeave ? 'Yes' : 'No',
+      'Applied Date': new Date(l.appliedDate).toLocaleDateString(),
+      'Approved By': l.approvedByName || '',
+      'Rejection Reason': l.rejectionReason || ''
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     ws['!cols'] = [10, 20, 15, 12, 12, 10, 30, 12, 10, 12, 18, 20].map(w => ({ wch: w }));
