@@ -15,34 +15,34 @@ import {
   providedIn: 'root'
 })
 export class HolidayService {
-  private endpoint = 'Holiday';
+  private readonly endpoint = 'Holiday';
 
   constructor(private apiClient: ApiClientService) {}
 
   createHoliday(dto: CreateHolidayDto): Observable<ApiResponse<Holiday>> {
-    return this.apiClient.createHoliday(dto);
+    return this.apiClient.post<ApiResponse<Holiday>>(this.endpoint, dto);
   }
 
   getHolidayById(id: string): Observable<ApiResponse<Holiday>> {
-    return this.apiClient.getHolidayById(id);
+    return this.apiClient.get<ApiResponse<Holiday>>(`${this.endpoint}/${id}`);
   }
 
   getFilteredHolidays(filter: HolidayFilterDto): Observable<ApiResponse<PagedResult<Holiday>>> {
-    return this.apiClient.filterHolidays(filter);
+    return this.apiClient.post<ApiResponse<PagedResult<Holiday>>>(`${this.endpoint}/filter`, filter);
   }
 
   getHolidaysByDepartment(departmentId: string): Observable<ApiResponse<Holiday[]>> {
     return this.apiClient.get<ApiResponse<Holiday[]>>(`${this.endpoint}/department/${departmentId}`);
   }
 
-  getHolidaysByDateRange(startDate: Date, endDate: Date): Observable<ApiResponse<Holiday[]>> {
+  getHolidaysByDateRange(startDate: string, endDate: string): Observable<ApiResponse<Holiday[]>> {
     return this.apiClient.get<ApiResponse<Holiday[]>>(
-      `${this.endpoint}/date-range?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
+      `${this.endpoint}/date-range?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
     );
   }
 
   getUpcomingHolidays(count: number = 10): Observable<ApiResponse<Holiday[]>> {
-    return this.apiClient.getUpcomingHolidays();
+    return this.apiClient.get<ApiResponse<Holiday[]>>(`${this.endpoint}/upcoming?count=${count}`);
   }
 
   getHolidaysByYear(year: number): Observable<ApiResponse<Holiday[]>> {
@@ -58,16 +58,16 @@ export class HolidayService {
   }
 
   updateHoliday(id: string, dto: UpdateHolidayDto): Observable<ApiResponse<Holiday>> {
-    return this.apiClient.updateHoliday(id, dto);
+    return this.apiClient.put<ApiResponse<Holiday>>(`${this.endpoint}/${id}`, dto);
   }
 
   deleteHoliday(id: string): Observable<ApiResponse<boolean>> {
-    return this.apiClient.deleteHoliday(id);
+    return this.apiClient.delete<ApiResponse<boolean>>(`${this.endpoint}/${id}`);
   }
 
-  isHolidayOnDate(date: Date): Observable<ApiResponse<boolean>> {
+  isHolidayOnDate(date: string): Observable<ApiResponse<boolean>> {
     return this.apiClient.get<ApiResponse<boolean>>(
-      `${this.endpoint}/check-date?date=${date.toISOString()}`
+      `${this.endpoint}/check-date?date=${encodeURIComponent(date)}`
     );
   }
 
