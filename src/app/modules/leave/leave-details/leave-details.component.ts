@@ -18,6 +18,8 @@ export class LeaveDetailsComponent implements OnInit {
 
   leave: Leave | null = null;
   loading = false;
+
+  // Expose enum to template
   LeaveStatus = LeaveStatus;
 
   constructor(private leaveService: LeaveService) {}
@@ -29,17 +31,32 @@ export class LeaveDetailsComponent implements OnInit {
   loadLeave(id: string): void {
     this.loading = true;
     this.leaveService.getLeaveById(id).subscribe({
-      next: (r) => { if (r.success) this.leave = r.data; this.loading = false; },
+      next: (r) => {
+        if (r.success) this.leave = r.data;
+        this.loading = false;
+      },
       error: () => { this.loading = false; }
     });
   }
 
   getStatusClass(status: LeaveStatus): string {
-    return { 0: 'pending', 1: 'approved', 2: 'rejected', 3: 'cancelled' }[status] || 'pending';
+    const map: Record<number, string> = {
+      [LeaveStatus.Pending]:   'pending',
+      [LeaveStatus.Approved]:  'approved',
+      [LeaveStatus.Rejected]:  'rejected',
+      [LeaveStatus.Cancelled]: 'cancelled'
+    };
+    return map[status] ?? 'pending';
   }
 
   getStatusIcon(status: LeaveStatus): string {
-    return { 0: 'bi-clock-history', 1: 'bi-check-circle', 2: 'bi-x-circle', 3: 'bi-slash-circle' }[status] || 'bi-clock-history';
+    const map: Record<number, string> = {
+      [LeaveStatus.Pending]:   'bi-clock-history',
+      [LeaveStatus.Approved]:  'bi-check-circle',
+      [LeaveStatus.Rejected]:  'bi-x-circle',
+      [LeaveStatus.Cancelled]: 'bi-slash-circle'
+    };
+    return map[status] ?? 'bi-clock-history';
   }
 
   async onApprove(): Promise<void> {
