@@ -81,7 +81,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     },
     { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
     { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
-     { label: "Shifts", route: "/shifts", icon: "fas fa-business-time" },
+    { label: "Shifts", route: "/shifts", icon: "fas fa-business-time" },
+    { label: 'Employee Shifts', route: '/employee-shifts', icon: 'fas fa-user-clock' },
     { label: "Designations", route: "/designations", icon: "fas fa-award" },
     { label: "Holidays", route: "/holidays", icon: "fas fa-calendar-alt" },
     {
@@ -239,7 +240,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           ]
         },
         { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
-         { label: "Shifts", route: "/shifts", icon: "fas fa-business-time" },
+        { label: "Shifts", route: "/shifts", icon: "fas fa-business-time" },
         { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
         { label: "Designations", route: "/designations", icon: "fas fa-award" },
         { label: "Holidays", route: "/holidays", icon: "fas fa-calendar-alt" },
