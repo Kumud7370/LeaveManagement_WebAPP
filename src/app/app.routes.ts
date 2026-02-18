@@ -212,6 +212,15 @@ export const routes: Routes = [
         data: { breadcrumb: "Shifts" },
       },
 
+      {
+        path: 'employee-shifts',
+        loadChildren: () =>
+          import('./modules/employee-shift/employee-shift.module')
+            .then(m => m.EmployeeShiftModule),
+        data: { breadcrumb: 'Employee Shifts' },
+      },
+
+
       // ==================== LEAVE MODULE ====================
       {
         path: "leave",
