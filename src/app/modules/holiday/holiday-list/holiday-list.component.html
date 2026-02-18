@@ -3,11 +3,11 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Holiday Management</h1>
-      <p class="page-subtitle">Manage your organization's holidays</p>
+      <p class="page-subtitle">Manage your organisation's holidays</p>
     </div>
   </div>
 
-  <!-- Search and Actions Bar (ONE LINE) -->
+  <!-- Search & Actions Bar -->
   <div class="search-actions-bar">
     <div class="search-box">
       <i class="bi bi-search"></i>
@@ -20,21 +20,29 @@
     </div>
 
     <div class="action-buttons-group">
-      <button class="btn-action btn-clear" (click)="clearFilters()" title="Clear filters">
-        <i class="bi bi-x-circle"></i>
-        Clear
+      <button
+        class="btn-action btn-clear"
+        (click)="clearFilters()"
+        title="Clear filters"
+      >
+        <i class="bi bi-x-circle"></i> Clear
       </button>
-      <button class="btn-action btn-refresh" (click)="loadHolidays()" title="Refresh data">
-        <i class="bi bi-arrow-clockwise"></i>
-        Refresh
+      <button
+        class="btn-action btn-refresh"
+        (click)="loadHolidays()"
+        title="Refresh"
+      >
+        <i class="bi bi-arrow-clockwise"></i> Refresh
       </button>
-      <button class="btn-action btn-export" (click)="exportData()" title="Export data">
-        <i class="bi bi-download"></i>
-        Export
+      <button
+        class="btn-action btn-export"
+        (click)="exportData()"
+        title="Export CSV"
+      >
+        <i class="bi bi-download"></i> Export
       </button>
       <button class="btn-action btn-add" (click)="openCreateModal()">
-        <i class="bi bi-plus-circle"></i>
-        Add Holiday
+        <i class="bi bi-plus-circle"></i> Add Holiday
       </button>
     </div>
   </div>
@@ -53,22 +61,21 @@
       [context]="context"
       (gridReady)="onGridReady($event)"
       style="width: 100%"
-    >
-    </ag-grid-angular>
+    ></ag-grid-angular>
   </div>
 
   <!-- Custom Pagination -->
   <div class="pagination-container" *ngIf="totalRecords > 0">
     <div class="pagination-info">
-      Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ getMaxRecords() }} of
+      Showing {{ (currentPage - 1) * pageSize + 1 }}–{{ getMaxRecords() }} of
       {{ totalRecords }} holidays
     </div>
 
     <div class="pagination-controls">
       <select
         class="page-size-select"
-        [(ngModel)]="pageSize"
-        (change)="onPageSizeChange(pageSize)"
+        [value]="pageSize"
+        (change)="onPageSizeChange($event)"
       >
         <option [value]="10">10 per page</option>
         <option [value]="20">20 per page</option>
@@ -77,17 +84,37 @@
       </select>
 
       <div class="page-buttons">
-        <button class="page-btn" [disabled]="currentPage === 1" (click)="onPageChange(1)" title="First page">
+        <button
+          class="page-btn"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(1)"
+          title="First page"
+        >
           <i class="bi bi-chevron-double-left"></i>
         </button>
-        <button class="page-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)" title="Previous page">
+        <button
+          class="page-btn"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)"
+          title="Previous page"
+        >
           <i class="bi bi-chevron-left"></i>
         </button>
         <span class="page-number">{{ currentPage }} / {{ totalPages }}</span>
-        <button class="page-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)" title="Next page">
+        <button
+          class="page-btn"
+          [disabled]="currentPage === totalPages"
+          (click)="onPageChange(currentPage + 1)"
+          title="Next page"
+        >
           <i class="bi bi-chevron-right"></i>
         </button>
-        <button class="page-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)" title="Last page">
+        <button
+          class="page-btn"
+          [disabled]="currentPage === totalPages"
+          (click)="onPageChange(totalPages)"
+          title="Last page"
+        >
           <i class="bi bi-chevron-double-right"></i>
         </button>
       </div>

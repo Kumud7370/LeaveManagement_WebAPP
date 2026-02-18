@@ -8,4 +8,4 @@ import { HolidayRoutingModule } from './holiday-routing.module';
     HolidayRoutingModule
   ]
 })
-export class HolidayModule { }
+export class HolidayModule {}
