@@ -1,0 +1,207 @@
+<!-- employee-shift-form.component.html -->
+<div class="modal-backdrop" (click)="onClose()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-left">
+        <div class="header-icon"><i class="bi bi-calendar2-week"></i></div>
+        <div>
+          <h2 class="modal-title">{{ modalTitle }}</h2>
+          <p class="modal-sub" *ngIf="employeeShift && mode !== 'create'">
+            <span class="status-chip"
+              [ngStyle]="{ background: getStatusStyle(employeeShift.status).bg,
+                           color: getStatusStyle(employeeShift.status).color }">
+              {{ employeeShift.statusName }}
+            </span>
+            <span *ngIf="employeeShift.employeeName" class="emp-tag">
+              &nbsp;· {{ employeeShift.employeeName }}
+            </span>
+          </p>
+        </div>
+      </div>
+      <button class="close-btn" (click)="onClose()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+
+      <!-- ════ VIEW MODE ════ -->
+      <ng-container *ngIf="mode === 'view' && employeeShift">
+        <div class="view-grid">
+
+          <div class="info-card"
+            [ngStyle]="{ borderLeftColor: employeeShift.shiftColor ?? '#3b82f6' }">
+            <div class="ic-label"><i class="bi bi-person"></i> Employee</div>
+            <div class="ic-val">{{ employeeShift.employeeName ?? '—' }}</div>
+            <div class="ic-sub">{{ employeeShift.employeeCode }}</div>
+          </div>
+
+          <div class="info-card">
+            <div class="ic-label"><i class="bi bi-clock"></i> Shift</div>
+            <div class="ic-val">{{ employeeShift.shiftName ?? '—' }}</div>
+            <div class="ic-sub">{{ employeeShift.shiftTimingDisplay }}</div>
+          </div>
+
+          <div class="info-card">
+            <div class="ic-label"><i class="bi bi-calendar-range"></i> From</div>
+            <div class="ic-val">{{ fmt(employeeShift.effectiveFrom) }}</div>
+          </div>
+
+          <div class="info-card">
+            <div class="ic-label"><i class="bi bi-calendar-range"></i> To</div>
+            <div class="ic-val">
+              {{ employeeShift.effectiveTo ? fmt(employeeShift.effectiveTo) : 'Ongoing' }}
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="ic-label"><i class="bi bi-hourglass"></i> Duration</div>
+            <div class="ic-val">
+              {{ (employeeShift.durationInDays === -1 || !employeeShift.durationInDays)
+                 ? 'Ongoing'
+                 : employeeShift.durationInDays + ' days' }}
+            </div>
+          </div>
+
+          <div class="info-card">
+            <div class="ic-label"><i class="bi bi-activity"></i> Currently Active</div>
+            <div class="ic-val"
+              [style.color]="employeeShift.isCurrentlyActive ? '#10b981' : '#94a3b8'">
+              <i [class]="employeeShift.isCurrentlyActive
+                ? 'bi bi-check-circle-fill'
+                : 'bi bi-dash-circle'"></i>
+              {{ employeeShift.isCurrentlyActive ? 'Yes' : 'No' }}
+            </div>
+          </div>
+
+          <!-- Reason -->
+          <div class="info-card full" *ngIf="employeeShift.changeReason">
+            <div class="ic-label"><i class="bi bi-chat-text"></i> Reason</div>
+            <div class="ic-val italic">{{ employeeShift.changeReason }}</div>
+          </div>
+
+          <!-- Approved -->
+          <div class="info-card full approved-card"
+            *ngIf="employeeShift.status === ShiftChangeStatus.Approved">
+            <div class="ic-label green">
+              <i class="bi bi-check-circle-fill"></i> Approved by
+            </div>
+            <div class="ic-val">{{ employeeShift.approvedByName ?? employeeShift.approvedBy ?? '—' }}</div>
+            <div class="ic-sub">{{ fmt(employeeShift.approvedDate) }}</div>
+          </div>
+
+          <!-- Rejected -->
+          <div class="info-card full rejected-card"
+            *ngIf="employeeShift.status === ShiftChangeStatus.Rejected">
+            <div class="ic-label red">
+              <i class="bi bi-x-circle-fill"></i>
+              Rejected by {{ employeeShift.rejectedByName ?? employeeShift.rejectedBy }}
+              · {{ fmt(employeeShift.rejectedDate) }}
+            </div>
+            <div class="ic-val italic">{{ employeeShift.rejectionReason }}</div>
+          </div>
+
+          <div class="info-card">
+            <div class="ic-label"><i class="bi bi-calendar-plus"></i> Requested</div>
+            <div class="ic-val">{{ fmt(employeeShift.requestedDate) }}</div>
+          </div>
+
+          <div class="info-card" *ngIf="employeeShift.updatedAt">
+            <div class="ic-label"><i class="bi bi-pencil-square"></i> Updated</div>
+            <div class="ic-val">{{ fmt(employeeShift.updatedAt) }}</div>
+          </div>
+
+        </div>
+      </ng-container>
+
+      <!-- ════ CREATE / EDIT FORM ════ -->
+      <form *ngIf="mode !== 'view'" [formGroup]="form" (ngSubmit)="onSubmit()">
+
+        <!-- Employee -->
+        <div class="fg">
+          <label class="fl">Employee <span class="req">*</span></label>
+          <select class="fc" formControlName="employeeId"
+            [class.invalid]="isInvalid('employeeId')">
+            <option value="">— Select employee —</option>
+            <option *ngFor="let e of employees" [value]="e.id">
+              {{ e.fullName ?? (e.firstName + ' ' + e.lastName) }}
+              ({{ e.employeeCode }})
+            </option>
+          </select>
+          <div class="em" *ngIf="isInvalid('employeeId')">{{ getError('employeeId') }}</div>
+        </div>
+
+        <!-- Shift -->
+        <div class="fg">
+          <label class="fl">Shift <span class="req">*</span></label>
+          <select class="fc" formControlName="shiftId"
+            [class.invalid]="isInvalid('shiftId')">
+            <option value="">— Select shift —</option>
+            <option *ngFor="let s of activeShifts" [value]="s.id">
+              {{ s.shiftName }} &nbsp;({{ s.shiftTimingDisplay }})
+            </option>
+          </select>
+          <div class="em" *ngIf="isInvalid('shiftId')">{{ getError('shiftId') }}</div>
+        </div>
+
+        <!-- Dates -->
+        <div class="form-row">
+          <div class="fg">
+            <label class="fl">Effective From <span class="req">*</span></label>
+            <input type="date" class="fc" formControlName="effectiveFrom"
+              [class.invalid]="isInvalid('effectiveFrom')" />
+            <div class="em" *ngIf="isInvalid('effectiveFrom')">{{ getError('effectiveFrom') }}</div>
+          </div>
+          <div class="fg">
+            <label class="fl">
+              Effective To
+              <span class="hint">(blank = ongoing)</span>
+            </label>
+            <input type="date" class="fc" formControlName="effectiveTo"
+              [class.invalid]="hasDateRangeError" />
+            <div class="em" *ngIf="hasDateRangeError">End date must be ≥ start date</div>
+          </div>
+        </div>
+
+        <!-- Reason -->
+        <div class="fg">
+          <label class="fl">Reason for Change</label>
+          <textarea class="fc" formControlName="changeReason" rows="3"
+            [class.invalid]="isInvalid('changeReason')"
+            placeholder="Optional — min 10 chars if provided"></textarea>
+          <div class="em" *ngIf="isInvalid('changeReason')">{{ getError('changeReason') }}</div>
+        </div>
+
+        <!-- Info banner -->
+        <div class="info-banner" *ngIf="mode === 'create'">
+          <i class="bi bi-info-circle-fill"></i>
+          Assignment starts as <strong>Pending</strong> and requires admin approval.
+          Max <strong>3 pending</strong> requests per employee at one time.
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary"
+            (click)="onClose()" [disabled]="isSubmitting">Cancel</button>
+          <button type="submit" class="btn btn-primary"
+            [disabled]="form.invalid || isSubmitting">
+            <span *ngIf="!isSubmitting">{{ submitLabel }}</span>
+            <span *ngIf="isSubmitting" class="spin-row">
+              <span class="spin"></span> Saving...
+            </span>
+          </button>
+        </div>
+
+      </form>
+
+      <!-- Footer for view mode -->
+      <div class="modal-footer" *ngIf="mode === 'view'">
+        <button type="button" class="btn btn-secondary" (click)="onClose()">Close</button>
+      </div>
+
+    </div><!-- /modal-body -->
+  </div>
+</div>

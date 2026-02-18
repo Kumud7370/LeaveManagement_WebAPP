@@ -7,7 +7,7 @@ export enum HolidayType {
 export interface Holiday {
   id: string;
   holidayName: string;
-  holidayDate: Date | string;
+  holidayDate: string; // ISO string from API
   description?: string;
   holidayType: HolidayType;
   holidayTypeName: string;
@@ -17,13 +17,13 @@ export interface Holiday {
   isUpcoming: boolean;
   isToday: boolean;
   daysUntilHoliday: number;
-  createdAt: Date | string;
-  updatedAt?: Date | string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateHolidayDto {
   holidayName: string;
-  holidayDate: Date | string;
+  holidayDate: string; // ISO string — send as 'YYYY-MM-DDT00:00:00.000Z'
   description?: string;
   holidayType: HolidayType;
   isOptional: boolean;
@@ -31,9 +31,8 @@ export interface CreateHolidayDto {
 }
 
 export interface UpdateHolidayDto {
-  id: string;
   holidayName?: string;
-  holidayDate?: Date | string;
+  holidayDate?: string; // ISO string
   description?: string;
   holidayType?: HolidayType;
   isOptional?: boolean;
@@ -45,8 +44,8 @@ export interface HolidayFilterDto {
   holidayType?: HolidayType;
   isOptional?: boolean;
   departmentId?: string;
-  dateFrom?: Date | string;
-  dateTo?: Date | string;
+  dateFrom?: string;
+  dateTo?: string;
   isUpcoming?: boolean;
   year?: number;
   month?: number;

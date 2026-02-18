@@ -1,19 +1,18 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { AgGridModule } from 'ag-grid-angular';
 import { ColDef, GridApi, GridReadyEvent, GridOptions } from 'ag-grid-community';
 import { Subject, takeUntil } from 'rxjs';
 import { HolidayService } from '../../../core/services/api/holiday.api';
-import { Holiday, HolidayFilterDto, HolidayType } from '../../../core/Models/holiday.model';
+import { Holiday, HolidayFilterDto } from '../../../core/Models/holiday.model';
 import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
 import { HolidayFormComponent } from '../holiday-form/holiday-form.component';
 
 @Component({
   selector: 'app-holiday-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, AgGridModule, HolidayFormComponent],
+  imports: [CommonModule, FormsModule, AgGridModule, HolidayFormComponent, ActionCellRendererComponent],
   templateUrl: './holiday-list.component.html',
   styleUrls: ['./holiday-list.component.scss']
 })
@@ -22,8 +21,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   private gridApi!: GridApi;
 
   holidays: Holiday[] = [];
-  searchTerm: string = '';
-
+  searchTerm = '';
   totalRecords = 0;
   currentPage = 1;
   pageSize = 10;
@@ -33,20 +31,31 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   modalMode: 'create' | 'edit' | 'view' = 'create';
   selectedHoliday: Holiday | null = null;
 
-  columnDefs: ColDef[] = [
+  /**
+   * ACTION BUTTONS FIX:
+   * The callbacks MUST be arrow functions to capture the correct `this` reference.
+   * If written as regular methods or plain function references, `this` inside
+   * viewDetails/editHoliday/deleteHoliday would be `undefined` at call time
+   * because AG Grid calls them outside the Angular component context.
+   *
+   * Also: cellRendererParams must be set as a function (params) => ({...})
+   * so AG Grid re-evaluates per row, passing the correct row data each time.
+   */
+  readonly columnDefs: ColDef[] = [
     {
       headerName: 'Actions',
       field: 'actions',
       cellRenderer: ActionCellRendererComponent,
-      width: 160,
+      width: 140,
       pinned: 'left',
       sortable: false,
       filter: false,
-      cellRendererParams: {
-        onView: (data: Holiday) => this.viewDetails(data),
-        onEdit: (data: Holiday) => this.editHoliday(data),
+      // Use a function so params are re-evaluated per row
+      cellRendererParams: (params: any) => ({
+        onView:   (data: Holiday) => this.viewDetails(data),
+        onEdit:   (data: Holiday) => this.editHoliday(data),
         onDelete: (data: Holiday) => this.deleteHoliday(data)
-      }
+      })
     },
     {
       headerName: 'Holiday Name',
@@ -61,7 +70,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
       field: 'holidayDate',
       width: 160,
       sortable: true,
-      valueFormatter: (params) => this.formatDate(params.value)
+      valueFormatter: (p) => this.formatDate(p.value)
     },
     {
       headerName: 'Type',
@@ -69,97 +78,80 @@ export class HolidayListComponent implements OnInit, OnDestroy {
       width: 140,
       sortable: true,
       filter: true,
-      // ── Badge pill, NOT full-cell background ──
-      cellRenderer: (params: any) => {
-        const type = params.value;
-        if (type === 'National') {
-          return '<span class="type-badge type-national">National</span>';
-        } else if (type === 'Regional') {
-          return '<span class="type-badge type-regional">Regional</span>';
-        } else if (type === 'Optional') {
-          return '<span class="type-badge type-optional">Optional</span>';
-        }
-        return `<span class="type-badge type-national">${type}</span>`;
+      cellRenderer: (p: any) => {
+        const type: string = p.value ?? '';
+        const cls = type === 'National' ? 'type-national'
+                  : type === 'Regional' ? 'type-regional'
+                  : type === 'Optional' ? 'type-optional'
+                  : 'type-national';
+        return `<span class="type-badge ${cls}">${type}</span>`;
       }
     },
     {
       headerName: 'Optional',
       field: 'isOptional',
-      width: 100,
-      cellRenderer: (params: any) => {
-        return params.value
+      width: 110,
+      cellRenderer: (p: any) =>
+        p.value
           ? '<span class="badge badge-warning">Yes</span>'
-          : '<span class="badge badge-info">No</span>';
-      }
+          : '<span class="badge badge-info">No</span>'
     },
     {
       headerName: 'Departments',
       field: 'applicableDepartments',
       flex: 1,
-      minWidth: 100,
-      valueFormatter: (params) => {
-        if (!params.value || params.value.length === 0) return 'All Departments';
-        return `${params.value.length} Department(s)`;
-      }
+      minWidth: 140,
+      valueFormatter: (p) =>
+        !p.value || p.value.length === 0
+          ? 'All Departments'
+          : `${p.value.length} Department(s)`
     },
     {
       headerName: 'Days Until',
       field: 'daysUntilHoliday',
       width: 130,
       sortable: true,
-      // ── Badge pill for days, NOT full-cell background ──
-      cellRenderer: (params: any) => {
-        if (params.data.isToday) {
-          return '<span class="type-badge type-today">Today</span>';
-        }
-        if (params.value < 0) {
-          return `<span style="color:#6b7280;">Past</span>`;
-        }
-        if (params.value <= 7) {
-          return `<span class="type-badge type-regional">${params.value} days</span>`;
-        }
-        return `<span>${params.value} days</span>`;
+      cellRenderer: (p: any) => {
+        if (p.data?.isToday) return '<span class="type-badge type-today">Today</span>';
+        if (p.value < 0)      return '<span style="color:#6b7280;">Past</span>';
+        if (p.value <= 7)     return `<span class="type-badge type-regional">${p.value} days</span>`;
+        return `<span>${p.value} days</span>`;
       }
     },
     {
       headerName: 'Status',
       field: 'isUpcoming',
       width: 130,
-      cellRenderer: (params: any) => {
-        return params.value
+      cellRenderer: (p: any) =>
+        p.value
           ? '<span class="badge badge-success">Upcoming</span>'
-          : '<span class="badge badge-secondary">Past</span>';
-      }
+          : '<span class="badge badge-secondary">Past</span>'
     },
     {
       headerName: 'Created',
       field: 'createdAt',
       width: 160,
       sortable: true,
-      valueFormatter: (params) => this.formatDate(params.value)
+      valueFormatter: (p) => this.formatDate(p.value)
     }
   ];
 
-  defaultColDef: ColDef = {
+  readonly defaultColDef: ColDef = {
     resizable: true,
-    sortable: true,
-    filter: true
+    suppressMovable: false
   };
 
-  gridOptions: GridOptions = {
+  readonly gridOptions: GridOptions = {
     rowHeight: 60,
     headerHeight: 50,
-    suppressCellFocus: true
+    suppressCellFocus: true,
+    // Ensure AG Grid uses the Angular change detection zone
+    onCellClicked: () => {}
   };
 
-  context = {
-    componentParent: this
-  };
+  context = { componentParent: this };
 
-  constructor(
-    private holidayService: HolidayService,
-    private router: Router
-  ) {}
+  constructor(private holidayService: HolidayService) {}
 
   ngOnInit(): void {
     this.loadHolidays();
@@ -191,19 +183,16 @@ export class HolidayListComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
+          this.isLoading = false;
           if (response.success) {
             this.holidays = response.data.items;
             this.totalRecords = response.data.totalCount;
-            setTimeout(() => {
-              if (this.gridApi) this.gridApi.sizeColumnsToFit();
-            }, 100);
+            setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
           }
-          this.isLoading = false;
         },
-        error: (error) => {
-          console.error('Error loading holidays:', error);
+        error: (err) => {
+          console.error('Error loading holidays:', err);
           this.isLoading = false;
-          alert('Failed to load holidays. Please check your API connection.');
         }
       });
   }
@@ -224,18 +213,16 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     this.loadHolidays();
   }
 
-  onPageSizeChange(size: number): void {
-    this.pageSize = size;
+  onPageSizeChange(event: Event): void {
+    this.pageSize = Number((event.target as HTMLSelectElement).value);
     this.currentPage = 1;
     this.loadHolidays();
   }
 
   exportData(): void {
-    if (this.gridApi) {
-      this.gridApi.exportDataAsCsv({
-        fileName: `holidays_${new Date().getTime()}.csv`
-      });
-    }
+    this.gridApi?.exportDataAsCsv({
+      fileName: `holidays_${Date.now()}.csv`
+    });
   }
 
   openCreateModal(): void {
@@ -246,38 +233,35 @@ export class HolidayListComponent implements OnInit, OnDestroy {
 
   viewDetails(holiday: Holiday): void {
     this.modalMode = 'view';
-    this.selectedHoliday = holiday;
+    this.selectedHoliday = { ...holiday }; // shallow clone to avoid reference issues
     this.showModal = true;
   }
 
   editHoliday(holiday: Holiday): void {
     this.modalMode = 'edit';
-    this.selectedHoliday = holiday;
+    this.selectedHoliday = { ...holiday };
     this.showModal = true;
   }
 
   deleteHoliday(holiday: Holiday): void {
-    if (confirm(`Are you sure you want to delete "${holiday.holidayName}"?`)) {
-      this.isLoading = true;
-      this.holidayService.deleteHoliday(holiday.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            if (response.success) {
-              alert('Holiday deleted successfully');
-              this.loadHolidays();
-            } else {
-              alert('Failed to delete holiday');
-              this.isLoading = false;
-            }
-          },
-          error: (error) => {
-            console.error('Error deleting holiday:', error);
-            alert('Failed to delete holiday');
+    if (!confirm(`Are you sure you want to delete "${holiday.holidayName}"?`)) return;
+
+    this.isLoading = true;
+    this.holidayService.deleteHoliday(holiday.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.loadHolidays();
+          } else {
             this.isLoading = false;
           }
-        });
-    }
+        },
+        error: (err) => {
+          console.error('Error deleting holiday:', err);
+          this.isLoading = false;
+        }
+      });
   }
 
   onModalClose(): void {
@@ -288,22 +272,18 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   onModalSuccess(): void {
     this.showModal = false;
     this.selectedHoliday = null;
-    alert('Holiday saved successfully');
     this.loadHolidays();
   }
 
   formatDate(date: any): string {
     if (!date) return '';
-    const d = new Date(date);
-    return d.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+    return new Date(date).toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric'
     });
   }
 
   get totalPages(): number {
-    return Math.ceil(this.totalRecords / this.pageSize);
+    return Math.max(1, Math.ceil(this.totalRecords / this.pageSize));
   }
 
   getMaxRecords(): number {
