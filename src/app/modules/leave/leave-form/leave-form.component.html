@@ -34,9 +34,30 @@
           </option>
         </select>
         <span class="error-msg" *ngIf="isInvalid('leaveTypeId')">{{ getError('leaveTypeId') }}</span>
-        <div class="balance-info" *ngIf="remainingDays !== null">
+
+        <!-- Loading balance -->
+        <div class="balance-loading" *ngIf="balanceLoading">
+          <div class="mini-spinner"></div>
+          <span>Checking balance...</span>
+        </div>
+
+        <!-- No balance record found - block with clear guidance -->
+        <div class="balance-warning" *ngIf="balanceNotFound && !balanceLoading">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <div>
+            <strong>No leave balance found</strong> for this employee and leave type in {{ currentYear }}.
+            An admin must initialize the leave balance before this leave can be submitted.
+            Go to <strong>Leave Balance &rarr; Initialize</strong> to set it up.
+          </div>
+        </div>
+
+        <!-- Balance OK - show remaining days -->
+        <div class="balance-info" *ngIf="remainingDays !== null && !balanceLoading && !balanceNotFound">
           <i class="bi bi-info-circle"></i>
-          <span>Remaining balance: <strong>{{ remainingDays }} day(s)</strong></span>
+          <span>Available balance: <strong>{{ remainingDays }} day(s)</strong></span>
+          <span class="balance-warn" *ngIf="computedDays > remainingDays">
+            &nbsp;&mdash; &cir; Requested {{ computedDays }} days exceeds balance
+          </span>
         </div>
       </div>
     </div>
@@ -146,7 +167,7 @@
       <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="submitting">
         Cancel
       </button>
-      <button type="submit" class="btn btn-submit" [disabled]="submitting || leaveForm.invalid">
+      <button type="submit" class="btn btn-submit" [disabled]="submitting || leaveForm.invalid || balanceNotFound || balanceLoading">
         <span *ngIf="!submitting">
           <i class="bi bi-check-circle"></i>
           {{ isEditMode ? 'Update Leave' : 'Submit Leave Request' }}

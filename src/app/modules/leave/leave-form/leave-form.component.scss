@@ -57,10 +57,31 @@
     .balance-info {
       display: flex; align-items: center; gap: .4rem; margin-top: .45rem;
       padding: .5rem .75rem; background: #eff6ff; border-radius: .375rem;
-      border: 1px solid #bfdbfe;
+      border: 1px solid #bfdbfe; flex-wrap: wrap;
       i { color: #3b82f6; font-size: .85rem; }
       span { font-size: .82rem; color: #1d4ed8;
         strong { font-weight: 700; }
+      }
+      .balance-warn { color: #b45309; font-weight: 600; font-size: .8rem; }
+    }
+
+    // Shown while fetching balance from API
+    .balance-loading {
+      display: flex; align-items: center; gap: .5rem; margin-top: .45rem;
+      padding: .5rem .75rem; background: #f8fafc; border-radius: .375rem;
+      border: 1px solid #e2e8f0; font-size: .82rem; color: #64748b;
+      .mini-spinner { width: .875rem; height: .875rem; border: 2px solid #e2e8f0;
+        border-top-color: #3b82f6; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+    }
+
+    // No balance record — blocks submission
+    .balance-warning {
+      display: flex; align-items: flex-start; gap: .5rem; margin-top: .45rem;
+      padding: .625rem .875rem; background: #fff7ed; border-radius: .375rem;
+      border: 1px solid #fed7aa;
+      i { color: #ea580c; font-size: .95rem; flex-shrink: 0; margin-top: .1rem; }
+      div { font-size: .82rem; color: #7c2d12; line-height: 1.5;
+        strong { font-weight: 700; color: #9a3412; }
       }
     }
 
