@@ -25,21 +25,21 @@ import {
 })
 export class AttendanceDetailsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   @Input() isModal = false;
   @Input() attendanceId: string | null = null;
   @Output() modalClosed = new EventEmitter<void>();
   @Output() editRequested = new EventEmitter<string>();
   @Output() deleteRequested = new EventEmitter<string>();
-  
+
   attendance: AttendanceResponseDto | null = null;
   isLoading = true;
 
-  // Enums for display
+  // Enums for template
   AttendanceStatus = AttendanceStatus;
   CheckInMethod = CheckInMethod;
 
-  // Helper functions
+  // Helper functions exposed to template
   getStatusBadgeClass = getStatusBadgeClass;
   getCheckInMethodIcon = getCheckInMethodIcon;
   formatTime = formatTime;
@@ -56,8 +56,7 @@ export class AttendanceDetailsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (this.isModal && this.attendanceId) {
       this.loadAttendanceDetails();
-    } 
-    else if (!this.isModal) {
+    } else if (!this.isModal) {
       this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
         this.attendanceId = params['id'];
         if (this.attendanceId) {
@@ -112,7 +111,6 @@ export class AttendanceDetailsComponent implements OnInit, OnDestroy {
 
   editAttendance(): void {
     if (!this.attendanceId) return;
-
     if (this.isModal) {
       this.editRequested.emit(this.attendanceId);
     } else {
@@ -125,7 +123,7 @@ export class AttendanceDetailsComponent implements OnInit, OnDestroy {
 
     Swal.fire({
       title: 'Are you sure?',
-      html: `Do you want to delete attendance record for <strong>"${this.attendance.employeeName}"</strong> on ${this.formatDate(this.attendance.attendanceDate)}?`,
+      html: `Delete attendance for <strong>${this.attendance.employeeName}</strong> on ${this.formatDate(this.attendance.attendanceDate)}?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
@@ -153,7 +151,6 @@ export class AttendanceDetailsComponent implements OnInit, OnDestroy {
             timer: 2000,
             showConfirmButton: false
           });
-          
           if (this.isModal) {
             this.deleteRequested.emit(this.attendanceId!);
           } else {
@@ -180,7 +177,7 @@ export class AttendanceDetailsComponent implements OnInit, OnDestroy {
       text: `Approve attendance for ${this.attendance.employeeName}?`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#3b82f6',
+      confirmButtonColor: '#10b981',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, approve it!',
       cancelButtonText: 'Cancel'
@@ -228,7 +225,6 @@ export class AttendanceDetailsComponent implements OnInit, OnDestroy {
   }
 
   get canApprove(): boolean {
-    // Add logic to check if current user has permission to approve
     const userRole = sessionStorage.getItem('RoleName');
     return (userRole === 'Admin' || userRole === 'Manager') && !this.isApproved;
   }
