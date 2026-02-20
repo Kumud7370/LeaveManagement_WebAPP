@@ -170,7 +170,7 @@
 </div>
 
 <!-- Form Modal -->
-<div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+<div class="modal-overlay" *ngIf="showFormModal || showDetailsModal" (click)="showFormModal ? closeFormModal() : closeDetailsModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <button class="modal-close" (click)="closeFormModal()"><i class="bi bi-x-lg"></i></button>
     <app-leave-form

@@ -1,5 +1,8 @@
 .leave-details-container {
   font-family: 'Inter', -apple-system, sans-serif;
+  max-height: 85vh;       
+  overflow-y: auto;        
+  border-radius: .875rem;
 
   .details-loading, .details-error {
     text-align: center; padding: 3rem;
