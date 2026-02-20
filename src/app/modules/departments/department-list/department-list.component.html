@@ -20,25 +20,27 @@
       />
     </div>
 
-    <button class="btn btn-clear" (click)="clearSearch()">
-      <i class="bi bi-funnel"></i>
-      Clear
-    </button>
+    <div class="action-buttons-group">
+      <button class="btn btn-clear" (click)="clearSearch()" title="Clear">
+        <i class="bi bi-x-circle"></i>
+        <span class="btn-label">Clear</span>
+      </button>
 
-    <button class="btn btn-refresh" (click)="loadDepartments()">
-      <i class="bi bi-arrow-clockwise"></i>
-      Refresh
-    </button>
+      <button class="btn btn-refresh" (click)="loadDepartments()" title="Refresh">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span class="btn-label">Refresh</span>
+      </button>
 
-    <button class="btn btn-export" (click)="exportToExcel()">
-      <i class="bi bi-download"></i>
-      Export
-    </button>
+      <button class="btn btn-export" (click)="exportToExcel()" title="Export">
+        <i class="bi bi-download"></i>
+        <span class="btn-label">Export</span>
+      </button>
 
-    <button class="btn btn-primary" (click)="createDepartment()">
-      <i class="bi bi-plus-circle"></i>
-      Add Department
-    </button>
+      <button class="btn btn-primary" (click)="createDepartment()" title="Add Department">
+        <i class="bi bi-plus-circle"></i>
+        <span class="btn-label">Add Department</span>
+      </button>
+    </div>
   </div>
 
   <!-- Loading State -->
