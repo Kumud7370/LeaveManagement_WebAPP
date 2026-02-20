@@ -5,9 +5,15 @@
       <h1 class="page-title">Attendance Management</h1>
       <p class="page-subtitle">Track and manage employee attendance records</p>
     </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="addManualAttendance()">
+        <i class="fas fa-plus-circle"></i>
+        Mark Attendance
+      </button>
+    </div>
   </div>
 
-  <!-- Search and Action Buttons -->
+  <!-- Search and Action Bar -->
   <div class="search-action-section">
     <div class="search-bar">
       <input
@@ -24,7 +30,10 @@
       {{ isFilterVisible ? 'Hide Filters' : 'Show Filters' }}
     </button>
 
-    <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
+    <button class="btn btn-clear" (click)="clearSearch()">
+      <i class="fas fa-times"></i>
+      Clear
+    </button>
 
     <button class="btn btn-refresh" (click)="loadAttendance()">
       <i class="fas fa-sync-alt"></i>
@@ -83,7 +92,7 @@
         </select>
       </div>
 
-      <div class="filter-item">
+      <div class="filter-item filter-checkbox-item">
         <label class="checkbox-label">
           <input
             type="checkbox"
@@ -94,7 +103,7 @@
         </label>
       </div>
 
-      <div class="filter-item">
+      <div class="filter-item filter-checkbox-item">
         <label class="checkbox-label">
           <input
             type="checkbox"
@@ -107,7 +116,8 @@
     </div>
 
     <button class="btn btn-text" (click)="resetFilter()">
-      Clear All Filters
+      <i class="fas fa-redo"></i>
+      Reset All Filters
     </button>
   </div>
 
@@ -119,23 +129,27 @@
 
   <!-- Error State -->
   <div *ngIf="error && !isLoading" class="error-state">
-    <i class="bi bi-exclamation-circle"></i>
+    <i class="fas fa-exclamation-circle"></i>
     <p>{{ error }}</p>
     <button class="btn btn-outline" (click)="loadAttendance()">
+      <i class="fas fa-redo"></i>
       Try Again
     </button>
   </div>
 
-  <!-- AG Grid Table -->
+  <!-- AG Grid -->
   <div *ngIf="!isLoading && !error" class="grid-container">
     <!-- Empty State -->
     <div *ngIf="rowData.length === 0" class="empty-state">
-      <i class="bi bi-inbox"></i>
+      <i class="fas fa-calendar-times"></i>
       <h3>No attendance records found</h3>
-      <p>Try adjusting your filters or check back later</p>
+      <p>Try adjusting your filters or mark attendance for today</p>
+      <button class="btn btn-primary" (click)="addManualAttendance()">
+        <i class="fas fa-plus-circle"></i>
+        Mark Attendance
+      </button>
     </div>
 
-    <!-- AG Grid -->
     <ag-grid-angular
       *ngIf="rowData.length > 0"
       class="ag-theme-quartz"
@@ -172,19 +186,11 @@
       </select>
 
       <div class="pagination-buttons">
-        <button
-          class="btn-page"
-          [disabled]="currentPage === 1"
-          (click)="goToPage(1)"
-        >
-          <i class="bi bi-chevron-bar-left"></i>
+        <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(1)">
+          <i class="fas fa-angle-double-left"></i>
         </button>
-        <button
-          class="btn-page"
-          [disabled]="currentPage === 1"
-          (click)="previousPage()"
-        >
-          <i class="bi bi-chevron-left"></i>
+        <button class="btn-page" [disabled]="currentPage === 1" (click)="previousPage()">
+          <i class="fas fa-angle-left"></i>
         </button>
 
         <button
@@ -196,21 +202,45 @@
           {{ page }}
         </button>
 
-        <button
-          class="btn-page"
-          [disabled]="currentPage === totalPages"
-          (click)="nextPage()"
-        >
-          <i class="bi bi-chevron-right"></i>
+        <button class="btn-page" [disabled]="currentPage === totalPages" (click)="nextPage()">
+          <i class="fas fa-angle-right"></i>
         </button>
-        <button
-          class="btn-page"
-          [disabled]="currentPage === totalPages"
-          (click)="goToPage(totalPages)"
-        >
-          <i class="bi bi-chevron-bar-right"></i>
+        <button class="btn-page" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">
+          <i class="fas fa-angle-double-right"></i>
         </button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal: Attendance Form -->
+<div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeFormModal()">
+      <i class="fas fa-times"></i>
+    </button>
+    <app-attendance-form
+      [isModal]="true"
+      [attendanceId]="selectedAttendanceId"
+      [isEditMode]="formMode === 'edit'"
+      (formCancelled)="closeFormModal()"
+      (formSubmitted)="onFormSuccess()"
+    ></app-attendance-form>
+  </div>
+</div>
+
+<!-- Modal: Attendance Details -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+  <div class="modal-container modal-container-large" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeDetailsModal()">
+      <i class="fas fa-times"></i>
+    </button>
+    <app-attendance-details
+      [isModal]="true"
+      [attendanceId]="selectedAttendanceId"
+      (modalClosed)="closeDetailsModal()"
+      (editRequested)="onEditFromDetails($event)"
+      (deleteRequested)="onDeleteFromDetails($event)"
+    ></app-attendance-details>
   </div>
 </div>

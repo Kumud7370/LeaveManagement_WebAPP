@@ -23,21 +23,21 @@ import {
 })
 export class AttendanceFormComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  
+
   @Input() isModal = false;
   @Input() attendanceId: string | null = null;
   @Input() isEditMode = false;
   @Output() formCancelled = new EventEmitter<void>();
   @Output() formSubmitted = new EventEmitter<void>();
-  
+
   attendanceForm: FormGroup;
   isLoading = false;
   isSaving = false;
-  
-  // Enums for dropdowns
+
+  // Dropdown options
   attendanceStatusOptions = AttendanceStatusOptions;
   AttendanceStatus = AttendanceStatus;
-  
+
   // Helper functions
   formatDate = formatDate;
   formatTime = formatTime;
@@ -52,13 +52,10 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // If modal mode with attendanceId, load the attendance
     if (this.isModal && this.attendanceId) {
       this.isEditMode = true;
       this.loadAttendanceData();
-    } 
-    // If not modal mode, check route params
-    else if (!this.isModal) {
+    } else if (!this.isModal) {
       this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
         if (params['id']) {
           this.isEditMode = true;
@@ -95,6 +92,9 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
         next: (attendance) => {
           this.populateForm(attendance);
           this.isLoading = false;
+          // Lock employee ID and date in edit mode
+          this.attendanceForm.get('employeeId')?.disable();
+          this.attendanceForm.get('attendanceDate')?.disable();
         },
         error: (error) => {
           console.error('Error loading attendance:', error);
@@ -138,15 +138,11 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Validate check-in and check-out times
     const checkInTime = this.attendanceForm.value.checkInTime;
     const checkOutTime = this.attendanceForm.value.checkOutTime;
-    
+
     if (checkInTime && checkOutTime) {
-      const checkIn = new Date(checkInTime);
-      const checkOut = new Date(checkOutTime);
-      
-      if (checkOut <= checkIn) {
+      if (new Date(checkOutTime) <= new Date(checkInTime)) {
         Swal.fire({
           icon: 'warning',
           title: 'Invalid Time',
@@ -158,7 +154,7 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
     }
 
     this.isSaving = true;
-    
+
     if (this.isEditMode) {
       this.updateAttendance();
     } else {
@@ -167,13 +163,13 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
   }
 
   private createAttendance(): void {
-    const formValue = this.attendanceForm.value;
+    const formValue = this.attendanceForm.getRawValue();
     const dto: ManualAttendanceDto = {
       employeeId: formValue.employeeId,
       attendanceDate: new Date(formValue.attendanceDate),
       checkInTime: formValue.checkInTime ? new Date(formValue.checkInTime) : undefined,
       checkOutTime: formValue.checkOutTime ? new Date(formValue.checkOutTime) : undefined,
-      status: formValue.status,
+      status: Number(formValue.status),
       remarks: formValue.remarks || undefined
     };
 
@@ -188,7 +184,6 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
             timer: 2000,
             showConfirmButton: false
           });
-          
           if (this.isModal) {
             this.formSubmitted.emit();
           } else {
@@ -201,7 +196,7 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: error.error?.message || 'Failed to mark attendance.',
+            text: error.error?.message || 'Failed to mark attendance. It may already exist for this date.',
             confirmButtonColor: '#ef4444'
           });
         }
@@ -211,13 +206,13 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
   private updateAttendance(): void {
     if (!this.attendanceId) return;
 
-    const formValue = this.attendanceForm.value;
+    const formValue = this.attendanceForm.getRawValue();
     const dto: ManualAttendanceDto = {
       employeeId: formValue.employeeId,
       attendanceDate: new Date(formValue.attendanceDate),
       checkInTime: formValue.checkInTime ? new Date(formValue.checkInTime) : undefined,
       checkOutTime: formValue.checkOutTime ? new Date(formValue.checkOutTime) : undefined,
-      status: formValue.status,
+      status: Number(formValue.status),
       remarks: formValue.remarks || undefined
     };
 
@@ -232,7 +227,6 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
             timer: 2000,
             showConfirmButton: false
           });
-          
           if (this.isModal) {
             this.formSubmitted.emit();
           } else {
@@ -260,6 +254,42 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
     }
   }
 
+  setCurrentDateTime(field: string): void {
+    const now = new Date();
+    this.attendanceForm.patchValue({ [field]: this.formatDateTimeForInput(now) });
+  }
+
+  onStatusChange(event: Event): void {
+    const status = Number((event.target as HTMLSelectElement).value);
+    if (status === AttendanceStatus.Absent) {
+      this.attendanceForm.patchValue({ checkInTime: '', checkOutTime: '' });
+    }
+  }
+
+  // ─── Validation Helpers ────────────────────────────────────────
+
+  isFieldInvalid(fieldName: string): boolean {
+    const field = this.attendanceForm.get(fieldName);
+    return !!(field && field.invalid && (field.dirty || field.touched));
+  }
+
+  getFieldError(fieldName: string): string {
+    const field = this.attendanceForm.get(fieldName);
+    if (field?.errors) {
+      if (field.errors['required']) return 'This field is required';
+      if (field.errors['maxlength']) return `Maximum length is ${field.errors['maxlength'].requiredLength} characters`;
+    }
+    return '';
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      formGroup.get(key)?.markAsTouched();
+    });
+  }
+
+  // ─── Date Format Helpers ───────────────────────────────────────
+
   private formatDateForInput(date: Date): string {
     const d = new Date(date);
     const month = ('0' + (d.getMonth() + 1)).slice(-2);
@@ -274,45 +304,5 @@ export class AttendanceFormComponent implements OnInit, OnDestroy {
     const hours = ('0' + d.getHours()).slice(-2);
     const minutes = ('0' + d.getMinutes()).slice(-2);
     return `${d.getFullYear()}-${month}-${day}T${hours}:${minutes}`;
-  }
-
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
-    });
-  }
-
-  // Helper methods for validation
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.attendanceForm.get(fieldName);
-    return !!(field && field.invalid && (field.dirty || field.touched));
-  }
-
-  getFieldError(fieldName: string): string {
-    const field = this.attendanceForm.get(fieldName);
-    if (field?.errors) {
-      if (field.errors['required']) return 'This field is required';
-      if (field.errors['maxlength']) return `Maximum length is ${field.errors['maxlength'].requiredLength}`;
-    }
-    return '';
-  }
-
-  onStatusChange(status: AttendanceStatus): void {
-    // If status is Absent, clear check-in and check-out times
-    if (status === AttendanceStatus.Absent) {
-      this.attendanceForm.patchValue({
-        checkInTime: '',
-        checkOutTime: ''
-      });
-    }
-  }
-
-  setCurrentDateTime(field: string): void {
-    const now = new Date();
-    const formattedDateTime = this.formatDateTimeForInput(now);
-    this.attendanceForm.patchValue({
-      [field]: formattedDateTime
-    });
   }
 }

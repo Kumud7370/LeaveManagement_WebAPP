@@ -1,4 +1,5 @@
 <div class="attendance-form-container" [class.modal-form]="isModal">
+
   <!-- Loading State -->
   <div class="loading-overlay" *ngIf="isLoading">
     <div class="spinner-container">
@@ -9,6 +10,7 @@
 
   <!-- Form Content -->
   <div class="form-content" *ngIf="!isLoading">
+
     <!-- Header -->
     <div class="form-header">
       <div class="header-content">
@@ -18,17 +20,18 @@
         </button>
         <h1 class="form-title">
           <i class="fas fa-calendar-check"></i>
-          {{ isEditMode ? 'Edit Attendance' : 'Mark Manual Attendance' }}
+          {{ isEditMode ? 'Edit Attendance Record' : 'Mark Manual Attendance' }}
         </h1>
       </div>
     </div>
 
     <!-- Form -->
     <form [formGroup]="attendanceForm" (ngSubmit)="onSubmit()" class="attendance-form">
-      <!-- Employee & Date Information Section -->
+
+      <!-- Employee & Date Section -->
       <div class="form-section">
         <div class="section-header">
-          <h2><i class="fas fa-user-clock"></i> Employee & Date Information</h2>
+          <h2><i class="fas fa-user-clock"></i> Employee & Date</h2>
         </div>
         <div class="section-body">
           <div class="form-row">
@@ -40,7 +43,6 @@
                 class="form-control"
                 [class.invalid]="isFieldInvalid('employeeId')"
                 placeholder="Enter employee ID"
-                [readonly]="isEditMode"
               />
               <span class="error-message" *ngIf="isFieldInvalid('employeeId')">
                 {{ getFieldError('employeeId') }}
@@ -79,14 +81,8 @@
                   class="form-control"
                   [class.invalid]="isFieldInvalid('checkInTime')"
                 />
-                <button
-                  type="button"
-                  class="btn-now"
-                  (click)="setCurrentDateTime('checkInTime')"
-                  title="Set current time"
-                >
-                  <i class="fas fa-clock"></i>
-                  Now
+                <button type="button" class="btn-now" (click)="setCurrentDateTime('checkInTime')" title="Set to now">
+                  <i class="fas fa-clock"></i> Now
                 </button>
               </div>
               <span class="error-message" *ngIf="isFieldInvalid('checkInTime')">
@@ -104,20 +100,14 @@
                   class="form-control"
                   [class.invalid]="isFieldInvalid('checkOutTime')"
                 />
-                <button
-                  type="button"
-                  class="btn-now"
-                  (click)="setCurrentDateTime('checkOutTime')"
-                  title="Set current time"
-                >
-                  <i class="fas fa-clock"></i>
-                  Now
+                <button type="button" class="btn-now" (click)="setCurrentDateTime('checkOutTime')" title="Set to now">
+                  <i class="fas fa-clock"></i> Now
                 </button>
               </div>
               <span class="error-message" *ngIf="isFieldInvalid('checkOutTime')">
                 {{ getFieldError('checkOutTime') }}
               </span>
-              <span class="help-text">Leave empty if not checked out yet</span>
+              <span class="help-text">Leave empty if not yet checked out</span>
             </div>
           </div>
         </div>
@@ -136,7 +126,7 @@
                 formControlName="status"
                 class="form-control"
                 [class.invalid]="isFieldInvalid('status')"
-                (change)="onStatusChange($any($event.target).value)"
+                (change)="onStatusChange($event)"
               >
                 <option *ngFor="let option of attendanceStatusOptions" [value]="option.value">
                   {{ option.label }}
@@ -167,7 +157,7 @@
         </div>
       </div>
 
-      <!-- Information Box -->
+      <!-- Info Box -->
       <div class="info-box">
         <div class="info-header">
           <i class="fas fa-info-circle"></i>
@@ -175,9 +165,9 @@
         </div>
         <ul class="info-list">
           <li>Check-out time must be after check-in time</li>
-          <li>For absent status, leave check-in and check-out times empty</li>
-          <li>Working hours will be calculated automatically based on check-in and check-out times</li>
-          <li>Manual attendance entries require manager or admin approval</li>
+          <li>For absent status, check-in and check-out times will be cleared</li>
+          <li>Working hours are calculated automatically from check-in/out times</li>
+          <li>Manual attendance entries may require manager or admin approval</li>
         </ul>
       </div>
 
@@ -188,10 +178,16 @@
           Cancel
         </button>
         <button type="submit" class="btn btn-primary" [disabled]="isSaving">
-          <i class="fas" [class.fa-spinner]="isSaving" [class.fa-spin]="isSaving" [class.fa-save]="!isSaving"></i>
+          <i
+            class="fas"
+            [class.fa-spinner]="isSaving"
+            [class.fa-spin]="isSaving"
+            [class.fa-save]="!isSaving"
+          ></i>
           {{ isSaving ? 'Saving...' : (isEditMode ? 'Update Attendance' : 'Mark Attendance') }}
         </button>
       </div>
+
     </form>
   </div>
 </div>
