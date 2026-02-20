@@ -105,48 +105,50 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
   //   • ApiResponseDto<T[]>            { success, data: T[] }
   //   • ApiResponseDto<PagedResultDto> { success, data: { items: T[] } }
   //   • PagedResultDto                 { items: T[], totalCount, ... }
-  private loadDepartments(): void {
-    this.isDepartmentsLoading = true;
-    this.departmentService.getActiveDepartments()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: any) => {
-          this.departments = this.extractArray(response);
-          console.log(`✅ Departments loaded: ${this.departments.length}`, this.departments);
-          this.isDepartmentsLoading = false;
-        },
-        error: (err: any) => {
-          console.error('❌ Error loading departments:', err);
-          this.isDepartmentsLoading = false;
-        }
-      });
-  }
+ private loadDepartments(): void {
+  this.isDepartmentsLoading = true;
+  this.departmentService.getActiveDepartments()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (response: any) => {
+        const raw = this.extractArray(response);
+        // Normalize: map departmentId/departmentName → id/name
+        this.departments = raw.map((d: any) => ({
+          id: d.departmentId ?? d.id,
+          name: d.departmentName ?? d.name
+        }));
+        console.log(`✅ Departments loaded: ${this.departments.length}`, this.departments);
+        this.isDepartmentsLoading = false;
+      },
+      error: (err: any) => {
+        console.error('❌ Error loading departments:', err);
+        this.isDepartmentsLoading = false;
+      }
+    });
+}
 
-  // ─── Load Designations ────────────────────────────────────────────────────────
-  private loadDesignations(): void {
-    this.isDesignationsLoading = true;
-    this.designationService.getActiveDesignations()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response: any) => {
-          this.designations = this.extractArray(response);
-          console.log(`✅ Designations loaded: ${this.designations.length}`, this.designations);
-          this.isDesignationsLoading = false;
-        },
-        error: (err: any) => {
-          console.error('❌ Error loading designations:', err);
-          this.isDesignationsLoading = false;
-        }
-      });
-  }
+private loadDesignations(): void {
+  this.isDesignationsLoading = true;
+  this.designationService.getActiveDesignations()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (response: any) => {
+        const raw = this.extractArray(response);
+        // Normalize: map designationId/designationName → id/name
+        this.designations = raw.map((d: any) => ({
+          id: d.designationId ?? d.id,
+          name: d.designationName ?? d.name
+        }));
+        console.log(`✅ Designations loaded: ${this.designations.length}`, this.designations);
+        this.isDesignationsLoading = false;
+      },
+      error: (err: any) => {
+        console.error('❌ Error loading designations:', err);
+        this.isDesignationsLoading = false;
+      }
+    });
+}
 
-  /**
-   * Safely extracts an array from any of these API response shapes:
-   *   T[]                              → returned as-is
-   *   { data: T[] }                   → returns data
-   *   { data: { items: T[] } }        → returns data.items
-   *   { items: T[] }                  → returns items
-   */
   private extractArray(response: any): any[] {
     if (Array.isArray(response)) {
       return response;
@@ -166,7 +168,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     return [];
   }
 
-  // ─── Form ─────────────────────────────────────────────────────────────────────
+  // ─── Form ───────
   private createForm(): FormGroup {
     return this.fb.group({
       employeeCode:         ['', [Validators.required, Validators.minLength(3), Validators.maxLength(20)]],
@@ -249,7 +251,7 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Submit ───────────────────────────────────────────────────────────────────
+  // ─── Submit ──────
   onSubmit(): void {
     if (this.employeeForm.invalid) {
       this.markFormGroupTouched(this.employeeForm);
