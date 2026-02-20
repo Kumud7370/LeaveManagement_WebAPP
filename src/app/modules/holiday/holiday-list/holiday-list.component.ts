@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AgGridModule } from 'ag-grid-angular';
 import { ColDef, GridApi, GridReadyEvent, GridOptions } from 'ag-grid-community';
 import { Subject, takeUntil } from 'rxjs';
+import Swal from 'sweetalert2';
 import { HolidayService } from '../../../core/services/api/holiday.api';
 import { Holiday, HolidayFilterDto } from '../../../core/Models/holiday.model';
 import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
@@ -31,31 +32,15 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   modalMode: 'create' | 'edit' | 'view' = 'create';
   selectedHoliday: Holiday | null = null;
 
-  /**
-   * ACTION BUTTONS FIX:
-   * The callbacks MUST be arrow functions to capture the correct `this` reference.
-   * If written as regular methods or plain function references, `this` inside
-   * viewDetails/editHoliday/deleteHoliday would be `undefined` at call time
-   * because AG Grid calls them outside the Angular component context.
-   *
-   * Also: cellRendererParams must be set as a function (params) => ({...})
-   * so AG Grid re-evaluates per row, passing the correct row data each time.
-   */
   readonly columnDefs: ColDef[] = [
     {
       headerName: 'Actions',
       field: 'actions',
       cellRenderer: ActionCellRendererComponent,
-      width: 140,
+      width: 160,
       pinned: 'left',
       sortable: false,
-      filter: false,
-      // Use a function so params are re-evaluated per row
-      cellRendererParams: (params: any) => ({
-        onView:   (data: Holiday) => this.viewDetails(data),
-        onEdit:   (data: Holiday) => this.editHoliday(data),
-        onDelete: (data: Holiday) => this.deleteHoliday(data)
-      })
+      filter: false
     },
     {
       headerName: 'Holiday Name',
@@ -95,6 +80,15 @@ export class HolidayListComponent implements OnInit, OnDestroy {
         p.value
           ? '<span class="badge badge-warning">Yes</span>'
           : '<span class="badge badge-info">No</span>'
+    },
+    {
+      headerName: 'Active',
+      field: 'isActive',
+      width: 110,
+      cellRenderer: (p: any) =>
+        p.value
+          ? '<span class="badge badge-success">Active</span>'
+          : '<span class="badge badge-secondary">Inactive</span>'
     },
     {
       headerName: 'Departments',
@@ -144,9 +138,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   readonly gridOptions: GridOptions = {
     rowHeight: 60,
     headerHeight: 50,
-    suppressCellFocus: true,
-    // Ensure AG Grid uses the Angular change detection zone
-    onCellClicked: () => {}
+    suppressCellFocus: true
   };
 
   context = { componentParent: this };
@@ -193,6 +185,12 @@ export class HolidayListComponent implements OnInit, OnDestroy {
         error: (err) => {
           console.error('Error loading holidays:', err);
           this.isLoading = false;
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to Load',
+            text: 'Unable to load holidays. Please try again.',
+            confirmButtonColor: '#3b82f6'
+          });
         }
       });
   }
@@ -223,6 +221,15 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     this.gridApi?.exportDataAsCsv({
       fileName: `holidays_${Date.now()}.csv`
     });
+    Swal.fire({
+      icon: 'success',
+      title: 'Exported!',
+      text: 'Holiday data has been exported as CSV.',
+      confirmButtonColor: '#3b82f6',
+      timer: 2000,
+      timerProgressBar: true,
+      showConfirmButton: false
+    });
   }
 
   openCreateModal(): void {
@@ -231,20 +238,97 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     this.showModal = true;
   }
 
+  /** Called by ActionCellRenderer → context.componentParent.viewDetails */
   viewDetails(holiday: Holiday): void {
     this.modalMode = 'view';
-    this.selectedHoliday = { ...holiday }; // shallow clone to avoid reference issues
+    this.selectedHoliday = { ...holiday };
     this.showModal = true;
   }
 
-  editHoliday(holiday: Holiday): void {
+  /** Called by ActionCellRenderer → context.componentParent.editDepartment */
+  editDepartment(holiday: Holiday): void {
     this.modalMode = 'edit';
     this.selectedHoliday = { ...holiday };
     this.showModal = true;
   }
 
-  deleteHoliday(holiday: Holiday): void {
-    if (!confirm(`Are you sure you want to delete "${holiday.holidayName}"?`)) return;
+  /** Called by ActionCellRenderer → context.componentParent.toggleStatus */
+  async toggleStatus(holiday: Holiday): Promise<void> {
+    const newActiveState = !holiday.isActive;
+    const action = newActiveState ? 'activate' : 'deactivate';
+    const actionLabel = newActiveState ? 'Activate' : 'Deactivate';
+    const iconColor = newActiveState ? '#22c55e' : '#f59e0b';
+
+    const result = await Swal.fire({
+      title: `${actionLabel} Holiday?`,
+      text: `Are you sure you want to ${action} "${holiday.holidayName}"?`,
+      icon: newActiveState ? 'question' : 'warning',
+      iconColor,
+      showCancelButton: true,
+      confirmButtonColor: newActiveState ? '#22c55e' : '#f59e0b',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: `Yes, ${actionLabel}`,
+      cancelButtonText: 'Cancel',
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    this.isLoading = true;
+    this.holidayService.updateHoliday(holiday.id, { isActive: newActiveState })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.loadHolidays();
+            Swal.fire({
+              icon: 'success',
+              title: `${actionLabel}d!`,
+              text: `"${holiday.holidayName}" has been ${action}d successfully.`,
+              confirmButtonColor: '#3b82f6',
+              timer: 2000,
+              timerProgressBar: true,
+              showConfirmButton: false
+            });
+          } else {
+            this.isLoading = false;
+            Swal.fire({
+              icon: 'error',
+              title: 'Update Failed',
+              text: `Could not ${action} the holiday. Please try again.`,
+              confirmButtonColor: '#3b82f6'
+            });
+          }
+        },
+        error: (err) => {
+          console.error('Error toggling holiday status:', err);
+          this.isLoading = false;
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: `An error occurred while trying to ${action} the holiday.`,
+            confirmButtonColor: '#3b82f6'
+          });
+        }
+      });
+  }
+
+  /** Called by ActionCellRenderer → context.componentParent.deleteDepartment */
+  async deleteDepartment(holiday: Holiday): Promise<void> {
+    const result = await Swal.fire({
+      title: 'Delete Holiday?',
+      html: `Are you sure you want to delete <strong>"${holiday.holidayName}"</strong>?<br><span style="color:#6b7280;font-size:0.875rem;">This action cannot be undone.</span>`,
+      icon: 'warning',
+      iconColor: '#ef4444',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Delete',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
 
     this.isLoading = true;
     this.holidayService.deleteHoliday(holiday.id)
@@ -253,13 +337,34 @@ export class HolidayListComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.success) {
             this.loadHolidays();
+            Swal.fire({
+              icon: 'success',
+              title: 'Deleted!',
+              text: `"${holiday.holidayName}" has been deleted successfully.`,
+              confirmButtonColor: '#3b82f6',
+              timer: 2000,
+              timerProgressBar: true,
+              showConfirmButton: false
+            });
           } else {
             this.isLoading = false;
+            Swal.fire({
+              icon: 'error',
+              title: 'Delete Failed',
+              text: 'Could not delete the holiday. Please try again.',
+              confirmButtonColor: '#3b82f6'
+            });
           }
         },
         error: (err) => {
           console.error('Error deleting holiday:', err);
           this.isLoading = false;
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while deleting the holiday.',
+            confirmButtonColor: '#3b82f6'
+          });
         }
       });
   }

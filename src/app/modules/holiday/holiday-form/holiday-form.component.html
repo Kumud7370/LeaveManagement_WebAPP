@@ -100,20 +100,7 @@
             class="departments-grid"
             *ngIf="departments.length > 0; else noDepts"
           >
-            <!--
-              ROOT CAUSE FIX:
-              The original code used a wrapping <label> containing a checkbox.
-              Clicking anywhere on the card triggered the label's implicit "for"
-              association which fired the checkbox's (change) event AND the card's
-              own (click) registered via the checkbox — resulting in toggleDepartment()
-              being called twice per click, which toggled every department on then off
-              (or off then on) making it look like all were selected.
-
-              Fix: use a plain <div> as the card. The checkbox is controlled ONLY
-              by its own (change) event. The card div also calls toggleDepartment
-              but we stop the checkbox's own click from bubbling with stopPropagation
-              so it doesn't fire twice.
-            -->
+           
             <div
               *ngFor="let dept of departments"
               class="department-card"

@@ -2,6 +2,7 @@ import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angu
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
+import Swal from 'sweetalert2';
 import { HolidayService } from '../../../core/services/api/holiday.api';
 import { DepartmentService } from '../../../core/services/api/department.api';
 import {
@@ -31,20 +32,12 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
   departments: any[] = [];
   isSubmitting = false;
 
-  /**
-   * Tracks whether each department is selected by ID.
-   * Using a Set makes O(1) lookup and avoids the double-toggle bug that
-   * existed when mutating an array directly via splice/push while Angular
-   * was also re-rendering.
-   */
   private selectedDepartmentSet = new Set<string>();
 
-  /** Exposed as an array for the template length check */
   get selectedDepartments(): string[] {
     return Array.from(this.selectedDepartmentSet);
   }
 
-  /** Used to show department validation error only after a submit attempt */
   formSubmitAttempted = false;
 
   constructor(
@@ -81,7 +74,6 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
       applicableDepartments: [[]]
     });
 
-    // Clear department selection when switching to National
     this.holidayForm.get('holidayType')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe((type: HolidayType) => {
@@ -104,7 +96,6 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
       applicableDepartments: this.holiday.applicableDepartments
     });
 
-    // Populate the Set from the holiday data
     this.selectedDepartmentSet = new Set(this.holiday.applicableDepartments);
   }
 
@@ -117,23 +108,18 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
             this.departments = response.data;
           }
         },
-        error: (err: any) => console.error('Error loading departments:', err)
+        error: (err: any) => {
+          console.error('Error loading departments:', err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to Load Departments',
+            text: 'Could not load the department list. Please close and try again.',
+            confirmButtonColor: '#3b82f6'
+          });
+        }
       });
   }
 
-  /**
-   * Toggle a single department.
-   *
-   * ROOT CAUSE of old bug: The template used a wrapping <label> which caused
-   * the browser to fire two events per user click (one from the click itself,
-   * one from the label forwarding to the checkbox). Each call toggled the Set,
-   * so net result was no change — appearing as if everything was selected or
-   * deselected together.
-   *
-   * Fix: The template now uses a plain <div> card with (click)="toggleDepartment"
-   * and the checkbox uses (click)="$event.stopPropagation()" so only ONE event
-   * path reaches toggleDepartment per user interaction.
-   */
   toggleDepartment(departmentId: string): void {
     if (this.mode === 'view') return;
 
@@ -160,8 +146,15 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
 
     if (this.holidayForm.invalid || this.isSubmitting) return;
 
-    // Extra guard: non-national types need at least one dept
-    if (!this.isNationalHoliday && this.selectedDepartmentSet.size === 0) return;
+    if (!this.isNationalHoliday && this.selectedDepartmentSet.size === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Department Selected',
+        text: 'Please select at least one applicable department.',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
 
     this.isSubmitting = true;
     if (this.mode === 'create') {
@@ -188,11 +181,35 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response: any) => {
           this.isSubmitting = false;
-          if (response.success) this.success.emit();
+          if (response.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Holiday Created!',
+              text: `"${dto.holidayName}" has been added successfully.`,
+              confirmButtonColor: '#3b82f6',
+              timer: 2000,
+              timerProgressBar: true,
+              showConfirmButton: false
+            });
+            this.success.emit();
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Creation Failed',
+              text: 'Could not create the holiday. Please try again.',
+              confirmButtonColor: '#3b82f6'
+            });
+          }
         },
         error: (err: any) => {
           console.error('Error creating holiday:', err);
           this.isSubmitting = false;
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err?.error?.message ?? 'An unexpected error occurred while creating the holiday.',
+            confirmButtonColor: '#3b82f6'
+          });
         }
       });
   }
@@ -216,11 +233,35 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response: any) => {
           this.isSubmitting = false;
-          if (response.success) this.success.emit();
+          if (response.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Holiday Updated!',
+              text: `"${dto.holidayName ?? this.holiday?.holidayName}" has been updated successfully.`,
+              confirmButtonColor: '#3b82f6',
+              timer: 2000,
+              timerProgressBar: true,
+              showConfirmButton: false
+            });
+            this.success.emit();
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Update Failed',
+              text: 'Could not update the holiday. Please try again.',
+              confirmButtonColor: '#3b82f6'
+            });
+          }
         },
         error: (err: any) => {
           console.error('Error updating holiday:', err);
           this.isSubmitting = false;
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err?.error?.message ?? 'An unexpected error occurred while updating the holiday.',
+            confirmButtonColor: '#3b82f6'
+          });
         }
       });
   }
