@@ -15,7 +15,7 @@
   </div>
 
   <!-- Statistics Cards -->
-  <div class="stats-row">
+  <!-- <div class="stats-row">
     <div class="stat-card stat-pending">
       <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
       <div class="stat-body">
@@ -44,10 +44,10 @@
         <span class="stat-label">Cancelled</span>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <!-- Main Content -->
-  <div class="content-wrapper" [class.sidebar-open]="showDetails || showForm">
+  <div class="content-wrapper" [class.sidebar-open]="showDetails">
 
     <!-- Grid Panel -->
     <div class="grid-panel">
@@ -103,10 +103,10 @@
       </div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="sidebar-panel" *ngIf="showDetails || showForm">
+    <!-- Sidebar (Details only) -->
+    <div class="sidebar-panel" *ngIf="showDetails">
       <div class="sidebar-header">
-        <h3>{{ showForm ? (editingRequest ? 'Edit WFH Request' : 'New WFH Request') : 'Request Details' }}</h3>
+        <h3>Request Details</h3>
         <button class="close-btn" (click)="onSidebarClose()">
           <i class="bi bi-x-lg"></i>
         </button>
@@ -117,14 +117,25 @@
         [requestId]="selectedRequestId"
         (requestUpdated)="onRequestUpdated()"
       ></app-wfh-request-details>
-
-      <app-wfh-request-form
-        *ngIf="showForm"
-        [existingRequest]="editingRequest"
-        (saved)="onRequestSaved()"
-        (cancelled)="onSidebarClose()"
-      ></app-wfh-request-form>
     </div>
 
+  </div>
+</div>
+
+<!-- Form Modal Overlay -->
+<div class="modal-overlay" *ngIf="showForm" (click)="onSidebarClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="onSidebarClose()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <div class="modal-header">
+      <h2>{{ editingRequest ? 'Edit WFH Request' : 'New WFH Request' }}</h2>
+      <p>{{ editingRequest ? 'Update your WFH request details below' : 'Fill in the details to submit a WFH request' }}</p>
+    </div>
+    <app-wfh-request-form
+      [existingRequest]="editingRequest"
+      (saved)="onRequestSaved()"
+      (cancelled)="onSidebarClose()"
+    ></app-wfh-request-form>
   </div>
 </div>

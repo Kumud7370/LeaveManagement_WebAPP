@@ -137,6 +137,7 @@ export class WfhRequestListComponent implements OnInit {
     {
       headerName: 'Actions',
       width: 210,
+      pinned: 'left',
       sortable: false,
       filter: false,
       cellRenderer: WfhActionCellRendererComponent,
