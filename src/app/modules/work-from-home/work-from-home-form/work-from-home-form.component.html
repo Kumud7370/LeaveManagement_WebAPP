@@ -1,82 +1,89 @@
 <div class="wfh-form-container">
 
-  <div class="form-body">
+  <form (ngSubmit)="onSubmit()">
 
-    <!-- Info Banner -->
-    <div class="info-banner">
-      <i class="bi bi-info-circle"></i>
-      <span>
-        {{ isEditMode ? 'Update the details below. Only pending requests can be edited.' : 'Fill in the details to submit a new WFH request.' }}
-      </span>
+    <!-- Date Range Row -->
+    <div class="form-row two-col">
+      <div class="form-group">
+        <label>Start Date <span class="required">*</span></label>
+        <input
+          type="date"
+          [(ngModel)]="formData.startDate"
+          name="startDate"
+          [class.is-error]="errors['startDate']"
+          [min]="minDate"
+          (change)="errors['startDate'] = ''"
+        />
+        <span class="error-msg" *ngIf="errors['startDate']">{{ errors['startDate'] }}</span>
+      </div>
+
+      <div class="form-group">
+        <label>End Date <span class="required">*</span></label>
+        <input
+          type="date"
+          [(ngModel)]="formData.endDate"
+          name="endDate"
+          [class.is-error]="errors['endDate']"
+          [min]="formData.startDate || minDate"
+          (change)="errors['endDate'] = ''"
+        />
+        <span class="error-msg" *ngIf="errors['endDate']">{{ errors['endDate'] }}</span>
+      </div>
     </div>
 
-    <!-- Duration Preview -->
-    <div class="duration-preview" *ngIf="totalDays > 0">
-      <i class="bi bi-calendar-check"></i>
-      <span>Duration: <strong>{{ totalDays }} day{{ totalDays !== 1 ? 's' : '' }}</strong></span>
-      <span class="warn-text" *ngIf="totalDays > 30">⚠ Exceeds 30-day limit</span>
+    <!-- Total Days -->
+    <div class="form-row two-col" *ngIf="totalDays > 0">
+      <div class="form-group">
+        <label>Total Days</label>
+        <div class="days-input-wrapper">
+          <input
+            type="number"
+            [value]="totalDays"
+            readonly
+            class="readonly-input"
+          />
+          <span class="days-unit">days</span>
+        </div>
+        <span class="hint-msg">Auto-computed: {{ totalDays }} calendar day(s)</span>
+        <span class="error-msg" *ngIf="errors['duration']">{{ errors['duration'] }}</span>
+      </div>
     </div>
 
-    <!-- Form Fields -->
+    <!-- Reason -->
     <div class="form-group">
-      <label class="form-label">Start Date <span class="required">*</span></label>
-      <input
-        type="date"
-        class="form-control"
-        [class.is-invalid]="errors['startDate']"
-        [(ngModel)]="formData.startDate"
-        [min]="minDate"
-        name="startDate"
-      />
-      <span class="error-text" *ngIf="errors['startDate']">{{ errors['startDate'] }}</span>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">End Date <span class="required">*</span></label>
-      <input
-        type="date"
-        class="form-control"
-        [class.is-invalid]="errors['endDate']"
-        [(ngModel)]="formData.endDate"
-        [min]="formData.startDate || minDate"
-        name="endDate"
-      />
-      <span class="error-text" *ngIf="errors['endDate']">{{ errors['endDate'] }}</span>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">
-        Reason <span class="required">*</span>
-        <span class="char-count">{{ formData.reason.length }}/500</span>
-      </label>
+      <label>Reason <span class="required">*</span></label>
       <textarea
-        class="form-control textarea"
-        [class.is-invalid]="errors['reason']"
         [(ngModel)]="formData.reason"
         name="reason"
         rows="4"
         placeholder="Describe the reason for working from home (min 10 characters)..."
+        [class.is-error]="errors['reason']"
         maxlength="500"
       ></textarea>
-      <span class="error-text" *ngIf="errors['reason']">{{ errors['reason'] }}</span>
+      <div class="textarea-footer">
+        <span class="error-msg" *ngIf="errors['reason']">{{ errors['reason'] }}</span>
+        <span class="char-count" [class.over]="formData.reason.length > 450">
+          {{ formData.reason.length }}/500
+        </span>
+      </div>
     </div>
 
-    <div class="error-text global-error" *ngIf="errors['duration']">
-      {{ errors['duration'] }}
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="submitting">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-submit" [disabled]="submitting">
+        <span *ngIf="!submitting">
+          <i class="bi" [ngClass]="isEditMode ? 'bi-pencil-square' : 'bi-check-circle'"></i>
+          {{ isEditMode ? 'Update Request' : 'Submit Request' }}
+        </span>
+        <span *ngIf="submitting" class="submitting-state">
+          <div class="btn-spinner"></div>
+          {{ isEditMode ? 'Updating...' : 'Submitting...' }}
+        </span>
+      </button>
     </div>
 
-  </div>
-
-  <!-- Form Actions -->
-  <div class="form-actions">
-    <button class="btn btn-outline" type="button" (click)="onCancel()" [disabled]="submitting">
-      Cancel
-    </button>
-    <button class="btn btn-primary" type="button" (click)="onSubmit()" [disabled]="submitting">
-      <span *ngIf="submitting" class="btn-spinner"></span>
-      <i *ngIf="!submitting" class="bi" [ngClass]="isEditMode ? 'bi-pencil' : 'bi-send'"></i>
-      {{ submitting ? 'Submitting...' : (isEditMode ? 'Update Request' : 'Submit Request') }}
-    </button>
-  </div>
-
+  </form>
 </div>
