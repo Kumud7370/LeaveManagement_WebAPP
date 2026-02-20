@@ -159,7 +159,7 @@ export class InvitationListComponent implements OnInit {
                         SuperAdmin: { bg: '#f3e8ff', text: '#7c3aed' },
                         Admin: { bg: '#e0e7ff', text: '#4f46e5' },
                         Manager: { bg: '#dbeafe', text: '#2563eb' },
-                        Staff: { bg: '#cffafe', text: '#0891b2' }
+                        Employee: { bg: '#cffafe', text: '#0891b2' }
                     };
                     const color = roleColors[params.value] || { bg: '#f3f4f6', text: '#6b7280' };
                     return `
