@@ -1,6 +1,5 @@
 // ============================================================
-// employee-shift.api.ts
-// src/app/core/services/api/employee-shift.api.ts
+// FILE: src/app/core/services/api/employee-shift.api.ts
 // ============================================================
 
 import { Injectable } from '@angular/core';
@@ -15,11 +14,10 @@ import {
   ValidateShiftAssignmentRequestDto,
   PagedResult,
   ApiResponse,
-} from '../../Models/employee-shift.module';   // ✅ FIXED: was .module
+} from '../../Models/employee-shift.module';
 
 @Injectable({ providedIn: 'root' })
 export class EmployeeShiftService {
-
   private readonly BASE = 'EmployeeShift';
 
   constructor(private api: ApiClientService) {}

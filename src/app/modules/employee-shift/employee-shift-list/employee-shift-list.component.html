@@ -1,4 +1,6 @@
-<!-- employee-shift-list.component.html -->
+<!-- ============================================================ -->
+<!-- FILE: src/app/modules/employee-shift/employee-shift-list/employee-shift-list.component.html -->
+<!-- ============================================================ -->
 <div class="es-page">
 
   <!-- Header -->
@@ -39,16 +41,16 @@
         <span>Current only</span>
       </label>
 
-      <button class="btn btn-clear"    (click)="clearFilters()">
+      <button class="btn btn-clear"   (click)="clearFilters()">
         <i class="bi bi-funnel"></i> Clear
       </button>
-      <button class="btn btn-refresh"  (click)="loadShifts()">
+      <button class="btn btn-refresh" (click)="loadShifts()">
         <i class="bi bi-arrow-clockwise"></i> Refresh
       </button>
-      <button class="btn btn-export"   (click)="exportData()">
+      <button class="btn btn-export"  (click)="exportData()">
         <i class="bi bi-download"></i> Export
       </button>
-      <button class="btn btn-primary"  (click)="openCreateModal()">
+      <button class="btn btn-primary" (click)="openCreateModal()">
         <i class="bi bi-plus-circle"></i> Assign Shift
       </button>
 
@@ -86,14 +88,14 @@
       </select>
       <div class="page-buttons">
         <button class="page-btn" [disabled]="currentPage === 1"
-          (click)="onPageChange(1)"><i class="bi bi-chevron-double-left"></i></button>
+          (click)="onPageChange(1)">&#171;</button>
         <button class="page-btn" [disabled]="currentPage === 1"
-          (click)="onPageChange(currentPage - 1)"><i class="bi bi-chevron-left"></i></button>
+          (click)="onPageChange(currentPage - 1)">&#8249;</button>
         <span class="page-num">{{ currentPage }} / {{ totalPages }}</span>
         <button class="page-btn" [disabled]="currentPage === totalPages"
-          (click)="onPageChange(currentPage + 1)"><i class="bi bi-chevron-right"></i></button>
+          (click)="onPageChange(currentPage + 1)">&#8250;</button>
         <button class="page-btn" [disabled]="currentPage === totalPages"
-          (click)="onPageChange(totalPages)"><i class="bi bi-chevron-double-right"></i></button>
+          (click)="onPageChange(totalPages)">&#187;</button>
       </div>
     </div>
   </div>
@@ -109,12 +111,12 @@
 <div class="modal-backdrop" *ngIf="showRejectDialog" (click)="showRejectDialog = false">
   <div class="reject-box" (click)="$event.stopPropagation()">
     <div class="reject-title">
-      <i class="bi bi-x-circle-fill" style="color:#ef4444"></i>
+      <span style="color:#ef4444;font-size:1.2rem;">&#10060;</span>
       Reject Shift Request
     </div>
     <p class="reject-sub">
       Rejecting <b>{{ rejectTarget?.employeeName }}</b>
-      → <b>{{ rejectTarget?.shiftName }}</b>
+      &rarr; <b>{{ rejectTarget?.shiftName }}</b>
     </p>
     <textarea class="reject-area" rows="3"
       placeholder="Rejection reason (required)"

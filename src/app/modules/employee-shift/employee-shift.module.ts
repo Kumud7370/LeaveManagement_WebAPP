@@ -1,7 +1,5 @@
 // ============================================================
-// employee-shift.module.ts
-// src/app/modules/employee-shift/employee-shift.module.ts
-// Follows the same pattern as your existing shift.module.ts
+// FILE: src/app/modules/employee-shift/employee-shift.module.ts
 // ============================================================
 
 import { NgModule } from '@angular/core';

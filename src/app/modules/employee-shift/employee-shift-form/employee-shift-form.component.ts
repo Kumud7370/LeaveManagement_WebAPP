@@ -1,6 +1,5 @@
 // ============================================================
-// employee-shift-form.component.ts
-// src/app/modules/employee-shift/employee-shift-form/employee-shift-form.component.ts
+// FILE: src/app/modules/employee-shift/employee-shift-form/employee-shift-form.component.ts
 // ============================================================
 
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
@@ -18,7 +17,7 @@ import {
   UpdateEmployeeShiftDto,
   ShiftChangeStatus,
   ShiftChangeStatusColor,
-} from '../../../core/Models/employee-shift.module';   // ✅ FIXED: was .module
+} from '../../../core/Models/employee-shift.module';
 import { Shift } from '../../../core/Models/shift.model';
 
 @Component({
@@ -100,6 +99,7 @@ export class EmployeeShiftFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: r => { if (r.success) this.activeShifts = r.data; } });
 
+    // getActiveEmployees must exist on ApiClientService — see note below
     this.api.getActiveEmployees()
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (r: any) => { if (r.success) this.employees = r.data; } });
@@ -137,13 +137,20 @@ export class EmployeeShiftFormComponent implements OnInit, OnDestroy {
         next: r => {
           this.isSubmitting = false;
           if (r.success) {
-            Swal.fire({ icon: 'success', title: 'Shift Assigned!',
+            Swal.fire({
+              icon: 'success',
+              title: 'Shift Assigned!',
               text: 'Assignment submitted — awaiting approval.',
-              confirmButtonColor: '#3b82f6', timer: 2500, timerProgressBar: true, showConfirmButton: false,
+              confirmButtonColor: '#3b82f6',
+              timer: 2500, timerProgressBar: true, showConfirmButton: false,
             }).then(() => this.success.emit());
           } else {
-            Swal.fire({ icon: 'warning', title: 'Could Not Assign',
-              text: r.message || 'Check overlapping shifts or pending limit (max 3).', confirmButtonColor: '#f59e0b' });
+            Swal.fire({
+              icon: 'warning',
+              title: 'Could Not Assign',
+              text: r.message || 'Check overlapping shifts or pending limit (max 3).',
+              confirmButtonColor: '#f59e0b'
+            });
           }
         },
         error: err => {
@@ -168,11 +175,20 @@ export class EmployeeShiftFormComponent implements OnInit, OnDestroy {
         next: r => {
           this.isSubmitting = false;
           if (r.success) {
-            Swal.fire({ icon: 'success', title: 'Updated!', text: 'Shift assignment updated.',
-              confirmButtonColor: '#3b82f6', timer: 2500, timerProgressBar: true, showConfirmButton: false,
+            Swal.fire({
+              icon: 'success',
+              title: 'Updated!',
+              text: 'Shift assignment updated.',
+              confirmButtonColor: '#3b82f6',
+              timer: 2500, timerProgressBar: true, showConfirmButton: false,
             }).then(() => this.success.emit());
           } else {
-            Swal.fire({ icon: 'warning', title: 'Update Failed', text: r.message || 'Update failed.', confirmButtonColor: '#f59e0b' });
+            Swal.fire({
+              icon: 'warning',
+              title: 'Update Failed',
+              text: r.message || 'Update failed.',
+              confirmButtonColor: '#f59e0b'
+            });
           }
         },
         error: err => {
@@ -214,8 +230,30 @@ export class EmployeeShiftFormComponent implements OnInit, OnDestroy {
       (this.form.get('effectiveTo')?.dirty || this.form.get('effectiveTo')?.touched));
   }
 
-  getStatusStyle(status: ShiftChangeStatus) {
-    return ShiftChangeStatusColor[status] ?? { bg: '#f1f5f9', color: '#475569' };
+  // Normalize: backend may send "Approved" (string) or 2 (number)
+  resolveStatus(status: any): ShiftChangeStatus {
+    if (typeof status === 'string') {
+      const map: Record<string, ShiftChangeStatus> = {
+        'Pending':   ShiftChangeStatus.Pending,
+        'Approved':  ShiftChangeStatus.Approved,
+        'Rejected':  ShiftChangeStatus.Rejected,
+        'Cancelled': ShiftChangeStatus.Cancelled,
+      };
+      return map[status] ?? ShiftChangeStatus.Pending;
+    }
+    return status as ShiftChangeStatus;
+  }
+
+  getStatusStyle(status: any) {
+    return ShiftChangeStatusColor[this.resolveStatus(status)] ?? { bg: '#f1f5f9', color: '#475569' };
+  }
+
+  isStatusApproved(status: any): boolean {
+    return this.resolveStatus(status) === ShiftChangeStatus.Approved;
+  }
+
+  isStatusRejected(status: any): boolean {
+    return this.resolveStatus(status) === ShiftChangeStatus.Rejected;
   }
 
   fmt(v: any): string {
