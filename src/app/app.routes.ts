@@ -268,6 +268,22 @@ export const routes: Routes = [
           }
         ]
       },
+      {
+        path: "wfh-requests",
+        children: [
+          {
+            path: "",
+            redirectTo: "list",
+            pathMatch: "full"
+          },
+          {
+            path: "list",
+            loadComponent: () => import("./modules/work-from-home/work-from-home-list/work-from-home-list.component")
+              .then((m) => m.WfhRequestListComponent),
+            data: { breadcrumb: "WFH Requests" },
+          },
+        ]
+      },
     ],
   },
 ];     

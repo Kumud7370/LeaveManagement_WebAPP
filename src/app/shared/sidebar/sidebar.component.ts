@@ -92,7 +92,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
       children: [
         { label: "Leave Management", route: "/leave/list", icon: "fas fa-list-alt" },
         { label: "Leave Types", route: "/leave-types", icon: "fas fa-tags" },
-        { label: "Leave Balances",   route: "/leave-balance/list",  icon: "fas fa-wallet" },
+        { label: "Leave Balances", route: "/leave-balance/list", icon: "fas fa-wallet" },
+      ]
+    },
+    {
+      label: "Work From Home",
+      icon: "fas fa-house-user",
+      expanded: false,
+      children: [
+        { label: "WFH Requests", route: "/wfh-requests/list", icon: "fas fa-list-alt" },
       ]
     },
     { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" }
@@ -251,7 +259,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
           children: [
             { label: "Leave Management", route: "/leave/list", icon: "fas fa-list-alt" },
             { label: "Leave Types", route: "/leave-types", icon: "fas fa-tags" },
-            { label: "Leave Balances",   route: "/leave-balance/list",  icon: "fas fa-wallet" },
+            { label: "Leave Balances", route: "/leave-balance/list", icon: "fas fa-wallet" },
+          ]
+        },
+        {
+          label: "Work From Home",
+          icon: "fas fa-house-user",
+          expanded: false,
+          children: [
+            { label: "WFH Requests", route: "/wfh-requests/list", icon: "fas fa-list-alt" },
           ]
         },
         { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" },
@@ -274,6 +290,14 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
             { label: "Request Regularization", route: "/attendance-regularization/create", icon: "fas fa-plus-circle" },
             { label: "My Requests", route: "/attendance-regularization/list", icon: "fas fa-list-alt" }
+          ]
+        },
+        {
+          label: "Work From Home",
+          icon: "fas fa-house-user",
+          expanded: false,
+          children: [
+            { label: "My WFH Requests", route: "/wfh-requests/list", icon: "fas fa-list-alt" },
           ]
         },
       ]

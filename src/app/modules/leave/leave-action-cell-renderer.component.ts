@@ -43,7 +43,13 @@ import { LeaveStatus } from '../../core/Models/leave.model';
 })
 export class LeaveActionCellRendererComponent implements ICellRendererAngularComp {
   params!: ICellRendererParams;
-  get isPending(): boolean { return this.params.data?.leaveStatus === LeaveStatus.Pending; }
+
+  get isPending(): boolean {
+  const status = this.params.data?.leaveStatus;
+  return status === LeaveStatus.Pending   
+      || status === 'Pending';            
+}
+
   agInit(params: ICellRendererParams): void { this.params = params; }
   refresh(params: ICellRendererParams): boolean { this.params = params; return true; }
   onView()   { this.params.context?.componentParent?.viewDetails(this.params.data); }

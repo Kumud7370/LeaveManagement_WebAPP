@@ -4,7 +4,7 @@ import { RouterModule, Routes } from '@angular/router';
 const routes: Routes = [
   {
     path: '',
-    loadComponent: () => 
+    loadComponent: () =>
       import('./holiday-list/holiday-list.component').then(m => m.HolidayListComponent),
     data: { breadcrumb: 'holidays' }
   }
@@ -14,4 +14,4 @@ const routes: Routes = [
   imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]
 })
-export class HolidayRoutingModule { }
+export class HolidayRoutingModule {}

@@ -18,13 +18,17 @@
         </button>
         <h1 class="form-title">
           <i class="fas fa-user-plus"></i>
-          {{ isEditMode ? 'Edit Employee' : 'Add New Employee' }}
+          {{ isEditMode ? "Edit Employee" : "Add New Employee" }}
         </h1>
       </div>
     </div>
 
     <!-- Form -->
-    <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()" class="employee-form">
+    <form
+      [formGroup]="employeeForm"
+      (ngSubmit)="onSubmit()"
+      class="employee-form"
+    >
       <!-- Personal Information Section -->
       <div class="form-section">
         <div class="section-header">
@@ -41,8 +45,11 @@
                 [class.invalid]="isFieldInvalid('employeeCode')"
                 placeholder="e.g., EMP001"
               />
-              <span class="error-message" *ngIf="isFieldInvalid('employeeCode')">
-                {{ getFieldError('employeeCode') }}
+              <span
+                class="error-message"
+                *ngIf="isFieldInvalid('employeeCode')"
+              >
+                {{ getFieldError("employeeCode") }}
               </span>
             </div>
 
@@ -56,7 +63,7 @@
                 placeholder="Enter first name"
               />
               <span class="error-message" *ngIf="isFieldInvalid('firstName')">
-                {{ getFieldError('firstName') }}
+                {{ getFieldError("firstName") }}
               </span>
             </div>
 
@@ -80,7 +87,7 @@
                 placeholder="Enter last name"
               />
               <span class="error-message" *ngIf="isFieldInvalid('lastName')">
-                {{ getFieldError('lastName') }}
+                {{ getFieldError("lastName") }}
               </span>
             </div>
           </div>
@@ -95,7 +102,7 @@
                 [class.invalid]="isFieldInvalid('dateOfBirth')"
               />
               <span class="error-message" *ngIf="isFieldInvalid('dateOfBirth')">
-                {{ getFieldError('dateOfBirth') }}
+                {{ getFieldError("dateOfBirth") }}
               </span>
             </div>
 
@@ -106,7 +113,10 @@
                 class="form-control"
                 [class.invalid]="isFieldInvalid('gender')"
               >
-                <option *ngFor="let option of genderOptions" [value]="option.value">
+                <option
+                  *ngFor="let option of genderOptions"
+                  [value]="option.value"
+                >
                   {{ option.label }}
                 </option>
               </select>
@@ -132,7 +142,7 @@
                 placeholder="employee@example.com"
               />
               <span class="error-message" *ngIf="isFieldInvalid('email')">
-                {{ getFieldError('email') }}
+                {{ getFieldError("email") }}
               </span>
             </div>
 
@@ -146,7 +156,7 @@
                 placeholder="+1234567890"
               />
               <span class="error-message" *ngIf="isFieldInvalid('phoneNumber')">
-                {{ getFieldError('phoneNumber') }}
+                {{ getFieldError("phoneNumber") }}
               </span>
             </div>
 
@@ -159,8 +169,11 @@
                 [class.invalid]="isFieldInvalid('alternatePhoneNumber')"
                 placeholder="+1234567890 (optional)"
               />
-              <span class="error-message" *ngIf="isFieldInvalid('alternatePhoneNumber')">
-                {{ getFieldError('alternatePhoneNumber') }}
+              <span
+                class="error-message"
+                *ngIf="isFieldInvalid('alternatePhoneNumber')"
+              >
+                {{ getFieldError("alternatePhoneNumber") }}
               </span>
             </div>
           </div>
@@ -184,7 +197,7 @@
                 placeholder="Enter street address"
               />
               <span class="error-message" *ngIf="isFieldInvalid('street')">
-                {{ getFieldError('street') }}
+                {{ getFieldError("street") }}
               </span>
             </div>
           </div>
@@ -199,9 +212,9 @@
                 [class.invalid]="isFieldInvalid('city')"
                 placeholder="Enter city"
               />
-              <span class="error-message" *ngIf="isFieldInvalid('city')">
-                {{ getFieldError('city') }}
-              </span>
+              <span class="error-message" *ngIf="isFieldInvalid('city')">{{
+                getFieldError("city")
+              }}</span>
             </div>
 
             <div class="form-group">
@@ -213,9 +226,9 @@
                 [class.invalid]="isFieldInvalid('state')"
                 placeholder="Enter state"
               />
-              <span class="error-message" *ngIf="isFieldInvalid('state')">
-                {{ getFieldError('state') }}
-              </span>
+              <span class="error-message" *ngIf="isFieldInvalid('state')">{{
+                getFieldError("state")
+              }}</span>
             </div>
 
             <div class="form-group">
@@ -227,9 +240,9 @@
                 [class.invalid]="isFieldInvalid('country')"
                 placeholder="Enter country"
               />
-              <span class="error-message" *ngIf="isFieldInvalid('country')">
-                {{ getFieldError('country') }}
-              </span>
+              <span class="error-message" *ngIf="isFieldInvalid('country')">{{
+                getFieldError("country")
+              }}</span>
             </div>
 
             <div class="form-group">
@@ -241,9 +254,11 @@
                 [class.invalid]="isFieldInvalid('postalCode')"
                 placeholder="Enter postal code"
               />
-              <span class="error-message" *ngIf="isFieldInvalid('postalCode')">
-                {{ getFieldError('postalCode') }}
-              </span>
+              <span
+                class="error-message"
+                *ngIf="isFieldInvalid('postalCode')"
+                >{{ getFieldError("postalCode") }}</span
+              >
             </div>
           </div>
         </div>
@@ -256,31 +271,57 @@
         </div>
         <div class="section-body">
           <div class="form-row">
+            <!-- Department dropdown - fetched from DepartmentService -->
             <div class="form-group">
               <label class="required">Department</label>
-              <input
-                type="text"
+              <select
                 formControlName="departmentId"
                 class="form-control"
                 [class.invalid]="isFieldInvalid('departmentId')"
-                placeholder="Enter department ID"
-              />
-              <span class="error-message" *ngIf="isFieldInvalid('departmentId')">
-                {{ getFieldError('departmentId') }}
+              >
+                <option value="">
+                  {{
+                    isDepartmentsLoading
+                      ? "Loading departments..."
+                      : "Select Department"
+                  }}
+                </option>
+                <option *ngFor="let dept of departments" [value]="dept.id">
+                  {{ dept.name }}
+                </option>
+              </select>
+              <span
+                class="error-message"
+                *ngIf="isFieldInvalid('departmentId')"
+              >
+                {{ getFieldError("departmentId") }}
               </span>
             </div>
 
+            <!-- Designation dropdown - fetched from DesignationService -->
             <div class="form-group">
               <label class="required">Designation</label>
-              <input
-                type="text"
+              <select
                 formControlName="designationId"
                 class="form-control"
                 [class.invalid]="isFieldInvalid('designationId')"
-                placeholder="Enter designation ID"
-              />
-              <span class="error-message" *ngIf="isFieldInvalid('designationId')">
-                {{ getFieldError('designationId') }}
+              >
+                <option value="">
+                  {{
+                    isDesignationsLoading
+                      ? "Loading designations..."
+                      : "Select Designation"
+                  }}
+                </option>
+                <option *ngFor="let desig of designations" [value]="desig.id">
+                  {{ desig.name }}
+                </option>
+              </select>
+              <span
+                class="error-message"
+                *ngIf="isFieldInvalid('designationId')"
+              >
+                {{ getFieldError("designationId") }}
               </span>
             </div>
 
@@ -304,8 +345,11 @@
                 class="form-control"
                 [class.invalid]="isFieldInvalid('dateOfJoining')"
               />
-              <span class="error-message" *ngIf="isFieldInvalid('dateOfJoining')">
-                {{ getFieldError('dateOfJoining') }}
+              <span
+                class="error-message"
+                *ngIf="isFieldInvalid('dateOfJoining')"
+              >
+                {{ getFieldError("dateOfJoining") }}
               </span>
             </div>
 
@@ -318,6 +362,7 @@
               />
             </div>
 
+            <!-- FIXED: Employment Type shows labels not numbers -->
             <div class="form-group">
               <label class="required">Employment Type</label>
               <select
@@ -325,12 +370,16 @@
                 class="form-control"
                 [class.invalid]="isFieldInvalid('employmentType')"
               >
-                <option *ngFor="let option of employmentTypeOptions" [value]="option.value">
+                <option
+                  *ngFor="let option of employmentTypeOptions"
+                  [value]="option.value"
+                >
                   {{ option.label }}
                 </option>
               </select>
             </div>
 
+            <!-- FIXED: Employee Status shows labels not numbers -->
             <div class="form-group">
               <label class="required">Employee Status</label>
               <select
@@ -338,7 +387,10 @@
                 class="form-control"
                 [class.invalid]="isFieldInvalid('employeeStatus')"
               >
-                <option *ngFor="let option of employeeStatusOptions" [value]="option.value">
+                <option
+                  *ngFor="let option of employeeStatusOptions"
+                  [value]="option.value"
+                >
                   {{ option.label }}
                 </option>
               </select>
@@ -363,7 +415,6 @@
                 placeholder="https://example.com/image.jpg"
               />
             </div>
-
             <div class="form-group">
               <label>Biometric ID</label>
               <input
@@ -379,13 +430,29 @@
 
       <!-- Form Actions -->
       <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="cancel()" [disabled]="isSaving">
-          <i class="fas fa-times"></i>
-          Cancel
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="cancel()"
+          [disabled]="isSaving"
+        >
+          <i class="fas fa-times"></i> Cancel
         </button>
         <button type="submit" class="btn btn-primary" [disabled]="isSaving">
-          <i class="fas" [class.fa-spinner]="isSaving" [class.fa-spin]="isSaving" [class.fa-save]="!isSaving"></i>
-          {{ isSaving ? 'Saving...' : (isEditMode ? 'Update Employee' : 'Create Employee') }}
+          <i
+            class="fas"
+            [class.fa-spinner]="isSaving"
+            [class.fa-spin]="isSaving"
+            [class.fa-save]="!isSaving"
+          >
+          </i>
+          {{
+            isSaving
+              ? "Saving..."
+              : isEditMode
+                ? "Update Employee"
+                : "Create Employee"
+          }}
         </button>
       </div>
     </form>

@@ -7,37 +7,39 @@ export enum HolidayType {
 export interface Holiday {
   id: string;
   holidayName: string;
-  holidayDate: Date | string;
+  holidayDate: string;
   description?: string;
   holidayType: HolidayType;
   holidayTypeName: string;
   isOptional: boolean;
+  isActive: boolean;          // ← added: mapped from backend IsActive
   applicableDepartments: string[];
   departmentNames: string[];
   isUpcoming: boolean;
   isToday: boolean;
   daysUntilHoliday: number;
-  createdAt: Date | string;
-  updatedAt?: Date | string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateHolidayDto {
   holidayName: string;
-  holidayDate: Date | string;
+  holidayDate: string;
   description?: string;
   holidayType: HolidayType;
   isOptional: boolean;
   applicableDepartments: string[];
+  isActive?: boolean;
 }
 
 export interface UpdateHolidayDto {
-  id: string;
   holidayName?: string;
-  holidayDate?: Date | string;
+  holidayDate?: string;
   description?: string;
   holidayType?: HolidayType;
   isOptional?: boolean;
   applicableDepartments?: string[];
+  isActive?: boolean;          // ← added: lets toggleStatus send isActive
 }
 
 export interface HolidayFilterDto {
@@ -45,8 +47,9 @@ export interface HolidayFilterDto {
   holidayType?: HolidayType;
   isOptional?: boolean;
   departmentId?: string;
-  dateFrom?: Date | string;
-  dateTo?: Date | string;
+  isActive?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
   isUpcoming?: boolean;
   year?: number;
   month?: number;

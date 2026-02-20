@@ -90,32 +90,53 @@
           </div>
         </div>
 
-        <!-- Applicable Departments (only for Regional/Optional) -->
+        <!-- Applicable Departments (hidden for National) -->
         <div class="form-group" *ngIf="!isNationalHoliday">
           <label class="form-label">
             Applicable Departments <span class="required">*</span>
           </label>
-          <div class="departments-grid" *ngIf="departments.length > 0">
-            <label
+
+          <div
+            class="departments-grid"
+            *ngIf="departments.length > 0; else noDepts"
+          >
+           
+            <div
               *ngFor="let dept of departments"
-              class="department-checkbox"
+              class="department-card"
               [class.selected]="isDepartmentSelected(dept.id)"
+              (click)="toggleDepartment(dept.id)"
             >
               <input
                 type="checkbox"
+                class="dept-checkbox"
                 [checked]="isDepartmentSelected(dept.id)"
+                (click)="$event.stopPropagation()"
                 (change)="toggleDepartment(dept.id)"
+                [attr.id]="'dept-' + dept.id"
               />
               <span class="department-name">{{ dept.departmentName }}</span>
               <span class="department-code">{{ dept.departmentCode }}</span>
-            </label>
+            </div>
           </div>
-          <div class="info-message" *ngIf="isNationalHoliday">
-            National holidays apply to all departments automatically.
+
+          <ng-template #noDepts>
+            <p class="info-message">No departments available.</p>
+          </ng-template>
+
+          <div
+            class="error-message"
+            *ngIf="
+              !isNationalHoliday &&
+              selectedDepartments.length === 0 &&
+              formSubmitAttempted
+            "
+          >
+            At least one department must be selected.
           </div>
         </div>
 
-        <!-- View Mode Info -->
+        <!-- View Mode Extra Info -->
         <div class="info-box" *ngIf="mode === 'view' && holiday">
           <div class="info-row">
             <span class="info-label">Status:</span>
@@ -158,6 +179,7 @@
             type="submit"
             class="btn btn-primary"
             [disabled]="holidayForm.invalid || isSubmitting"
+            (click)="formSubmitAttempted = true"
           >
             <span *ngIf="!isSubmitting">{{ submitButtonText }}</span>
             <span *ngIf="isSubmitting" class="spinner-container">
