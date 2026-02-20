@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, type OnDestroy, type OnInit, Inject, PLATFORM_ID } from "@angular/core"
+import { Component, HostListener, inject, type OnDestroy, type OnInit, Inject, PLATFORM_ID, Input } from "@angular/core"
 import { CommonModule, isPlatformBrowser } from "@angular/common"
 import { Router, NavigationEnd, RouterModule } from "@angular/router"
 import { SidebarService } from "../sidebar/sidebar.service"
@@ -50,6 +50,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   isMobile = false
   activeRoute = ""
   isPinned = false
+  @Input() isBlurred = false
   private isUserInteraction = false
   private hoverTimeout: any
 
