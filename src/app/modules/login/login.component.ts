@@ -72,9 +72,9 @@ export class LoginComponent implements OnInit {
   }
 
   // Navigate to register page
-  navigateToRegister(): void {
-    this.router.navigate(['/register']);
-  }
+  // navigateToRegister(): void {
+  //   this.router.navigate(['/register']);
+  // }
 
   onLogin(): void {
     if (this.loginForm.valid) {
