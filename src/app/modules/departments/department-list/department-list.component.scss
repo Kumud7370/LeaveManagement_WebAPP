@@ -246,7 +246,6 @@
     }
   }
 
-  // Custom AG Grid Styles - Matching Reference Design
   ::ng-deep {
     .ag-theme-quartz {
       --ag-wrapper-border-radius: 0;
@@ -538,7 +537,6 @@
       }
     }
 
-    // Search stacks on top, buttons row below
     .search-action-section {
       flex-direction: column;
       gap: 0.5rem;
@@ -549,7 +547,6 @@
         min-width: unset;
       }
 
-      // Buttons row: icon-only, evenly spaced
       .action-buttons-group {
         display: flex;
         gap: 0.5rem;

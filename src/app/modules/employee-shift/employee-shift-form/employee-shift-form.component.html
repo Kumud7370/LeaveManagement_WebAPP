@@ -1,11 +1,13 @@
-<!-- employee-shift-form.component.html -->
+<!-- ============================================================ -->
+<!-- FILE: src/app/modules/employee-shift/employee-shift-form/employee-shift-form.component.html -->
+<!-- ============================================================ -->
 <div class="modal-backdrop" (click)="onClose()">
   <div class="modal-box" (click)="$event.stopPropagation()">
 
     <!-- Header -->
     <div class="modal-header">
       <div class="header-left">
-        <div class="header-icon"><i class="bi bi-calendar2-week"></i></div>
+        <div class="header-icon">&#128197;</div>
         <div>
           <h2 class="modal-title">{{ modalTitle }}</h2>
           <p class="modal-sub" *ngIf="employeeShift && mode !== 'create'">
@@ -15,14 +17,12 @@
               {{ employeeShift.statusName }}
             </span>
             <span *ngIf="employeeShift.employeeName" class="emp-tag">
-              &nbsp;· {{ employeeShift.employeeName }}
+              &nbsp;&middot; {{ employeeShift.employeeName }}
             </span>
           </p>
         </div>
       </div>
-      <button class="close-btn" (click)="onClose()" type="button">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <button class="close-btn" (click)="onClose()" type="button">&times;</button>
     </div>
 
     <!-- Body -->
@@ -34,31 +34,31 @@
 
           <div class="info-card"
             [ngStyle]="{ borderLeftColor: employeeShift.shiftColor ?? '#3b82f6' }">
-            <div class="ic-label"><i class="bi bi-person"></i> Employee</div>
+            <div class="ic-label">&#128100; Employee</div>
             <div class="ic-val">{{ employeeShift.employeeName ?? '—' }}</div>
             <div class="ic-sub">{{ employeeShift.employeeCode }}</div>
           </div>
 
           <div class="info-card">
-            <div class="ic-label"><i class="bi bi-clock"></i> Shift</div>
+            <div class="ic-label">&#128336; Shift</div>
             <div class="ic-val">{{ employeeShift.shiftName ?? '—' }}</div>
             <div class="ic-sub">{{ employeeShift.shiftTimingDisplay }}</div>
           </div>
 
           <div class="info-card">
-            <div class="ic-label"><i class="bi bi-calendar-range"></i> From</div>
+            <div class="ic-label">&#128197; From</div>
             <div class="ic-val">{{ fmt(employeeShift.effectiveFrom) }}</div>
           </div>
 
           <div class="info-card">
-            <div class="ic-label"><i class="bi bi-calendar-range"></i> To</div>
+            <div class="ic-label">&#128197; To</div>
             <div class="ic-val">
               {{ employeeShift.effectiveTo ? fmt(employeeShift.effectiveTo) : 'Ongoing' }}
             </div>
           </div>
 
           <div class="info-card">
-            <div class="ic-label"><i class="bi bi-hourglass"></i> Duration</div>
+            <div class="ic-label">&#9203; Duration</div>
             <div class="ic-val">
               {{ (employeeShift.durationInDays === -1 || !employeeShift.durationInDays)
                  ? 'Ongoing'
@@ -67,50 +67,44 @@
           </div>
 
           <div class="info-card">
-            <div class="ic-label"><i class="bi bi-activity"></i> Currently Active</div>
+            <div class="ic-label">&#9889; Currently Active</div>
             <div class="ic-val"
               [style.color]="employeeShift.isCurrentlyActive ? '#10b981' : '#94a3b8'">
-              <i [class]="employeeShift.isCurrentlyActive
-                ? 'bi bi-check-circle-fill'
-                : 'bi bi-dash-circle'"></i>
-              {{ employeeShift.isCurrentlyActive ? 'Yes' : 'No' }}
+              {{ employeeShift.isCurrentlyActive ? '&#10004; Yes' : '&#8212; No' }}
             </div>
           </div>
 
           <!-- Reason -->
           <div class="info-card full" *ngIf="employeeShift.changeReason">
-            <div class="ic-label"><i class="bi bi-chat-text"></i> Reason</div>
+            <div class="ic-label">&#128172; Reason</div>
             <div class="ic-val italic">{{ employeeShift.changeReason }}</div>
           </div>
 
           <!-- Approved -->
           <div class="info-card full approved-card"
-            *ngIf="employeeShift.status === ShiftChangeStatus.Approved">
-            <div class="ic-label green">
-              <i class="bi bi-check-circle-fill"></i> Approved by
-            </div>
+            *ngIf="isStatusApproved(employeeShift.status)">
+            <div class="ic-label green">&#10004; Approved by</div>
             <div class="ic-val">{{ employeeShift.approvedByName ?? employeeShift.approvedBy ?? '—' }}</div>
             <div class="ic-sub">{{ fmt(employeeShift.approvedDate) }}</div>
           </div>
 
           <!-- Rejected -->
           <div class="info-card full rejected-card"
-            *ngIf="employeeShift.status === ShiftChangeStatus.Rejected">
+            *ngIf="isStatusRejected(employeeShift.status)">
             <div class="ic-label red">
-              <i class="bi bi-x-circle-fill"></i>
-              Rejected by {{ employeeShift.rejectedByName ?? employeeShift.rejectedBy }}
-              · {{ fmt(employeeShift.rejectedDate) }}
+              &#10060; Rejected by {{ employeeShift.rejectedByName ?? employeeShift.rejectedBy }}
+              &middot; {{ fmt(employeeShift.rejectedDate) }}
             </div>
             <div class="ic-val italic">{{ employeeShift.rejectionReason }}</div>
           </div>
 
           <div class="info-card">
-            <div class="ic-label"><i class="bi bi-calendar-plus"></i> Requested</div>
+            <div class="ic-label">&#128197; Requested</div>
             <div class="ic-val">{{ fmt(employeeShift.requestedDate) }}</div>
           </div>
 
           <div class="info-card" *ngIf="employeeShift.updatedAt">
-            <div class="ic-label"><i class="bi bi-pencil-square"></i> Updated</div>
+            <div class="ic-label">&#9998; Updated</div>
             <div class="ic-val">{{ fmt(employeeShift.updatedAt) }}</div>
           </div>
 
@@ -162,13 +156,13 @@
             </label>
             <input type="date" class="fc" formControlName="effectiveTo"
               [class.invalid]="hasDateRangeError" />
-            <div class="em" *ngIf="hasDateRangeError">End date must be ≥ start date</div>
+            <div class="em" *ngIf="hasDateRangeError">End date must be &ge; start date</div>
           </div>
         </div>
 
         <!-- Reason -->
         <div class="fg">
-          <label class="fl">Reason for Change</label>
+          <label class="fl">Reason for Change <span class="hint">(optional, min 10 chars)</span></label>
           <textarea class="fc" formControlName="changeReason" rows="3"
             [class.invalid]="isInvalid('changeReason')"
             placeholder="Optional — min 10 chars if provided"></textarea>
@@ -177,7 +171,7 @@
 
         <!-- Info banner -->
         <div class="info-banner" *ngIf="mode === 'create'">
-          <i class="bi bi-info-circle-fill"></i>
+          &#8505;
           Assignment starts as <strong>Pending</strong> and requires admin approval.
           Max <strong>3 pending</strong> requests per employee at one time.
         </div>

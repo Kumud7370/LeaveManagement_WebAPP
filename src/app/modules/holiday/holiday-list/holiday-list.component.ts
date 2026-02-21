@@ -238,21 +238,19 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     this.showModal = true;
   }
 
-  /** Called by ActionCellRenderer → context.componentParent.viewDetails */
   viewDetails(holiday: Holiday): void {
     this.modalMode = 'view';
     this.selectedHoliday = { ...holiday };
     this.showModal = true;
   }
 
-  /** Called by ActionCellRenderer → context.componentParent.editDepartment */
+
   editDepartment(holiday: Holiday): void {
     this.modalMode = 'edit';
     this.selectedHoliday = { ...holiday };
     this.showModal = true;
   }
 
-  /** Called by ActionCellRenderer → context.componentParent.toggleStatus */
   async toggleStatus(holiday: Holiday): Promise<void> {
     const newActiveState = !holiday.isActive;
     const action = newActiveState ? 'activate' : 'deactivate';
@@ -313,7 +311,6 @@ export class HolidayListComponent implements OnInit, OnDestroy {
       });
   }
 
-  /** Called by ActionCellRenderer → context.componentParent.deleteDepartment */
   async deleteDepartment(holiday: Holiday): Promise<void> {
     const result = await Swal.fire({
       title: 'Delete Holiday?',

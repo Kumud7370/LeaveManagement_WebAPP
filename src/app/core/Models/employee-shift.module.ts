@@ -1,6 +1,8 @@
 // ============================================================
-// employee-shift.model.ts
-// src/app/core/Models/employee-shift.model.ts
+// FILE: src/app/core/Models/employee-shift.model.ts
+// ⚠️  NOTE: The imports in your components reference 'employee-shift.module'
+//     but the correct filename should be 'employee-shift.model'
+//     Fix all imports to: import { ... } from '../../Models/employee-shift.model'
 // ============================================================
 
 export enum ShiftChangeStatus {
@@ -24,7 +26,7 @@ export const ShiftChangeStatusColor: Record<ShiftChangeStatus, { bg: string; col
   [ShiftChangeStatus.Cancelled]: { bg: '#f1f5f9', color: '#475569' },
 };
 
-// ── Main response DTO (mirrors backend EmployeeShiftResponseDto) ──
+// Main response DTO — mirrors backend EmployeeShiftResponseDto
 export interface EmployeeShift {
   id: string;
   employeeId: string;
@@ -58,7 +60,6 @@ export interface EmployeeShift {
   updatedAt?: string | Date | null;
 }
 
-// ── Create DTO ────────────────────────────────────────────────
 export interface CreateEmployeeShiftDto {
   employeeId: string;
   shiftId: string;
@@ -67,7 +68,6 @@ export interface CreateEmployeeShiftDto {
   changeReason?: string;
 }
 
-// ── Update DTO ────────────────────────────────────────────────
 export interface UpdateEmployeeShiftDto {
   shiftId?: string;
   effectiveFrom?: string;
@@ -75,7 +75,6 @@ export interface UpdateEmployeeShiftDto {
   changeReason?: string;
 }
 
-// ── Filter DTO ────────────────────────────────────────────────
 export interface EmployeeShiftFilterDto {
   employeeId?: string;
   shiftId?: string;
@@ -90,12 +89,10 @@ export interface EmployeeShiftFilterDto {
   sortDescending: boolean;
 }
 
-// ── Reject request ────────────────────────────────────────────
 export interface RejectShiftChangeRequestDto {
   rejectionReason: string;
 }
 
-// ── Validate request ──────────────────────────────────────────
 export interface ValidateShiftAssignmentRequestDto {
   employeeId: string;
   effectiveFrom: string;
@@ -103,7 +100,6 @@ export interface ValidateShiftAssignmentRequestDto {
   excludeId?: string;
 }
 
-// ── Paged result ──────────────────────────────────────────────
 export interface PagedResult<T> {
   items: T[];
   totalCount: number;
@@ -112,7 +108,6 @@ export interface PagedResult<T> {
   totalPages: number;
 }
 
-// ── API wrapper ───────────────────────────────────────────────
 export interface ApiResponse<T> {
   data: T;
   message: string;
