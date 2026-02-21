@@ -270,7 +270,7 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
     this.close.emit();
   }
 
-  // ── Date helpers ──────────────────────────────────────────────────────────
+  // ── Date helpers ──────
 
   formatDateForInput(date: any): string {
     const d = new Date(date);
@@ -291,7 +291,7 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
     return new Date(`${dateStr}T00:00:00.000Z`).toISOString();
   }
 
-  // ── Template helpers ──────────────────────────────────────────────────────
+  // ── Template helpers ────────
 
   get isNationalHoliday(): boolean {
     return this.holidayForm.get('holidayType')?.value === HolidayType.National;

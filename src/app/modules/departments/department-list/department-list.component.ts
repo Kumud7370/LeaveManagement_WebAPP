@@ -216,10 +216,9 @@ export class DepartmentListComponent implements OnInit {
   }
 
   loadStats(): void {
-    // Load all departments for stats calculation
     const statsFilter: DepartmentFilterRequest = {
       pageNumber: 1,
-      pageSize: 10000, // Get all departments for stats
+      pageSize: 10000, 
       sortBy: 'DepartmentName',
       sortDirection: 'asc'
     };
@@ -278,17 +277,17 @@ export class DepartmentListComponent implements OnInit {
     
     // Set column widths
     const columnWidths = [
-      { wch: 18 }, // Department Code
-      { wch: 30 }, // Department Name
-      { wch: 40 }, // Description
-      { wch: 25 }, // Parent Department
-      { wch: 25 }, // Head of Department
-      { wch: 12 }, // Employees
-      { wch: 15 }, // Sub-Departments
-      { wch: 10 }, // Status
-      { wch: 14 }, // Display Order
-      { wch: 25 }, // Created At
-      { wch: 25 }  // Updated At
+      { wch: 18 }, 
+      { wch: 30 }, 
+      { wch: 40 }, 
+      { wch: 25 }, 
+      { wch: 25 }, 
+      { wch: 12 }, 
+      { wch: 15 }, 
+      { wch: 10 }, 
+      { wch: 14 }, 
+      { wch: 25 }, 
+      { wch: 25 }  
     ];
     worksheet['!cols'] = columnWidths;
 
