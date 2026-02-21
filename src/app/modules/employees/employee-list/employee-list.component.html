@@ -19,19 +19,24 @@
       />
     </div>
 
-    <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
+    <button class="btn btn-clear" (click)="clearSearch()">
+      <i class="bi bi-x-circle"></i>
+      <span class="btn-label">Clear</span>
+    </button>
 
-    <button class="btn btn-refresh" (click)="loadEmployees()">Refresh</button>
+    <button class="btn btn-refresh" (click)="loadEmployees()">
+      <i class="bi bi-arrow-clockwise"></i>
+      <span class="btn-label">Refresh</span>
+    </button>
 
-    <!-- NEW: Export Button -->
     <button class="btn btn-export" (click)="exportToExcel()">
       <i class="bi bi-download"></i>
-      Export
+      <span class="btn-label">Export</span>
     </button>
 
     <button class="btn btn-primary" (click)="addNewEmployee()">
       <i class="bi bi-plus-circle"></i>
-      Add Employee
+      <span class="btn-label">Add Employee</span>
     </button>
   </div>
 
@@ -116,9 +121,7 @@
   <div *ngIf="error && !isLoading" class="error-state">
     <i class="bi bi-exclamation-circle"></i>
     <p>{{ error }}</p>
-    <button class="btn btn-outline" (click)="loadEmployees()">
-      Try Again
-    </button>
+    <button class="btn btn-outline" (click)="loadEmployees()">Try Again</button>
   </div>
 
   <!-- AG Grid Table -->
@@ -230,8 +233,15 @@
 </div>
 
 <!-- Modal for Employee Details -->
-<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
-  <div class="modal-container modal-container-large" (click)="$event.stopPropagation()">
+<div
+  class="modal-overlay"
+  *ngIf="showDetailsModal"
+  (click)="closeDetailsModal()"
+>
+  <div
+    class="modal-container modal-container-large"
+    (click)="$event.stopPropagation()"
+  >
     <button class="modal-close" (click)="closeDetailsModal()">
       <i class="bi bi-x-lg"></i>
     </button>
