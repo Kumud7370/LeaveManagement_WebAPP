@@ -6,7 +6,8 @@ import {
   ColDef,
   GridApi,
   GridReadyEvent,
-  GridOptions
+  GridOptions,
+  ICellRendererParams
 } from 'ag-grid-community';
 import Swal from 'sweetalert2';
 
@@ -17,8 +18,6 @@ import {
   ApprovalStatus,
   ApproveRejectWfhRequestDto
 } from '../../../core/Models/work-from-home.model';
-import { WfhActionCellRendererComponent } from '../wfh-action-cell-renderer.component';
-import { WfhStatusCellRendererComponent } from '../wfh-status-cell-renderer.component';
 import { WfhRequestDetailsComponent } from '../work-from-home-details/work-from-home-details.component';
 import { WfhRequestFormComponent } from '../work-from-home-form/work-from-home-form.component';
 
@@ -32,8 +31,8 @@ import { WfhRequestFormComponent } from '../work-from-home-form/work-from-home-f
     WfhRequestDetailsComponent,
     WfhRequestFormComponent
   ],
- templateUrl: './work-from-home-list.component.html',
-styleUrls: ['./work-from-home-list.component.scss']
+  templateUrl: './work-from-home-list.component.html',
+  styleUrls: ['./work-from-home-list.component.scss']
 })
 export class WfhRequestListComponent implements OnInit {
   // Grid
@@ -83,14 +82,18 @@ export class WfhRequestListComponent implements OnInit {
       headerName: 'Start Date',
       width: 130,
       sortable: true,
-      valueFormatter: p => p.value ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+      valueFormatter: p => p.value
+        ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—'
     },
     {
       field: 'endDate',
       headerName: 'End Date',
       width: 130,
       sortable: true,
-      valueFormatter: p => p.value ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+      valueFormatter: p => p.value
+        ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—'
     },
     {
       field: 'totalDays',
@@ -116,23 +119,37 @@ export class WfhRequestListComponent implements OnInit {
       headerName: 'Status',
       width: 140,
       sortable: true,
-      cellRenderer: WfhStatusCellRendererComponent
-    },
-    {
-      field: 'isActive',
-      headerName: 'Active',
-      width: 90,
-      sortable: true,
-      cellRenderer: (params: any) => params.value
-        ? `<span style="color:#14532d;font-weight:600;">● Yes</span>`
-        : `<span style="color:#64748b;">—</span>`
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+      cellRenderer: (params: ICellRendererParams) => {
+        const status: ApprovalStatus = params.value;
+        const label = params.data?.statusName ?? ApprovalStatus[status] ?? '';
+
+        const styleMap: Record<number, { bg: string; color: string; border: string; icon: string }> = {
+          [ApprovalStatus.Pending]:   { bg: '#fef9c3', color: '#854d0e', border: '#fde68a', icon: 'bi-clock-history' },
+          [ApprovalStatus.Approved]:  { bg: '#dcfce7', color: '#14532d', border: '#86efac', icon: 'bi-check-circle' },
+          [ApprovalStatus.Rejected]:  { bg: '#fee2e2', color: '#7f1d1d', border: '#fca5a5', icon: 'bi-x-circle' },
+          [ApprovalStatus.Cancelled]: { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1', icon: 'bi-slash-circle' }
+        };
+
+        const s = styleMap[status] ?? styleMap[ApprovalStatus.Pending];
+
+        return `<span style="display:inline-flex;align-items:center;gap:0.35rem;
+                              padding:0.35rem 0.85rem;border-radius:2rem;font-size:0.78rem;
+                              font-weight:600;background:${s.bg};color:${s.color};
+                              border:1px solid ${s.border};">
+                  <i class="bi ${s.icon}" style="pointer-events:none;"></i>
+                  ${label}
+                </span>`;
+      }
     },
     {
       field: 'createdAt',
       headerName: 'Applied On',
       width: 130,
       sortable: true,
-      valueFormatter: p => p.value ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+      valueFormatter: p => p.value
+        ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—'
     },
     {
       headerName: 'Actions',
@@ -140,8 +157,73 @@ export class WfhRequestListComponent implements OnInit {
       pinned: 'left',
       sortable: false,
       filter: false,
-      cellRenderer: WfhActionCellRendererComponent,
-      cellRendererParams: { context: { componentParent: this } }
+      suppressKeyboardEvent: () => true,
+      cellStyle: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'visible'
+      },
+      cellRenderer: (params: ICellRendererParams) => {
+        if (!params.data) return '';
+
+        const status: ApprovalStatus = params.data.status;
+        const isPending = status === ApprovalStatus.Pending;
+        const canBeCancelled = params.data.canBeCancelled && !isPending;
+
+        const viewBtn = `
+          <button data-action="view" title="View Details"
+            style="width:1.9rem;height:1.9rem;border:none;border-radius:0.375rem;
+                   cursor:pointer;display:flex;align-items:center;justify-content:center;
+                   background:#dbeafe;color:#1e40af;font-size:0.85rem;pointer-events:all;">
+            <i class="bi bi-eye" style="pointer-events:none;"></i>
+          </button>`;
+
+        const editBtn = isPending ? `
+          <button data-action="edit" title="Edit"
+            style="width:1.9rem;height:1.9rem;border:none;border-radius:0.375rem;
+                   cursor:pointer;display:flex;align-items:center;justify-content:center;
+                   background:#fef3c7;color:#92400e;font-size:0.85rem;pointer-events:all;">
+            <i class="bi bi-pencil" style="pointer-events:none;"></i>
+          </button>` : '';
+
+        const approveBtn = isPending ? `
+          <button data-action="approve" title="Approve"
+            style="width:1.9rem;height:1.9rem;border:none;border-radius:0.375rem;
+                   cursor:pointer;display:flex;align-items:center;justify-content:center;
+                   background:#d1fae5;color:#065f46;font-size:0.85rem;pointer-events:all;">
+            <i class="bi bi-check-lg" style="pointer-events:none;"></i>
+          </button>` : '';
+
+        const rejectBtn = isPending ? `
+          <button data-action="reject" title="Reject"
+            style="width:1.9rem;height:1.9rem;border:none;border-radius:0.375rem;
+                   cursor:pointer;display:flex;align-items:center;justify-content:center;
+                   background:#fee2e2;color:#991b1b;font-size:0.85rem;pointer-events:all;">
+            <i class="bi bi-x-lg" style="pointer-events:none;"></i>
+          </button>` : '';
+
+        const cancelBtn = canBeCancelled ? `
+          <button data-action="cancel" title="Cancel"
+            style="width:1.9rem;height:1.9rem;border:none;border-radius:0.375rem;
+                   cursor:pointer;display:flex;align-items:center;justify-content:center;
+                   background:#fef3c7;color:#92400e;font-size:0.85rem;pointer-events:all;">
+            <i class="bi bi-slash-circle" style="pointer-events:none;"></i>
+          </button>` : '';
+
+        const deleteBtn = isPending ? `
+          <button data-action="delete" title="Delete"
+            style="width:1.9rem;height:1.9rem;border:none;border-radius:0.375rem;
+                   cursor:pointer;display:flex;align-items:center;justify-content:center;
+                   background:#fee2e2;color:#991b1b;font-size:0.85rem;pointer-events:all;">
+            <i class="bi bi-trash" style="pointer-events:none;"></i>
+          </button>` : '';
+
+        return `<div style="display:flex;gap:0.4rem;align-items:center;height:100%;
+                             flex-wrap:wrap;pointer-events:all;">
+                  ${viewBtn}${editBtn}${approveBtn}${rejectBtn}${cancelBtn}${deleteBtn}
+                </div>`;
+      }
     }
   ];
 
@@ -153,7 +235,31 @@ export class WfhRequestListComponent implements OnInit {
       suppressMovable: false
     },
     animateRows: true,
-    context: { componentParent: this }
+    rowSelection: 'single',
+    suppressRowClickSelection: true,
+    suppressCellFocus: true,
+    onCellClicked: (event: any) => {
+      const target = event.event?.target as HTMLElement;
+      if (!target) return;
+
+      const actionBtn = target.closest
+        ? target.closest('[data-action]') as HTMLElement | null
+        : null;
+
+      const action = actionBtn?.getAttribute('data-action');
+      if (!action || !event.data) return;
+
+      const request: WfhRequest = event.data;
+
+      switch (action) {
+        case 'view':    this.viewDetails(request);       break;
+        case 'edit':    this.editWfhRequest(request);    break;
+        case 'approve': this.approveWfhRequest(request); break;
+        case 'reject':  this.rejectWfhRequest(request);  break;
+        case 'cancel':  this.cancelWfhRequest(request);  break;
+        case 'delete':  this.deleteWfhRequest(request);  break;
+      }
+    }
   };
 
   constructor(private wfhRequestService: WfhRequestService) {}
@@ -207,7 +313,36 @@ export class WfhRequestListComponent implements OnInit {
     this.loadRequests();
   }
 
-  // ---- CRUD actions called from cell renderer ----
+  exportData(): void {
+    if (this.rowData.length === 0) {
+      Swal.fire('No Data', 'There are no records to export.', 'info');
+      return;
+    }
+
+    const headers = ['Emp Code', 'Employee', 'Start Date', 'End Date', 'Days', 'Reason', 'Status', 'Applied On'];
+    const rows = this.rowData.map(r => [
+      r.employeeCode ?? '',
+      r.employeeName ?? '',
+      r.startDate ? new Date(r.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
+      r.endDate   ? new Date(r.endDate).toLocaleDateString('en-GB',   { day: '2-digit', month: 'short', year: 'numeric' }) : '',
+      r.totalDays ?? '',
+      r.reason ?? '',
+      r.statusName ?? '',
+      r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `wfh_requests_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   viewDetails(request: WfhRequest): void {
     this.selectedRequestId = request.id;
@@ -243,7 +378,7 @@ export class WfhRequestListComponent implements OnInit {
     this.wfhRequestService.approveRejectWfhRequest(request.id, dto).subscribe({
       next: (r) => {
         if (r.success) {
-          Swal.fire({ title: 'Approved!', text: 'WFH request approved.', icon: 'success', timer: 2000, confirmButtonColor: '#3b82f6' });
+          Swal.fire({ title: 'Approved!', text: 'WFH request approved.', icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadRequests();
           this.loadStatistics();
         } else {
@@ -272,7 +407,7 @@ export class WfhRequestListComponent implements OnInit {
     this.wfhRequestService.approveRejectWfhRequest(request.id, dto).subscribe({
       next: (r) => {
         if (r.success) {
-          Swal.fire({ title: 'Rejected!', text: 'WFH request rejected.', icon: 'success', timer: 2000, confirmButtonColor: '#3b82f6' });
+          Swal.fire({ title: 'Rejected!', text: 'WFH request rejected.', icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadRequests();
           this.loadStatistics();
         } else {
@@ -298,7 +433,7 @@ export class WfhRequestListComponent implements OnInit {
     this.wfhRequestService.cancelWfhRequest(request.id).subscribe({
       next: (r) => {
         if (r.success) {
-          Swal.fire({ title: 'Cancelled!', text: 'WFH request cancelled.', icon: 'success', timer: 2000, confirmButtonColor: '#3b82f6' });
+          Swal.fire({ title: 'Cancelled!', text: 'WFH request cancelled.', icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadRequests();
           this.loadStatistics();
         } else {
@@ -324,7 +459,7 @@ export class WfhRequestListComponent implements OnInit {
     this.wfhRequestService.deleteWfhRequest(request.id).subscribe({
       next: (r) => {
         if (r.success) {
-          Swal.fire({ title: 'Deleted!', text: 'WFH request deleted.', icon: 'success', timer: 2000, confirmButtonColor: '#3b82f6' });
+          Swal.fire({ title: 'Deleted!', text: 'WFH request deleted.', icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadRequests();
           this.loadStatistics();
         } else {
