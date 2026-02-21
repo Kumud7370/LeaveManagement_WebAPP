@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, GridOptions, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
 import { AdminInvitationService } from '../../../core/services/api/admin-invitation.api';
 import {
     InvitationResponseDto,
@@ -13,6 +13,7 @@ import {
 } from '../../../core/Models/admin-invitation.model';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
+import { StatusCellRendererComponent } from '../../../shared/status-cell-renderer.component';
 
 @Component({
     selector: 'app-invitation-list',
@@ -62,7 +63,34 @@ export class InvitationListComponent implements OnInit {
     gridOptions: GridOptions = {
         pagination: false,
         domLayout: 'autoHeight',
-        context: { componentParent: this }
+        rowSelection: 'single',
+        suppressRowClickSelection: true,
+        suppressCellFocus: true,
+        onCellClicked: (event: any) => {
+            const target = event.event?.target as HTMLElement;
+            if (!target) return;
+
+            const actionBtn = target.closest
+                ? target.closest('[data-action]') as HTMLElement | null
+                : null;
+
+            const action = actionBtn?.getAttribute('data-action');
+            if (!action || !event.data) return;
+
+            const invitation: InvitationResponseDto = event.data;
+
+            switch (action) {
+                case 'edit':
+                    this.editInvitation(invitation);
+                    break;
+                case 'revoke':
+                    this.revokeInvitation(invitation);
+                    break;
+                case 'delete':
+                    this.deleteInvitation(invitation);
+                    break;
+            }
+        }
     };
 
     // Stats
@@ -76,11 +104,10 @@ export class InvitationListComponent implements OnInit {
     constructor(
         private invitationService: AdminInvitationService,
         private router: Router
-    ) {
-        this.initializeColumnDefs();
-    }
+    ) {}
 
     ngOnInit(): void {
+        this.initializeColumnDefs();
         this.loadInvitations();
     }
 
@@ -92,46 +119,55 @@ export class InvitationListComponent implements OnInit {
                 sortable: false,
                 filter: false,
                 pinned: 'left',
-                cellStyle: { textAlign: 'center' },
-                cellRenderer: (params: any) => {
+                suppressKeyboardEvent: () => true,
+                cellStyle: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'visible'
+                },
+                cellRenderer: (params: ICellRendererParams) => {
                     if (!params.data) return '';
 
                     const isValid = params.data.status === 'Pending' &&
                         new Date(params.data.expiresAt) > new Date();
 
-                    const editBtn = isValid ?
-                        `<button class="btn-icon btn-edit" data-action="edit" title="Edit">
-        <i class="bi bi-pencil"></i>
-       </button>` : '';
+                    const editBtn = isValid
+                        ? `<button
+                            data-action="edit"
+                            title="Edit"
+                            style="width:2rem;height:2rem;border:none;border-radius:0.375rem;
+                                   cursor:pointer;display:flex;align-items:center;justify-content:center;
+                                   background:#fef3c7;color:#92400e;font-size:0.875rem;pointer-events:all;">
+                            <i class="bi bi-pencil" style="pointer-events:none;"></i>
+                          </button>`
+                        : '';
 
-                    const revokeBtn = isValid ?
-                        `<button class="btn-icon btn-revoke" data-action="revoke" title="Revoke">
-        <i class="bi bi-x-circle"></i>
-       </button>` : '';
+                    const revokeBtn = isValid
+                        ? `<button
+                            data-action="revoke"
+                            title="Revoke"
+                            style="width:2rem;height:2rem;border:none;border-radius:0.375rem;
+                                   cursor:pointer;display:flex;align-items:center;justify-content:center;
+                                   background:#fee2e2;color:#991b1b;font-size:0.875rem;pointer-events:all;">
+                            <i class="bi bi-x-circle" style="pointer-events:none;"></i>
+                          </button>`
+                        : '';
 
                     return `
-      <div class="action-buttons">
-        ${editBtn}
-        ${revokeBtn}
-        <button class="btn-icon btn-delete" data-action="delete" title="Delete">
-          <i class="bi bi-trash"></i>
-        </button>
-      </div>
-    `;
-                },
-                onCellClicked: (params: any) => {
-                    const target = params.event.target as HTMLElement;
-                    const button = target.closest('button');
-                    if (!button) return;
-
-                    const action = button.getAttribute('data-action');
-                    if (action === 'edit') {
-                        this.editInvitation(params.data);
-                    } else if (action === 'revoke') {
-                        this.revokeInvitation(params.data);
-                    } else if (action === 'delete') {
-                        this.deleteInvitation(params.data);
-                    }
+                        <div style="display:flex;gap:0.4rem;align-items:center;height:100%;pointer-events:all;">
+                            ${editBtn}
+                            ${revokeBtn}
+                            <button
+                                data-action="delete"
+                                title="Delete"
+                                style="width:2rem;height:2rem;border:none;border-radius:0.375rem;
+                                       cursor:pointer;display:flex;align-items:center;justify-content:center;
+                                       background:#f3f4f6;color:#6b7280;font-size:0.875rem;pointer-events:all;">
+                                <i class="bi bi-trash" style="pointer-events:none;"></i>
+                            </button>
+                        </div>
+                    `;
                 }
             },
             {
@@ -139,92 +175,72 @@ export class InvitationListComponent implements OnInit {
                 field: 'email',
                 minWidth: 250,
                 flex: 2,
-                cellRenderer: (params: any) => {
-                    if (!params.value) return '';
-                    return `
-          <div class="recipient-cell">
-            <div class="recipient-info">
-              <div class="recipient-email" title="${params.value}">${params.value}</div>
-            </div>
-          </div>
-        `;
-                }
+                cellStyle: { fontWeight: '500', color: '#1e293b' },
+                cellRenderer: (params: ICellRendererParams) => params.value || '—'
             },
             {
                 headerName: 'ROLE',
                 field: 'invitedRole',
                 width: 120,
-                cellRenderer: (params: any) => {
+                cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+                cellRenderer: (params: ICellRendererParams) => {
                     const roleColors: Record<string, { bg: string; text: string }> = {
                         SuperAdmin: { bg: '#f3e8ff', text: '#7c3aed' },
-                        Admin: { bg: '#e0e7ff', text: '#4f46e5' },
-                        Manager: { bg: '#dbeafe', text: '#2563eb' },
-                        Employee: { bg: '#cffafe', text: '#0891b2' }
+                        Admin:      { bg: '#e0e7ff', text: '#4f46e5' },
+                        Manager:    { bg: '#dbeafe', text: '#2563eb' },
+                        Employee:   { bg: '#cffafe', text: '#0891b2' }
                     };
                     const color = roleColors[params.value] || { bg: '#f3f4f6', text: '#6b7280' };
-                    return `
-            <span class="role-badge" style="background: ${color.bg}; color: ${color.text};">
-              ${params.value}
-            </span>
-          `;
+                    return `<span style="display:inline-flex;align-items:center;justify-content:center;
+                                        padding:0.3rem 0.65rem;border-radius:0.375rem;font-size:0.8rem;
+                                        font-weight:600;background:${color.bg};color:${color.text};">
+                                ${params.value ?? '—'}
+                            </span>`;
                 }
             },
             {
                 headerName: 'STATUS',
                 field: 'status',
-                width: 120,
-                cellStyle: { textAlign: 'center' },
-                cellRenderer: (params: any) => {
+                width: 130,
+                cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+                cellRenderer: (params: ICellRendererParams) => {
                     const status = params.data?.status;
                     const expiresAt = params.data?.expiresAt;
 
-                    let statusText = '';
-                    let statusClass = '';
-                    let statusIcon = '';
+                    let text = '', bg = '', color = '', icon = '';
 
                     if (status === 'Accepted') {
-                        statusText = 'Accepted';
-                        statusClass = 'status-accepted';
-                        statusIcon = 'bi bi-check-circle';
+                        text = 'Accepted'; bg = '#d1fae5'; color = '#065f46'; icon = 'bi-check-circle';
                     } else if (status === 'Revoked') {
-                        statusText = 'Revoked';
-                        statusClass = 'status-revoked';
-                        statusIcon = 'bi bi-x-circle';
+                        text = 'Revoked'; bg = '#fee2e2'; color = '#991b1b'; icon = 'bi-x-circle';
                     } else if (status === 'Expired' || (expiresAt && new Date(expiresAt) <= new Date())) {
-                        statusText = 'Expired';
-                        statusClass = 'status-expired';
-                        statusIcon = 'bi bi-clock';
+                        text = 'Expired'; bg = '#f3f4f6'; color = '#6b7280'; icon = 'bi-clock';
                     } else {
-                        statusText = 'Pending';
-                        statusClass = 'status-pending';
-                        statusIcon = 'bi bi-clock-history';
+                        text = 'Pending'; bg = '#dbeafe'; color = '#1e40af'; icon = 'bi-clock-history';
                     }
 
-                    return `
-            <span class="status-badge ${statusClass}">
-              <i class="${statusIcon}"></i>
-              ${statusText}
-            </span>
-          `;
+                    return `<span style="display:inline-flex;align-items:center;gap:0.35rem;
+                                        padding:0.35rem 0.75rem;border-radius:0.5rem;font-size:0.8rem;
+                                        font-weight:600;background:${bg};color:${color};">
+                                <i class="bi ${icon}" style="font-size:0.85rem;"></i>
+                                ${text}
+                            </span>`;
                 }
             },
             {
                 headerName: 'INVITED BY',
                 field: 'invitedByName',
                 width: 200,
-                valueFormatter: (params) => params.value || '—'
+                cellRenderer: (params: ICellRendererParams) => params.value || '—'
             },
             {
                 headerName: 'CREATED',
                 field: 'createdAt',
                 width: 150,
-                valueFormatter: (params) => {
+                valueFormatter: (params: any) => {
                     if (!params.value) return '—';
-                    const date = new Date(params.value);
-                    return date.toLocaleDateString('en-US', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
+                    return new Date(params.value).toLocaleDateString('en-US', {
+                        day: 'numeric', month: 'short', year: 'numeric'
                     });
                 }
             },
@@ -232,13 +248,10 @@ export class InvitationListComponent implements OnInit {
                 headerName: 'EXPIRES',
                 field: 'expiresAt',
                 width: 150,
-                valueFormatter: (params) => {
+                valueFormatter: (params: any) => {
                     if (!params.value) return '—';
-                    const date = new Date(params.value);
-                    return date.toLocaleDateString('en-US', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
+                    return new Date(params.value).toLocaleDateString('en-US', {
+                        day: 'numeric', month: 'short', year: 'numeric'
                     });
                 }
             }
@@ -287,7 +300,6 @@ export class InvitationListComponent implements OnInit {
     get filteredInvitations(): InvitationResponseDto[] {
         let filtered = [...this.invitations];
 
-        // Apply status filter
         if (this.statusFilter === 'pending') {
             filtered = filtered.filter(inv =>
                 inv.status === 'Pending' && new Date(inv.expiresAt) > new Date()
@@ -301,7 +313,6 @@ export class InvitationListComponent implements OnInit {
             );
         }
 
-        // Apply search filter
         if (this.searchTerm.trim()) {
             const query = this.searchTerm.toLowerCase();
             filtered = filtered.filter(inv =>
@@ -314,9 +325,7 @@ export class InvitationListComponent implements OnInit {
         return filtered;
     }
 
-    onSearch(): void {
-        // Trigger re-render by updating the grid
-    }
+    onSearch(): void {}
 
     clearSearch(): void {
         this.searchTerm = '';
@@ -324,11 +333,7 @@ export class InvitationListComponent implements OnInit {
     }
 
     openAddModal(): void {
-        this.formData = {
-            email: '',
-            role: 'Admin',
-            notes: undefined
-        };
+        this.formData = { email: '', role: 'Admin', notes: undefined };
         this.showAddModal = true;
         this.error = null;
     }
@@ -367,15 +372,13 @@ export class InvitationListComponent implements OnInit {
                     this.successMessage = `Invitation sent successfully to ${this.formData.email}`;
                     this.closeAddModal();
                     this.loadInvitations();
-
                     Swal.fire({
-                        title: 'Success!',
-                        text: 'Invitation sent successfully!',
                         icon: 'success',
-                        confirmButtonColor: '#3b82f6',
-                        timer: 2000
+                        title: 'Sent!',
+                        text: 'Invitation sent successfully.',
+                        timer: 1500,
+                        showConfirmButton: false
                     });
-
                     setTimeout(() => this.successMessage = null, 3000);
                 } else {
                     this.error = response.message || 'Failed to send invitation';
@@ -403,15 +406,13 @@ export class InvitationListComponent implements OnInit {
                     this.successMessage = 'Invitation updated successfully';
                     this.closeEditModal();
                     this.loadInvitations();
-
                     Swal.fire({
-                        title: 'Success!',
-                        text: 'Invitation updated successfully!',
                         icon: 'success',
-                        confirmButtonColor: '#3b82f6',
-                        timer: 2000
+                        title: 'Updated!',
+                        text: 'Invitation updated successfully.',
+                        timer: 1500,
+                        showConfirmButton: false
                     });
-
                     setTimeout(() => this.successMessage = null, 3000);
                 } else {
                     this.error = response.message || 'Failed to update invitation';
@@ -433,13 +434,11 @@ export class InvitationListComponent implements OnInit {
         const result = await Swal.fire({
             title: 'Revoke Invitation?',
             html: `Are you sure you want to revoke the invitation for <strong>${invitation.email}</strong>?`,
-            icon: 'question',
+            icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
             cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, revoke it!',
-            cancelButtonText: 'Cancel',
-            reverseButtons: true
+            confirmButtonText: 'Yes, revoke it!'
         });
 
         if (result.isConfirmed) {
@@ -447,22 +446,17 @@ export class InvitationListComponent implements OnInit {
                 next: (response) => {
                     if (response.success) {
                         Swal.fire({
+                            icon: 'success',
                             title: 'Revoked!',
                             text: 'Invitation has been revoked successfully.',
-                            icon: 'success',
-                            confirmButtonColor: '#3b82f6',
-                            timer: 2000
+                            timer: 1500,
+                            showConfirmButton: false
                         });
                         this.loadInvitations();
                     }
                 },
                 error: (err) => {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: err.error?.message || 'Failed to revoke invitation',
-                        icon: 'error',
-                        confirmButtonColor: '#ef4444'
-                    });
+                    Swal.fire('Error', err.error?.message || 'Failed to revoke invitation.', 'error');
                 }
             });
         }
@@ -470,15 +464,13 @@ export class InvitationListComponent implements OnInit {
 
     async deleteInvitation(invitation: InvitationResponseDto): Promise<void> {
         const result = await Swal.fire({
-            title: 'Are you sure?',
-            html: `You want to permanently delete the invitation for <strong>${invitation.email}</strong>?<br><span style="color: #dc2626; font-size: 14px;">This action cannot be undone.</span>`,
+            title: 'Delete Invitation?',
+            html: `Are you sure you want to permanently delete the invitation for <strong>${invitation.email}</strong>?<br>This action cannot be undone.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
             cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel',
-            reverseButtons: true
+            confirmButtonText: 'Yes, delete it!'
         });
 
         if (result.isConfirmed) {
@@ -486,22 +478,17 @@ export class InvitationListComponent implements OnInit {
                 next: (response) => {
                     if (response.success) {
                         Swal.fire({
-                            title: 'Deleted!',
-                            text: 'Invitation has been deleted successfully.',
                             icon: 'success',
-                            confirmButtonColor: '#3b82f6',
-                            timer: 2000
+                            title: 'Deleted!',
+                            text: 'Invitation has been deleted.',
+                            timer: 1500,
+                            showConfirmButton: false
                         });
                         this.loadInvitations();
                     }
                 },
                 error: (err) => {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: err.error?.message || 'Failed to delete invitation',
-                        icon: 'error',
-                        confirmButtonColor: '#ef4444'
-                    });
+                    Swal.fire('Error', err.error?.message || 'Failed to delete invitation.', 'error');
                 }
             });
         }
@@ -509,23 +496,9 @@ export class InvitationListComponent implements OnInit {
 
     exportToExcel(): void {
         if (this.invitations.length === 0) {
-            Swal.fire({
-                title: 'No Data',
-                text: 'There are no invitations to export.',
-                icon: 'info',
-                confirmButtonColor: '#3b82f6'
-            });
+            Swal.fire('No Data', 'There are no invitations to export.', 'info');
             return;
         }
-
-        Swal.fire({
-            title: 'Exporting...',
-            text: 'Please wait while we prepare your file.',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
 
         const exportData = this.invitations.map(inv => ({
             'Email': inv.email,
@@ -533,46 +506,33 @@ export class InvitationListComponent implements OnInit {
             'Status': inv.status,
             'Invited By': inv.invitedByName,
             'Created At': new Date(inv.createdAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+                year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
             }),
             'Expires At': new Date(inv.expiresAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+                year: 'numeric', month: 'long', day: 'numeric'
             }),
             'Notes': inv.notes || '—'
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(exportData);
-        const columnWidths = [
-            { wch: 30 }, // Email
-            { wch: 15 }, // Role
-            { wch: 12 }, // Status
-            { wch: 25 }, // Invited By
-            { wch: 25 }, // Created At
-            { wch: 20 }, // Expires At
-            { wch: 40 }  // Notes
+        worksheet['!cols'] = [
+            { wch: 30 }, { wch: 15 }, { wch: 12 },
+            { wch: 25 }, { wch: 25 }, { wch: 20 }, { wch: 40 }
         ];
-        worksheet['!cols'] = columnWidths;
 
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Invitations');
 
-        const timestamp = new Date().toISOString().slice(0, 10);
-        const fileName = `Admin_Invitations_${timestamp}.xlsx`;
-
+        const fileName = `Admin_Invitations_${new Date().toISOString().slice(0, 10)}.xlsx`;
         XLSX.writeFile(workbook, fileName);
 
         Swal.fire({
+            icon: 'success',
             title: 'Export Successful!',
             text: `File "${fileName}" has been downloaded.`,
-            icon: 'success',
-            confirmButtonColor: '#3b82f6',
-            timer: 3000
+            timer: 2000,
+            showConfirmButton: false
         });
     }
 }

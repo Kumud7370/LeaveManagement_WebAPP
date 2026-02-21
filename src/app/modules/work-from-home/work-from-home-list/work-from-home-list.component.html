@@ -9,42 +9,7 @@
       </h1>
       <p class="page-subtitle">Manage and track employee WFH requests</p>
     </div>
-    <button class="btn btn-primary" (click)="openCreateForm()">
-      <i class="bi bi-plus-lg"></i> New WFH Request
-    </button>
   </div>
-
-  <!-- Statistics Cards -->
-  <!-- <div class="stats-row">
-    <div class="stat-card stat-pending">
-      <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
-      <div class="stat-body">
-        <span class="stat-count">{{ getStatCount('Pending') }}</span>
-        <span class="stat-label">Pending</span>
-      </div>
-    </div>
-    <div class="stat-card stat-approved">
-      <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
-      <div class="stat-body">
-        <span class="stat-count">{{ getStatCount('Approved') }}</span>
-        <span class="stat-label">Approved</span>
-      </div>
-    </div>
-    <div class="stat-card stat-rejected">
-      <div class="stat-icon"><i class="bi bi-x-circle"></i></div>
-      <div class="stat-body">
-        <span class="stat-count">{{ getStatCount('Rejected') }}</span>
-        <span class="stat-label">Rejected</span>
-      </div>
-    </div>
-    <div class="stat-card stat-cancelled">
-      <div class="stat-icon"><i class="bi bi-slash-circle"></i></div>
-      <div class="stat-body">
-        <span class="stat-count">{{ getStatCount('Cancelled') }}</span>
-        <span class="stat-label">Cancelled</span>
-      </div>
-    </div>
-  </div> -->
 
   <!-- Main Content -->
   <div class="content-wrapper" [class.sidebar-open]="showDetails">
@@ -75,19 +40,25 @@
           <option [value]="ApprovalStatus.Cancelled">Cancelled</option>
         </select>
 
-        <button class="btn btn-outline" (click)="onClearFilters()">
+        <button class="btn btn-clear" (click)="onClearFilters()">
           <i class="bi bi-funnel"></i> Clear
         </button>
 
-        <button class="btn btn-outline" (click)="loadRequests()">
+        <button class="btn btn-refresh" (click)="loadRequests()">
           <i class="bi bi-arrow-clockwise"></i> Refresh
         </button>
 
-        <span class="result-count">{{ rowData.length }} record{{ rowData.length !== 1 ? 's' : '' }}</span>
+        <button class="btn btn-export" (click)="exportData()">
+          <i class="bi bi-download"></i> Export
+        </button>
+
+        <button class="btn btn-primary" (click)="openCreateForm()">
+          <i class="bi bi-plus-lg"></i> New WFH Request
+        </button>
       </div>
 
       <!-- AG Grid -->
-      <div class="grid-wrapper ag-theme-alpine">
+      <div class="grid-wrapper ag-theme-quartz">
         <div *ngIf="loading" class="grid-loading">
           <div class="spinner"></div>
           <p>Loading WFH requests...</p>
