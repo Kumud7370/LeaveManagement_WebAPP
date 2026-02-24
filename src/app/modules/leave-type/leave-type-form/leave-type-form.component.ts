@@ -47,9 +47,8 @@ export class LeaveTypeFormComponent implements OnInit {
       requiresApproval:    [true],
       requiresDocument:    [false],
       minimumNoticeDays:   [0,  [Validators.min(0)]],
-      // ✅ Split into two controls to avoid duplicate formControlName binding
-      colorPicker:         ['#3b82f6'],   // drives the <input type="color">
-      colorHex:            ['#3b82f6'],   // drives the text input
+      colorPicker:         ['#3b82f6'],   
+      colorHex:            ['#3b82f6'],   
       isActive:            [true],
       displayOrder:        [0,  [Validators.min(0)]]
     });
@@ -127,7 +126,7 @@ export class LeaveTypeFormComponent implements OnInit {
       requiresApproval:    v.requiresApproval as boolean,
       requiresDocument:    v.requiresDocument as boolean,
       minimumNoticeDays:   Number(v.minimumNoticeDays) || 0,
-      color:               (v.colorPicker as string) || '#3b82f6',  // ✅ use colorPicker, not color
+      color:               (v.colorPicker as string) || '#3b82f6',  
       isActive:            v.isActive as boolean,
       displayOrder:        Number(v.displayOrder) || 0
     };
