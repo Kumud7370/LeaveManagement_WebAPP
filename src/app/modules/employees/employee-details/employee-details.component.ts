@@ -42,7 +42,6 @@ export class EmployeeDetailsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // If modal mode with employeeId, load the employee
     if (this.isModal && this.employeeId) {
       this.loadEmployeeDetails();
     } 

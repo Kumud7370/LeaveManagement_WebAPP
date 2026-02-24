@@ -1,10 +1,4 @@
-// utils/ag-grid-helpers.ts
-
 import type { ColDef, GridOptions, GridApi } from 'ag-grid-community';
-
-// ============================================
-// FORMATTERS
-// ============================================
 
 // Common date formatter
 export const dateFormatter = (params: any) => {
@@ -51,10 +45,6 @@ export const percentageFormatter = (params: any) => {
   return `${params.value}%`;
 };
 
-// ============================================
-// DEFAULT GRID OPTIONS
-// ============================================
-
 // Default grid options
 export const defaultGridOptions: GridOptions = {
   pagination: true,
@@ -78,9 +68,6 @@ export const defaultGridOptions: GridOptions = {
   enableBrowserTooltips: true,
 };
 
-// ============================================
-// GRID OPERATIONS
-// ============================================
 
 // Apply quick filter to AG Grid
 export const applyQuickFilter = (gridApi: GridApi | undefined, searchText: string) => {
@@ -153,10 +140,6 @@ export const autoSizeAll = (gridApi: GridApi | undefined, skipHeader = false) =>
   }
 };
 
-// ============================================
-// TOOLBAR UTILITIES
-// ============================================
-
 export interface AGGridToolbarConfig {
   searchText: string;
   filterValue?: string;
@@ -167,9 +150,6 @@ export interface AGGridToolbarConfig {
   onExport: () => void;
 }
 
-/**
- * Helper to clear all toolbar states
- */
 export const clearToolbarState = (
   setSearchText: (text: string) => void,
   setFilterValue: (value: string) => void,
@@ -182,9 +162,7 @@ export const clearToolbarState = (
   clearAllFilters(gridApi);
 };
 
-/**
- * Get active filters summary
- */
+
 export const getActiveFiltersSummary = (
   searchText: string,
   filterValue?: string,
