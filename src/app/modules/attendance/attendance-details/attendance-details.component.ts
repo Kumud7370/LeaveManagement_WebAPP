@@ -1,231 +1,102 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+// =============================================
+// attendance-details.component.ts
+// Read-only detail panel (sidebar) with
+// approve and delete actions for admins
+// =============================================
+
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import Swal from 'sweetalert2';
+
 import { AttendanceService } from '../../../core/services/api/attendance.api';
-import {
-  AttendanceResponseDto,
-  AttendanceStatus,
-  CheckInMethod,
-  getStatusBadgeClass,
-  getCheckInMethodIcon,
-  formatTime,
-  formatDate,
-  formatDateTime,
-  formatWorkingHours
-} from '../../../core/Models/attendance.model';
+import { AttendanceResponseDto, AttendanceStatus } from '../../../core/Models/attendance.model';
 
 @Component({
   selector: 'app-attendance-details',
   standalone: true,
   imports: [CommonModule],
+  providers: [DatePipe],
   templateUrl: './attendance-details.component.html',
   styleUrls: ['./attendance-details.component.scss']
 })
-export class AttendanceDetailsComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-
-  @Input() isModal = false;
+export class AttendanceDetailsComponent implements OnInit, OnChanges {
   @Input() attendanceId: string | null = null;
-  @Output() modalClosed = new EventEmitter<void>();
-  @Output() editRequested = new EventEmitter<string>();
-  @Output() deleteRequested = new EventEmitter<string>();
+  @Output() recordUpdated = new EventEmitter<void>();
 
-  attendance: AttendanceResponseDto | null = null;
-  isLoading = true;
+  record: AttendanceResponseDto | null = null;
+  loading = false;
 
-  // Enums for template
   AttendanceStatus = AttendanceStatus;
-  CheckInMethod = CheckInMethod;
 
-  // Helper functions exposed to template
-  getStatusBadgeClass = getStatusBadgeClass;
-  getCheckInMethodIcon = getCheckInMethodIcon;
-  formatTime = formatTime;
-  formatDate = formatDate;
-  formatDateTime = formatDateTime;
-  formatWorkingHours = formatWorkingHours;
+  isAdmin = ['admin', 'manager'].includes(
+    (sessionStorage.getItem('RoleName') || '').toLowerCase()
+  );
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private attendanceService: AttendanceService
-  ) {}
+  constructor(private attendanceService: AttendanceService) {}
 
   ngOnInit(): void {
-    if (this.isModal && this.attendanceId) {
-      this.loadAttendanceDetails();
-    } else if (!this.isModal) {
-      this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-        this.attendanceId = params['id'];
-        if (this.attendanceId) {
-          this.loadAttendanceDetails();
-        }
-      });
-    }
+    if (this.attendanceId) this.loadRecord(this.attendanceId);
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  ngOnChanges(): void {
+    if (this.attendanceId) this.loadRecord(this.attendanceId);
   }
 
-  loadAttendanceDetails(): void {
-    if (!this.attendanceId) return;
-
-    this.isLoading = true;
-    this.attendanceService.getAttendanceById(this.attendanceId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (attendance) => {
-          this.attendance = attendance;
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error loading attendance details:', error);
-          this.isLoading = false;
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to load attendance details.',
-            confirmButtonColor: '#3b82f6'
-          }).then(() => {
-            if (this.isModal) {
-              this.goBack();
-            } else {
-              this.router.navigate(['/attendance/list']);
-            }
-          });
-        }
-      });
-  }
-
-  goBack(): void {
-    if (this.isModal) {
-      this.modalClosed.emit();
-    } else {
-      this.router.navigate(['/attendance/list']);
-    }
-  }
-
-  editAttendance(): void {
-    if (!this.attendanceId) return;
-    if (this.isModal) {
-      this.editRequested.emit(this.attendanceId);
-    } else {
-      this.router.navigate(['/attendance/edit', this.attendanceId]);
-    }
-  }
-
-  deleteAttendance(): void {
-    if (!this.attendance || !this.attendanceId) return;
-
-    Swal.fire({
-      title: 'Are you sure?',
-      html: `Delete attendance for <strong>${this.attendance.employeeName}</strong> on ${this.formatDate(this.attendance.attendanceDate)}?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.performDelete();
-      }
+  loadRecord(id: string): void {
+    this.loading = true;
+    this.attendanceService.getAttendanceById(id).subscribe({
+      next: (r) => { if (r.success) this.record = r.data; this.loading = false; },
+      error: () => { this.loading = false; }
     });
   }
 
-  private performDelete(): void {
-    if (!this.attendanceId) return;
-
-    this.attendanceService.deleteAttendance(this.attendanceId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Deleted!',
-            text: 'Attendance record has been deleted successfully.',
-            timer: 2000,
-            showConfirmButton: false
-          });
-          if (this.isModal) {
-            this.deleteRequested.emit(this.attendanceId!);
-          } else {
-            this.router.navigate(['/attendance/list']);
-          }
-        },
-        error: (error) => {
-          console.error('Error deleting attendance:', error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to delete attendance record.',
-            confirmButtonColor: '#ef4444'
-          });
-        }
-      });
+  formatTime(dateStr?: string): string {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
   }
 
-  approveAttendance(): void {
-    if (!this.attendance || !this.attendanceId) return;
+  formatDate(dateStr?: string): string {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  }
 
-    Swal.fire({
+  getStatusClass(status?: AttendanceStatus): string {
+    const map: Record<number, string> = {
+      [AttendanceStatus.Present]: 'present',
+      [AttendanceStatus.Absent]: 'absent',
+      [AttendanceStatus.HalfDay]: 'halfday',
+      [AttendanceStatus.Leave]: 'leave',
+      [AttendanceStatus.Holiday]: 'holiday',
+      [AttendanceStatus.WeekOff]: 'weekoff',
+      [AttendanceStatus.WorkFromHome]: 'wfh',
+      [AttendanceStatus.OnDuty]: 'onduty'
+    };
+    return status !== undefined ? (map[status] ?? 'absent') : 'absent';
+  }
+
+  async onApprove(): Promise<void> {
+    if (!this.record) return;
+    const res = await Swal.fire({
       title: 'Approve Attendance?',
-      text: `Approve attendance for ${this.attendance.employeeName}?`,
+      html: `Approve <strong>${this.record.employeeName}</strong>'s attendance for ${this.formatDate(this.record.attendanceDate)}?`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, approve it!',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.performApprove();
-      }
+      confirmButtonText: 'Approve'
     });
-  }
-
-  private performApprove(): void {
-    if (!this.attendanceId) return;
-
-    this.attendanceService.approveAttendance(this.attendanceId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Approved!',
-            text: 'Attendance has been approved successfully.',
-            timer: 2000,
-            showConfirmButton: false
-          });
-          this.loadAttendanceDetails();
-        },
-        error: (error) => {
-          console.error('Error approving attendance:', error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Failed to approve attendance.',
-            confirmButtonColor: '#ef4444'
-          });
+    if (!res.isConfirmed) return;
+    this.attendanceService.approveAttendance(this.record.id).subscribe({
+      next: (r) => {
+        if (r.success) {
+          Swal.fire({ title: 'Approved!', icon: 'success', timer: 2000, showConfirmButton: false });
+          this.loadRecord(this.record!.id);
+          this.recordUpdated.emit();
+        } else {
+          Swal.fire('Error!', r.message, 'error');
         }
-      });
-  }
-
-  printAttendanceDetails(): void {
-    window.print();
-  }
-
-  get isApproved(): boolean {
-    return !!this.attendance?.approvedBy;
-  }
-
-  get canApprove(): boolean {
-    const userRole = sessionStorage.getItem('RoleName');
-    return (userRole === 'Admin' || userRole === 'Manager') && !this.isApproved;
+      },
+      error: (e) => Swal.fire('Error!', e.error?.message || 'Error', 'error')
+    });
   }
 }

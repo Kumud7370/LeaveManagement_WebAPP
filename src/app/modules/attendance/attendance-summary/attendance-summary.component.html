@@ -1,202 +1,194 @@
-<div class="attendance-summary-container">
+<!-- attendance-summary.component.html -->
+<div class="summary-container">
+
   <!-- Header -->
-  <div class="header">
-    <h1 class="title">
-      <i class="fas fa-chart-bar"></i>
-      Attendance Summary
-    </h1>
-    <p class="subtitle">View your attendance statistics and performance</p>
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <i class="fas fa-chart-bar"></i>
+        {{ isAdmin ? 'Employee Summary' : 'My Attendance Summary' }}
+      </h1>
+      <p class="page-subtitle">Detailed breakdown of attendance statistics</p>
+    </div>
   </div>
 
-  <!-- Date Range Selector -->
-  <div class="date-range-section">
-    <div class="date-inputs">
-      <div class="input-group">
-        <label>Start Date</label>
+  <!-- Filter Panel -->
+  <div class="filter-panel">
+    <div class="filter-row">
+      <div class="form-group" *ngIf="isAdmin">
+        <label>Employee ID</label>
         <input
-          type="date"
-          [(ngModel)]="startDate"
-          (change)="onDateRangeChange()"
-          class="date-input"
+          type="text"
+          [(ngModel)]="lookupEmployeeId"
+          placeholder="Enter employee ID..."
+          (keyup.enter)="loadSummary()"
         />
       </div>
-
-      <div class="input-group">
-        <label>End Date</label>
-        <input
-          type="date"
-          [(ngModel)]="endDate"
-          (change)="onDateRangeChange()"
-          class="date-input"
-        />
+      <div class="form-group">
+        <label>From</label>
+        <input type="date" [(ngModel)]="startDate" (change)="loadSummary()" />
+      </div>
+      <div class="form-group">
+        <label>To</label>
+        <input type="date" [(ngModel)]="endDate" (change)="loadSummary()" />
+      </div>
+      <div class="quick-btns">
+        <button class="btn btn-outline" (click)="setCurrentMonth()">This Month</button>
+        <button class="btn btn-outline" (click)="setLastMonth()">Last Month</button>
+        <button class="btn btn-primary" (click)="loadSummary()">
+          <i class="fas fa-search"></i> Search
+        </button>
       </div>
     </div>
-
-    <div class="quick-actions">
-      <button class="btn btn-quick" (click)="setCurrentMonth()">
-        This Month
-      </button>
-      <button class="btn btn-quick" (click)="setLastMonth()">
-        Last Month
-      </button>
-      <button class="btn btn-quick" (click)="setCurrentYear()">
-        This Year
-      </button>
-    </div>
   </div>
 
-  <!-- Loading State -->
-  <div class="loading-overlay" *ngIf="isLoading">
-    <div class="spinner-container">
-      <div class="spinner"></div>
-      <p>Loading summary...</p>
-    </div>
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div><p>Loading summary...</p>
   </div>
 
-  <!-- Summary Content -->
-  <div class="summary-content" *ngIf="!isLoading && summary">
-    <!-- Employee Info -->
-    <div class="employee-info-card">
-      <div class="employee-details">
+  <ng-container *ngIf="!loading && summary">
+
+    <!-- Employee Info Banner -->
+    <div class="employee-banner">
+      <div class="emp-avatar">
+        {{ summary.employeeName.charAt(0).toUpperCase() }}
+      </div>
+      <div class="emp-info">
         <h2>{{ summary.employeeName }}</h2>
-        <p class="employee-code">{{ summary.employeeCode }}</p>
+        <span class="emp-code">{{ summary.employeeCode }}</span>
       </div>
-      <div class="date-range">
-        <i class="fas fa-calendar-alt"></i>
-        {{ formatDate(summary.startDate) }} - {{ formatDate(summary.endDate) }}
-      </div>
-    </div>
-
-    <!-- Attendance Percentage Card -->
-    <div class="percentage-card">
-      <div class="percentage-circle" 
-           [style.border-color]="getAttendancePercentageColor(summary.attendancePercentage)">
-        <div class="percentage-value" 
-             [style.color]="getAttendancePercentageColor(summary.attendancePercentage)">
-          {{ summary.attendancePercentage }}%
-        </div>
-        <div class="percentage-label">Attendance</div>
-      </div>
-      <div class="percentage-info">
-        <h3>Overall Attendance Rate</h3>
-        <p>Based on {{ summary.totalWorkingDays }} working days</p>
+      <div class="period-info">
+        <span>{{ summary.startDate | date:'d MMM' }} – {{ summary.endDate | date:'d MMM yyyy' }}</span>
       </div>
     </div>
 
-    <!-- Statistics Grid -->
-    <div class="statistics-grid">
-      <div class="stat-card present">
-        <div class="stat-icon">
-          <i class="fas fa-check-circle"></i>
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-attendance">
+        <div class="kpi-circle">
+          <svg viewBox="0 0 100 60">
+            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e2e8f0" stroke-width="8" stroke-linecap="round"/>
+            <path [attr.d]="getAttendanceArc()" fill="none" stroke="#6366f1" stroke-width="8" stroke-linecap="round"/>
+          </svg>
+          <span class="kpi-pct">{{ summary.attendancePercentage }}%</span>
         </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ summary.presentDays }}</div>
-          <div class="stat-label">Present Days</div>
-        </div>
+        <span class="kpi-label">Attendance Rate</span>
       </div>
-
-      <div class="stat-card absent">
-        <div class="stat-icon">
-          <i class="fas fa-times-circle"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ summary.absentDays }}</div>
-          <div class="stat-label">Absent Days</div>
-        </div>
+      <div class="kpi-card kpi-hours">
+        <div class="kpi-value">{{ summary.totalWorkingHours | number:'1.1-1' }}<span class="kpi-unit">h</span></div>
+        <span class="kpi-label">Total Hours Worked</span>
       </div>
-
-      <div class="stat-card half-day">
-        <div class="stat-icon">
-          <i class="fas fa-adjust"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ summary.halfDays }}</div>
-          <div class="stat-label">Half Days</div>
-        </div>
+      <div class="kpi-card kpi-avg">
+        <div class="kpi-value">{{ summary.averageWorkingHours | number:'1.1-1' }}<span class="kpi-unit">h</span></div>
+        <span class="kpi-label">Avg. Daily Hours</span>
       </div>
-
-      <div class="stat-card leave">
-        <div class="stat-icon">
-          <i class="fas fa-plane"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ summary.leaveDays }}</div>
-          <div class="stat-label">Leave Days</div>
-        </div>
-      </div>
-
-      <div class="stat-card late">
-        <div class="stat-icon">
-          <i class="fas fa-clock"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ summary.lateDays }}</div>
-          <div class="stat-label">Late Days</div>
-        </div>
-      </div>
-
-      <div class="stat-card early-leave">
-        <div class="stat-icon">
-          <i class="fas fa-door-open"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-value">{{ summary.earlyLeaveDays }}</div>
-          <div class="stat-label">Early Leaves</div>
-        </div>
+      <div class="kpi-card kpi-overtime">
+        <div class="kpi-value">{{ summary.totalOvertimeHours | number:'1.1-1' }}<span class="kpi-unit">h</span></div>
+        <span class="kpi-label">Total Overtime</span>
       </div>
     </div>
 
-    <!-- Working Hours Card -->
-    <div class="working-hours-card">
-      <h3>
-        <i class="fas fa-business-time"></i>
-        Working Hours Summary
-      </h3>
-      <div class="hours-grid">
-        <div class="hours-item">
-          <div class="hours-label">Total Working Hours</div>
-          <div class="hours-value primary">
-            {{ formatWorkingHours(summary.totalWorkingHours) }}
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+
+      <!-- Attendance Breakdown -->
+      <div class="stats-card">
+        <h3 class="card-title"><i class="fas fa-calendar-check"></i> Attendance Breakdown</h3>
+        <div class="stat-rows">
+          <div class="stat-row">
+            <div class="dot present"></div>
+            <span class="sr-label">Present Days</span>
+            <div class="sr-bar-wrap">
+              <div class="sr-bar present" [style.width.%]="(summary.presentDays / summary.totalWorkingDays) * 100"></div>
+            </div>
+            <span class="sr-count">{{ summary.presentDays }}</span>
           </div>
-        </div>
-
-        <div class="hours-item">
-          <div class="hours-label">Average Daily Hours</div>
-          <div class="hours-value secondary">
-            {{ formatWorkingHours(summary.averageWorkingHours) }}
+          <div class="stat-row">
+            <div class="dot absent"></div>
+            <span class="sr-label">Absent Days</span>
+            <div class="sr-bar-wrap">
+              <div class="sr-bar absent" [style.width.%]="(summary.absentDays / summary.totalWorkingDays) * 100"></div>
+            </div>
+            <span class="sr-count">{{ summary.absentDays }}</span>
           </div>
-        </div>
-
-        <div class="hours-item">
-          <div class="hours-label">Total Overtime</div>
-          <div class="hours-value overtime">
-            {{ formatWorkingHours(summary.totalOvertimeHours) }}
+          <div class="stat-row">
+            <div class="dot halfday"></div>
+            <span class="sr-label">Half Days</span>
+            <div class="sr-bar-wrap">
+              <div class="sr-bar halfday" [style.width.%]="(summary.halfDays / summary.totalWorkingDays) * 100"></div>
+            </div>
+            <span class="sr-count">{{ summary.halfDays }}</span>
+          </div>
+          <div class="stat-row">
+            <div class="dot leave"></div>
+            <span class="sr-label">Leave Days</span>
+            <div class="sr-bar-wrap">
+              <div class="sr-bar leave" [style.width.%]="(summary.leaveDays / summary.totalWorkingDays) * 100"></div>
+            </div>
+            <span class="sr-count">{{ summary.leaveDays }}</span>
+          </div>
+          <div class="stat-row">
+            <div class="dot wfh"></div>
+            <span class="sr-label">Work From Home</span>
+            <div class="sr-bar-wrap">
+              <div class="sr-bar wfh" [style.width.%]="0"></div>
+            </div>
+            <span class="sr-count">0</span>
           </div>
         </div>
       </div>
+
+      <!-- Compliance -->
+      <div class="stats-card">
+        <h3 class="card-title"><i class="fas fa-clipboard-check"></i> Compliance</h3>
+        <div class="compliance-items">
+          <div class="compliance-item">
+            <div class="c-icon late"><i class="fas fa-clock"></i></div>
+            <div class="c-info">
+              <span class="c-val">{{ summary.lateDays }}</span>
+              <span class="c-lbl">Late Check-Ins</span>
+            </div>
+          </div>
+          <div class="compliance-item">
+            <div class="c-icon early"><i class="fas fa-running"></i></div>
+            <div class="c-info">
+              <span class="c-val">{{ summary.earlyLeaveDays }}</span>
+              <span class="c-lbl">Early Exits</span>
+            </div>
+          </div>
+          <div class="compliance-item">
+            <div class="c-icon holiday"><i class="fas fa-umbrella-beach"></i></div>
+            <div class="c-info">
+              <span class="c-val">{{ summary.holidays }}</span>
+              <span class="c-lbl">Holidays</span>
+            </div>
+          </div>
+          <div class="compliance-item">
+            <div class="c-icon weekoff"><i class="fas fa-couch"></i></div>
+            <div class="c-info">
+              <span class="c-val">{{ summary.weekOffs }}</span>
+              <span class="c-lbl">Week Offs</span>
+            </div>
+          </div>
+          <div class="compliance-item total">
+            <div class="c-icon total"><i class="fas fa-calendar-alt"></i></div>
+            <div class="c-info">
+              <span class="c-val">{{ summary.totalWorkingDays }}</span>
+              <span class="c-lbl">Total Working Days</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Additional Info -->
-    <div class="additional-info">
-      <div class="info-item">
-        <span class="info-label">Total Working Days:</span>
-        <span class="info-value">{{ summary.totalWorkingDays }}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Holidays:</span>
-        <span class="info-value">{{ summary.holidays }}</span>
-      </div>
-      <div class="info-item">
-        <span class="info-label">Week Offs:</span>
-        <span class="info-value">{{ summary.weekOffs }}</span>
-      </div>
-    </div>
+  </ng-container>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && !summary" class="empty-state">
+    <i class="fas fa-chart-bar"></i>
+    <p>Enter details and click Search to view the summary.</p>
   </div>
 
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="!isLoading && !summary">
-    <i class="fas fa-inbox"></i>
-    <h3>No Data Available</h3>
-    <p>No attendance data found for the selected date range</p>
-  </div>
 </div>

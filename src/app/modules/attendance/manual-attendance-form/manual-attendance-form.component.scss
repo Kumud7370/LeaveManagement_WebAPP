@@ -1,0 +1,109 @@
+// manual-attendance-form.component.scss
+
+.manual-form-container {
+  padding: 1.25rem 1.5rem;
+  font-family: 'DM Sans', -apple-system, sans-serif;
+
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    &.two-col > .form-group { flex: 1; }
+    @media (max-width: 580px) { flex-direction: column; }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+
+    label {
+      font-size: 0.83rem;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 0.4rem;
+      .required { color: #ef4444; margin-left: 2px; }
+    }
+
+    input, select, textarea {
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      color: #1e293b;
+      background: white;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+      box-sizing: border-box;
+
+      &:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      }
+      &.is-error {
+        border-color: #ef4444;
+        background: #fff5f5;
+      }
+      &.readonly-input {
+        background: #f8fafc;
+        color: #64748b;
+        cursor: not-allowed;
+      }
+    }
+    textarea { resize: vertical; min-height: 80px; }
+  }
+
+  .error-msg { font-size: 0.78rem; color: #ef4444; margin-top: 0.3rem; }
+  .hint-msg  { font-size: 0.78rem; color: #94a3b8; margin-top: 0.3rem; }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #f1f5f9;
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.4rem;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
+
+      &.btn-cancel {
+        background: #f1f5f9;
+        color: #475569;
+        &:hover:not(:disabled) { background: #e2e8f0; }
+      }
+      &.btn-submit {
+        background: #6366f1;
+        color: white;
+        &:hover:not(:disabled) { background: #4f46e5; }
+      }
+    }
+  }
+
+  .loading-state {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    .btn-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+}

@@ -74,48 +74,33 @@ export const routes: Routes = [
 
       // ==================== ATTENDANCE MODULE ====================
       {
-        path: "attendance",
+        path: 'attendance',
         children: [
           {
-            path: "",
-            redirectTo: "check-in-out",
-            pathMatch: "full"
+            path: '',
+            redirectTo: 'check-in-out',
+            pathMatch: 'full'
           },
           {
-            path: "check-in-out",
-            loadComponent: () => import("./modules/attendance/check-in-out/check-in-out.component")
-              .then((m) => m.CheckInOutComponent),
-            data: { breadcrumb: "Check In/Out" },
+            path: 'check-in-out',
+            loadComponent: () =>
+              import('./modules/attendance/attendance-check-in-out/attendance-check-in-out.component')
+                .then(m => m.AttendanceCheckInOutComponent),
+            data: { breadcrumb: 'Check In / Out' }
           },
           {
-            path: "list",
-            loadComponent: () => import("./modules/attendance/attendance-list/attendance-list.component")
-              .then((m) => m.AttendanceListComponent),
-            data: { breadcrumb: "Attendance List" },
+            path: 'list',
+            loadComponent: () =>
+              import('./modules/attendance/attendance-list/attendance-list.component')
+                .then(m => m.AttendanceListComponent),
+            data: { breadcrumb: 'Attendance List' }
           },
           {
-            path: "summary",
-            loadComponent: () => import("./modules/attendance/attendance-summary/attendance-summary.component")
-              .then((m) => m.AttendanceSummaryComponent),
-            data: { breadcrumb: "My Summary" },
-          },
-          {
-            path: "create",
-            loadComponent: () => import("./modules/attendance/attendance-form/attendance-form.component")
-              .then((m) => m.AttendanceFormComponent),
-            data: { breadcrumb: "Mark Attendance" },
-          },
-          {
-            path: "edit/:id",
-            loadComponent: () => import("./modules/attendance/attendance-form/attendance-form.component")
-              .then((m) => m.AttendanceFormComponent),
-            data: { breadcrumb: "Edit Attendance" },
-          },
-          {
-            path: "details/:id",
-            loadComponent: () => import("./modules/attendance/attendance-details/attendance-details.component")
-              .then((m) => m.AttendanceDetailsComponent),
-            data: { breadcrumb: "Attendance Details" },
+            path: 'summary',
+            loadComponent: () =>
+              import('./modules/attendance/attendance-summary/attendance-summary.component')
+                .then(m => m.AttendanceSummaryComponent),
+            data: { breadcrumb: 'My Summary' }
           }
         ]
       },
@@ -220,7 +205,6 @@ export const routes: Routes = [
         data: { breadcrumb: 'Employee Shifts' },
       },
 
-
       // ==================== LEAVE MODULE ====================
       {
         path: "leave",
@@ -268,6 +252,7 @@ export const routes: Routes = [
           }
         ]
       },
+
       {
         path: "wfh-requests",
         children: [
@@ -284,6 +269,7 @@ export const routes: Routes = [
           },
         ]
       },
+
     ],
   },
-];     
+];
