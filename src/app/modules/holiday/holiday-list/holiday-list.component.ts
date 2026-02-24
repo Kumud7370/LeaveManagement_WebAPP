@@ -1,5 +1,3 @@
-// holiday-list.component.ts
-
 import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
@@ -63,27 +61,27 @@ export class HolidayListComponent implements OnInit {
   @ViewChild('agGrid', { read: ElementRef })
   agGridElement!: ElementRef<HTMLElement>;
 
-  // ─── Grid state ──────────────────────────────────────────────────────────
+  // ─── Grid state ───────────
   rowData: any[] = [];
   gridApi!: GridApi;
   searchTerm: string = '';
 
-  // ─── Modal state ──────────────────────────────────────────────────────────
+  // ─── Modal state ───────────
   isModalOpen: boolean = false;
   modalMode: 'add' | 'edit' | 'view' = 'add';
   selectedHoliday: any = null;
 
-  // ─── Form ─────────────────────────────────────────────────────────────────
+  // ─── Form ────────────
   holidayForm!: FormGroup;
   isSubmitting: boolean = false;
   formSubmitAttempted: boolean = false;
 
-  // ─── Departments ──────────────────────────────────────────────────────────
+  // ─── Departments ────────
   departments: any[] = [];
   isLoadingDepartments: boolean = false;
   private selectedDepartmentSet = new Set<string>();
 
-  // ─── Pagination ───────────────────────────────────────────────────────────
+  // ─── Pagination ─────────
   currentPage: number = 1;
   pageSize: number = 20;
   totalItems: number = 0;
@@ -92,7 +90,7 @@ export class HolidayListComponent implements OnInit {
   private searchDebounceTimer: any = null;
   Math = Math;
 
-  // ─── Lookup data ──────────────────────────────────────────────────────────
+  // ─── Lookup data ───────────
   holidayTypes = [
     { value: HolidayType.National, label: 'National'  },
     { value: HolidayType.Regional, label: 'Regional'  },
@@ -103,7 +101,7 @@ export class HolidayListComponent implements OnInit {
 
   context = { componentParent: this };
 
-  // ─── Grid config ─────────────────────────────────────────────────────────
+  // ─── Grid config ──────────────
   defaultColDef: ColDef = {
     sortable: true,
     filter: true,
@@ -268,7 +266,7 @@ export class HolidayListComponent implements OnInit {
     this.loadHolidays();
   }
 
-  // ─── Form ─────────────────────────────────────────────────────────────────
+  // ─── Form ────────
 
   initializeForm(): void {
     this.holidayForm = this.fb.group({
@@ -327,7 +325,7 @@ export class HolidayListComponent implements OnInit {
     return this.departments.find(d => d.id === id)?.departmentName || id;
   }
 
-  // ─── Data Loading ─────────────────────────────────────────────────────────
+  // ─── Data Loading ──────
 
   loadStats(): void {
     const filter: HolidayFilterDto = {
@@ -408,7 +406,6 @@ export class HolidayListComponent implements OnInit {
     });
   }
 
-  // ─── Grid ─────────────────────────────────────────────────────────────────
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
@@ -435,7 +432,7 @@ export class HolidayListComponent implements OnInit {
     return String(text).replace(regex, '<mark class="search-highlight">$1</mark>');
   }
 
-  // ─── Pagination ───────────────────────────────────────────────────────────
+  // ─── Pagination ─────────
 
   onPageSizeChanged(newPageSize: number): void {
     this.pageSize    = newPageSize;
@@ -458,7 +455,7 @@ export class HolidayListComponent implements OnInit {
     if (this.currentPage > 1) this.goToPage(this.currentPage - 1);
   }
 
-  // ─── Search ───────────────────────────────────────────────────────────────
+  // ─── Search ──────────
 
   onSearchChange(): void {
     clearTimeout(this.searchDebounceTimer);
@@ -497,7 +494,7 @@ export class HolidayListComponent implements OnInit {
     this.activeFilters = { hasActiveFilters: filters.length > 0, filters, count: filters.length };
   }
 
-  // ─── Modal ────────────────────────────────────────────────────────────────
+  // ─── Modal ────────────
 
   openAddModal(): void {
     this.modalMode           = 'add';
@@ -577,9 +574,6 @@ export class HolidayListComponent implements OnInit {
     if (event.target === event.currentTarget) this.closeModal();
   }
 
-  // ─── ActionCellRenderer bridge methods ────────────────────────────────────
-  // These match the exact method names called by the shared ActionCellRendererComponent.
-
   viewDetails(data: any): void      { this.openViewModal(data); }
   editDepartment(data: any): void    { this.openEditModal(data); }
   toggleStatus(data: any): void      { this.onToggleStatus(data); }
@@ -595,8 +589,7 @@ export class HolidayListComponent implements OnInit {
     }
   }
 
-  // ─── Submit ───────────────────────────────────────────────────────────────
-
+  // ─── Submit ──────────
   onSubmit(): void {
     this.formSubmitAttempted = true;
 
@@ -687,8 +680,7 @@ export class HolidayListComponent implements OnInit {
     });
   }
 
-  // ─── Toggle Status ────────────────────────────────────────────────────────
-
+  // ─── Toggle Status ─────────
   onToggleStatus(holiday: any): void {
     const newStatus   = !holiday.isActive;
     const actionText  = newStatus ? 'activate' : 'deactivate';
@@ -738,7 +730,7 @@ export class HolidayListComponent implements OnInit {
     });
   }
 
-  // ─── Delete ───────────────────────────────────────────────────────────────
+  // ─── Delete ───────────
 
   onDelete(holiday: any): void {
     Swal.fire({
@@ -789,7 +781,7 @@ export class HolidayListComponent implements OnInit {
     });
   }
 
-  // ─── Export ───────────────────────────────────────────────────────────────
+  // ─── Export ───────────
 
   exportData(): void {
     exportToCsv(this.gridApi, 'holidays');
@@ -799,7 +791,7 @@ export class HolidayListComponent implements OnInit {
     });
   }
 
-  // ─── Date helpers ─────────────────────────────────────────────────────────
+  // ─── Date helpers 
 
   formatDateForInput(date: any): string {
     const d     = new Date(date);

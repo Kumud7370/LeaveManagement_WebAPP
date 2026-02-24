@@ -1,31 +1,27 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+// =============================================
+// attendance-list.component.ts
+// Admin / Manager: filterable AG-Grid list
+// with approve, delete, manual mark actions
+// =============================================
+
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
-import Swal from 'sweetalert2';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
+import {
+  ColDef, GridApi, GridReadyEvent, GridOptions, ICellRendererParams
+} from 'ag-grid-community';
+import Swal from 'sweetalert2';
 
 import { AttendanceService } from '../../../core/services/api/attendance.api';
 import {
   AttendanceResponseDto,
   AttendanceFilterDto,
-  PagedResultDto,
   AttendanceStatus,
-  CheckInMethod,
-  createEmptyAttendanceFilter,
-  getStatusBadgeClass,
-  formatTime,
-  formatDate,
-  formatWorkingHours,
-  AttendanceStatusOptions,
-  CheckInMethodOptions
+  CheckInMethod
 } from '../../../core/Models/attendance.model';
-
-import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
-import { AttendanceFormComponent } from '../attendance-form/attendance-form.component';
 import { AttendanceDetailsComponent } from '../attendance-details/attendance-details.component';
+import { ManualAttendanceFormComponent } from '../manual-attendance-form/manual-attendance-form.component';
 
 @Component({
   selector: 'app-attendance-list',
@@ -34,442 +30,339 @@ import { AttendanceDetailsComponent } from '../attendance-details/attendance-det
     CommonModule,
     FormsModule,
     AgGridAngular,
-    AttendanceFormComponent,
-    AttendanceDetailsComponent
+    AttendanceDetailsComponent,
+    ManualAttendanceFormComponent
   ],
   templateUrl: './attendance-list.component.html',
   styleUrls: ['./attendance-list.component.scss']
 })
-export class AttendanceListComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-
+export class AttendanceListComponent implements OnInit {
+  private gridApi!: GridApi;
   rowData: AttendanceResponseDto[] = [];
-  isLoading = false;
-  error: string | null = null;
+  loading = false;
 
-  // Pagination
-  currentPage = 1;
-  pageSize = 20;
-  totalPages = 0;
-  totalItems = 0;
+  // Sidebar
+  showDetails = false;
+  showForm = false;
+  selectedAttendanceId: string | null = null;
+  editingRecord: AttendanceResponseDto | null = null;
 
   // Filters
-  isFilterVisible = false;
-  filter: AttendanceFilterDto = createEmptyAttendanceFilter();
+  filter: AttendanceFilterDto = {
+    pageNumber: 1,
+    pageSize: 1000,
+    sortBy: 'AttendanceDate',
+    sortDescending: true
+  };
+  searchEmployeeId = '';
+  selectedStatus: AttendanceStatus | '' = '';
+  startDate = '';
+  endDate = '';
 
-  // Modal States
-  showFormModal = false;
-  showDetailsModal = false;
-  formMode: 'create' | 'edit' = 'create';
-  selectedAttendanceId: string | null = null;
-
-  // Enums
   AttendanceStatus = AttendanceStatus;
-  CheckInMethod = CheckInMethod;
-  attendanceStatusOptions = AttendanceStatusOptions;
-  checkInMethodOptions = CheckInMethodOptions;
+  statistics: { [key: string]: number } = {};
 
-  // Make Math available in template
-  Math = Math;
+  // ---- Column Definitions ----
+  columnDefs: ColDef[] = [
+    {
+      field: 'employeeCode', headerName: 'Emp Code',
+      width: 110, sortable: true, filter: true
+    },
+    {
+      field: 'employeeName', headerName: 'Employee',
+      flex: 1, minWidth: 150, sortable: true, filter: true
+    },
+    {
+      field: 'attendanceDate', headerName: 'Date',
+      width: 130, sortable: true,
+      valueFormatter: p => p.value
+        ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—'
+    },
+    {
+      field: 'checkInTime', headerName: 'Check In',
+      width: 110,
+      valueFormatter: p => p.value
+        ? new Date(p.value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+        : '—'
+    },
+    {
+      field: 'checkOutTime', headerName: 'Check Out',
+      width: 110,
+      valueFormatter: p => p.value
+        ? new Date(p.value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+        : '—'
+    },
+    {
+      field: 'workingHours', headerName: 'Hours',
+      width: 90, sortable: true,
+      valueFormatter: p => p.value != null ? `${(+p.value).toFixed(1)}h` : '—',
+      cellStyle: { textAlign: 'center' }
+    },
+    {
+      field: 'status', headerName: 'Status',
+      width: 130, sortable: true,
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+      cellRenderer: (params: ICellRendererParams) => {
+        const status: AttendanceStatus = params.value;
+        const label = params.data?.statusName ?? '';
+        const styleMap: Record<number, { bg: string; color: string; border: string }> = {
+          [AttendanceStatus.Present]:      { bg: '#dcfce7', color: '#14532d', border: '#86efac' },
+          [AttendanceStatus.Absent]:       { bg: '#fee2e2', color: '#7f1d1d', border: '#fca5a5' },
+          [AttendanceStatus.HalfDay]:      { bg: '#fef9c3', color: '#854d0e', border: '#fde68a' },
+          [AttendanceStatus.Leave]:        { bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' },
+          [AttendanceStatus.Holiday]:      { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' },
+          [AttendanceStatus.WeekOff]:      { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' },
+          [AttendanceStatus.WorkFromHome]: { bg: '#ede9fe', color: '#5b21b6', border: '#c4b5fd' },
+          [AttendanceStatus.OnDuty]:       { bg: '#fff7ed', color: '#9a3412', border: '#fdba74' }
+        };
+        const s = styleMap[status] ?? styleMap[AttendanceStatus.Absent];
+        return `<span style="display:inline-flex;align-items:center;padding:0.3rem 0.75rem;
+                              border-radius:2rem;font-size:0.78rem;font-weight:700;
+                              background:${s.bg};color:${s.color};border:1px solid ${s.border};">
+                  ${label}
+                </span>`;
+      }
+    },
+    {
+      field: 'isLate', headerName: 'Late',
+      width: 80, sortable: true,
+      cellStyle: { textAlign: 'center' },
+      cellRenderer: (p: ICellRendererParams) =>
+        p.value
+          ? `<span style="color:#d97706;font-weight:700;font-size:0.78rem;">+${p.data?.lateMinutes ?? 0}m</span>`
+          : `<span style="color:#94a3b8;font-size:0.78rem;">—</span>`
+    },
+    {
+      field: 'checkInMethodName', headerName: 'Method',
+      width: 110,
+      cellStyle: { color: '#64748b', fontSize: '0.82rem' }
+    },
+    {
+      headerName: 'Actions', width: 180,
+      sortable: false, filter: false,
+      pinned: 'left',
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' },
+      cellRenderer: (params: ICellRendererParams) => {
+        if (!params.data) return '';
+        const viewBtn = `<button data-action="view" title="View"
+          style="width:1.9rem;height:1.9rem;border:none;border-radius:0.375rem;cursor:pointer;
+                 display:inline-flex;align-items:center;justify-content:center;
+                 background:#dbeafe;color:#1e40af;font-size:0.82rem;">
+          <i class="fas fa-eye" style="pointer-events:none"></i></button>`;
+        const editBtn = `<button data-action="edit" title="Edit"
+          style="width:1.9rem;height:1.9rem;border:none;border-radius:0.375rem;cursor:pointer;
+                 display:inline-flex;align-items:center;justify-content:center;
+                 background:#fef3c7;color:#92400e;font-size:0.82rem;">
+          <i class="fas fa-edit" style="pointer-events:none"></i></button>`;
+        const approveBtn = !params.data.approvedBy ? `<button data-action="approve" title="Approve"
+          style="width:1.9rem;height:1.9rem;border:none;border-radius:0.375rem;cursor:pointer;
+                 display:inline-flex;align-items:center;justify-content:center;
+                 background:#d1fae5;color:#065f46;font-size:0.82rem;">
+          <i class="fas fa-check" style="pointer-events:none"></i></button>` : '';
+        const deleteBtn = `<button data-action="delete" title="Delete"
+          style="width:1.9rem;height:1.9rem;border:none;border-radius:0.375rem;cursor:pointer;
+                 display:inline-flex;align-items:center;justify-content:center;
+                 background:#fee2e2;color:#991b1b;font-size:0.82rem;">
+          <i class="fas fa-trash" style="pointer-events:none"></i></button>`;
+        return `<div style="display:flex;gap:0.35rem;align-items:center;height:100%;">
+                  ${viewBtn}${editBtn}${approveBtn}${deleteBtn}</div>`;
+      }
+    }
+  ];
 
-  // Helper functions exposed to template
-  formatTime = formatTime;
-  formatDate = formatDate;
-  formatWorkingHours = formatWorkingHours;
-  getStatusBadgeClass = getStatusBadgeClass;
-
-  // AG Grid
-  columnDefs: ColDef[] = [];
-  defaultColDef: ColDef = {
-    sortable: true,
-    filter: true,
-    resizable: true,
-    flex: 1,
-    minWidth: 100,
-  };
   gridOptions: GridOptions = {
-    pagination: false,
-    rowSelection: undefined,
+    rowHeight: 50,
+    headerHeight: 44,
+    defaultColDef: { resizable: true },
+    animateRows: true,
+    rowSelection: 'single',
     suppressRowClickSelection: true,
-    domLayout: 'autoHeight',
-    context: { componentParent: this }
+    suppressCellFocus: true,
+    onCellClicked: (event: any) => {
+      const target = event.event?.target as HTMLElement;
+      const action = (target?.closest ? target.closest('[data-action]') as HTMLElement : null)
+        ?.getAttribute('data-action');
+      if (!action || !event.data) return;
+      const record: AttendanceResponseDto = event.data;
+      switch (action) {
+        case 'view':    this.viewDetails(record);     break;
+        case 'edit':    this.openEditForm(record);    break;
+        case 'approve': this.approveRecord(record);  break;
+        case 'delete':  this.deleteRecord(record);   break;
+      }
+    }
   };
 
-  constructor(
-    private attendanceService: AttendanceService,
-    private router: Router
-  ) {
-    this.initializeColumnDefs();
-  }
+  constructor(private attendanceService: AttendanceService) {}
 
   ngOnInit(): void {
+    // Set default 30-day range
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    this.endDate = today.toISOString().substring(0, 10);
+    this.startDate = thirtyDaysAgo.toISOString().substring(0, 10);
     this.loadAttendance();
+    this.loadStats();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  onGridReady(event: GridReadyEvent): void {
+    this.gridApi = event.api;
   }
-
-  // ─── AG Grid Setup ────────────────────────────────────────────────────────
-
-  initializeColumnDefs(): void {
-    this.columnDefs = [
-      {
-        headerName: 'Actions',
-        width: 160,
-        minWidth: 160,
-        maxWidth: 160,
-       cellRenderer: ActionCellRendererComponent,
-        sortable: false,
-        filter: false,
-        pinned: 'left',
-        cellStyle: {
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0 8px'
-        }
-      },
-      {
-        headerName: 'Employee',
-        field: 'employeeName',
-        width: 220,
-        minWidth: 180,
-        cellRenderer: (params: any) => {
-          if (!params.value) return '';
-          const name = params.value;
-          const code = params.data?.employeeCode || '';
-          return `
-            <div class="employee-cell">
-              <div class="employee-name">${name}</div>
-              <div class="employee-code">${code}</div>
-            </div>
-          `;
-        }
-      },
-      {
-        headerName: 'Date',
-        field: 'attendanceDate',
-        width: 130,
-        minWidth: 120,
-        valueFormatter: (params) => this.formatDate(params.value),
-        cellStyle: { fontSize: '12px', color: '#374151' }
-      },
-      {
-        headerName: 'Check In',
-        field: 'checkInTime',
-        width: 110,
-        minWidth: 100,
-        valueFormatter: (params) => this.formatTime(params.value),
-        cellStyle: { fontWeight: '600', color: '#059669' }
-      },
-      {
-        headerName: 'Check Out',
-        field: 'checkOutTime',
-        width: 110,
-        minWidth: 100,
-        valueFormatter: (params) => this.formatTime(params.value),
-        cellStyle: { fontWeight: '600', color: '#dc2626' }
-      },
-      {
-        headerName: 'Working Hrs',
-        field: 'workingHours',
-        width: 130,
-        minWidth: 110,
-        valueFormatter: (params) => this.formatWorkingHours(params.value),
-        cellStyle: { color: '#3b82f6', fontWeight: '600' }
-      },
-      {
-        headerName: 'Status',
-        field: 'statusName',
-        width: 130,
-        minWidth: 110,
-        cellRenderer: (params: any) => {
-          if (!params.value) return '';
-          const badgeClass = this.getStatusBadgeClass(params.data?.status);
-          return `<span class="badge ${badgeClass}">${params.value}</span>`;
-        },
-        cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
-      },
-      {
-        headerName: 'Late',
-        field: 'isLate',
-        width: 90,
-        minWidth: 80,
-        cellRenderer: (params: any) => {
-          if (params.value) {
-            const minutes = params.data?.lateMinutes || 0;
-            return `<span class="badge badge-warning">${minutes}m late</span>`;
-          }
-          return `<i class="fas fa-check" style="color:#10b981"></i>`;
-        },
-        cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
-      },
-      {
-        headerName: 'Early Leave',
-        field: 'isEarlyLeave',
-        width: 110,
-        minWidth: 100,
-        cellRenderer: (params: any) => {
-          if (params.value) {
-            const minutes = params.data?.earlyLeaveMinutes || 0;
-            return `<span class="badge badge-warning">${minutes}m early</span>`;
-          }
-          return `<i class="fas fa-check" style="color:#10b981"></i>`;
-        },
-        cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
-      },
-      {
-        headerName: 'Approved',
-        field: 'approvedBy',
-        width: 110,
-        minWidth: 100,
-        cellRenderer: (params: any) => {
-          if (params.value) {
-            return `<span class="badge badge-success"><i class="fas fa-check-circle"></i> Yes</span>`;
-          }
-          return `<span class="badge badge-secondary">Pending</span>`;
-        },
-        cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
-      }
-    ];
-  }
-
-  onGridReady(params: GridReadyEvent): void {
-    params.api.sizeColumnsToFit();
-  }
-
-  // ─── Data Loading ─────────────────────────────────────────────────────────
 
   loadAttendance(): void {
-    if (this.isLoading) return;
-
-    this.isLoading = true;
-    this.error = null;
-    this.filter.pageNumber = this.currentPage;
-    this.filter.pageSize = this.pageSize;
-
-    this.attendanceService.getFilteredAttendance(this.filter)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (result: PagedResultDto<AttendanceResponseDto>) => {
-          this.rowData = result.items || [];
-          this.totalItems = result.totalCount || 0;
-          this.totalPages = result.totalPages || 0;
-          this.currentPage = result.pageNumber || 1;
-          this.isLoading = false;
-        },
-        error: (error: any) => {
-          console.error('Error loading attendance:', error);
-          this.error = error.error?.message || 'Failed to load attendance records. Please try again.';
-          this.isLoading = false;
-        }
-      });
+    this.loading = true;
+    const f: AttendanceFilterDto = {
+      ...this.filter,
+      employeeId: this.searchEmployeeId || undefined,
+      status: this.selectedStatus !== '' ? (this.selectedStatus as AttendanceStatus) : undefined,
+      startDate: this.startDate || undefined,
+      endDate: this.endDate || undefined
+    };
+    this.attendanceService.getFilteredAttendance(f).subscribe({
+      next: (r) => {
+        if (r.success) this.rowData = r.data.items;
+        this.loading = false;
+      },
+      error: () => { this.loading = false; }
+    });
   }
 
-  // ─── Filter Operations ────────────────────────────────────────────────────
-
-  toggleFilter(): void {
-    this.isFilterVisible = !this.isFilterVisible;
+  loadStats(): void {
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    this.attendanceService.getStatistics(
+      thirtyDaysAgo.toISOString().substring(0, 10),
+      today.toISOString().substring(0, 10)
+    ).subscribe({
+      next: (r) => { if (r.success) this.statistics = r.data; }
+    });
   }
 
-  applyFilter(): void {
-    this.currentPage = 1;
+  onClearFilters(): void {
+    this.searchEmployeeId = '';
+    this.selectedStatus = '';
+    this.filter.pageNumber = 1;
     this.loadAttendance();
   }
 
-  resetFilter(): void {
-    this.filter = createEmptyAttendanceFilter();
-    this.currentPage = 1;
-    this.pageSize = 20;
-    this.loadAttendance();
-  }
-
-  onSearchChange(): void {
-    const searchTerm = this.filter.employeeId || '';
-    if (searchTerm.length === 0 || searchTerm.length >= 3) {
-      this.currentPage = 1;
-      this.loadAttendance();
+  exportData(): void {
+    if (!this.rowData.length) {
+      Swal.fire('No Data', 'Nothing to export.', 'info');
+      return;
     }
+    const headers = ['Emp Code', 'Employee', 'Date', 'Check In', 'Check Out', 'Hours', 'Status', 'Late', 'Method'];
+    const rows = this.rowData.map(r => [
+      r.employeeCode,
+      r.employeeName,
+      r.attendanceDate ? new Date(r.attendanceDate).toLocaleDateString('en-GB') : '',
+      r.checkInTime   ? new Date(r.checkInTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '',
+      r.checkOutTime  ? new Date(r.checkOutTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '',
+      r.workingHours != null ? (+r.workingHours).toFixed(1) : '',
+      r.statusName,
+      r.isLate ? `+${r.lateMinutes}m` : '',
+      r.checkInMethodName ?? ''
+    ]);
+    const csv = [headers, ...rows].map(row =>
+      row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `attendance_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
-  clearSearch(): void {
-    this.filter.employeeId = '';
-    this.currentPage = 1;
-    this.loadAttendance();
+  viewDetails(record: AttendanceResponseDto): void {
+    this.selectedAttendanceId = record.id;
+    this.showDetails = true;
+    this.showForm = false;
   }
 
-  // ─── Pagination ───────────────────────────────────────────────────────────
-
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
-      this.currentPage = page;
-      this.loadAttendance();
-    }
+  openEditForm(record: AttendanceResponseDto): void {
+    this.editingRecord = record;
+    this.showForm = true;
+    this.showDetails = false;
   }
 
-  previousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.loadAttendance();
-    }
+  openCreateForm(): void {
+    this.editingRecord = null;
+    this.showForm = true;
+    this.showDetails = false;
   }
 
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.loadAttendance();
-    }
-  }
-
-  onPageSizeChanged(newPageSize: number): void {
-    this.pageSize = newPageSize;
-    this.currentPage = 1;
-    this.loadAttendance();
-  }
-
-  get pages(): number[] {
-    const pages: number[] = [];
-    const maxPagesToShow = 5;
-    let startPage = Math.max(1, this.currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
-
-    if (endPage - startPage < maxPagesToShow - 1) {
-      startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
-
-  // ─── Action Handlers (called by AttendanceActionCellRendererComponent) ────
-
-  viewDetails(attendance: AttendanceResponseDto): void {
-    this.selectedAttendanceId = attendance.id;
-    this.showDetailsModal = true;
-  }
-
-  editAttendance(attendance: AttendanceResponseDto): void {
-    this.formMode = 'edit';
-    this.selectedAttendanceId = attendance.id;
-    this.showFormModal = true;
-  }
-
-  async approveAttendance(attendance: AttendanceResponseDto): Promise<void> {
-    if (!attendance?.id) return;
-
-    const result = await Swal.fire({
+  async approveRecord(record: AttendanceResponseDto): Promise<void> {
+    const res = await Swal.fire({
       title: 'Approve Attendance?',
-      html: `Approve attendance for <strong>${attendance.employeeName}</strong> on ${this.formatDate(attendance.attendanceDate)}?`,
+      html: `Approve <strong>${record.employeeName}</strong>'s attendance for ${new Date(record.attendanceDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}?`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, Approve',
-      cancelButtonText: 'Cancel'
+      confirmButtonText: 'Approve'
     });
-
-    if (result.isConfirmed) {
-      this.attendanceService.approveAttendance(attendance.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            Swal.fire({
-              icon: 'success',
-              title: 'Approved!',
-              text: 'Attendance has been approved successfully.',
-              timer: 2000,
-              showConfirmButton: false
-            });
-            this.loadAttendance();
-          },
-          error: (error: any) => {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: error.error?.message || 'Failed to approve attendance.',
-              confirmButtonColor: '#ef4444'
-            });
-          }
-        });
-    }
+    if (!res.isConfirmed) return;
+    this.attendanceService.approveAttendance(record.id).subscribe({
+      next: (r) => {
+        if (r.success) {
+          Swal.fire({ title: 'Approved!', icon: 'success', timer: 2000, showConfirmButton: false });
+          this.loadAttendance();
+        } else {
+          Swal.fire('Error!', r.message, 'error');
+        }
+      },
+      error: (e) => Swal.fire('Error!', e.error?.message || 'Error', 'error')
+    });
   }
 
-  async deleteAttendance(attendance: AttendanceResponseDto): Promise<void> {
-    if (!attendance?.id) return;
-
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      html: `Delete attendance for <strong>${attendance.employeeName}</strong> on ${this.formatDate(attendance.attendanceDate)}?<br>This action cannot be undone.`,
+  async deleteRecord(record: AttendanceResponseDto): Promise<void> {
+    const res = await Swal.fire({
+      title: 'Delete Attendance?',
+      text: 'This action cannot be undone.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel'
+      confirmButtonText: 'Delete'
     });
-
-    if (result.isConfirmed) {
-      this.attendanceService.deleteAttendance(attendance.id)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            Swal.fire({
-              icon: 'success',
-              title: 'Deleted!',
-              text: 'Attendance record has been deleted successfully.',
-              timer: 2000,
-              showConfirmButton: false
-            });
-            this.loadAttendance();
-          },
-          error: (error: any) => {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: error.error?.message || 'Failed to delete attendance.',
-              confirmButtonColor: '#ef4444'
-            });
-          }
-        });
-    }
+    if (!res.isConfirmed) return;
+    this.attendanceService.deleteAttendance(record.id).subscribe({
+      next: (r) => {
+        if (r.success) {
+          Swal.fire({ title: 'Deleted!', icon: 'success', timer: 2000, showConfirmButton: false });
+          this.loadAttendance();
+          this.loadStats();
+        } else {
+          Swal.fire('Error!', r.message, 'error');
+        }
+      },
+      error: (e) => Swal.fire('Error!', e.error?.message || 'Error', 'error')
+    });
   }
 
-  // ─── Modal Management ─────────────────────────────────────────────────────
-
-  addManualAttendance(): void {
-    this.formMode = 'create';
-    this.selectedAttendanceId = null;
-    this.showFormModal = true;
-  }
-
-  closeFormModal(): void {
-    this.showFormModal = false;
-    this.selectedAttendanceId = null;
-  }
-
-  closeDetailsModal(): void {
-    this.showDetailsModal = false;
-    this.selectedAttendanceId = null;
-  }
-
-  onFormSuccess(): void {
-    this.closeFormModal();
+  onRecordSaved(): void {
+    this.showForm = false;
+    this.editingRecord = null;
     this.loadAttendance();
+    this.loadStats();
   }
 
-  onEditFromDetails(attendanceId: string): void {
-    this.closeDetailsModal();
-    this.formMode = 'edit';
-    this.selectedAttendanceId = attendanceId;
-    this.showFormModal = true;
+  onSidebarClose(): void {
+    this.showDetails = false;
+    this.showForm = false;
+    this.selectedAttendanceId = null;
+    this.editingRecord = null;
   }
 
-  onDeleteFromDetails(attendanceId: string): void {
-    this.closeDetailsModal();
+  onRecordUpdated(): void {
     this.loadAttendance();
+    this.loadStats();
+  }
+
+  getStatCount(key: string): number {
+    return this.statistics[key] ?? 0;
   }
 }

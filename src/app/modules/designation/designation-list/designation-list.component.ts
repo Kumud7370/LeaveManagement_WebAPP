@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -8,12 +8,23 @@ import {
   ColDef,
   GridOptions,
   GridReadyEvent,
+  GridApi,
   ICellRendererParams
 } from 'ag-grid-community';
 import Swal from 'sweetalert2';
 import { DesignationService } from '../../../core/services/api/designation.api';
 import { DesignationResponseDto, DesignationFilterDto } from '../../../core/Models/designation.model';
 import { StatusCellRendererComponent } from '../../../shared/status-cell-renderer.component';
+
+// ── AG Grid Helpers ──────────────────────────────────────────────────────────
+import {
+  dateFormatter,
+  applyQuickFilter,
+  clearAllFilters,
+  exportToCsv,
+  refreshGrid,
+  autoSizeAll,
+} from '../../../utils/ag-grid-helpers';
 
 @Component({
   selector: 'app-designation-list',
@@ -22,36 +33,43 @@ import { StatusCellRendererComponent } from '../../../shared/status-cell-rendere
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    AgGridAngular
+    AgGridAngular,
   ],
   templateUrl: './designation-list.component.html',
-  styleUrls: ['./designation-list.component.scss']
+  styleUrls: ['./designation-list.component.scss'],
 })
-export class DesignationListComponent implements OnInit {
+export class DesignationListComponent implements OnInit, OnDestroy {
 
+  // ── Grid ──────────────────────────────────────────────────────────────────
   rowData: DesignationResponseDto[] = [];
   columnDefs: ColDef[] = [];
+  private gridApi: GridApi | undefined;
 
   defaultColDef: ColDef = {
     sortable: true,
     filter: true,
     resizable: true,
     flex: 1,
-    minWidth: 100
+    minWidth: 100,
   };
 
   gridOptions: GridOptions = {
     pagination: false,
     domLayout: 'autoHeight',
-    rowSelection: 'single',           
-    suppressRowClickSelection: true,   
+    rowSelection: 'single',
+    suppressRowClickSelection: true,
     suppressCellFocus: true,
+    animateRows: true,
+    enableBrowserTooltips: true,
+    rowHeight: 60,
+    headerHeight: 50,
+
     onCellClicked: (event: any) => {
       const target = event.event?.target as HTMLElement;
       if (!target) return;
 
       const actionBtn = target.closest
-        ? target.closest('[data-action]') as HTMLElement | null
+        ? (target.closest('[data-action]') as HTMLElement | null)
         : null;
 
       const action = actionBtn?.getAttribute('data-action');
@@ -70,22 +88,20 @@ export class DesignationListComponent implements OnInit {
           this.deleteDesignation(designation);
           break;
       }
-    }
+    },
   };
 
-  // Filter
+  // ── Filter / Pagination ───────────────────────────────────────────────────
   searchTerm = '';
-
-  // Pagination
   currentPage = 1;
   pageSize = 10;
   totalCount = 0;
   totalPages = 0;
 
-  // Loading
+  // ── Loading ───────────────────────────────────────────────────────────────
   isLoading = false;
 
-  // Modal
+  // ── Modal ─────────────────────────────────────────────────────────────────
   isModalOpen = false;
   isEditMode = false;
   isLoadingForm = false;
@@ -99,33 +115,36 @@ export class DesignationListComponent implements OnInit {
     private router: Router
   ) {}
 
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.initializeForm();
     this.initializeGrid();
     this.loadDesignations();
   }
 
+  ngOnDestroy(): void {
+    this.gridApi = undefined;
+  }
+
+  // ── Form Setup ────────────────────────────────────────────────────────────
   initializeForm(): void {
     this.designationForm = this.fb.group({
-      designationCode: ['', [
-        Validators.required,
-        Validators.maxLength(50),
-        Validators.pattern(/^[A-Z0-9\-_]+$/)
-      ]],
-      designationName: ['', [
-        Validators.required,
-        Validators.maxLength(100)
-      ]],
+      designationCode: [
+        '',
+        [
+          Validators.required,
+          Validators.maxLength(50),
+          Validators.pattern(/^[A-Z0-9\-_]+$/),
+        ],
+      ],
+      designationName: ['', [Validators.required, Validators.maxLength(100)]],
       description: ['', [Validators.maxLength(500)]],
-      level: [1, [
-        Validators.required,
-        Validators.min(1),
-        Validators.max(100)
-      ]],
-      isActive: [true]
+      level: [1, [Validators.required, Validators.min(1), Validators.max(100)]],
+      isActive: [true],
     });
   }
 
+  // ── Grid Setup ────────────────────────────────────────────────────────────
   initializeGrid(): void {
     this.columnDefs = [
       {
@@ -139,7 +158,7 @@ export class DesignationListComponent implements OnInit {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          overflow: 'visible'         
+          overflow: 'visible',
         },
         cellRenderer: (params: ICellRendererParams) => {
           const isActive = params.data?.isActive;
@@ -148,25 +167,19 @@ export class DesignationListComponent implements OnInit {
           const toggleColor = isActive ? '#854d0e' : '#166534';
           return `
             <div style="display:flex;gap:0.4rem;align-items:center;height:100%;pointer-events:all;">
-              <button
-                data-action="edit"
-                title="Edit"
+              <button data-action="edit" title="Edit"
                 style="width:2rem;height:2rem;border:none;border-radius:0.375rem;
                        cursor:pointer;display:flex;align-items:center;justify-content:center;
                        background:#fef3c7;color:#92400e;font-size:0.875rem;pointer-events:all;">
                 <i class="bi bi-pencil" style="pointer-events:none;"></i>
               </button>
-              <button
-                data-action="toggle"
-                title="${toggleTitle}"
+              <button data-action="toggle" title="${toggleTitle}"
                 style="width:2rem;height:2rem;border:none;border-radius:0.375rem;
                        cursor:pointer;display:flex;align-items:center;justify-content:center;
                        background:${toggleBg};color:${toggleColor};font-size:0.875rem;pointer-events:all;">
                 <i class="bi bi-power" style="pointer-events:none;"></i>
               </button>
-              <button
-                data-action="delete"
-                title="Delete"
+              <button data-action="delete" title="Delete"
                 style="width:2rem;height:2rem;border:none;border-radius:0.375rem;
                        cursor:pointer;display:flex;align-items:center;justify-content:center;
                        background:#fee2e2;color:#991b1b;font-size:0.875rem;pointer-events:all;">
@@ -174,7 +187,7 @@ export class DesignationListComponent implements OnInit {
               </button>
             </div>
           `;
-        }
+        },
       },
       {
         headerName: 'CODE',
@@ -185,20 +198,20 @@ export class DesignationListComponent implements OnInit {
             ? `<span style="font-family:'Monaco','Courier New',monospace;background:#f1f5f9;
                              padding:0.3rem 0.65rem;border-radius:0.375rem;font-size:0.85rem;
                              font-weight:600;color:#334155;">${params.value}</span>`
-            : '—'
+            : '—',
       },
       {
         headerName: 'DESIGNATION NAME',
         field: 'designationName',
         width: 260,
-        cellStyle: { fontWeight: '500', color: '#1e293b' }
+        cellStyle: { fontWeight: '500', color: '#1e293b' },
       },
       {
         headerName: 'DESCRIPTION',
         field: 'description',
         flex: 1,
         minWidth: 200,
-        cellRenderer: (params: ICellRendererParams) => params.value || '—'
+        cellRenderer: (params: ICellRendererParams) => params.value || '—',
       },
       {
         headerName: 'LEVEL',
@@ -210,7 +223,7 @@ export class DesignationListComponent implements OnInit {
                         padding:0.3rem 0.65rem;border-radius:0.375rem;font-size:0.8rem;
                         font-weight:600;background:#dbeafe;color:#1e40af;">
              ${params.value ?? '—'}
-           </span>`
+           </span>`,
       },
       {
         headerName: 'EMPLOYEES',
@@ -222,33 +235,33 @@ export class DesignationListComponent implements OnInit {
                         padding:0.3rem 0.65rem;border-radius:0.375rem;font-size:0.8rem;
                         font-weight:600;background:#e0e7ff;color:#3730a3;">
              ${params.value ?? 0}
-           </span>`
+           </span>`,
       },
       {
         headerName: 'STATUS',
         field: 'isActive',
         width: 120,
         cellRenderer: StatusCellRendererComponent,
-        cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' }
+        cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
       },
       {
         headerName: 'CREATED',
         field: 'createdAt',
         width: 145,
-        valueFormatter: (params: any) => {
-          if (!params.value) return '—';
-          return new Date(params.value).toLocaleDateString('en-US', {
-            month: 'short', day: 'numeric', year: 'numeric'
-          });
-        }
-      }
+        // ✅ Using shared dateFormatter helper
+        valueFormatter: dateFormatter,
+      },
     ];
   }
 
+  // ── Grid Ready ────────────────────────────────────────────────────────────
   onGridReady(params: GridReadyEvent): void {
-    params.api.sizeColumnsToFit();
+    this.gridApi = params.api;
+    // ✅ Auto-size columns on ready using helper
+    autoSizeAll(this.gridApi);
   }
 
+  // ── Data Loading ──────────────────────────────────────────────────────────
   loadDesignations(): void {
     this.isLoading = true;
 
@@ -257,7 +270,7 @@ export class DesignationListComponent implements OnInit {
       pageNumber: this.currentPage,
       pageSize: this.pageSize,
       sortBy: 'createdAt',
-      sortDescending: true
+      sortDescending: true,
     };
 
     this.designationService.getFilteredDesignations(filter).subscribe({
@@ -273,10 +286,12 @@ export class DesignationListComponent implements OnInit {
           this.totalPages = Math.ceil(this.totalCount / this.pageSize);
         }
 
+        // ✅ Refresh grid cells after data update using helper
+        refreshGrid(this.gridApi);
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('❌ Error loading designations:', error);
+        console.error('Error loading designations:', error);
         let msg = 'Failed to load designations. ';
         if (error.status === 0)        msg += 'Cannot connect to the server.';
         else if (error.status === 401) msg += 'Unauthorized. Please login again.';
@@ -288,18 +303,24 @@ export class DesignationListComponent implements OnInit {
         this.rowData = [];
         this.totalCount = 0;
         this.totalPages = 0;
-      }
+      },
     });
   }
 
+  // ── Search ────────────────────────────────────────────────────────────────
   onSearchChange(): void {
     this.currentPage = 1;
+    // ✅ Apply quick filter via helper for instant client-side filtering feedback
+    applyQuickFilter(this.gridApi, this.searchTerm);
+    // Then reload from server
     this.loadDesignations();
   }
 
   clearFilters(): void {
     this.searchTerm = '';
     this.currentPage = 1;
+    // ✅ Clear all AG Grid filters using helper
+    clearAllFilters(this.gridApi);
     this.loadDesignations();
   }
 
@@ -307,36 +328,18 @@ export class DesignationListComponent implements OnInit {
     this.loadDesignations();
   }
 
+  // ── Export ────────────────────────────────────────────────────────────────
   exportData(): void {
     if (this.rowData.length === 0) {
       Swal.fire('No Data', 'There is no data to export.', 'info');
       return;
     }
 
-    const headers = ['Code', 'Name', 'Description', 'Level', 'Employees', 'Status', 'Created'];
-    const rows = this.rowData.map(d => [
-      d.designationCode,
-      d.designationName,
-      d.description ?? '',
-      d.level,
-      d.employeeCount,
-      d.isActive ? 'Active' : 'Inactive',
-      d.createdAt ? new Date(d.createdAt).toLocaleDateString('en-US') : ''
-    ]);
-
-    const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `designations_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    // ✅ Use AG Grid's built-in CSV export helper (excludes 'actions' column automatically)
+    exportToCsv(this.gridApi, 'designations');
   }
 
+  // ── Modal ─────────────────────────────────────────────────────────────────
   openCreateModal(): void {
     this.isModalOpen = true;
     this.isEditMode = false;
@@ -346,13 +349,16 @@ export class DesignationListComponent implements OnInit {
       designationName: '',
       description: '',
       level: 1,
-      isActive: true
+      isActive: true,
     });
   }
 
   openEditModal(designation: DesignationResponseDto): void {
-   
-    const id = designation.designationId || (designation as any).id || (designation as any).Id;
+    const id =
+      designation.designationId ||
+      (designation as any).id ||
+      (designation as any).Id;
+
     if (!id) {
       Swal.fire('Error', 'Could not determine designation ID.', 'error');
       return;
@@ -371,14 +377,14 @@ export class DesignationListComponent implements OnInit {
           designationName: data.designationName,
           description: data.description || '',
           level: data.level,
-          isActive: data.isActive
+          isActive: data.isActive,
         });
         this.isLoadingForm = false;
       },
       error: () => {
         Swal.fire('Error', 'Failed to load designation details.', 'error');
         this.closeModal();
-      }
+      },
     });
   }
 
@@ -393,10 +399,11 @@ export class DesignationListComponent implements OnInit {
       designationName: '',
       description: '',
       level: 1,
-      isActive: true
+      isActive: true,
     });
   }
 
+  // ── Submit ────────────────────────────────────────────────────────────────
   onSubmit(): void {
     if (this.designationForm.invalid) {
       this.markFormGroupTouched(this.designationForm);
@@ -408,23 +415,25 @@ export class DesignationListComponent implements OnInit {
     const formValue = this.designationForm.value;
 
     if (this.isEditMode && this.selectedDesignationId) {
-      this.designationService.updateDesignation(this.selectedDesignationId, formValue).subscribe({
-        next: () => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Updated!',
-            text: 'Designation updated successfully.',
-            timer: 1500,
-            showConfirmButton: false
-          });
-          this.closeModal();
-          this.loadDesignations();
-        },
-        error: (error) => {
-          Swal.fire('Error', error.error?.message || 'Failed to update designation.', 'error');
-          this.isSubmitting = false;
-        }
-      });
+      this.designationService
+        .updateDesignation(this.selectedDesignationId, formValue)
+        .subscribe({
+          next: () => {
+            Swal.fire({
+              icon: 'success',
+              title: 'Updated!',
+              text: 'Designation updated successfully.',
+              timer: 1500,
+              showConfirmButton: false,
+            });
+            this.closeModal();
+            this.loadDesignations();
+          },
+          error: (error) => {
+            Swal.fire('Error', error.error?.message || 'Failed to update designation.', 'error');
+            this.isSubmitting = false;
+          },
+        });
     } else {
       this.designationService.createDesignation(formValue).subscribe({
         next: () => {
@@ -433,7 +442,7 @@ export class DesignationListComponent implements OnInit {
             title: 'Created!',
             text: 'Designation created successfully.',
             timer: 1500,
-            showConfirmButton: false
+            showConfirmButton: false,
           });
           this.closeModal();
           this.loadDesignations();
@@ -441,13 +450,13 @@ export class DesignationListComponent implements OnInit {
         error: (error) => {
           Swal.fire('Error', error.error?.message || 'Failed to create designation.', 'error');
           this.isSubmitting = false;
-        }
+        },
       });
     }
   }
 
+  // ── Toggle Status ─────────────────────────────────────────────────────────
   toggleStatus(designation: DesignationResponseDto): void {
-    
     const action = designation.isActive ? 'deactivate' : 'activate';
     const actionLabel = action.charAt(0).toUpperCase() + action.slice(1);
     const id = designation.designationId || (designation as any).id;
@@ -464,7 +473,7 @@ export class DesignationListComponent implements OnInit {
       showCancelButton: true,
       confirmButtonColor: '#3b82f6',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: `Yes, ${action} it!`
+      confirmButtonText: `Yes, ${action} it!`,
     }).then((result) => {
       if (result.isConfirmed) {
         this.designationService.toggleDesignationStatus(id).subscribe({
@@ -474,18 +483,19 @@ export class DesignationListComponent implements OnInit {
               title: 'Success!',
               text: `Designation ${action}d successfully.`,
               timer: 1500,
-              showConfirmButton: false
+              showConfirmButton: false,
             });
             this.loadDesignations();
           },
           error: (error) => {
             Swal.fire('Error', error.error?.message || 'Failed to toggle status.', 'error');
-          }
+          },
         });
       }
     });
   }
 
+  // ── Delete ────────────────────────────────────────────────────────────────
   deleteDesignation(designation: DesignationResponseDto): void {
     const id = designation.designationId || (designation as any).id;
 
@@ -510,7 +520,7 @@ export class DesignationListComponent implements OnInit {
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, delete it!'
+      confirmButtonText: 'Yes, delete it!',
     }).then((result) => {
       if (result.isConfirmed) {
         this.designationService.deleteDesignation(id).subscribe({
@@ -520,7 +530,7 @@ export class DesignationListComponent implements OnInit {
               title: 'Deleted!',
               text: 'Designation has been deleted.',
               timer: 1500,
-              showConfirmButton: false
+              showConfirmButton: false,
             });
 
             if (this.rowData.length === 1 && this.currentPage > 1) {
@@ -530,14 +540,15 @@ export class DesignationListComponent implements OnInit {
           },
           error: (error) => {
             Swal.fire('Error', error.error?.message || 'Failed to delete designation.', 'error');
-          }
+          },
         });
       }
     });
   }
 
+  // ── Helpers ───────────────────────────────────────────────────────────────
   private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
+    Object.keys(formGroup.controls).forEach((key) => {
       const control = formGroup.get(key);
       control?.markAsTouched();
       control?.markAsDirty();
@@ -557,10 +568,8 @@ export class DesignationListComponent implements OnInit {
       return `Maximum ${control.errors?.['maxlength'].requiredLength} characters allowed`;
     if (control?.hasError('pattern'))
       return 'Only uppercase letters, numbers, hyphens, and underscores are allowed';
-    if (control?.hasError('min'))
-      return 'Minimum value is 1';
-    if (control?.hasError('max'))
-      return 'Maximum value is 100';
+    if (control?.hasError('min')) return 'Minimum value is 1';
+    if (control?.hasError('max'))  return 'Maximum value is 100';
     return '';
   }
 
@@ -568,12 +577,13 @@ export class DesignationListComponent implements OnInit {
     const labels: { [key: string]: string } = {
       designationCode: 'Designation Code',
       designationName: 'Designation Name',
-      description: 'Description',
-      level: 'Level'
+      description:     'Description',
+      level:           'Level',
     };
     return labels[fieldName] || fieldName;
   }
 
+  // ── Pagination ────────────────────────────────────────────────────────────
   onPageChange(page: number): void {
     if (page < 1 || page > this.totalPages) return;
     this.currentPage = page;

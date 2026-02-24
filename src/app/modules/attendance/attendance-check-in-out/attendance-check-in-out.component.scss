@@ -1,0 +1,263 @@
+// attendance-check-in-out.component.scss
+
+.checkinout-container {
+  padding: 1.5rem;
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  // ---- Header ----
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .page-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0;
+      i { color: #6366f1; margin-right: 0.5rem; }
+    }
+    .page-subtitle { font-size: 0.9rem; color: #64748b; margin: 0.2rem 0 0; }
+
+    .live-clock .clock-time {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #6366f1;
+      letter-spacing: 0.05em;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  // ---- Status Banner ----
+  .status-banner {
+    border-radius: 1rem;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    border: 1.5px solid transparent;
+
+    &.present  { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-color: #86efac; }
+    &.absent   { background: linear-gradient(135deg, #fff5f5, #fee2e2); border-color: #fca5a5; }
+    &.halfday  { background: linear-gradient(135deg, #fffbeb, #fef3c7); border-color: #fde68a; }
+    &.leave    { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-color: #93c5fd; }
+    &.wfh      { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-color: #c4b5fd; }
+    &.holiday, &.weekoff { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-color: #cbd5e1; }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      .status-icon {
+        width: 3.5rem; height: 3.5rem;
+        border-radius: 50%;
+        background: rgba(99, 102, 241, 0.12);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem; color: #6366f1;
+      }
+
+      h2 { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0 0 0.3rem; }
+    }
+
+    .status-badge {
+      display: inline-flex; align-items: center;
+      padding: 0.25rem 0.8rem; border-radius: 2rem;
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+
+      &.present  { background: #dcfce7; color: #14532d; }
+      &.absent   { background: #fee2e2; color: #7f1d1d; }
+      &.halfday  { background: #fef9c3; color: #854d0e; }
+      &.leave    { background: #dbeafe; color: #1e40af; }
+      &.wfh      { background: #ede9fe; color: #5b21b6; }
+      &.holiday, &.weekoff { background: #f1f5f9; color: #475569; }
+    }
+
+    .time-pills {
+      display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+
+      .time-pill {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 0.65rem 1rem;
+        border: 1px solid #e2e8f0;
+        display: flex; flex-direction: column; align-items: center;
+        min-width: 90px; text-align: center;
+
+        i { font-size: 0.9rem; color: #6366f1; margin-bottom: 0.25rem; }
+        .label { font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; }
+        .value { font-size: 1rem; font-weight: 800; color: #0f172a; margin-top: 0.15rem; }
+        .late-tag {
+          background: #fef3c7; color: #92400e;
+          font-size: 0.68rem; font-weight: 700;
+          padding: 0.1rem 0.5rem; border-radius: 1rem; margin-top: 0.2rem;
+        }
+
+        &.accent { border-color: #c4b5fd; background: #f5f3ff; }
+      }
+
+      .time-divider { color: #94a3b8; font-size: 0.85rem; }
+    }
+  }
+
+  // ---- Action Panel ----
+  .action-panel {
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+
+    .panel-body { padding: 1.5rem; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      @media (max-width: 600px) { grid-template-columns: 1fr; }
+    }
+
+    .form-group {
+      display: flex; flex-direction: column; gap: 0.4rem;
+
+      label {
+        font-size: 0.82rem; font-weight: 700; color: #374151;
+        i { margin-right: 0.4rem; color: #6366f1; }
+      }
+
+      select, input[type='text'] {
+        padding: 0.6rem 0.85rem;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+        color: #1e293b;
+        background: white;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+
+        &:focus {
+          border-color: #6366f1;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+      }
+    }
+
+    .location-badge {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.6rem 0.85rem;
+      border-radius: 0.5rem;
+      font-size: 0.82rem; font-weight: 500;
+      border: 1.5px solid;
+
+      &.loading  { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+      &.granted  { background: #f0fdf4; border-color: #86efac; color: #14532d; }
+      &.denied   { background: #fff5f5; border-color: #fca5a5; color: #7f1d1d; }
+      &.idle     { background: #f8fafc; border-color: #e2e8f0; color: #64748b; }
+
+      .retry-btn {
+        margin-left: auto; background: none; border: none;
+        font-size: 0.78rem; font-weight: 700; color: #6366f1;
+        cursor: pointer; text-decoration: underline;
+      }
+    }
+
+    .action-buttons {
+      display: flex; gap: 1rem; margin-top: 1.5rem;
+      padding-top: 1.25rem; border-top: 1px solid #f1f5f9;
+
+      .btn {
+        flex: 1;
+        padding: 0.85rem 1.5rem;
+        border-radius: 0.75rem;
+        font-size: 1rem; font-weight: 700;
+        border: none; cursor: pointer;
+        transition: all 0.2s;
+        display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+
+        &:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        &.btn-checkin {
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35);
+          }
+        }
+
+        &.btn-checkout {
+          background: linear-gradient(135deg, #6366f1, #4f46e5);
+          color: white;
+          &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+          }
+        }
+
+        .btn-loading {
+          display: flex; align-items: center; gap: 0.5rem;
+          .btn-spinner {
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+          }
+        }
+      }
+    }
+  }
+
+  // ---- Done Card ----
+  .done-card {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border: 1.5px solid #86efac;
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+
+    .done-icon { font-size: 3rem; color: #10b981; margin-bottom: 0.75rem; }
+    h3 { font-size: 1.3rem; font-weight: 800; color: #0f172a; margin: 0 0 0.5rem; }
+    p { color: #64748b; margin: 0 0 1.5rem; }
+
+    .done-stats {
+      display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;
+
+      .done-stat {
+        display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+
+        .stat-val {
+          font-size: 1.5rem; font-weight: 800; color: #0f172a;
+          &.accent { color: #6366f1; }
+          &.present { color: #10b981; }
+          &.halfday { color: #f59e0b; }
+          &.absent  { color: #ef4444; }
+        }
+        .stat-lbl { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+      }
+    }
+  }
+
+  // ---- Loading ----
+  .loading-state {
+    text-align: center; padding: 3rem;
+    .spinner {
+      width: 2.5rem; height: 2.5rem;
+      border: 3px solid #e2e8f0;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      margin: 0 auto 0.75rem;
+      animation: spin 0.8s linear infinite;
+    }
+    p { color: #64748b; }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+}

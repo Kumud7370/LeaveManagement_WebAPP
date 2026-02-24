@@ -1,246 +1,138 @@
+<!-- attendance-list.component.html -->
 <div class="attendance-list-container">
+
   <!-- Header -->
   <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Attendance Management</h1>
-      <p class="page-subtitle">Track and manage employee attendance records</p>
+    <div class="header-left">
+      <h1 class="page-title">
+        <i class="fas fa-calendar-check"></i> Attendance Management
+      </h1>
+      <p class="page-subtitle">View, manage, and approve employee attendance records</p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-primary" (click)="addManualAttendance()">
-        <i class="fas fa-plus-circle"></i>
-        Mark Attendance
+      <button class="btn btn-secondary" (click)="loadAttendance()">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+      <button class="btn btn-export" (click)="exportData()">
+        <i class="fas fa-download"></i> Export
+      </button>
+      <button class="btn btn-primary" (click)="openCreateForm()">
+        <i class="fas fa-plus"></i> Mark Attendance
       </button>
     </div>
   </div>
 
-  <!-- Search and Action Bar -->
-  <div class="search-action-section">
-    <div class="search-bar">
-      <input
-        type="text"
-        placeholder="Search by employee ID..."
-        [(ngModel)]="filter.employeeId"
-        (keyup)="onSearchChange()"
-        class="search-input"
-      />
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card stat-present">
+      <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+      <div class="stat-body">
+        <span class="stat-count">{{ getStatCount('Present') }}</span>
+        <span class="stat-label">Present</span>
+      </div>
     </div>
-
-    <button class="btn btn-outline" (click)="toggleFilter()">
-      <i class="fas fa-filter"></i>
-      {{ isFilterVisible ? 'Hide Filters' : 'Show Filters' }}
-    </button>
-
-    <button class="btn btn-clear" (click)="clearSearch()">
-      <i class="fas fa-times"></i>
-      Clear
-    </button>
-
-    <button class="btn btn-refresh" (click)="loadAttendance()">
-      <i class="fas fa-sync-alt"></i>
-      Refresh
-    </button>
+    <div class="stat-card stat-absent">
+      <div class="stat-icon"><i class="fas fa-user-times"></i></div>
+      <div class="stat-body">
+        <span class="stat-count">{{ getStatCount('Absent') }}</span>
+        <span class="stat-label">Absent</span>
+      </div>
+    </div>
+    <div class="stat-card stat-halfday">
+      <div class="stat-icon"><i class="fas fa-adjust"></i></div>
+      <div class="stat-body">
+        <span class="stat-count">{{ getStatCount('HalfDay') }}</span>
+        <span class="stat-label">Half Day</span>
+      </div>
+    </div>
+    <div class="stat-card stat-leave">
+      <div class="stat-icon"><i class="fas fa-plane-departure"></i></div>
+      <div class="stat-body">
+        <span class="stat-count">{{ getStatCount('Leave') }}</span>
+        <span class="stat-label">On Leave</span>
+      </div>
+    </div>
   </div>
 
-  <!-- Advanced Filters -->
-  <div class="advanced-filters" *ngIf="isFilterVisible">
-    <div class="filter-grid">
-      <div class="filter-item">
-        <label>Start Date</label>
+  <!-- Content -->
+  <div class="content-wrapper" [class.sidebar-open]="showDetails">
+    <!-- Grid Panel -->
+    <div class="grid-panel">
+      <!-- Filter Bar -->
+      <div class="filter-bar">
         <input
-          type="date"
-          [(ngModel)]="filter.startDate"
-          (change)="applyFilter()"
-          class="filter-select"
+          type="text"
+          class="filter-input"
+          placeholder="Employee ID..."
+          [(ngModel)]="searchEmployeeId"
+          (keyup.enter)="loadAttendance()"
         />
-      </div>
-
-      <div class="filter-item">
-        <label>End Date</label>
-        <input
-          type="date"
-          [(ngModel)]="filter.endDate"
-          (change)="applyFilter()"
-          class="filter-select"
-        />
-      </div>
-
-      <div class="filter-item">
-        <label>Status</label>
-        <select
-          [(ngModel)]="filter.status"
-          (change)="applyFilter()"
-          class="filter-select"
-        >
-          <option [ngValue]="undefined">All Statuses</option>
-          <option *ngFor="let option of attendanceStatusOptions" [ngValue]="option.value">
-            {{ option.label }}
-          </option>
+        <input type="date" class="filter-input date-input" [(ngModel)]="startDate" (change)="loadAttendance()" />
+        <input type="date" class="filter-input date-input" [(ngModel)]="endDate" (change)="loadAttendance()" />
+        <select class="filter-select" [(ngModel)]="selectedStatus" (change)="loadAttendance()">
+          <option value="">All Statuses</option>
+          <option [value]="AttendanceStatus.Present">Present</option>
+          <option [value]="AttendanceStatus.Absent">Absent</option>
+          <option [value]="AttendanceStatus.HalfDay">Half Day</option>
+          <option [value]="AttendanceStatus.Leave">Leave</option>
+          <option [value]="AttendanceStatus.Holiday">Holiday</option>
+          <option [value]="AttendanceStatus.WeekOff">Week Off</option>
+          <option [value]="AttendanceStatus.WorkFromHome">WFH</option>
         </select>
+        <button class="btn btn-sm btn-clear" (click)="onClearFilters()">
+          <i class="fas fa-times"></i> Clear
+        </button>
+        <span class="result-count">{{ rowData.length }} records</span>
       </div>
 
-      <div class="filter-item">
-        <label>Check-In Method</label>
-        <select
-          [(ngModel)]="filter.checkInMethod"
-          (change)="applyFilter()"
-          class="filter-select"
-        >
-          <option [ngValue]="undefined">All Methods</option>
-          <option *ngFor="let option of checkInMethodOptions" [ngValue]="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-      </div>
-
-      <div class="filter-item filter-checkbox-item">
-        <label class="checkbox-label">
-          <input
-            type="checkbox"
-            [(ngModel)]="filter.isLate"
-            (change)="applyFilter()"
-          />
-          Show Late Only
-        </label>
-      </div>
-
-      <div class="filter-item filter-checkbox-item">
-        <label class="checkbox-label">
-          <input
-            type="checkbox"
-            [(ngModel)]="filter.isEarlyLeave"
-            (change)="applyFilter()"
-          />
-          Show Early Leave Only
-        </label>
+      <!-- Grid -->
+      <div class="grid-wrapper ag-theme-quartz">
+        <div *ngIf="loading" class="grid-loading">
+          <div class="spinner"></div><p>Loading attendance...</p>
+        </div>
+        <ag-grid-angular
+          *ngIf="!loading"
+          [rowData]="rowData"
+          [columnDefs]="columnDefs"
+          [gridOptions]="gridOptions"
+          (gridReady)="onGridReady($event)"
+          style="width:100%;height:100%;"
+        ></ag-grid-angular>
       </div>
     </div>
 
-    <button class="btn btn-text" (click)="resetFilter()">
-      <i class="fas fa-redo"></i>
-      Reset All Filters
-    </button>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading attendance records...</p>
-  </div>
-
-  <!-- Error State -->
-  <div *ngIf="error && !isLoading" class="error-state">
-    <i class="fas fa-exclamation-circle"></i>
-    <p>{{ error }}</p>
-    <button class="btn btn-outline" (click)="loadAttendance()">
-      <i class="fas fa-redo"></i>
-      Try Again
-    </button>
-  </div>
-
-  <!-- AG Grid -->
-  <div *ngIf="!isLoading && !error" class="grid-container">
-    <!-- Empty State -->
-    <div *ngIf="rowData.length === 0" class="empty-state">
-      <i class="fas fa-calendar-times"></i>
-      <h3>No attendance records found</h3>
-      <p>Try adjusting your filters or mark attendance for today</p>
-      <button class="btn btn-primary" (click)="addManualAttendance()">
-        <i class="fas fa-plus-circle"></i>
-        Mark Attendance
-      </button>
-    </div>
-
-    <ag-grid-angular
-      *ngIf="rowData.length > 0"
-      class="ag-theme-quartz"
-      [rowData]="rowData"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      [gridOptions]="gridOptions"
-      (gridReady)="onGridReady($event)"
-      [rowHeight]="60"
-      [headerHeight]="50"
-      [domLayout]="'autoHeight'"
-    >
-    </ag-grid-angular>
-  </div>
-
-  <!-- Pagination -->
-  <div *ngIf="!isLoading && rowData.length > 0" class="pagination-container">
-    <div class="pagination-info">
-      Showing {{ (currentPage - 1) * pageSize + 1 }} to
-      {{ Math.min(currentPage * pageSize, totalItems) }} of
-      {{ totalItems }} records
-    </div>
-
-    <div class="pagination-controls">
-      <select
-        [(ngModel)]="pageSize"
-        (change)="onPageSizeChanged(pageSize)"
-        class="page-size-select"
-      >
-        <option [value]="10">10 per page</option>
-        <option [value]="20">20 per page</option>
-        <option [value]="50">50 per page</option>
-        <option [value]="100">100 per page</option>
-      </select>
-
-      <div class="pagination-buttons">
-        <button class="btn-page" [disabled]="currentPage === 1" (click)="goToPage(1)">
-          <i class="fas fa-angle-double-left"></i>
-        </button>
-        <button class="btn-page" [disabled]="currentPage === 1" (click)="previousPage()">
-          <i class="fas fa-angle-left"></i>
-        </button>
-
-        <button
-          *ngFor="let page of pages"
-          class="btn-page"
-          [class.active]="page === currentPage"
-          (click)="goToPage(page)"
-        >
-          {{ page }}
-        </button>
-
-        <button class="btn-page" [disabled]="currentPage === totalPages" (click)="nextPage()">
-          <i class="fas fa-angle-right"></i>
-        </button>
-        <button class="btn-page" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">
-          <i class="fas fa-angle-double-right"></i>
+    <!-- Sidebar: Details -->
+    <div class="sidebar-panel" *ngIf="showDetails">
+      <div class="sidebar-header">
+        <h3>Attendance Details</h3>
+        <button class="close-btn" (click)="onSidebarClose()">
+          <i class="fas fa-times"></i>
         </button>
       </div>
+      <app-attendance-details
+        *ngIf="showDetails && selectedAttendanceId"
+        [attendanceId]="selectedAttendanceId"
+        (recordUpdated)="onRecordUpdated()"
+      ></app-attendance-details>
     </div>
   </div>
+
 </div>
 
-<!-- Modal: Attendance Form -->
-<div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+<!-- Manual Attendance Form Modal -->
+<div class="modal-overlay" *ngIf="showForm" (click)="onSidebarClose()">
   <div class="modal-container" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="closeFormModal()">
+    <button class="modal-close" (click)="onSidebarClose()">
       <i class="fas fa-times"></i>
     </button>
-    <app-attendance-form
-      [isModal]="true"
-      [attendanceId]="selectedAttendanceId"
-      [isEditMode]="formMode === 'edit'"
-      (formCancelled)="closeFormModal()"
-      (formSubmitted)="onFormSuccess()"
-    ></app-attendance-form>
-  </div>
-</div>
-
-<!-- Modal: Attendance Details -->
-<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
-  <div class="modal-container modal-container-large" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="closeDetailsModal()">
-      <i class="fas fa-times"></i>
-    </button>
-    <app-attendance-details
-      [isModal]="true"
-      [attendanceId]="selectedAttendanceId"
-      (modalClosed)="closeDetailsModal()"
-      (editRequested)="onEditFromDetails($event)"
-      (deleteRequested)="onDeleteFromDetails($event)"
-    ></app-attendance-details>
+    <div class="modal-header">
+      <h2>{{ editingRecord ? 'Edit Attendance' : 'Mark Manual Attendance' }}</h2>
+      <p>{{ editingRecord ? 'Update the attendance record below' : 'Manually record attendance for an employee' }}</p>
+    </div>
+    <app-manual-attendance-form
+      [existingRecord]="editingRecord"
+      (saved)="onRecordSaved()"
+      (cancelled)="onSidebarClose()"
+    ></app-manual-attendance-form>
   </div>
 </div>
