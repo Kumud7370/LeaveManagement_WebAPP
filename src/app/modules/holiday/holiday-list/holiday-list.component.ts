@@ -1,394 +1,820 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+// holiday-list.component.ts
+
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ViewChild,
+  OnInit,
+  ElementRef,
+  ChangeDetectorRef,
+  ViewEncapsulation
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
-import { AgGridModule } from 'ag-grid-angular';
-import { ColDef, GridApi, GridReadyEvent, GridOptions } from 'ag-grid-community';
-import { Subject, takeUntil } from 'rxjs';
+import { AgGridAngular } from 'ag-grid-angular';
+import {
+  GridApi,
+  GridReadyEvent,
+  ColDef,
+  ModuleRegistry,
+  AllCommunityModule,
+  SortChangedEvent,
+  FilterChangedEvent
+} from 'ag-grid-community';
 import Swal from 'sweetalert2';
 import { HolidayService } from '../../../core/services/api/holiday.api';
-import { Holiday, HolidayFilterDto } from '../../../core/Models/holiday.model';
+import { DepartmentService } from '../../../core/services/api/department.api';
+import {
+  Holiday,
+  CreateHolidayDto,
+  UpdateHolidayDto,
+  HolidayFilterDto,
+  HolidayType
+} from '../../../core/Models/holiday.model';
 import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
-import { HolidayFormComponent } from '../holiday-form/holiday-form.component';
+import {
+  dateTimeFormatter,
+  exportToCsv,
+  clearAllFilters,
+  refreshGrid,
+  getActiveFiltersSummary
+} from '../../../utils/ag-grid-helpers';
+
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 @Component({
   selector: 'app-holiday-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, AgGridModule, HolidayFormComponent, ActionCellRendererComponent],
   templateUrl: './holiday-list.component.html',
-  styleUrls: ['./holiday-list.component.scss']
+  styleUrls: ['./holiday-list.component.scss'],
+  encapsulation: ViewEncapsulation.None,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    AgGridAngular,
+  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class HolidayListComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-  private gridApi!: GridApi;
+export class HolidayListComponent implements OnInit {
 
-  holidays: Holiday[] = [];
-  searchTerm = '';
-  totalRecords = 0;
-  currentPage = 1;
-  pageSize = 10;
+  @ViewChild('agGrid', { read: ElementRef })
+  agGridElement!: ElementRef<HTMLElement>;
 
-  isLoading = false;
-  showModal = false;
-  modalMode: 'create' | 'edit' | 'view' = 'create';
-  selectedHoliday: Holiday | null = null;
+  // ─── Grid state ──────────────────────────────────────────────────────────
+  rowData: any[] = [];
+  gridApi!: GridApi;
+  searchTerm: string = '';
 
-  readonly columnDefs: ColDef[] = [
+  // ─── Modal state ──────────────────────────────────────────────────────────
+  isModalOpen: boolean = false;
+  modalMode: 'add' | 'edit' | 'view' = 'add';
+  selectedHoliday: any = null;
+
+  // ─── Form ─────────────────────────────────────────────────────────────────
+  holidayForm!: FormGroup;
+  isSubmitting: boolean = false;
+  formSubmitAttempted: boolean = false;
+
+  // ─── Departments ──────────────────────────────────────────────────────────
+  departments: any[] = [];
+  isLoadingDepartments: boolean = false;
+  private selectedDepartmentSet = new Set<string>();
+
+  // ─── Pagination ───────────────────────────────────────────────────────────
+  currentPage: number = 1;
+  pageSize: number = 20;
+  totalItems: number = 0;
+  totalPages: number = 0;
+  private isLoadingData: boolean = false;
+  private searchDebounceTimer: any = null;
+  Math = Math;
+
+  // ─── Lookup data ──────────────────────────────────────────────────────────
+  holidayTypes = [
+    { value: HolidayType.National, label: 'National'  },
+    { value: HolidayType.Regional, label: 'Regional'  },
+    { value: HolidayType.Optional, label: 'Optional'  }
+  ];
+
+  stats = { total: 0, upcoming: 0, past: 0 };
+
+  context = { componentParent: this };
+
+  // ─── Grid config ─────────────────────────────────────────────────────────
+  defaultColDef: ColDef = {
+    sortable: true,
+    filter: true,
+    floatingFilter: true,
+    resizable: true,
+    minWidth: 80,
+    suppressSizeToFit: false,
+    suppressAutoSize: false
+  };
+
+  columnDefs: ColDef[] = [
     {
       headerName: 'Actions',
       field: 'actions',
-      cellRenderer: ActionCellRendererComponent,
-      width: 160,
-      pinned: 'left',
+      width: 155,
+      minWidth: 155,
+      maxWidth: 155,
       sortable: false,
-      filter: false
+      filter: false,
+      floatingFilter: false,
+      suppressFloatingFilterButton: true,
+      cellClass: 'actions-cell',
+      cellRenderer: ActionCellRendererComponent,
+      suppressSizeToFit: true
     },
     {
       headerName: 'Holiday Name',
       field: 'holidayName',
-      flex: 1,
-      minWidth: 200,
-      sortable: true,
-      filter: true
+      width: 220,
+      minWidth: 180,
+      cellStyle: { fontWeight: '600', color: '#1f2937' },
+      cellRenderer: (params: any) => {
+        const val    = params.value || '';
+        const search = params.context?.componentParent?.searchTerm || '';
+        const highlighted = params.context?.componentParent?.highlightText(val, search) || val;
+        return `<span style="font-weight:600;color:#1f2937;">${highlighted}</span>`;
+      }
     },
     {
       headerName: 'Date',
       field: 'holidayDate',
       width: 160,
-      sortable: true,
-      valueFormatter: (p) => this.formatDate(p.value)
+      minWidth: 130,
+      valueFormatter: (params: any) => {
+        if (!params.value) return '';
+        return new Date(params.value).toLocaleDateString('en-GB', {
+          day: '2-digit', month: 'short', year: 'numeric'
+        });
+      },
+      cellStyle: { color: '#374151' }
     },
     {
       headerName: 'Type',
       field: 'holidayTypeName',
       width: 140,
-      sortable: true,
-      filter: true,
-      cellRenderer: (p: any) => {
-        const type: string = p.value ?? '';
-        const cls = type === 'National' ? 'type-national'
-                  : type === 'Regional' ? 'type-regional'
-                  : type === 'Optional' ? 'type-optional'
-                  : 'type-national';
-        return `<span class="type-badge ${cls}">${type}</span>`;
+      minWidth: 120,
+      cellRenderer: (params: any) => {
+        const type: string = params.value ?? '';
+        const cls = type === 'National' ? 'holiday-type-badge hl-type-national'
+                  : type === 'Regional' ? 'holiday-type-badge hl-type-regional'
+                  : type === 'Optional' ? 'holiday-type-badge hl-type-optional'
+                  : 'holiday-type-badge hl-type-national';
+        const search      = params.context?.componentParent?.searchTerm || '';
+        const highlighted = params.context?.componentParent?.highlightText(type, search) || type;
+        return `<span class="${cls}">${highlighted}</span>`;
       }
     },
     {
       headerName: 'Optional',
       field: 'isOptional',
       width: 110,
-      cellRenderer: (p: any) =>
-        p.value
-          ? '<span class="badge badge-warning">Yes</span>'
-          : '<span class="badge badge-info">No</span>'
-    },
-    {
-      headerName: 'Active',
-      field: 'isActive',
-      width: 110,
-      cellRenderer: (p: any) =>
-        p.value
-          ? '<span class="badge badge-success">Active</span>'
-          : '<span class="badge badge-secondary">Inactive</span>'
+      minWidth: 90,
+      cellRenderer: (params: any) => {
+        return params.value
+          ? '<span class="hl-status-badge" style="background:#fef3c7;color:#92400e;">Yes</span>'
+          : '<span class="hl-status-badge" style="background:#dbeafe;color:#1e40af;">No</span>';
+      }
     },
     {
       headerName: 'Departments',
       field: 'applicableDepartments',
-      flex: 1,
+      width: 180,
       minWidth: 140,
-      valueFormatter: (p) =>
-        !p.value || p.value.length === 0
-          ? 'All Departments'
-          : `${p.value.length} Department(s)`
+      cellRenderer: (params: any) => {
+        const depts: any[] = params.value || [];
+        if (depts.length === 0) {
+          return '<span style="color:#9ca3af;font-size:11px;">All Departments</span>';
+        }
+        return `<span style="color:#4338ca;font-size:11px;font-weight:600;">${depts.length} Department(s)</span>`;
+      }
     },
     {
       headerName: 'Days Until',
       field: 'daysUntilHoliday',
       width: 130,
-      sortable: true,
-      cellRenderer: (p: any) => {
-        if (p.data?.isToday) return '<span class="type-badge type-today">Today</span>';
-        if (p.value < 0)      return '<span style="color:#6b7280;">Past</span>';
-        if (p.value <= 7)     return `<span class="type-badge type-regional">${p.value} days</span>`;
-        return `<span>${p.value} days</span>`;
+      minWidth: 100,
+      cellRenderer: (params: any) => {
+        if (params.data?.isToday) {
+          return '<span class="hl-status-badge" style="background:#dcfce7;color:#166534;font-weight:600;">Today</span>';
+        }
+        if (params.value < 0) {
+          return '<span style="color:#9ca3af;font-size:12px;">Past</span>';
+        }
+        if (params.value <= 7) {
+          return `<span class="holiday-type-badge hl-type-regional">${params.value} days</span>`;
+        }
+        return `<span style="color:#374151;">${params.value} days</span>`;
       }
     },
     {
       headerName: 'Status',
       field: 'isUpcoming',
-      width: 130,
-      cellRenderer: (p: any) =>
-        p.value
-          ? '<span class="badge badge-success">Upcoming</span>'
-          : '<span class="badge badge-secondary">Past</span>'
+      width: 120,
+      minWidth: 100,
+      cellRenderer: (params: any) => {
+        const search = params.context?.componentParent?.searchTerm || '';
+        const hl     = (t: string) => params.context?.componentParent?.highlightText(t, search) || t;
+        return params.value
+          ? `<span class="badge-status" style="background:#dcfce7;color:#166534;">${hl('Upcoming')}</span>`
+          : `<span class="badge-status" style="background:#f1f5f9;color:#475569;">${hl('Past')}</span>`;
+      }
     },
     {
-      headerName: 'Created',
+      headerName: 'Active',
+      field: 'isActive',
+      width: 110,
+      minWidth: 90,
+      cellRenderer: (params: any) => {
+        return params.value
+          ? '<span class="badge-status" style="background:#dcfce7;color:#166534;">Active</span>'
+          : '<span class="badge-status" style="background:#fee2e2;color:#991b1b;">Inactive</span>';
+      }
+    },
+    {
+      headerName: 'Created At',
       field: 'createdAt',
-      width: 160,
-      sortable: true,
-      valueFormatter: (p) => this.formatDate(p.value)
+      width: 180,
+      minWidth: 150,
+      valueFormatter: dateTimeFormatter,
+      cellStyle: { color: '#6b7280', fontSize: '12px' }
     }
   ];
 
-  readonly defaultColDef: ColDef = {
-    resizable: true,
-    suppressMovable: false
+  activeFilters = {
+    hasActiveFilters: false,
+    filters: [] as string[],
+    count: 0
   };
 
-  readonly gridOptions: GridOptions = {
-    rowHeight: 60,
-    headerHeight: 50,
-    suppressCellFocus: true
-  };
-
-  context = { componentParent: this };
-
-  constructor(private holidayService: HolidayService) {}
+  constructor(
+    private holidayService: HolidayService,
+    private departmentService: DepartmentService,
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.initializeForm();
+  }
 
   ngOnInit(): void {
+    this.loadStats();
+    this.loadDepartments();
     this.loadHolidays();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  // ─── Form ─────────────────────────────────────────────────────────────────
+
+  initializeForm(): void {
+    this.holidayForm = this.fb.group({
+      holidayName:          ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      holidayDate:          ['', Validators.required],
+      holidayType:          ['', Validators.required],
+      isOptional:           [false],
+      isActive:             [true],
+      description:          ['', Validators.maxLength(500)],
+      applicableDepartments:[[]]
+    });
+
+    // Clear departments when National is selected
+    this.holidayForm.get('holidayType')?.valueChanges.subscribe((type: string) => {
+      if (type === HolidayType.National || type === String(HolidayType.National)) {
+        this.selectedDepartmentSet.clear();
+        this.syncDepartmentsToForm();
+      }
+    });
   }
 
-  onGridReady(params: GridReadyEvent): void {
-    this.gridApi = params.api;
-    this.gridApi.sizeColumnsToFit();
+  get selectedDepartments(): string[] {
+    return Array.from(this.selectedDepartmentSet);
   }
 
-  loadHolidays(): void {
-    this.isLoading = true;
+  get isNationalHoliday(): boolean {
+    const val = this.holidayForm.get('holidayType')?.value;
+    return val === HolidayType.National || val === 'National' || val === 0;
+  }
 
+  toggleDepartment(departmentId: string): void {
+    if (this.modalMode === 'view') return;
+    if (this.selectedDepartmentSet.has(departmentId)) {
+      this.selectedDepartmentSet.delete(departmentId);
+    } else {
+      this.selectedDepartmentSet.add(departmentId);
+    }
+    this.syncDepartmentsToForm();
+  }
+
+  isDepartmentSelected(departmentId: string): boolean {
+    return this.selectedDepartmentSet.has(departmentId);
+  }
+
+  removeDepartment(departmentId: string): void {
+    this.selectedDepartmentSet.delete(departmentId);
+    this.syncDepartmentsToForm();
+  }
+
+  private syncDepartmentsToForm(): void {
+    this.holidayForm.patchValue({ applicableDepartments: Array.from(this.selectedDepartmentSet) });
+    this.cdr.detectChanges();
+  }
+
+  getDepartmentName(id: string): string {
+    return this.departments.find(d => d.id === id)?.departmentName || id;
+  }
+
+  // ─── Data Loading ─────────────────────────────────────────────────────────
+
+  loadStats(): void {
     const filter: HolidayFilterDto = {
-      searchTerm: this.searchTerm || undefined,
       year: new Date().getFullYear(),
-      pageNumber: this.currentPage,
-      pageSize: this.pageSize,
+      pageNumber: 1,
+      pageSize: 1000,
       sortBy: 'HolidayDate',
       sortDescending: false
     };
 
-    this.holidayService.getFilteredHolidays(filter)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          this.isLoading = false;
-          if (response.success) {
-            this.holidays = response.data.items;
-            this.totalRecords = response.data.totalCount;
-            setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
+    this.holidayService.getFilteredHolidays(filter).subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          const items: any[] = response.data.items || [];
+          const now = new Date();
+          this.stats.total    = response.data.totalCount;
+          this.stats.upcoming = items.filter(h => new Date(h.holidayDate) >= now).length;
+          this.stats.past     = items.filter(h => new Date(h.holidayDate) <  now).length;
+          this.cdr.detectChanges();
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  loadDepartments(): void {
+    this.isLoadingDepartments = true;
+    this.departmentService.getActiveDepartments().subscribe({
+      next: (response: any) => {
+        this.isLoadingDepartments = false;
+        if (response.success) {
+          this.departments = response.data;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error: any) => {
+        this.isLoadingDepartments = false;
+        console.error('Failed to load departments:', error);
+      }
+    });
+  }
+
+  loadHolidays(): void {
+    if (this.isLoadingData) return;
+    this.isLoadingData = true;
+
+    const filter: HolidayFilterDto = {
+      searchTerm:     this.searchTerm || undefined,
+      year:           new Date().getFullYear(),
+      pageNumber:     this.currentPage,
+      pageSize:       this.pageSize,
+      sortBy:         'HolidayDate',
+      sortDescending: false
+    };
+
+    this.holidayService.getFilteredHolidays(filter).subscribe({
+      next: (response: any) => {
+        this.isLoadingData = false;
+        if (response.success) {
+          this.rowData     = response.data.items;
+          this.totalItems  = response.data.totalCount;
+          this.totalPages  = Math.ceil(this.totalItems / this.pageSize);
+
+          if (this.gridApi) {
+            this.gridApi.setGridOption('rowData', this.rowData);
+            refreshGrid(this.gridApi);
+            setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
           }
-        },
-        error: (err) => {
-          console.error('Error loading holidays:', err);
-          this.isLoading = false;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (error: any) => {
+        this.isLoadingData = false;
+        if (error.status !== 401) {
+          Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load holidays. Please try again.' });
+        }
+      }
+    });
+  }
+
+  // ─── Grid ─────────────────────────────────────────────────────────────────
+
+  onGridReady(params: GridReadyEvent): void {
+    this.gridApi = params.api;
+    this.gridApi.addEventListener('sortChanged',   this.onSortChanged.bind(this));
+    this.gridApi.addEventListener('filterChanged', this.onFilterChanged.bind(this));
+    setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
+  }
+
+  onSortChanged(_event: SortChangedEvent): void {
+    this.currentPage = 1;
+    this.loadHolidays();
+  }
+
+  onFilterChanged(_event: FilterChangedEvent): void {
+    this.currentPage = 1;
+    this.loadHolidays();
+    this.updateActiveFilters();
+  }
+
+  highlightText(text: string, term: string): string {
+    if (!term || !term.trim() || !text) return String(text);
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex   = new RegExp(`(${escaped})`, 'gi');
+    return String(text).replace(regex, '<mark class="search-highlight">$1</mark>');
+  }
+
+  // ─── Pagination ───────────────────────────────────────────────────────────
+
+  onPageSizeChanged(newPageSize: number): void {
+    this.pageSize    = newPageSize;
+    this.currentPage = 1;
+    this.loadHolidays();
+  }
+
+  goToPage(page: number | string): void {
+    const pageNum = typeof page === 'string' ? parseInt(page, 10) : page;
+    if (isNaN(pageNum) || pageNum < 1 || pageNum > this.totalPages || pageNum === this.currentPage) return;
+    this.currentPage = pageNum;
+    this.loadHolidays();
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1);
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) this.goToPage(this.currentPage - 1);
+  }
+
+  // ─── Search ───────────────────────────────────────────────────────────────
+
+  onSearchChange(): void {
+    clearTimeout(this.searchDebounceTimer);
+    this.searchDebounceTimer = setTimeout(() => {
+      this.currentPage = 1;
+      this.loadHolidays();
+      this.updateActiveFilters();
+    }, 350);
+  }
+
+  clearSearch(): void {
+    clearTimeout(this.searchDebounceTimer);
+    this.searchTerm  = '';
+    this.currentPage = 1;
+    this.loadHolidays();
+    this.updateActiveFilters();
+  }
+
+  handleClearFilters(): void {
+    clearTimeout(this.searchDebounceTimer);
+    this.searchTerm  = '';
+    this.currentPage = 1;
+    clearAllFilters(this.gridApi);
+    this.loadHolidays();
+    this.updateActiveFilters();
+  }
+
+  updateActiveFilters(): void {
+    const columnFilterCount = this.gridApi
+      ? Object.keys(this.gridApi.getFilterModel()).length
+      : 0;
+    const additionalFilters = columnFilterCount > 0
+      ? { 'Column filters': `${columnFilterCount} active` }
+      : undefined;
+    const filters = getActiveFiltersSummary(this.searchTerm, undefined, additionalFilters);
+    this.activeFilters = { hasActiveFilters: filters.length > 0, filters, count: filters.length };
+  }
+
+  // ─── Modal ────────────────────────────────────────────────────────────────
+
+  openAddModal(): void {
+    this.modalMode           = 'add';
+    this.selectedHoliday     = null;
+    this.formSubmitAttempted = false;
+    this.selectedDepartmentSet.clear();
+    this.holidayForm.reset({
+      holidayName:           '',
+      holidayDate:           '',
+      holidayType:           '',
+      isOptional:            false,
+      isActive:              true,
+      description:           '',
+      applicableDepartments: []
+    });
+    this.holidayForm.enable();
+    this.isModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  openEditModal(holiday: any): void {
+    this.modalMode           = 'edit';
+    this.selectedHoliday     = holiday;
+    this.formSubmitAttempted = false;
+
+    this.selectedDepartmentSet = new Set<string>(holiday.applicableDepartments || []);
+
+    this.holidayForm.reset();
+    this.holidayForm.patchValue({
+      holidayName:           holiday.holidayName,
+      holidayDate:           this.formatDateForInput(holiday.holidayDate),
+      holidayType:           holiday.holidayType,
+      isOptional:            holiday.isOptional,
+      isActive:              holiday.isActive,
+      description:           holiday.description || '',
+      applicableDepartments: Array.from(this.selectedDepartmentSet)
+    });
+    this.holidayForm.enable();
+    this.isModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  openViewModal(holiday: any): void {
+    this.modalMode           = 'view';
+    this.selectedHoliday     = holiday;
+    this.formSubmitAttempted = false;
+
+    this.selectedDepartmentSet = new Set<string>(holiday.applicableDepartments || []);
+
+    this.holidayForm.reset();
+    this.holidayForm.patchValue({
+      holidayName:           holiday.holidayName,
+      holidayDate:           this.formatDateForInput(holiday.holidayDate),
+      holidayType:           holiday.holidayType,
+      isOptional:            holiday.isOptional,
+      isActive:              holiday.isActive,
+      description:           holiday.description || '',
+      applicableDepartments: Array.from(this.selectedDepartmentSet)
+    });
+    this.holidayForm.disable();
+    this.isModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeModal(): void {
+    this.isModalOpen         = false;
+    this.selectedHoliday     = null;
+    this.isSubmitting        = false;
+    this.formSubmitAttempted = false;
+    this.selectedDepartmentSet.clear();
+    this.holidayForm.reset();
+    this.holidayForm.enable();
+    this.cdr.detectChanges();
+  }
+
+  onOverlayClick(event: Event): void {
+    if (event.target === event.currentTarget) this.closeModal();
+  }
+
+  // ─── ActionCellRenderer bridge methods ────────────────────────────────────
+  // These match the exact method names called by the shared ActionCellRendererComponent.
+
+  viewDetails(data: any): void      { this.openViewModal(data); }
+  editDepartment(data: any): void    { this.openEditModal(data); }
+  toggleStatus(data: any): void      { this.onToggleStatus(data); }
+  deleteDepartment(data: any): void  { this.onDelete(data); }
+
+  // Grid action dispatcher (used if ActionCellRenderer emits generic events)
+  onGridAction(event: { action: string; data: any }): void {
+    switch (event.action) {
+      case 'edit':   this.openEditModal(event.data);  break;
+      case 'view':   this.openViewModal(event.data);  break;
+      case 'toggle': this.onToggleStatus(event.data); break;
+      case 'delete': this.onDelete(event.data);       break;
+    }
+  }
+
+  // ─── Submit ───────────────────────────────────────────────────────────────
+
+  onSubmit(): void {
+    this.formSubmitAttempted = true;
+
+    if (this.holidayForm.invalid) {
+      this.holidayForm.markAllAsTouched();
+      Swal.fire({ icon: 'warning', title: 'Form Invalid', text: 'Please fill in all required fields.' });
+      return;
+    }
+
+    if (!this.isNationalHoliday && this.selectedDepartmentSet.size === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Department Selected',
+        text: 'Please select at least one applicable department.'
+      });
+      return;
+    }
+
+    this.isSubmitting = true;
+    if (this.modalMode === 'add') {
+      this.handleCreate();
+    } else if (this.modalMode === 'edit') {
+      this.handleUpdate();
+    }
+  }
+
+  private handleCreate(): void {
+    const fv = this.holidayForm.value;
+    const dto: CreateHolidayDto = {
+      holidayName:           fv.holidayName,
+      holidayDate:           this.toUtcIso(fv.holidayDate),
+      description:           fv.description || undefined,
+      holidayType:           fv.holidayType,
+      isOptional:            fv.isOptional,
+      isActive:              fv.isActive,
+      applicableDepartments: Array.from(this.selectedDepartmentSet)
+    };
+
+    this.holidayService.createHoliday(dto).subscribe({
+      next: (response: any) => {
+        this.isSubmitting = false;
+        if (response.success) {
+          this.closeModal();
+          this.loadHolidays();
+          this.loadStats();
           Swal.fire({
-            icon: 'error',
-            title: 'Failed to Load',
-            text: 'Unable to load holidays. Please try again.',
-            confirmButtonColor: '#3b82f6'
+            icon: 'success', title: 'Success!', text: 'Holiday created successfully.',
+            timer: 2000, showConfirmButton: false
           });
         }
-      });
-  }
-
-  onSearch(): void {
-    this.currentPage = 1;
-    this.loadHolidays();
-  }
-
-  clearFilters(): void {
-    this.searchTerm = '';
-    this.currentPage = 1;
-    this.loadHolidays();
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.loadHolidays();
-  }
-
-  onPageSizeChange(event: Event): void {
-    this.pageSize = Number((event.target as HTMLSelectElement).value);
-    this.currentPage = 1;
-    this.loadHolidays();
-  }
-
-  exportData(): void {
-    this.gridApi?.exportDataAsCsv({
-      fileName: `holidays_${Date.now()}.csv`
+      },
+      error: (error: any) => {
+        this.isSubmitting = false;
+        Swal.fire({ icon: 'error', title: 'Error', text: error.error?.message || 'Failed to create holiday.' });
+      }
     });
+  }
+
+  private handleUpdate(): void {
+    const fv = this.holidayForm.value;
+    const dto: UpdateHolidayDto = {
+      holidayName:           fv.holidayName,
+      holidayDate:           fv.holidayDate ? this.toUtcIso(fv.holidayDate) : undefined,
+      description:           fv.description ?? undefined,
+      holidayType:           fv.holidayType,
+      isOptional:            fv.isOptional,
+      isActive:              fv.isActive,
+      applicableDepartments: Array.from(this.selectedDepartmentSet)
+    };
+
+    this.holidayService.updateHoliday(this.selectedHoliday.id, dto).subscribe({
+      next: (response: any) => {
+        this.isSubmitting = false;
+        if (response.success) {
+          this.closeModal();
+          this.loadHolidays();
+          this.loadStats();
+          Swal.fire({
+            icon: 'success', title: 'Updated!', text: 'Holiday updated successfully.',
+            timer: 2000, showConfirmButton: false
+          });
+        }
+      },
+      error: (error: any) => {
+        this.isSubmitting = false;
+        Swal.fire({ icon: 'error', title: 'Error', text: error.error?.message || 'Failed to update holiday.' });
+      }
+    });
+  }
+
+  // ─── Toggle Status ────────────────────────────────────────────────────────
+
+  onToggleStatus(holiday: any): void {
+    const newStatus   = !holiday.isActive;
+    const actionText  = newStatus ? 'activate' : 'deactivate';
+    const statusLabel = newStatus ? 'Active' : 'Inactive';
+
     Swal.fire({
-      icon: 'success',
-      title: 'Exported!',
-      text: 'Holiday data has been exported as CSV.',
-      confirmButtonColor: '#3b82f6',
-      timer: 2000,
-      timerProgressBar: true,
-      showConfirmButton: false
-    });
-  }
-
-  openCreateModal(): void {
-    this.modalMode = 'create';
-    this.selectedHoliday = null;
-    this.showModal = true;
-  }
-
-  viewDetails(holiday: Holiday): void {
-    this.modalMode = 'view';
-    this.selectedHoliday = { ...holiday };
-    this.showModal = true;
-  }
-
-
-  editDepartment(holiday: Holiday): void {
-    this.modalMode = 'edit';
-    this.selectedHoliday = { ...holiday };
-    this.showModal = true;
-  }
-
-  async toggleStatus(holiday: Holiday): Promise<void> {
-    const newActiveState = !holiday.isActive;
-    const action = newActiveState ? 'activate' : 'deactivate';
-    const actionLabel = newActiveState ? 'Activate' : 'Deactivate';
-    const iconColor = newActiveState ? '#22c55e' : '#f59e0b';
-
-    const result = await Swal.fire({
-      title: `${actionLabel} Holiday?`,
-      text: `Are you sure you want to ${action} "${holiday.holidayName}"?`,
-      icon: newActiveState ? 'question' : 'warning',
-      iconColor,
+      title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Holiday?`,
+      html: `
+        <div style="text-align:left;padding:10px;">
+          <p>Do you want to ${actionText} this holiday?</p>
+          <p style="margin:10px 0;"><strong>Holiday:</strong> ${holiday.holidayName}</p>
+          <p style="margin:10px 0;"><strong>New Status:</strong>
+            <span style="color:${newStatus ? '#10b981' : '#6b7280'};font-weight:600;">${statusLabel}</span>
+          </p>
+        </div>`,
+      icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: newActiveState ? '#22c55e' : '#f59e0b',
+      confirmButtonColor: newStatus ? '#10b981' : '#ef4444',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: `Yes, ${actionLabel}`,
-      cancelButtonText: 'Cancel',
-      reverseButtons: true
-    });
+      confirmButtonText: `Yes, ${actionText}!`
+    }).then(result => {
+      if (!result.isConfirmed) return;
 
-    if (!result.isConfirmed) return;
-
-    this.isLoading = true;
-    this.holidayService.updateHoliday(holiday.id, { isActive: newActiveState })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
+      const dto: UpdateHolidayDto = { isActive: newStatus };
+      this.holidayService.updateHoliday(holiday.id, dto).subscribe({
+        next: (response: any) => {
           if (response.success) {
-            this.loadHolidays();
+            const idx = this.rowData.findIndex(r => r.id === holiday.id);
+            if (idx !== -1) {
+              this.rowData[idx].isActive = newStatus;
+              this.gridApi.setGridOption('rowData', [...this.rowData]);
+              refreshGrid(this.gridApi);
+            }
+            this.loadStats();
+            this.cdr.detectChanges();
             Swal.fire({
-              icon: 'success',
-              title: `${actionLabel}d!`,
-              text: `"${holiday.holidayName}" has been ${action}d successfully.`,
-              confirmButtonColor: '#3b82f6',
-              timer: 2000,
-              timerProgressBar: true,
-              showConfirmButton: false
-            });
-          } else {
-            this.isLoading = false;
-            Swal.fire({
-              icon: 'error',
-              title: 'Update Failed',
-              text: `Could not ${action} the holiday. Please try again.`,
-              confirmButtonColor: '#3b82f6'
+              icon: 'success', title: 'Status Updated!',
+              text: `Holiday is now ${statusLabel}.`,
+              timer: 2000, showConfirmButton: false
             });
           }
         },
-        error: (err) => {
-          console.error('Error toggling holiday status:', err);
-          this.isLoading = false;
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: `An error occurred while trying to ${action} the holiday.`,
-            confirmButtonColor: '#3b82f6'
-          });
+        error: () => {
+          Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update holiday status.' });
         }
       });
+    });
   }
 
-  async deleteDepartment(holiday: Holiday): Promise<void> {
-    const result = await Swal.fire({
+  // ─── Delete ───────────────────────────────────────────────────────────────
+
+  onDelete(holiday: any): void {
+    Swal.fire({
       title: 'Delete Holiday?',
-      html: `Are you sure you want to delete <strong>"${holiday.holidayName}"</strong>?<br><span style="color:#6b7280;font-size:0.875rem;">This action cannot be undone.</span>`,
+      html: `
+        <div style="text-align:left;padding:10px;">
+          <p>Are you sure you want to delete <strong>"${holiday.holidayName}"</strong>?</p>
+          <p style="color:#ef4444;margin-top:15px;padding:10px;background:#fee2e2;border-radius:6px;">
+            <strong>Warning:</strong> This action cannot be undone.
+          </p>
+        </div>`,
       icon: 'warning',
-      iconColor: '#ef4444',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, Delete',
-      cancelButtonText: 'Cancel',
-      reverseButtons: true
-    });
+      confirmButtonText: 'Yes, delete!'
+    }).then(result => {
+      if (!result.isConfirmed) return;
 
-    if (!result.isConfirmed) return;
-
-    this.isLoading = true;
-    this.holidayService.deleteHoliday(holiday.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
+      this.holidayService.deleteHoliday(holiday.id).subscribe({
+        next: (response: any) => {
           if (response.success) {
-            this.loadHolidays();
+            const idx = this.rowData.findIndex(r => r.id === holiday.id);
+            if (idx !== -1) {
+              this.rowData.splice(idx, 1);
+              this.gridApi.setGridOption('rowData', [...this.rowData]);
+              refreshGrid(this.gridApi);
+            }
+            this.totalItems = Math.max(0, this.totalItems - 1);
+            this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+
+            if (this.rowData.length === 0 && this.currentPage > 1) {
+              this.currentPage--;
+              this.loadHolidays();
+            }
+            this.loadStats();
+            this.cdr.detectChanges();
             Swal.fire({
-              icon: 'success',
-              title: 'Deleted!',
-              text: `"${holiday.holidayName}" has been deleted successfully.`,
-              confirmButtonColor: '#3b82f6',
-              timer: 2000,
-              timerProgressBar: true,
-              showConfirmButton: false
-            });
-          } else {
-            this.isLoading = false;
-            Swal.fire({
-              icon: 'error',
-              title: 'Delete Failed',
-              text: 'Could not delete the holiday. Please try again.',
-              confirmButtonColor: '#3b82f6'
+              icon: 'success', title: 'Deleted!', text: 'Holiday has been deleted.',
+              timer: 2500, showConfirmButton: false
             });
           }
         },
-        error: (err) => {
-          console.error('Error deleting holiday:', err);
-          this.isLoading = false;
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while deleting the holiday.',
-            confirmButtonColor: '#3b82f6'
-          });
+        error: () => {
+          Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to delete holiday. Please try again.' });
         }
       });
+    });
   }
 
-  onModalClose(): void {
-    this.showModal = false;
-    this.selectedHoliday = null;
+  // ─── Export ───────────────────────────────────────────────────────────────
+
+  exportData(): void {
+    exportToCsv(this.gridApi, 'holidays');
+    Swal.fire({
+      icon: 'success', title: 'Exported!', text: 'Holiday data exported as CSV.',
+      timer: 2000, showConfirmButton: false
+    });
   }
 
-  onModalSuccess(): void {
-    this.showModal = false;
-    this.selectedHoliday = null;
-    this.loadHolidays();
+  // ─── Date helpers ─────────────────────────────────────────────────────────
+
+  formatDateForInput(date: any): string {
+    const d     = new Date(date);
+    const year  = d.getUTCFullYear();
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day   = String(d.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   formatDate(date: any): string {
     if (!date) return '';
-    return new Date(date).toLocaleDateString('en-GB', {
-      day: '2-digit', month: 'short', year: 'numeric'
-    });
+    return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  get totalPages(): number {
-    return Math.max(1, Math.ceil(this.totalRecords / this.pageSize));
-  }
-
-  getMaxRecords(): number {
-    return Math.min(this.currentPage * this.pageSize, this.totalRecords);
+  private toUtcIso(dateStr: string): string {
+    return new Date(`${dateStr}T00:00:00.000Z`).toISOString();
   }
 }

@@ -1,3 +1,5 @@
+// holiday-form.component.ts
+
 import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -22,7 +24,7 @@ import {
 export class HolidayFormComponent implements OnInit, OnDestroy {
   @Input() mode: 'create' | 'edit' | 'view' = 'create';
   @Input() holiday: Holiday | null = null;
-  @Output() close = new EventEmitter<void>();
+  @Output() close   = new EventEmitter<void>();
   @Output() success = new EventEmitter<void>();
 
   private destroy$ = new Subject<void>();
@@ -31,14 +33,13 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
   readonly holidayTypes = Object.values(HolidayType);
   departments: any[] = [];
   isSubmitting = false;
+  formSubmitAttempted = false;
 
   private selectedDepartmentSet = new Set<string>();
 
   get selectedDepartments(): string[] {
     return Array.from(this.selectedDepartmentSet);
   }
-
-  formSubmitAttempted = false;
 
   constructor(
     private fb: FormBuilder,
@@ -64,13 +65,15 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  // ─── Form Setup ───────────────────────────────────────────────────────────
+
   private initializeForm(): void {
     this.holidayForm = this.fb.group({
-      holidayName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-      holidayDate: ['', Validators.required],
-      description: ['', Validators.maxLength(500)],
-      holidayType: [HolidayType.National, Validators.required],
-      isOptional: [false],
+      holidayName:  ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      holidayDate:  ['', Validators.required],
+      description:  ['', Validators.maxLength(500)],
+      holidayType:  [HolidayType.National, Validators.required],
+      isOptional:   [false],
       applicableDepartments: [[]]
     });
 
@@ -88,11 +91,11 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
     if (!this.holiday) return;
 
     this.holidayForm.patchValue({
-      holidayName: this.holiday.holidayName,
-      holidayDate: this.formatDateForInput(this.holiday.holidayDate),
-      description: this.holiday.description ?? '',
-      holidayType: this.holiday.holidayType,
-      isOptional: this.holiday.isOptional,
+      holidayName:  this.holiday.holidayName,
+      holidayDate:  this.formatDateForInput(this.holiday.holidayDate),
+      description:  this.holiday.description ?? '',
+      holidayType:  this.holiday.holidayType,
+      isOptional:   this.holiday.isOptional,
       applicableDepartments: this.holiday.applicableDepartments
     });
 
@@ -104,9 +107,7 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
-          if (response.success) {
-            this.departments = response.data;
-          }
+          if (response.success) this.departments = response.data;
         },
         error: (err: any) => {
           console.error('Error loading departments:', err);
@@ -120,9 +121,10 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
       });
   }
 
+  // ─── Department Helpers ───────────────────────────────────────────────────
+
   toggleDepartment(departmentId: string): void {
     if (this.mode === 'view') return;
-
     if (this.selectedDepartmentSet.has(departmentId)) {
       this.selectedDepartmentSet.delete(departmentId);
     } else {
@@ -135,11 +137,20 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
     return this.selectedDepartmentSet.has(departmentId);
   }
 
-  private syncDepartmentsToForm(): void {
-    this.holidayForm.patchValue({
-      applicableDepartments: Array.from(this.selectedDepartmentSet)
-    });
+  removeDepartment(departmentId: string): void {
+    this.selectedDepartmentSet.delete(departmentId);
+    this.syncDepartmentsToForm();
   }
+
+  private syncDepartmentsToForm(): void {
+    this.holidayForm.patchValue({ applicableDepartments: Array.from(this.selectedDepartmentSet) });
+  }
+
+  getDepartmentName(id: string): string {
+    return this.departments.find(d => d.id === id)?.departmentName || id;
+  }
+
+  // ─── Submit ───────────────────────────────────────────────────────────────
 
   onSubmit(): void {
     this.formSubmitAttempted = true;
@@ -165,14 +176,13 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
   }
 
   private createHoliday(): void {
-    const formValue = this.holidayForm.value;
-
+    const fv = this.holidayForm.value;
     const dto: CreateHolidayDto = {
-      holidayName: formValue.holidayName,
-      holidayDate: this.toUtcIso(formValue.holidayDate),
-      description: formValue.description || undefined,
-      holidayType: formValue.holidayType,
-      isOptional: formValue.isOptional,
+      holidayName:  fv.holidayName,
+      holidayDate:  this.toUtcIso(fv.holidayDate),
+      description:  fv.description || undefined,
+      holidayType:  fv.holidayType,
+      isOptional:   fv.isOptional,
       applicableDepartments: Array.from(this.selectedDepartmentSet)
     };
 
@@ -183,48 +193,31 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
           this.isSubmitting = false;
           if (response.success) {
             Swal.fire({
-              icon: 'success',
-              title: 'Holiday Created!',
+              icon: 'success', title: 'Holiday Created!',
               text: `"${dto.holidayName}" has been added successfully.`,
-              confirmButtonColor: '#3b82f6',
-              timer: 2000,
-              timerProgressBar: true,
-              showConfirmButton: false
+              confirmButtonColor: '#3b82f6', timer: 2000, timerProgressBar: true, showConfirmButton: false
             });
             this.success.emit();
           } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Creation Failed',
-              text: 'Could not create the holiday. Please try again.',
-              confirmButtonColor: '#3b82f6'
-            });
+            Swal.fire({ icon: 'error', title: 'Creation Failed', text: 'Could not create the holiday.', confirmButtonColor: '#3b82f6' });
           }
         },
         error: (err: any) => {
-          console.error('Error creating holiday:', err);
           this.isSubmitting = false;
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: err?.error?.message ?? 'An unexpected error occurred while creating the holiday.',
-            confirmButtonColor: '#3b82f6'
-          });
+          Swal.fire({ icon: 'error', title: 'Error', text: err?.error?.message ?? 'An unexpected error occurred.', confirmButtonColor: '#3b82f6' });
         }
       });
   }
 
   private updateHoliday(): void {
     if (!this.holiday) return;
-
-    const formValue = this.holidayForm.value;
-
+    const fv = this.holidayForm.value;
     const dto: UpdateHolidayDto = {
-      holidayName: formValue.holidayName || undefined,
-      holidayDate: formValue.holidayDate ? this.toUtcIso(formValue.holidayDate) : undefined,
-      description: formValue.description ?? undefined,
-      holidayType: formValue.holidayType || undefined,
-      isOptional: formValue.isOptional,
+      holidayName:  fv.holidayName || undefined,
+      holidayDate:  fv.holidayDate ? this.toUtcIso(fv.holidayDate) : undefined,
+      description:  fv.description ?? undefined,
+      holidayType:  fv.holidayType || undefined,
+      isOptional:   fv.isOptional,
       applicableDepartments: Array.from(this.selectedDepartmentSet)
     };
 
@@ -235,63 +228,33 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
           this.isSubmitting = false;
           if (response.success) {
             Swal.fire({
-              icon: 'success',
-              title: 'Holiday Updated!',
-              text: `"${dto.holidayName ?? this.holiday?.holidayName}" has been updated successfully.`,
-              confirmButtonColor: '#3b82f6',
-              timer: 2000,
-              timerProgressBar: true,
-              showConfirmButton: false
+              icon: 'success', title: 'Holiday Updated!',
+              text: `"${dto.holidayName ?? this.holiday?.holidayName}" has been updated.`,
+              confirmButtonColor: '#3b82f6', timer: 2000, timerProgressBar: true, showConfirmButton: false
             });
             this.success.emit();
           } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Update Failed',
-              text: 'Could not update the holiday. Please try again.',
-              confirmButtonColor: '#3b82f6'
-            });
+            Swal.fire({ icon: 'error', title: 'Update Failed', text: 'Could not update the holiday.', confirmButtonColor: '#3b82f6' });
           }
         },
         error: (err: any) => {
-          console.error('Error updating holiday:', err);
           this.isSubmitting = false;
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: err?.error?.message ?? 'An unexpected error occurred while updating the holiday.',
-            confirmButtonColor: '#3b82f6'
-          });
+          Swal.fire({ icon: 'error', title: 'Error', text: err?.error?.message ?? 'An unexpected error occurred.', confirmButtonColor: '#3b82f6' });
         }
       });
   }
+
+  // ─── Close / Backdrop ─────────────────────────────────────────────────────
 
   onClose(): void {
     this.close.emit();
   }
 
-  // ── Date helpers ──────
-
-  formatDateForInput(date: any): string {
-    const d = new Date(date);
-    const year = d.getUTCFullYear();
-    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  onBackdropClick(event: Event): void {
+    if (event.target === event.currentTarget) this.onClose();
   }
 
-  formatDate(date: any): string {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString('en-GB', {
-      day: '2-digit', month: 'short', year: 'numeric'
-    });
-  }
-
-  private toUtcIso(dateStr: string): string {
-    return new Date(`${dateStr}T00:00:00.000Z`).toISOString();
-  }
-
-  // ── Template helpers ────────
+  // ─── Template Helpers ─────────────────────────────────────────────────────
 
   get isNationalHoliday(): boolean {
     return this.holidayForm.get('holidayType')?.value === HolidayType.National;
@@ -304,7 +267,6 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
   }
 
   get submitButtonText(): string {
-    if (this.isSubmitting) return 'Saving...';
     return this.mode === 'create' ? 'Create Holiday' : 'Update Holiday';
   }
 
@@ -331,5 +293,24 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
       holidayType: 'Holiday type'
     };
     return labels[fieldName] ?? fieldName;
+  }
+
+  // ─── Date Helpers ─────────────────────────────────────────────────────────
+
+  formatDateForInput(date: any): string {
+    const d = new Date(date);
+    const year  = d.getUTCFullYear();
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day   = String(d.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  formatDate(date: any): string {
+    if (!date) return '';
+    return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  private toUtcIso(dateStr: string): string {
+    return new Date(`${dateStr}T00:00:00.000Z`).toISOString();
   }
 }

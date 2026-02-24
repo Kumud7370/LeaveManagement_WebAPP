@@ -1,190 +1,199 @@
-<div class="modal-backdrop" (click)="onClose()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <!-- Modal Header -->
+<!-- holiday-form.component.html -->
+
+<div class="modal-overlay" (click)="onBackdropClick($event)">
+  <div class="modal-container modal-xlarge" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2 class="modal-title">{{ modalTitle }}</h2>
-      <button class="close-button" (click)="onClose()" type="button">
+      <h2 class="modal-title">
+        <i class="bi"
+          [ngClass]="mode === 'create' ? 'bi-plus-circle-dotted' : (mode === 'edit' ? 'bi-pencil-square' : 'bi-eye')">
+        </i>
+        {{ modalTitle }}
+      </h2>
+      <button (click)="onClose()" class="modal-close-btn" type="button">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
-    <!-- Modal Body -->
     <div class="modal-body">
       <form [formGroup]="holidayForm" (ngSubmit)="onSubmit()">
-        <!-- Holiday Name -->
-        <div class="form-group">
-          <label class="form-label">
-            Holiday Name <span class="required">*</span>
-          </label>
-          <input
-            type="text"
-            class="form-control"
-            [class.invalid]="isFieldInvalid('holidayName')"
-            formControlName="holidayName"
-            placeholder="Enter holiday name"
-          />
-          <div class="error-message" *ngIf="isFieldInvalid('holidayName')">
-            {{ getErrorMessage("holidayName") }}
+
+        <!-- Basic Information -->
+        <div class="form-section">
+          <h3 class="section-title">Basic Information</h3>
+
+          <div class="form-row">
+            <!-- Holiday Name -->
+            <div class="form-group">
+              <label for="hfHolidayName">Holiday Name *</label>
+              <input
+                type="text"
+                id="hfHolidayName"
+                formControlName="holidayName"
+                class="form-control"
+                placeholder="e.g., Republic Day"
+              />
+              <div *ngIf="isFieldInvalid('holidayName')" class="error-message">
+                {{ getErrorMessage('holidayName') }}
+              </div>
+            </div>
+
+            <!-- Holiday Date -->
+            <div class="form-group">
+              <label for="hfHolidayDate">Holiday Date *</label>
+              <input
+                type="date"
+                id="hfHolidayDate"
+                formControlName="holidayDate"
+                class="form-control"
+              />
+              <div *ngIf="isFieldInvalid('holidayDate')" class="error-message">
+                {{ getErrorMessage('holidayDate') }}
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <!-- Holiday Type -->
+            <div class="form-group">
+              <label for="hfHolidayType">Holiday Type *</label>
+              <select id="hfHolidayType" formControlName="holidayType" class="form-control">
+                <option value="">-- Select Type --</option>
+                <option *ngFor="let type of holidayTypes" [value]="type">{{ type }}</option>
+              </select>
+              <div *ngIf="isFieldInvalid('holidayType')" class="error-message">
+                {{ getErrorMessage('holidayType') }}
+              </div>
+            </div>
+
+            <!-- Is Optional -->
+            <div class="form-group" style="display:flex;align-items:center;padding-top:28px;">
+              <div class="form-check">
+                <input
+                  type="checkbox"
+                  id="hfIsOptional"
+                  formControlName="isOptional"
+                  class="form-check-input"
+                />
+                <label class="form-check-label" for="hfIsOptional">
+                  This is an optional holiday
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label for="hfDescription">Description</label>
+            <textarea
+              id="hfDescription"
+              formControlName="description"
+              class="form-control"
+              rows="3"
+              placeholder="Optional description...">
+            </textarea>
+            <div *ngIf="isFieldInvalid('description')" class="error-message">
+              {{ getErrorMessage('description') }}
+            </div>
           </div>
         </div>
 
-        <!-- Holiday Date -->
-        <div class="form-group">
-          <label class="form-label">
-            Holiday Date <span class="required">*</span>
-          </label>
-          <input
-            type="date"
-            class="form-control"
-            [class.invalid]="isFieldInvalid('holidayDate')"
-            formControlName="holidayDate"
-          />
-          <div class="error-message" *ngIf="isFieldInvalid('holidayDate')">
-            {{ getErrorMessage("holidayDate") }}
+        <!-- Department Selection (hidden for National) -->
+        <div class="form-section" *ngIf="!isNationalHoliday">
+          <h3 class="section-title">Applicable Departments</h3>
+          <small class="form-text" style="margin-bottom:12px;display:block;">
+            <i class="bi bi-info-circle"></i>
+            Select departments this holiday applies to. Required for Regional and Optional holidays.
+          </small>
+
+          <div *ngIf="departments.length === 0" style="color:#6b7280;font-size:13px;margin-bottom:12px;">
+            <i class="bi bi-info-circle"></i> No departments available.
           </div>
-        </div>
 
-        <!-- Holiday Type -->
-        <div class="form-group">
-          <label class="form-label">
-            Holiday Type <span class="required">*</span>
-          </label>
-          <select
-            class="form-control"
-            [class.invalid]="isFieldInvalid('holidayType')"
-            formControlName="holidayType"
-          >
-            <option *ngFor="let type of holidayTypes" [value]="type">
-              {{ type }}
-            </option>
-          </select>
-          <div class="error-message" *ngIf="isFieldInvalid('holidayType')">
-            {{ getErrorMessage("holidayType") }}
-          </div>
-        </div>
-
-        <!-- Is Optional Checkbox -->
-        <div class="form-group checkbox-group">
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              class="checkbox-input"
-              formControlName="isOptional"
-            />
-            <span class="checkbox-text">This is an optional holiday</span>
-          </label>
-        </div>
-
-        <!-- Description -->
-        <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea
-            class="form-control"
-            [class.invalid]="isFieldInvalid('description')"
-            formControlName="description"
-            rows="3"
-            placeholder="Enter holiday description (optional)"
-          ></textarea>
-          <div class="error-message" *ngIf="isFieldInvalid('description')">
-            {{ getErrorMessage("description") }}
-          </div>
-        </div>
-
-        <!-- Applicable Departments (hidden for National) -->
-        <div class="form-group" *ngIf="!isNationalHoliday">
-          <label class="form-label">
-            Applicable Departments <span class="required">*</span>
-          </label>
-
-          <div
-            class="departments-grid"
-            *ngIf="departments.length > 0; else noDepts"
-          >
-           
+          <div class="departments-grid" *ngIf="departments.length > 0">
             <div
               *ngFor="let dept of departments"
               class="department-card"
               [class.selected]="isDepartmentSelected(dept.id)"
-              (click)="toggleDepartment(dept.id)"
-            >
+              (click)="mode !== 'view' && toggleDepartment(dept.id)">
               <input
                 type="checkbox"
                 class="dept-checkbox"
                 [checked]="isDepartmentSelected(dept.id)"
                 (click)="$event.stopPropagation()"
                 (change)="toggleDepartment(dept.id)"
-                [attr.id]="'dept-' + dept.id"
+                [attr.disabled]="mode === 'view' ? true : null"
               />
               <span class="department-name">{{ dept.departmentName }}</span>
               <span class="department-code">{{ dept.departmentCode }}</span>
             </div>
           </div>
 
-          <ng-template #noDepts>
-            <p class="info-message">No departments available.</p>
-          </ng-template>
-
-          <div
-            class="error-message"
-            *ngIf="
-              !isNationalHoliday &&
-              selectedDepartments.length === 0 &&
-              formSubmitAttempted
-            "
-          >
+          <div class="error-message"
+            *ngIf="!isNationalHoliday && selectedDepartments.length === 0 && formSubmitAttempted">
             At least one department must be selected.
+          </div>
+
+          <!-- Selected tags -->
+          <div class="selected-roles" *ngIf="selectedDepartments.length > 0" style="margin-top:16px;">
+            <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:#374151;">
+              Selected ({{ selectedDepartments.length }}):
+            </div>
+            <span class="role-badge" *ngFor="let deptId of selectedDepartments">
+              <i class="bi bi-building"></i>
+              {{ getDepartmentName(deptId) }}
+              <i class="bi bi-x" *ngIf="mode !== 'view'"
+                (click)="removeDepartment(deptId)" style="cursor:pointer;"></i>
+            </span>
           </div>
         </div>
 
         <!-- View Mode Extra Info -->
-        <div class="info-box" *ngIf="mode === 'view' && holiday">
-          <div class="info-row">
-            <span class="info-label">Status:</span>
-            <span
-              [class]="
-                holiday.isUpcoming
-                  ? 'badge badge-success'
-                  : 'badge badge-secondary'
-              "
-            >
-              {{ holiday.isUpcoming ? "Upcoming" : "Past" }}
-            </span>
-          </div>
-          <div class="info-row" *ngIf="holiday.isUpcoming">
-            <span class="info-label">Days Until:</span>
-            <span class="info-value">{{ holiday.daysUntilHoliday }} days</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Created:</span>
-            <span class="info-value">{{ formatDate(holiday.createdAt) }}</span>
-          </div>
-          <div class="info-row" *ngIf="holiday.updatedAt">
-            <span class="info-label">Last Updated:</span>
-            <span class="info-value">{{ formatDate(holiday.updatedAt) }}</span>
+        <div class="form-section" *ngIf="mode === 'view' && holiday">
+          <h3 class="section-title">Additional Details</h3>
+          <div class="view-info-grid">
+            <div class="view-info-row">
+              <span class="view-info-label">Status:</span>
+              <span class="view-info-value">
+                <span [ngStyle]="{
+                  background: holiday.isUpcoming ? '#dcfce7' : '#f1f5f9',
+                  color: holiday.isUpcoming ? '#166534' : '#475569',
+                  padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: '600'
+                }">
+                  {{ holiday.isUpcoming ? 'Upcoming' : 'Past' }}
+                </span>
+              </span>
+            </div>
+            <div class="view-info-row" *ngIf="holiday.isUpcoming">
+              <span class="view-info-label">Days Until:</span>
+              <span class="view-info-value">{{ holiday.daysUntilHoliday }} days</span>
+            </div>
+            <div class="view-info-row">
+              <span class="view-info-label">Created:</span>
+              <span class="view-info-value">{{ formatDate(holiday.createdAt) }}</span>
+            </div>
+            <div class="view-info-row" *ngIf="holiday.updatedAt">
+              <span class="view-info-label">Last Updated:</span>
+              <span class="view-info-value">{{ formatDate(holiday.updatedAt) }}</span>
+            </div>
           </div>
         </div>
 
         <!-- Modal Footer -->
         <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            (click)="onClose()"
-            [disabled]="isSubmitting"
-          >
-            {{ mode === "view" ? "Close" : "Cancel" }}
+          <button type="button" (click)="onClose()" class="btn btn-secondary">
+            {{ mode === 'view' ? 'Close' : 'Cancel' }}
           </button>
           <button
             *ngIf="mode !== 'view'"
             type="submit"
             class="btn btn-primary"
             [disabled]="holidayForm.invalid || isSubmitting"
-            (click)="formSubmitAttempted = true"
-          >
-            <span *ngIf="!isSubmitting">{{ submitButtonText }}</span>
-            <span *ngIf="isSubmitting" class="spinner-container">
-              <span class="spinner"></span>
-              Saving...
+            (click)="formSubmitAttempted = true">
+            <span *ngIf="!isSubmitting">
+              <i class="bi bi-save"></i> {{ submitButtonText }}
+            </span>
+            <span *ngIf="isSubmitting">
+              <i class="bi bi-hourglass-split"></i> Saving...
             </span>
           </button>
         </div>

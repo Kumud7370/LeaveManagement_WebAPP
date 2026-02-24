@@ -44,30 +44,17 @@
   <div class="search-action-section">
     <div class="search-bar">
       <i class="bi bi-search search-icon"></i>
-      <input
-        type="text"
-        placeholder="Search by name or code..."
-        [(ngModel)]="searchTerm"
-        (keyup)="onSearch()"
-        class="search-input"
-      />
+      <input type="text" placeholder="Search by name or code..."
+        [(ngModel)]="searchTerm" (keyup)="onSearch()" class="search-input" />
     </div>
     <button class="btn btn-filter" (click)="showFilters = !showFilters">
       <i class="bi bi-funnel"></i> Filters
       <span class="filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
     </button>
-    <button class="btn btn-clear" (click)="clearFilters()">
-      <i class="bi bi-x-circle"></i> Clear
-    </button>
-    <button class="btn btn-refresh" (click)="loadLeaveTypes()">
-      <i class="bi bi-arrow-clockwise"></i> Refresh
-    </button>
-    <button class="btn btn-export" (click)="exportToExcel()">
-      <i class="bi bi-download"></i> Export
-    </button>
-    <button class="btn btn-primary" (click)="createLeaveType()">
-      <i class="bi bi-plus-circle"></i> Add Leave Type
-    </button>
+    <button class="btn btn-clear"   (click)="clearFilters()">    <i class="bi bi-x-circle"></i> Clear    </button>
+    <button class="btn btn-refresh" (click)="loadLeaveTypes()">  <i class="bi bi-arrow-clockwise"></i> Refresh </button>
+    <button class="btn btn-export"  (click)="exportToExcel()">   <i class="bi bi-download"></i> Export   </button>
+    <button class="btn btn-primary" (click)="createLeaveType()"> <i class="bi bi-plus-circle"></i> Add Leave Type </button>
   </div>
 
   <!-- Filter Panel -->
@@ -129,6 +116,7 @@
       <p>Try adjusting your filters or create a new leave type</p>
       <button class="btn btn-primary" (click)="createLeaveType()">Add Leave Type</button>
     </div>
+
     <ag-grid-angular
       *ngIf="leaveTypes.length > 0"
       class="ag-theme-quartz"
@@ -139,30 +127,44 @@
       (gridReady)="onGridReady($event)"
       [rowHeight]="64"
       [headerHeight]="50"
-      [domLayout]="'autoHeight'"
-    ></ag-grid-angular>
-  </div>
+      [domLayout]="'autoHeight'">
+    </ag-grid-angular>
 
-  <!-- Pagination -->
-  <div *ngIf="!loading && leaveTypes.length > 0" class="pagination-container">
-    <div class="pagination-info">
-      Showing {{ (currentPage - 1) * pageSize + 1 }} to
-      {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} leave types
-    </div>
-    <div class="pagination-controls">
-      <select [(ngModel)]="pageSize" (change)="onPageSizeChange($event)" class="page-size-select">
-        <option [value]="10">10 per page</option>
-        <option [value]="25">25 per page</option>
-        <option [value]="50">50 per page</option>
-      </select>
-      <div class="pagination-buttons">
-        <button class="btn-page" [disabled]="currentPage === 1" (click)="onPageChange(1)"><i class="bi bi-chevron-bar-left"></i></button>
-        <button class="btn-page" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)"><i class="bi bi-chevron-left"></i></button>
-        <button *ngFor="let page of pages" class="btn-page" [class.active]="page === currentPage" (click)="onPageChange(page)">{{ page }}</button>
-        <button class="btn-page" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)"><i class="bi bi-chevron-right"></i></button>
-        <button class="btn-page" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)"><i class="bi bi-chevron-bar-right"></i></button>
+    <!-- Pagination Bar -->
+    <div *ngIf="leaveTypes.length > 0" class="pagination-bar">
+
+      <div class="pagination-info">
+        <span class="items-label">
+          Showing <strong>{{ showingFrom }}</strong>–<strong>{{ showingTo }}</strong>
+          of <strong>{{ totalCount }}</strong> leave types
+        </span>
+        <label class="page-size-label">
+          Rows per page:
+          <select class="page-size-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+            <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+          </select>
+        </label>
       </div>
+
+      <div class="pagination-nav">
+        <button class="page-btn" (click)="onPageChange(1)"               [disabled]="!hasPrevPage" title="First">    <i class="bi bi-chevron-double-left"></i>  </button>
+        <button class="page-btn" (click)="onPageChange(currentPage - 1)" [disabled]="!hasPrevPage" title="Previous"> <i class="bi bi-chevron-left"></i>         </button>
+
+        <button
+          *ngFor="let p of pages"
+          class="page-btn page-number"
+          [class.active]="p === currentPage"
+          (click)="onPageChange(p)">
+          {{ p }}
+        </button>
+
+        <button class="page-btn" (click)="onPageChange(currentPage + 1)" [disabled]="!hasNextPage" title="Next"> <i class="bi bi-chevron-right"></i>        </button>
+        <button class="page-btn" (click)="onPageChange(totalPages)"      [disabled]="!hasNextPage" title="Last"> <i class="bi bi-chevron-double-right"></i> </button>
+      </div>
+
     </div>
+    <!-- End Pagination Bar -->
+
   </div>
 </div>
 
@@ -175,7 +177,7 @@
       [leaveTypeId]="selectedLeaveTypeId"
       [isEditMode]="formMode === 'edit'"
       (formCancelled)="closeFormModal()"
-      (formSubmitted)="onFormSuccess()"
-    ></app-leave-type-form>
+      (formSubmitted)="onFormSuccess()">
+    </app-leave-type-form>
   </div>
 </div>
