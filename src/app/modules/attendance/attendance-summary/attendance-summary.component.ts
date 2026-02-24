@@ -1,14 +1,15 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+// =============================================
+// attendance-summary.component.ts
+// Employee self-service summary view.
+// Admin can view any employee's summary.
+// =============================================
+
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
-import Swal from 'sweetalert2';
+
 import { AttendanceService } from '../../../core/services/api/attendance.api';
-import {
-  AttendanceSummaryDto,
-  formatDate,
-  formatWorkingHours
-} from '../../../core/Models/attendance.model';
+import { AttendanceSummaryDto } from '../../../core/Models/attendance.model';
 
 @Component({
   selector: 'app-attendance-summary',
@@ -17,103 +18,65 @@ import {
   templateUrl: './attendance-summary.component.html',
   styleUrls: ['./attendance-summary.component.scss']
 })
-export class AttendanceSummaryComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-
-  employeeId: string = '';
-  startDate: Date = new Date();
-  endDate: Date = new Date();
+export class AttendanceSummaryComponent implements OnInit {
   summary: AttendanceSummaryDto | null = null;
-  isLoading = false;
+  loading = false;
 
-  formatDate = formatDate;
-  formatWorkingHours = formatWorkingHours;
+  isAdmin = ['admin', 'manager'].includes(
+    (sessionStorage.getItem('RoleName') || '').toLowerCase()
+  );
+  employeeId = sessionStorage.getItem('EmployeeId') || '';
 
-  constructor(private attendanceService: AttendanceService) {
-    this.employeeId = sessionStorage.getItem('UserId') || '';
-    
-    // Set default date range (current month)
-    const now = new Date();
-    this.startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    this.endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  }
+  // Date range - default to current month
+  startDate = '';
+  endDate = '';
+  lookupEmployeeId = '';
+
+  constructor(private attendanceService: AttendanceService) {}
 
   ngOnInit(): void {
-    if (this.employeeId) {
-      this.loadSummary();
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    const today = new Date();
+    this.endDate = today.toISOString().substring(0, 10);
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    this.startDate = first.toISOString().substring(0, 10);
+    this.lookupEmployeeId = this.employeeId;
+    if (this.lookupEmployeeId) this.loadSummary();
   }
 
   loadSummary(): void {
-    if (!this.employeeId || !this.startDate || !this.endDate) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Missing Information',
-        text: 'Please select a date range.',
-        confirmButtonColor: '#3b82f6'
-      });
-      return;
-    }
-
-    this.isLoading = true;
-    this.attendanceService.getAttendanceSummary(
-      this.employeeId,
-      this.startDate,
-      this.endDate
-    )
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (summary) => {
-          this.summary = summary;
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error loading summary:', error);
-          this.isLoading = false;
-          
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.error?.message || 'Failed to load attendance summary.',
-            confirmButtonColor: '#ef4444'
-          });
-        }
-      });
-  }
-
-  onDateRangeChange(): void {
-    this.loadSummary();
+    const eid = this.isAdmin ? this.lookupEmployeeId : this.employeeId;
+    if (!eid || !this.startDate || !this.endDate) return;
+    this.loading = true;
+    this.attendanceService.getAttendanceSummary(eid, this.startDate, this.endDate).subscribe({
+      next: (r) => { if (r.success) this.summary = r.data; this.loading = false; },
+      error: () => { this.loading = false; }
+    });
   }
 
   setCurrentMonth(): void {
-    const now = new Date();
-    this.startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    this.endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const today = new Date();
+    this.endDate = today.toISOString().substring(0, 10);
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    this.startDate = first.toISOString().substring(0, 10);
     this.loadSummary();
   }
 
   setLastMonth(): void {
-    const now = new Date();
-    this.startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    this.endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+    const today = new Date();
+    const firstOfLast = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const lastOfLast  = new Date(today.getFullYear(), today.getMonth(), 0);
+    this.startDate = firstOfLast.toISOString().substring(0, 10);
+    this.endDate   = lastOfLast.toISOString().substring(0, 10);
     this.loadSummary();
   }
 
-  setCurrentYear(): void {
-    const now = new Date();
-    this.startDate = new Date(now.getFullYear(), 0, 1);
-    this.endDate = new Date(now.getFullYear(), 11, 31);
-    this.loadSummary();
-  }
-
-  getAttendancePercentageColor(percentage: number): string {
-    if (percentage >= 90) return '#10b981';
-    if (percentage >= 75) return '#f59e0b';
-    return '#ef4444';
+  getAttendanceArc(): string {
+    if (!this.summary) return 'M 50 50 m -40 0 a 40 40 0 0 1 80 0';
+    const pct = this.summary.attendancePercentage / 100;
+    const angle = pct * Math.PI;
+    const x = 50 + 40 * Math.cos(Math.PI + angle);
+    const y = 50 + 40 * Math.sin(Math.PI + angle);
+    const large = angle > Math.PI / 2 ? 1 : 0;
+    return `M 10 50 A 40 40 0 ${large} 1 ${x.toFixed(2)} ${y.toFixed(2)}`;
   }
 }

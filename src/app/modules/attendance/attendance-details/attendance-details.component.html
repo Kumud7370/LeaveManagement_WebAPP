@@ -1,273 +1,126 @@
-<div class="attendance-details-container" [class.modal-details]="isModal">
-  <!-- Loading State -->
-  <div class="loading-overlay" *ngIf="isLoading">
-    <div class="spinner-container">
-      <div class="spinner"></div>
-      <p>Loading attendance details...</p>
-    </div>
+<!-- attendance-details.component.html -->
+<div class="attendance-details-container">
+
+  <div *ngIf="loading" class="details-loading">
+    <div class="spinner"></div>
+    <p>Loading details...</p>
   </div>
 
-  <!-- Attendance Details Content -->
-  <div class="details-content" *ngIf="!isLoading && attendance">
-    <!-- Header Section -->
-    <div class="details-header">
-      <div class="header-top">
-        <button class="btn-back" (click)="goBack()" *ngIf="!isModal">
-          <i class="fas fa-arrow-left"></i>
-          <span>Back to List</span>
+  <ng-container *ngIf="!loading && record">
+
+    <!-- Header Band -->
+    <div class="details-header" [ngClass]="getStatusClass(record.status)">
+      <div class="header-left">
+        <div class="emp-pill">
+          <i class="fas fa-id-badge"></i> {{ record.employeeCode }}
+        </div>
+        <h2>{{ record.employeeName }}</h2>
+        <p class="date-sub">{{ formatDate(record.attendanceDate) }}</p>
+      </div>
+      <div class="header-right">
+        <span class="status-badge" [ngClass]="getStatusClass(record.status)">
+          {{ record.statusName }}
+        </span>
+        <span class="approved-badge" *ngIf="record.approvedBy">
+          <i class="fas fa-shield-alt"></i> Approved
+        </span>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="details-body">
+
+      <!-- Time Card -->
+      <div class="info-card highlight-card">
+        <div class="time-row">
+          <div class="time-item">
+            <span class="time-label">Check In</span>
+            <span class="time-value">{{ formatTime(record.checkInTime) }}</span>
+            <span class="late-tag" *ngIf="record.isLate">Late +{{ record.lateMinutes }}m</span>
+          </div>
+          <div class="time-arrow"><i class="fas fa-arrow-right"></i></div>
+          <div class="time-item">
+            <span class="time-label">Check Out</span>
+            <span class="time-value">{{ formatTime(record.checkOutTime) }}</span>
+            <span class="early-tag" *ngIf="record.isEarlyLeave">Early -{{ record.earlyLeaveMinutes }}m</span>
+          </div>
+          <div class="time-arrow"><i class="fas fa-hourglass-half"></i></div>
+          <div class="time-item accent">
+            <span class="time-label">Working</span>
+            <span class="time-value">
+              {{ record.workingHours != null ? (record.workingHours | number:'1.1-1') + 'h' : '—' }}
+            </span>
+            <span class="overtime-tag" *ngIf="(record.overtimeHours ?? 0) > 0">
+              +{{ record.overtimeHours | number:'1.1-1' }}h OT
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details Grid -->
+      <div class="details-grid">
+
+        <!-- Left: Method & Device -->
+        <div class="info-card">
+          <h4 class="card-title"><i class="fas fa-fingerprint"></i> Check-In Info</h4>
+          <div class="detail-row">
+            <span class="detail-label">Method</span>
+            <span class="detail-value">{{ record.checkInMethodName ?? '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Device</span>
+            <span class="detail-value">{{ record.checkInDeviceId ?? '—' }}</span>
+          </div>
+          <div class="detail-row" *ngIf="record.checkInLocation">
+            <span class="detail-label">Location</span>
+            <span class="detail-value">
+              {{ record.checkInLocation.address ?? (record.checkInLocation.latitude | number:'1.4-4') + ', ' + (record.checkInLocation.longitude | number:'1.4-4') }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Right: Approval -->
+        <div class="info-card">
+          <h4 class="card-title"><i class="fas fa-user-shield"></i> Approval</h4>
+          <ng-container *ngIf="record.approvedBy; else pendingApproval">
+            <div class="detail-row">
+              <span class="detail-label">Approved By</span>
+              <span class="detail-value">{{ record.approvedBy }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Approved At</span>
+              <span class="detail-value">{{ formatDate(record.approvedAt) }}</span>
+            </div>
+          </ng-container>
+          <ng-template #pendingApproval>
+            <div class="pending-note">
+              <i class="fas fa-hourglass-split"></i>
+              <span>Awaiting approval</span>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <div class="info-card" *ngIf="record.remarks">
+        <h4 class="card-title"><i class="fas fa-comment-alt"></i> Remarks</h4>
+        <p class="remarks-text">{{ record.remarks }}</p>
+      </div>
+
+      <!-- Actions (Admin only) -->
+      <div class="details-actions" *ngIf="isAdmin && !record.approvedBy">
+        <button class="btn btn-approve" (click)="onApprove()">
+          <i class="fas fa-check"></i> Approve
         </button>
-        <div class="header-actions">
-          <button class="btn-action btn-print" (click)="printAttendanceDetails()" title="Print">
-            <i class="fas fa-print"></i>
-          </button>
-          <button class="btn-action btn-edit" (click)="editAttendance()" title="Edit">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn-action btn-delete" (click)="deleteAttendance()" title="Delete">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
       </div>
 
-      <div class="header-main">
-        <div class="employee-info">
-          <h1 class="employee-name">{{ attendance.employeeName }}</h1>
-          <p class="employee-code">
-            <i class="fas fa-id-badge"></i> 
-            {{ attendance.employeeCode }}
-          </p>
-          
-          <div class="attendance-badges">
-            <span class="badge" [ngClass]="getStatusBadgeClass(attendance.status)">
-              {{ attendance.statusName }}
-            </span>
-            <span class="badge badge-date">
-              <i class="fas fa-calendar-day"></i>
-              {{ formatDate(attendance.attendanceDate) }}
-            </span>
-          </div>
-        </div>
-
-        <div class="approval-status" *ngIf="isApproved">
-          <div class="approval-badge">
-            <i class="fas fa-check-circle"></i>
-            <span>Approved</span>
-          </div>
-          <p class="approval-info">
-            By {{ attendance.approvedBy }} on {{ formatDateTime(attendance.approvedAt) }}
-          </p>
-        </div>
-      </div>
     </div>
+  </ng-container>
 
-    <!-- Details Grid -->
-    <div class="details-grid">
-      <!-- Time Information Card -->
-      <div class="info-card">
-        <div class="card-header">
-          <h3><i class="fas fa-clock"></i> Time Information</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-row">
-            <div class="info-label">Check-In Time:</div>
-            <div class="info-value">
-              <i class="fas fa-sign-in-alt text-success"></i>
-              {{ formatTime(attendance.checkInTime) }}
-            </div>
-          </div>
-
-          <div class="info-row">
-            <div class="info-label">Check-Out Time:</div>
-            <div class="info-value">
-              <i class="fas fa-sign-out-alt text-danger"></i>
-              {{ formatTime(attendance.checkOutTime) }}
-            </div>
-          </div>
-
-          <div class="info-row">
-            <div class="info-label">Working Hours:</div>
-            <div class="info-value">
-              <span class="highlight primary">
-                {{ formatWorkingHours(attendance.workingHours) }}
-              </span>
-            </div>
-          </div>
-
-          <div class="info-row" *ngIf="attendance.overtimeHours && attendance.overtimeHours > 0">
-            <div class="info-label">Overtime Hours:</div>
-            <div class="info-value">
-              <span class="highlight overtime">
-                {{ formatWorkingHours(attendance.overtimeHours) }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Status Information Card -->
-      <div class="info-card">
-        <div class="card-header">
-          <h3><i class="fas fa-info-circle"></i> Status Information</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-row">
-            <div class="info-label">Attendance Status:</div>
-            <div class="info-value">
-              <span class="badge" [ngClass]="getStatusBadgeClass(attendance.status)">
-                {{ attendance.statusName }}
-              </span>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <div class="info-label">Late Arrival:</div>
-            <div class="info-value">
-              <span *ngIf="attendance.isLate" class="badge badge-warning">
-                <i class="fas fa-exclamation-triangle"></i>
-                Late by {{ attendance.lateMinutes }} minutes
-              </span>
-              <span *ngIf="!attendance.isLate" class="text-success">
-                <i class="fas fa-check-circle"></i>
-                On Time
-              </span>
-            </div>
-          </div>
-
-          <div class="info-row">
-            <div class="info-label">Early Leave:</div>
-            <div class="info-value">
-              <span *ngIf="attendance.isEarlyLeave" class="badge badge-warning">
-                <i class="fas fa-exclamation-triangle"></i>
-                Early by {{ attendance.earlyLeaveMinutes }} minutes
-              </span>
-              <span *ngIf="!attendance.isEarlyLeave" class="text-success">
-                <i class="fas fa-check-circle"></i>
-                Full Day
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Check-In Method Card -->
-      <div class="info-card">
-        <div class="card-header">
-          <h3><i class="fas fa-fingerprint"></i> Check-In Method</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-row">
-            <div class="info-label">Method:</div>
-            <div class="info-value">
-              <i [class]="getCheckInMethodIcon(attendance.checkInMethod!)"></i>
-              {{ attendance.checkInMethodName || 'N/A' }}
-            </div>
-          </div>
-
-          <div class="info-row" *ngIf="attendance.checkInDeviceId">
-            <div class="info-label">Device ID:</div>
-            <div class="info-value code">
-              {{ attendance.checkInDeviceId }}
-            </div>
-          </div>
-
-          <div class="info-row" *ngIf="attendance.checkInLocation">
-            <div class="info-label">Location:</div>
-            <div class="info-value">
-              <i class="fas fa-map-marker-alt"></i>
-              {{ attendance.checkInLocation.address || 'N/A' }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Check-Out Method Card -->
-      <div class="info-card">
-        <div class="card-header">
-          <h3><i class="fas fa-fingerprint"></i> Check-Out Method</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-row">
-            <div class="info-label">Method:</div>
-            <div class="info-value">
-              <i [class]="getCheckInMethodIcon(attendance.checkOutMethod!)"></i>
-              {{ attendance.checkOutMethodName || 'N/A' }}
-            </div>
-          </div>
-
-          <div class="info-row" *ngIf="attendance.checkOutDeviceId">
-            <div class="info-label">Device ID:</div>
-            <div class="info-value code">
-              {{ attendance.checkOutDeviceId }}
-            </div>
-          </div>
-
-          <div class="info-row" *ngIf="attendance.checkOutLocation">
-            <div class="info-label">Location:</div>
-            <div class="info-value">
-              <i class="fas fa-map-marker-alt"></i>
-              {{ attendance.checkOutLocation.address || 'N/A' }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Remarks Card -->
-      <div class="info-card full-width" *ngIf="attendance.remarks">
-        <div class="card-header">
-          <h3><i class="fas fa-comment"></i> Remarks</h3>
-        </div>
-        <div class="card-body">
-          <p class="remarks-text">{{ attendance.remarks }}</p>
-        </div>
-      </div>
-
-      <!-- Audit Information Card -->
-      <div class="info-card full-width">
-        <div class="card-header">
-          <h3><i class="fas fa-history"></i> Audit Information</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-row">
-            <div class="info-label">Created At:</div>
-            <div class="info-value">
-              {{ formatDateTime(attendance.createdAt) }}
-            </div>
-          </div>
-
-          <div class="info-row" *ngIf="attendance.updatedAt">
-            <div class="info-label">Last Updated:</div>
-            <div class="info-value">
-              {{ formatDateTime(attendance.updatedAt) }}
-            </div>
-          </div>
-
-          <div class="info-row" *ngIf="attendance.approvedBy">
-            <div class="info-label">Approved By:</div>
-            <div class="info-value">
-              {{ attendance.approvedBy }} on {{ formatDateTime(attendance.approvedAt) }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Actions Card -->
-      <div class="info-card action-card" *ngIf="canApprove">
-        <div class="card-header">
-          <h3><i class="fas fa-tasks"></i> Actions</h3>
-        </div>
-        <div class="card-body">
-          <div class="action-buttons-grid">
-            <button 
-              class="action-btn btn-approve"
-              (click)="approveAttendance()"
-              [disabled]="isApproved"
-            >
-              <i class="fas fa-check-circle"></i>
-              {{ isApproved ? 'Approved' : 'Approve Attendance' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- Error -->
+  <div *ngIf="!loading && !record" class="details-error">
+    <i class="fas fa-exclamation-circle"></i>
+    <p>Failed to load attendance details.</p>
   </div>
+
 </div>
