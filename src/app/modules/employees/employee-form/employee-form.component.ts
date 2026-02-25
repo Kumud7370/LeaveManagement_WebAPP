@@ -16,6 +16,32 @@ import {
   Gender
 } from '../../../../app/core/Models/employee.model';
 
+const FIELD_LABELS: Record<string, string> = {
+  employeeCode:         'Employee Code',
+  firstName:            'First Name',
+  middleName:           'Middle Name',
+  lastName:             'Last Name',
+  dateOfBirth:          'Date of Birth',
+  gender:               'Gender',
+  email:                'Email',
+  phoneNumber:          'Phone Number',
+  alternatePhoneNumber: 'Alternate Phone Number',
+  street:               'Street',
+  city:                 'City',
+  state:                'State',
+  country:              'Country',
+  postalCode:           'Postal Code',
+  departmentId:         'Department',
+  designationId:        'Designation',
+  managerId:            'Manager',
+  dateOfJoining:        'Date of Joining',
+  dateOfLeaving:        'Date of Leaving',
+  employmentType:       'Employment Type',
+  employeeStatus:       'Employee Status',
+  profileImageUrl:      'Profile Image URL',
+  biometricId:          'Biometric ID'
+};
+
 @Component({
   selector: 'app-employee-form',
   standalone: true,
@@ -26,7 +52,7 @@ import {
 export class EmployeeFormComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  @Input() isModal = false;
+  @Input() isModal    = false;
   @Input() employeeId: string | null = null;
   @Input() isEditMode = false;
   @Output() formCancelled = new EventEmitter<void>();
@@ -34,35 +60,34 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
 
   employeeForm: FormGroup;
   isLoading = false;
-  isSaving = false;
+  isSaving  = false;
 
-  // Departments & Designations
-  departments: any[] = [];
-  designations: any[] = [];
-  isDepartmentsLoading = false;
+  departments:          any[] = [];
+  designations:         any[] = [];
+  isDepartmentsLoading  = false;
   isDesignationsLoading = false;
 
   genderOptions = [
-    { value: Gender.Male,   label: 'Male' },
+    { value: Gender.Male,   label: 'Male'   },
     { value: Gender.Female, label: 'Female' },
-    { value: Gender.Other,  label: 'Other' }
+    { value: Gender.Other,  label: 'Other'  }
   ];
 
   employmentTypeOptions = [
-    { value: EmploymentType.FullTime,  label: 'Full Time' },
-    { value: EmploymentType.PartTime,  label: 'Part Time' },
-    { value: EmploymentType.Contract,  label: 'Contract' },
-    { value: EmploymentType.Intern,    label: 'Intern' },
-    { value: EmploymentType.Temporary, label: 'Temporary' }
+    { value: EmploymentType.FullTime,  label: 'Full Time'  },
+    { value: EmploymentType.PartTime,  label: 'Part Time'  },
+    { value: EmploymentType.Contract,  label: 'Contract'   },
+    { value: EmploymentType.Intern,    label: 'Intern'     },
+    { value: EmploymentType.Temporary, label: 'Temporary'  }
   ];
 
   employeeStatusOptions = [
-    { value: EmployeeStatus.Active,     label: 'Active' },
-    { value: EmployeeStatus.Inactive,   label: 'Inactive' },
-    { value: EmployeeStatus.OnLeave,    label: 'On Leave' },
-    { value: EmployeeStatus.Suspended,  label: 'Suspended' },
+    { value: EmployeeStatus.Active,     label: 'Active'     },
+    { value: EmployeeStatus.Inactive,   label: 'Inactive'   },
+    { value: EmployeeStatus.OnLeave,    label: 'On Leave'   },
+    { value: EmployeeStatus.Suspended,  label: 'Suspended'  },
     { value: EmployeeStatus.Terminated, label: 'Terminated' },
-    { value: EmployeeStatus.Resigned,   label: 'Resigned' }
+    { value: EmployeeStatus.Resigned,   label: 'Resigned'   }
   ];
 
   constructor(
@@ -99,76 +124,50 @@ export class EmployeeFormComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ─── Load Departments ─────────────────────────────────────────────────────────
-  // Handles all response shapes:
-  //   • T[]                            (service already unwrapped with map(r => r.data))
-  //   • ApiResponseDto<T[]>            { success, data: T[] }
-  //   • ApiResponseDto<PagedResultDto> { success, data: { items: T[] } }
-  //   • PagedResultDto                 { items: T[], totalCount, ... }
- private loadDepartments(): void {
-  this.isDepartmentsLoading = true;
-  this.departmentService.getActiveDepartments()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: (response: any) => {
-        const raw = this.extractArray(response);
-        // Normalize: map departmentId/departmentName → id/name
-        this.departments = raw.map((d: any) => ({
-          id: d.departmentId ?? d.id,
-          name: d.departmentName ?? d.name
-        }));
-        console.log(`✅ Departments loaded: ${this.departments.length}`, this.departments);
-        this.isDepartmentsLoading = false;
-      },
-      error: (err: any) => {
-        console.error('❌ Error loading departments:', err);
-        this.isDepartmentsLoading = false;
-      }
-    });
-}
+  private loadDepartments(): void {
+    this.isDepartmentsLoading = true;
+    this.departmentService.getActiveDepartments()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          const raw = this.extractArray(response);
+          this.departments = raw.map((d: any) => ({
+            id:   d.departmentId ?? d.id,
+            name: d.departmentName ?? d.name
+          }));
+          this.isDepartmentsLoading = false;
+        },
+        error: () => { this.isDepartmentsLoading = false; }
+      });
+  }
 
-private loadDesignations(): void {
-  this.isDesignationsLoading = true;
-  this.designationService.getActiveDesignations()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: (response: any) => {
-        const raw = this.extractArray(response);
-        // Normalize: map designationId/designationName → id/name
-        this.designations = raw.map((d: any) => ({
-          id: d.designationId ?? d.id,
-          name: d.designationName ?? d.name
-        }));
-        console.log(`✅ Designations loaded: ${this.designations.length}`, this.designations);
-        this.isDesignationsLoading = false;
-      },
-      error: (err: any) => {
-        console.error('❌ Error loading designations:', err);
-        this.isDesignationsLoading = false;
-      }
-    });
-}
+  private loadDesignations(): void {
+    this.isDesignationsLoading = true;
+    this.designationService.getActiveDesignations()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          const raw = this.extractArray(response);
+          this.designations = raw.map((d: any) => ({
+            id:   d.designationId ?? d.id,
+            name: d.designationName ?? d.name
+          }));
+          this.isDesignationsLoading = false;
+        },
+        error: () => { this.isDesignationsLoading = false; }
+      });
+  }
 
   private extractArray(response: any): any[] {
-    if (Array.isArray(response)) {
-      return response;
-    }
+    if (Array.isArray(response))              return response;
     if (response?.data) {
-      if (Array.isArray(response.data)) {
-        return response.data;
-      }
-      if (Array.isArray(response.data?.items)) {
-        return response.data.items;
-      }
+      if (Array.isArray(response.data))        return response.data;
+      if (Array.isArray(response.data?.items)) return response.data.items;
     }
-    if (Array.isArray(response?.items)) {
-      return response.items;
-    }
-    console.warn('⚠️ Could not extract array from response shape:', response);
+    if (Array.isArray(response?.items))        return response.items;
     return [];
   }
 
-  // ─── Form ───────
   private createForm(): FormGroup {
     return this.fb.group({
       employeeCode:         ['', [Validators.required, Validators.minLength(3), Validators.maxLength(20)]],
@@ -176,7 +175,7 @@ private loadDesignations(): void {
       middleName:           ['', Validators.maxLength(50)],
       lastName:             ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
       dateOfBirth:          ['', Validators.required],
-      gender:               [Gender.Male, Validators.required],
+      gender:               [Gender.Male,            Validators.required],
       email:                ['', [Validators.required, Validators.email]],
       phoneNumber:          ['', [Validators.required, Validators.pattern(/^\+?[1-9]\d{1,14}$/)]],
       alternatePhoneNumber: ['', Validators.pattern(/^\+?[1-9]\d{1,14}$/)],
@@ -191,7 +190,7 @@ private loadDesignations(): void {
       dateOfJoining:        ['', Validators.required],
       dateOfLeaving:        [''],
       employmentType:       [EmploymentType.FullTime, Validators.required],
-      employeeStatus:       [EmployeeStatus.Active, Validators.required],
+      employeeStatus:       [EmployeeStatus.Active,   Validators.required],
       profileImageUrl:      [''],
       biometricId:          ['']
     });
@@ -199,7 +198,6 @@ private loadDesignations(): void {
 
   private loadEmployeeData(): void {
     if (!this.employeeId) return;
-
     this.isLoading = true;
     this.employeeService.getEmployeeById(this.employeeId)
       .pipe(takeUntil(this.destroy$))
@@ -209,16 +207,10 @@ private loadDesignations(): void {
           this.isLoading = false;
           this.employeeForm.get('employeeCode')?.disable();
         },
-        error: (error) => {
-          console.error('Error loading employee:', error);
+        error: () => {
           this.isLoading = false;
-          Swal.fire({
-            icon: 'error', title: 'Error',
-            text: 'Failed to load employee data.',
-            confirmButtonColor: '#1a2a6c'
-          }).then(() => {
-            if (this.isModal) { this.cancel(); } else { this.router.navigate(['/employees']); }
-          });
+          Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load employee data.', confirmButtonColor: '#1a2a6c' })
+            .then(() => { if (this.isModal) { this.cancel(); } else { this.router.navigate(['/employees']); } });
         }
       });
   }
@@ -234,10 +226,10 @@ private loadDesignations(): void {
       email:                employee.email,
       phoneNumber:          employee.phoneNumber,
       alternatePhoneNumber: employee.alternatePhoneNumber,
-      street:               employee.address?.street || '',
-      city:                 employee.address?.city || '',
-      state:                employee.address?.state || '',
-      country:              employee.address?.country || '',
+      street:               employee.address?.street     || '',
+      city:                 employee.address?.city       || '',
+      state:                employee.address?.state      || '',
+      country:              employee.address?.country    || '',
       postalCode:           employee.address?.postalCode || '',
       departmentId:         employee.departmentId,
       designationId:        employee.designationId,
@@ -251,14 +243,99 @@ private loadDesignations(): void {
     });
   }
 
-  // ─── Submit ──────
+  // ─────────────────────────────────────────────────────────────────────────
+  // CORE FIX 1: Backend uses JsonStringEnumConverter → must send "Male" not 1
+  // TypeScript numeric enum reverse mapping: Gender[1] === "Male"
+  // ─────────────────────────────────────────────────────────────────────────
+  private toEnumString<T extends object>(enumObj: T, value: any): string {
+    const numVal = Number(value);
+    const name   = (enumObj as any)[numVal];
+    if (typeof name === 'string') return name;
+    // already a string key like "Male"
+    if (typeof value === 'string' && isNaN(Number(value))) return value;
+    console.warn('⚠️ Cannot resolve enum string for:', value, enumObj);
+    return String(value);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // CORE FIX 2: ASP.NET Core returns errors as an OBJECT, not an array:
+  //   { "errors": { "FirstName": ["First name is required"], "Email": ["..."] } }
+  // Calling .join() on an object throws "join is not a function" — fixed here.
+  // ─────────────────────────────────────────────────────────────────────────
+  private parseBackendErrors(error: any): string {
+    const body = error?.error;
+
+    // ASP.NET Core ModelState: { errors: { "Field": ["msg"] } }
+    if (body?.errors && typeof body.errors === 'object' && !Array.isArray(body.errors)) {
+      const lines: string[] = [];
+      for (const field of Object.keys(body.errors)) {
+        const msgs = body.errors[field];
+        if (Array.isArray(msgs)) {
+          msgs.forEach((m: string) => lines.push(`• <b>${field}:</b> ${m}`));
+        }
+      }
+      if (lines.length) return lines.join('<br>');
+    }
+
+    // Custom API errors array: { errors: ["msg1", "msg2"] }
+    if (Array.isArray(body?.errors) && body.errors.length) {
+      return (body.errors as string[]).join('<br>');
+    }
+
+    // Simple message string
+    if (body?.message) return body.message;
+    if (typeof body === 'string') return body;
+
+    return 'Failed to save employee. Please check all fields and try again.';
+  }
+
+  private isDuplicateError(error: any): boolean {
+    if (error?.status === 409) return true;
+    const msg = (error?.error?.message || '').toLowerCase();
+    return msg.includes('duplicate') || msg.includes('already exists') ||
+           msg.includes('already taken') || msg.includes('conflict');
+  }
+
+  private getDuplicateMessage(error: any): string {
+    const msg = (error?.error?.message || '').toLowerCase();
+    if (msg.includes('email')) {
+      const email = this.employeeForm.get('email')?.value || '';
+      return `The email <b>${email}</b> is already registered. Please use a different email.`;
+    }
+    if (msg.includes('employee code') || msg.includes('employeecode')) {
+      const code = this.employeeForm.getRawValue().employeeCode || '';
+      return `Employee Code <b>${code}</b> is already in use. Please choose a different code.`;
+    }
+    return error?.error?.message || 'A duplicate record already exists.';
+  }
+
+  private getClientValidationErrors(): string[] {
+    const errors: string[] = [];
+    Object.keys(this.employeeForm.controls).forEach(key => {
+      const ctrl  = this.employeeForm.get(key);
+      if (!ctrl || !ctrl.invalid) return;
+      const label = FIELD_LABELS[key] || key;
+      if (ctrl.errors?.['required'])  { errors.push(`<b>${label}</b> is required`); return; }
+      if (ctrl.errors?.['email'])     { errors.push(`<b>${label}</b> – Invalid email format`); return; }
+      if (ctrl.errors?.['minlength']) { errors.push(`<b>${label}</b> – Minimum ${ctrl.errors['minlength'].requiredLength} characters`); return; }
+      if (ctrl.errors?.['maxlength']) { errors.push(`<b>${label}</b> – Maximum ${ctrl.errors['maxlength'].requiredLength} characters`); return; }
+      if (ctrl.errors?.['pattern'])   { errors.push(`<b>${label}</b> – Invalid format`); return; }
+    });
+    return errors;
+  }
+
+  // ─── Submit ───────────────────────────────────────────────────────────────
   onSubmit(): void {
     if (this.employeeForm.invalid) {
       this.markFormGroupTouched(this.employeeForm);
+      const errors   = this.getClientValidationErrors();
+      const listHtml = errors.map(e => `<li style="text-align:left;margin:4px 0;">${e}</li>`).join('');
       Swal.fire({
-        icon: 'warning', title: 'Validation Error',
-        text: 'Please fill all required fields correctly.',
-        confirmButtonColor: '#1a2a6c'
+        icon: 'warning',
+        title: 'Please fix the following fields',
+        html: `<div style="max-height:260px;overflow-y:auto;"><ul style="padding-left:18px;margin:0;font-size:14px;line-height:1.8;">${listHtml}</ul></div>`,
+        confirmButtonColor: '#1a2a6c',
+        confirmButtonText:  'OK, let me fix it'
       });
       return;
     }
@@ -266,95 +343,127 @@ private loadDesignations(): void {
     if (this.isEditMode) { this.updateEmployee(); } else { this.createEmployee(); }
   }
 
-  private createEmployee(): void {
-    const formValue = this.employeeForm.getRawValue();
-    const dto: CreateEmployeeDto = {
-      employeeCode:         formValue.employeeCode,
-      firstName:            formValue.firstName,
-      middleName:           formValue.middleName || undefined,
-      lastName:             formValue.lastName,
-      dateOfBirth:          new Date(formValue.dateOfBirth),
-      gender:               Number(formValue.gender),
-      email:                formValue.email,
-      phoneNumber:          formValue.phoneNumber,
-      alternatePhoneNumber: formValue.alternatePhoneNumber || undefined,
+  // Build DTO — enums as strings for JsonStringEnumConverter
+  private buildCreateDto(): any {
+    const fv = this.employeeForm.getRawValue();
+    const dto = {
+      employeeCode:         fv.employeeCode,
+      firstName:            fv.firstName,
+      middleName:           fv.middleName    || null,
+      lastName:             fv.lastName,
+      dateOfBirth:          new Date(fv.dateOfBirth).toISOString(),
+      gender:               this.toEnumString(Gender, fv.gender),
+      email:                fv.email,
+      phoneNumber:          fv.phoneNumber,
+      alternatePhoneNumber: fv.alternatePhoneNumber || null,
       address: {
-        street:     formValue.street,
-        city:       formValue.city,
-        state:      formValue.state,
-        country:    formValue.country,
-        postalCode: formValue.postalCode
+        street:     fv.street,
+        city:       fv.city,
+        state:      fv.state,
+        country:    fv.country,
+        postalCode: fv.postalCode
       },
-      departmentId:    formValue.departmentId,
-      designationId:   formValue.designationId,
-      managerId:       formValue.managerId || undefined,
-      dateOfJoining:   new Date(formValue.dateOfJoining),
-      dateOfLeaving:   formValue.dateOfLeaving ? new Date(formValue.dateOfLeaving) : undefined,
-      employmentType:  Number(formValue.employmentType),
-      employeeStatus:  Number(formValue.employeeStatus),
-      profileImageUrl: formValue.profileImageUrl || undefined,
-      biometricId:     formValue.biometricId || undefined
+      departmentId:    fv.departmentId,
+      designationId:   fv.designationId,
+      managerId:       fv.managerId       || null,
+      dateOfJoining:   new Date(fv.dateOfJoining).toISOString(),
+      dateOfLeaving:   fv.dateOfLeaving   ? new Date(fv.dateOfLeaving).toISOString() : null,
+      employmentType:  this.toEnumString(EmploymentType, fv.employmentType),
+      employeeStatus:  this.toEnumString(EmployeeStatus, fv.employeeStatus),
+      profileImageUrl: fv.profileImageUrl || null,
+      biometricId:     fv.biometricId     || null
     };
+    console.log('📤 CREATE PAYLOAD:', JSON.stringify(dto, null, 2));
+    return dto;
+  }
 
+  private buildUpdateDto(): any {
+    const fv = this.employeeForm.getRawValue();
+    const dto = {
+      firstName:            fv.firstName,
+      middleName:           fv.middleName    || null,
+      lastName:             fv.lastName,
+      dateOfBirth:          new Date(fv.dateOfBirth).toISOString(),
+      gender:               this.toEnumString(Gender, fv.gender),
+      email:                fv.email,
+      phoneNumber:          fv.phoneNumber,
+      alternatePhoneNumber: fv.alternatePhoneNumber || null,
+      address: {
+        street:     fv.street,
+        city:       fv.city,
+        state:      fv.state,
+        country:    fv.country,
+        postalCode: fv.postalCode
+      },
+      departmentId:    fv.departmentId,
+      designationId:   fv.designationId,
+      managerId:       fv.managerId       || null,
+      dateOfJoining:   new Date(fv.dateOfJoining).toISOString(),
+      dateOfLeaving:   fv.dateOfLeaving   ? new Date(fv.dateOfLeaving).toISOString() : null,
+      employmentType:  this.toEnumString(EmploymentType, fv.employmentType),
+      employeeStatus:  this.toEnumString(EmployeeStatus, fv.employeeStatus),
+      profileImageUrl: fv.profileImageUrl || null,
+      biometricId:     fv.biometricId     || null
+    };
+    console.log('📤 UPDATE PAYLOAD:', JSON.stringify(dto, null, 2));
+    return dto;
+  }
+
+  private createEmployee(): void {
+    const dto = this.buildCreateDto();
     this.employeeService.createEmployee(dto)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           this.isSaving = false;
-          Swal.fire({ icon: 'success', title: 'Success', text: 'Employee created successfully.', timer: 2000, showConfirmButton: false });
+          Swal.fire({ icon: 'success', title: 'Success!', text: 'Employee created successfully.', timer: 2000, showConfirmButton: false });
           if (this.isModal) { this.formSubmitted.emit(); } else { this.router.navigate(['/employees']); }
         },
-        error: (error) => {
-          console.error('Error creating employee:', error);
+        error: (error: any) => {
+          console.error('❌ Error body:', JSON.stringify(error?.error, null, 2));
           this.isSaving = false;
-          Swal.fire({ icon: 'error', title: 'Error', text: error.error?.message || 'Failed to create employee.', confirmButtonColor: '#1a2a6c' });
+
+          if (this.isDuplicateError(error)) {
+            Swal.fire({ icon: 'warning', title: '⚠️ Duplicate Entry', html: this.getDuplicateMessage(error), confirmButtonColor: '#1a2a6c' });
+            return;
+          }
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Validation Failed',
+            html: `<div style="font-size:14px;line-height:1.9;text-align:left;">${this.parseBackendErrors(error)}</div>`,
+            confirmButtonColor: '#1a2a6c'
+          });
         }
       });
   }
 
   private updateEmployee(): void {
     if (!this.employeeId) return;
-
-    const formValue = this.employeeForm.getRawValue();
-    const dto: UpdateEmployeeDto = {
-      firstName:            formValue.firstName,
-      middleName:           formValue.middleName || undefined,
-      lastName:             formValue.lastName,
-      dateOfBirth:          new Date(formValue.dateOfBirth),
-      gender:               Number(formValue.gender),
-      email:                formValue.email,
-      phoneNumber:          formValue.phoneNumber,
-      alternatePhoneNumber: formValue.alternatePhoneNumber || undefined,
-      address: {
-        street:     formValue.street,
-        city:       formValue.city,
-        state:      formValue.state,
-        country:    formValue.country,
-        postalCode: formValue.postalCode
-      },
-      departmentId:    formValue.departmentId,
-      designationId:   formValue.designationId,
-      managerId:       formValue.managerId || undefined,
-      dateOfJoining:   new Date(formValue.dateOfJoining),
-      dateOfLeaving:   formValue.dateOfLeaving ? new Date(formValue.dateOfLeaving) : undefined,
-      employmentType:  Number(formValue.employmentType),
-      employeeStatus:  Number(formValue.employeeStatus),
-      profileImageUrl: formValue.profileImageUrl || undefined,
-      biometricId:     formValue.biometricId || undefined
-    };
-
+    const dto = this.buildUpdateDto();
     this.employeeService.updateEmployee(this.employeeId, dto)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           this.isSaving = false;
-          Swal.fire({ icon: 'success', title: 'Success', text: 'Employee updated successfully.', timer: 2000, showConfirmButton: false });
+          Swal.fire({ icon: 'success', title: 'Success!', text: 'Employee updated successfully.', timer: 2000, showConfirmButton: false });
           if (this.isModal) { this.formSubmitted.emit(); } else { this.router.navigate(['/employees']); }
         },
-        error: (error) => {
-          console.error('Error updating employee:', error);
+        error: (error: any) => {
+          console.error('❌ Error body:', JSON.stringify(error?.error, null, 2));
           this.isSaving = false;
-          Swal.fire({ icon: 'error', title: 'Error', text: error.error?.message || 'Failed to update employee.', confirmButtonColor: '#1a2a6c' });
+
+          if (this.isDuplicateError(error)) {
+            Swal.fire({ icon: 'warning', title: '⚠️ Duplicate Entry', html: this.getDuplicateMessage(error), confirmButtonColor: '#1a2a6c' });
+            return;
+          }
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Validation Failed',
+            html: `<div style="font-size:14px;line-height:1.9;text-align:left;">${this.parseBackendErrors(error)}</div>`,
+            confirmButtonColor: '#1a2a6c'
+          });
         }
       });
   }
@@ -364,16 +473,14 @@ private loadDesignations(): void {
   }
 
   private formatDateForInput(date: Date | string): string {
-    const d = new Date(date);
+    const d     = new Date(date);
     const month = ('0' + (d.getMonth() + 1)).slice(-2);
     const day   = ('0' + d.getDate()).slice(-2);
     return `${d.getFullYear()}-${month}-${day}`;
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.keys(formGroup.controls).forEach(key => {
-      formGroup.get(key)?.markAsTouched();
-    });
+    Object.keys(formGroup.controls).forEach(key => formGroup.get(key)?.markAsTouched());
   }
 
   isFieldInvalid(fieldName: string): boolean {
