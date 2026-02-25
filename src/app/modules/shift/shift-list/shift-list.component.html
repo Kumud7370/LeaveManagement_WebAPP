@@ -1,108 +1,158 @@
-<div class="shift-management">
+<!-- shift-list.component.html -->
 
-  <!-- Page Header -->
-  <div class="page-header">
-    <div>
-      <h1 class="page-title">Shift Management</h1>
-      <p class="page-subtitle">Configure and manage work shifts for your organization</p>
+<div class="sl-page-container">
+
+  <!-- ── Page Title ──────────────────────────────────────────────── -->
+  <div class="sl-page-header">
+    <h1 class="sl-page-title">Shift Management</h1>
+  </div>
+
+  <!-- ── Stats Cards ────────────────────────────────────────────── -->
+  <div class="sl-stats-grid">
+    <div class="sl-stat-card sl-stat-total">
+      <p class="sl-stat-label">Total Shifts</p>
+      <p class="sl-stat-value">{{ stats.total }}</p>
+    </div>
+    <div class="sl-stat-card sl-stat-active">
+      <p class="sl-stat-label">Active Shifts</p>
+      <p class="sl-stat-value">{{ stats.active }}</p>
+    </div>
+    <div class="sl-stat-card sl-stat-night">
+      <p class="sl-stat-label">Night Shifts</p>
+      <p class="sl-stat-value">{{ stats.nightShifts }}</p>
     </div>
   </div>
 
-  <!-- Filters — single row like Department Management -->
-  <div class="filters-container">
-    <div class="filters-row">
-
-      <!-- Search Box -->
-      <div class="search-box">
-        <i class="bi bi-search search-icon"></i>
-        <input
-          type="text"
-          class="search-input"
-          placeholder="Search shifts..."
-          [(ngModel)]="searchTerm"
-          (keyup.enter)="onSearch()"
-        />
-      </div>
-
-      <!-- Action Buttons — inline after search (Department style) -->
-      <button class="btn btn-clear" (click)="clearFilters()" title="Clear filters">
-        <i class="bi bi-funnel"></i> Clear
+  <!-- ── Toolbar Row ──── -->
+  <div class="sl-toolbar">
+    <div class="sl-search-wrapper">
+      <input
+        type="text"
+        placeholder="Search shifts..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+        class="sl-search-input"
+      />
+    </div>
+    <div class="sl-toolbar-actions">
+      <button (click)="clearFilters()" class="sl-btn sl-btn-clear">
+        Clear
       </button>
-
-      <button class="btn btn-refresh" (click)="loadShifts()" title="Refresh data">
-        <i class="bi bi-arrow-clockwise"></i> Refresh
+      <button (click)="loadShifts()" class="sl-btn sl-btn-refresh">
+        Refresh
       </button>
-
-      <button class="btn btn-export" (click)="exportData()" title="Export CSV">
+      <button (click)="exportData()" class="sl-btn sl-btn-export">
         <i class="bi bi-download"></i> Export
       </button>
-
-      <button class="btn btn-primary" (click)="openCreateModal()">
-        <i class="bi bi-plus-circle"></i> Add Shift
+      <div class="sl-toolbar-divider"></div>
+      <button (click)="openCreateModal()" class="sl-btn sl-btn-primary">
+        <i class="bi bi-plus-lg"></i> Add Shift
       </button>
-
     </div>
   </div>
 
-  <!-- AG Grid -->
-  <div class="grid-container">
-    <ag-grid-angular
-      class="ag-theme-alpine"
-      [rowData]="shifts"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      [pagination]="false"
-      [suppressPaginationPanel]="true"
-      [domLayout]="'autoHeight'"
-      [context]="context"
-      (gridReady)="onGridReady($event)"
-      style="width: 100%"
-    ></ag-grid-angular>
+  <!-- ── Active Filters ─ -->
+  <div *ngIf="activeFilters.hasActiveFilters" class="sl-active-filters">
+    <span class="sl-filter-label">Active Filters:</span>
+    <span
+      *ngFor="let filter of activeFilters.filters"
+      class="sl-filter-badge"
+    >{{ filter }}</span>
   </div>
 
-  <!-- Pagination -->
-  <div class="pagination-container" *ngIf="totalRecords > 0">
-    <div class="pagination-info">
-      Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ getMaxRecords() }} of
-      {{ totalRecords }} shifts
+  <!-- ── Grid Card ─────────────────────────────────────────────── -->
+  <div class="sl-grid-card">
+    <div class="sl-grid-container">
+      <ag-grid-angular
+        #agGrid
+        style="width: 100%"
+        [theme]="gridTheme"
+        [domLayout]="'autoHeight'"
+        [rowData]="rowData"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [pagination]="false"
+        [animateRows]="true"
+        [rowSelection]="'multiple'"
+        [enableCellTextSelection]="true"
+        [suppressRowClickSelection]="true"
+        [rowHeight]="44"
+        [headerHeight]="44"
+        [floatingFiltersHeight]="36"
+        [suppressMenuHide]="true"
+        [enableBrowserTooltips]="true"
+        [suppressColumnVirtualisation]="true"
+        [suppressRowVirtualisation]="false"
+        [rowBuffer]="10"
+        [suppressLoadingOverlay]="false"
+        [suppressNoRowsOverlay]="false"
+        (gridReady)="onGridReady($event)"
+        [context]="context"
+      >
+      </ag-grid-angular>
     </div>
 
-    <div class="pagination-controls">
-
-      <select class="page-size-select" [(ngModel)]="pageSize" (change)="onPageSizeChange(pageSize)">
-        <option [value]="10">10 per page</option>
-        <option [value]="20">20 per page</option>
-        <option [value]="50">50 per page</option>
-        <option [value]="100">100 per page</option>
-      </select>
-
-      <div class="page-buttons">
-        <button class="page-btn" [disabled]="currentPage === 1" (click)="onPageChange(1)" title="First page">
-          <i class="bi bi-chevron-double-left"></i>
-        </button>
-        <button class="page-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)" title="Previous page">
-          <i class="bi bi-chevron-left"></i>
-        </button>
-        <span class="page-number">{{ currentPage }} / {{ totalPages }}</span>
-        <button class="page-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)" title="Next page">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-        <button class="page-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)" title="Last page">
-          <i class="bi bi-chevron-double-right"></i>
-        </button>
+    <!-- ── Pagination ─────────────────────────────────────────── -->
+    <div class="sl-pagination">
+      <div class="sl-pagination-inner">
+        <div class="sl-page-size">
+          <label for="slPageSize">Show:</label>
+          <select
+            id="slPageSize"
+            [(ngModel)]="pageSize"
+            (change)="onPageSizeChanged(pageSize)"
+            class="sl-page-size-select"
+          >
+            <option [value]="10">10</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </div>
+        <span class="sl-pagination-text">
+          {{ rowData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0 }}
+          to {{ Math.min(currentPage * pageSize, totalItems) }} of
+          {{ totalItems }}
+        </span>
+        <span class="sl-pagination-text">
+          Page {{ currentPage }} of {{ totalPages || 1 }}
+        </span>
+        <div class="sl-pagination-btns">
+          <button
+            (click)="goToPage(1)"
+            [disabled]="currentPage === 1"
+            class="sl-pgbtn"
+          >«</button>
+          <button
+            (click)="previousPage()"
+            [disabled]="currentPage === 1"
+            class="sl-pgbtn"
+          >‹</button>
+          <button
+            (click)="nextPage()"
+            [disabled]="currentPage === totalPages || totalPages === 0"
+            class="sl-pgbtn"
+          >›</button>
+          <button
+            (click)="goToPage(totalPages)"
+            [disabled]="currentPage === totalPages || totalPages === 0"
+            class="sl-pgbtn"
+          >»</button>
+        </div>
       </div>
-
     </div>
   </div>
 
-  <!-- Loading Overlay -->
-  <div class="loading-overlay" *ngIf="isLoading">
-    <div class="spinner"></div>
+  <!-- ── Loading Overlay ────────────────────────────────────────── -->
+  <div *ngIf="isLoading" class="sl-loading-overlay">
+    <div class="sl-spinner"></div>
   </div>
 
 </div>
 
-<!-- Shift Form Modal -->
+<!-- ════════════════════════════════════════════════════════════════
+     SHIFT FORM MODAL
+     ════════════════════════════════════════════════════════════════ -->
 <app-shift-form
   *ngIf="showModal"
   [mode]="modalMode"
