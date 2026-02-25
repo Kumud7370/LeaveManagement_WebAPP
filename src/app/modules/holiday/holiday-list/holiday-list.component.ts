@@ -19,7 +19,8 @@ import {
   ModuleRegistry,
   AllCommunityModule,
   SortChangedEvent,
-  FilterChangedEvent
+  FilterChangedEvent,
+  themeQuartz
 } from 'ag-grid-community';
 import Swal from 'sweetalert2';
 import { HolidayService } from '../../../core/services/api/holiday.api';
@@ -42,6 +43,27 @@ import {
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+// ── Same pattern as Leave Type — themeQuartz with columnBorder: true ──
+const holidayGridTheme = themeQuartz.withParams({
+  backgroundColor:                '#ffffff',
+  foregroundColor:                '#1f2937',
+  borderColor:                    '#e5e7eb',
+  headerBackgroundColor:          '#f9fafb',
+  headerTextColor:                '#374151',
+  oddRowBackgroundColor:          '#ffffff',
+  rowHoverColor:                  '#f8faff',
+  selectedRowBackgroundColor:     '#dbeafe',
+  fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontSize:                       13,
+  columnBorder:                   true,
+  headerColumnBorder:             true,
+  headerColumnBorderHeight:       '50%',
+  headerColumnResizeHandleColor:  '#9ca3af',
+  headerColumnResizeHandleHeight: '50%',
+  headerColumnResizeHandleWidth:  2,
+  cellHorizontalPaddingScale:     0.8,
+});
+
 @Component({
   selector: 'app-holiday-list',
   standalone: true,
@@ -60,6 +82,8 @@ export class HolidayListComponent implements OnInit {
 
   @ViewChild('agGrid', { read: ElementRef })
   agGridElement!: ElementRef<HTMLElement>;
+
+  readonly gridTheme = holidayGridTheme;
 
   // ─── Grid state ───────────
   rowData: any[] = [];
@@ -638,10 +662,7 @@ export class HolidayListComponent implements OnInit {
           this.closeModal();
           this.loadHolidays();
           this.loadStats();
-          Swal.fire({
-            icon: 'success', title: 'Success!', text: 'Holiday created successfully.',
-            timer: 2000, showConfirmButton: false
-          });
+          Swal.fire({ icon: 'success', title: 'Success!', text: 'Holiday created successfully.', timer: 2000, showConfirmButton: false });
         }
       },
       error: (error: any) => {
@@ -670,10 +691,7 @@ export class HolidayListComponent implements OnInit {
           this.closeModal();
           this.loadHolidays();
           this.loadStats();
-          Swal.fire({
-            icon: 'success', title: 'Updated!', text: 'Holiday updated successfully.',
-            timer: 2000, showConfirmButton: false
-          });
+          Swal.fire({ icon: 'success', title: 'Updated!', text: 'Holiday updated successfully.', timer: 2000, showConfirmButton: false });
         }
       },
       error: (error: any) => {
@@ -719,11 +737,7 @@ export class HolidayListComponent implements OnInit {
             }
             this.loadStats();
             this.cdr.detectChanges();
-            Swal.fire({
-              icon: 'success', title: 'Status Updated!',
-              text: `Holiday is now ${statusLabel}.`,
-              timer: 2000, showConfirmButton: false
-            });
+            Swal.fire({ icon: 'success', title: 'Status Updated!', text: `Holiday is now ${statusLabel}.`, timer: 2000, showConfirmButton: false });
           }
         },
         error: () => {
@@ -734,7 +748,6 @@ export class HolidayListComponent implements OnInit {
   }
 
   // ─── Delete ───────────
-
   onDelete(holiday: any): void {
     Swal.fire({
       title: 'Delete Holiday?',
@@ -764,17 +777,13 @@ export class HolidayListComponent implements OnInit {
             }
             this.totalItems = Math.max(0, this.totalItems - 1);
             this.totalPages = Math.ceil(this.totalItems / this.pageSize);
-
             if (this.rowData.length === 0 && this.currentPage > 1) {
               this.currentPage--;
               this.loadHolidays();
             }
             this.loadStats();
             this.cdr.detectChanges();
-            Swal.fire({
-              icon: 'success', title: 'Deleted!', text: 'Holiday has been deleted.',
-              timer: 2500, showConfirmButton: false
-            });
+            Swal.fire({ icon: 'success', title: 'Deleted!', text: 'Holiday has been deleted.', timer: 2500, showConfirmButton: false });
           }
         },
         error: () => {
@@ -785,17 +794,12 @@ export class HolidayListComponent implements OnInit {
   }
 
   // ─── Export ───────────
-
   exportData(): void {
     exportToCsv(this.gridApi, 'holidays');
-    Swal.fire({
-      icon: 'success', title: 'Exported!', text: 'Holiday data exported as CSV.',
-      timer: 2000, showConfirmButton: false
-    });
+    Swal.fire({ icon: 'success', title: 'Exported!', text: 'Holiday data exported as CSV.', timer: 2000, showConfirmButton: false });
   }
 
-  // ─── Date helpers
-
+  // ─── Date helpers ──────
   formatDateForInput(date: any): string {
     const d     = new Date(date);
     const year  = d.getUTCFullYear();
