@@ -1,92 +1,95 @@
-<div class="leave-type-list-container">
+<div class="hl-page-container">
 
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Leave Types</h1>
-      <p class="page-subtitle">Configure leave types available across the organization</p>
+  <!-- ── Page Header ────────────────────────────────────────────────── -->
+  <div class="hl-page-header">
+    <h1 class="hl-page-title">Leave Types</h1>
+  </div>
+
+  <!-- ── Stats Cards ────────────────────────────────────────────────── -->
+  <div class="hl-stats-grid">
+    <div class="hl-stat-card hl-stat-total" [class.hl-stat-loading]="loading">
+      <p class="hl-stat-label">Total Types</p>
+      <p class="hl-stat-value">
+        <span *ngIf="!loading; else statSkeleton">{{ totalCount }}</span>
+      </p>
+    </div>
+    <div class="hl-stat-card hl-stat-approved" [class.hl-stat-loading]="loading">
+      <p class="hl-stat-label">Active</p>
+      <p class="hl-stat-value">
+        <span *ngIf="!loading; else statSkeleton">{{ activeCount }}</span>
+      </p>
+    </div>
+    <div class="hl-stat-card hl-stat-pending" [class.hl-stat-loading]="loading">
+      <p class="hl-stat-label">Carry Forward</p>
+      <p class="hl-stat-value">
+        <span *ngIf="!loading; else statSkeleton">{{ carryForwardCount }}</span>
+      </p>
+    </div>
+    <div class="hl-stat-card hl-stat-rejected" [class.hl-stat-loading]="loading">
+      <p class="hl-stat-label">Requires Document</p>
+      <p class="hl-stat-value">
+        <span *ngIf="!loading; else statSkeleton">{{ requiresDocCount }}</span>
+      </p>
+    </div>
+  </div>
+  <ng-template #statSkeleton><span class="hl-stat-skeleton"></span></ng-template>
+
+  <!-- ── Toolbar ────────────────────────────────────────────────────── -->
+  <div class="hl-toolbar">
+    <div class="hl-search-wrapper">
+      <input type="text" class="hl-search-input" placeholder="Search by name or code..."
+        [(ngModel)]="searchTerm" (input)="onSearch()" />
+    </div>
+    <div class="hl-toolbar-actions">
+      <button class="hl-btn hl-btn-filter" (click)="showFilters = !showFilters">
+        <i class="bi bi-funnel"></i> Filters
+        <span class="hl-filter-count" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+      </button>
+      <button class="hl-btn hl-btn-clear" (click)="clearFilters()">
+        <i class="bi bi-x-circle"></i> Clear
+      </button>
+      <button class="hl-btn hl-btn-refresh" (click)="loadLeaveTypes()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+      <button class="hl-btn hl-btn-export" (click)="exportToExcel()">
+        <i class="bi bi-download"></i> Export
+      </button>
+      <button class="hl-btn hl-btn-primary" (click)="createLeaveType()">
+        <i class="bi bi-plus-circle"></i> Add Leave Type
+      </button>
     </div>
   </div>
 
-  <!-- Stats Cards -->
-  <!-- <div class="stats-cards">
-    <div class="stat-card total">
-      <div class="stat-icon"><i class="bi bi-calendar2-week"></i></div>
-      <div class="stat-content">
-        <h3>{{ totalCount }}</h3>
-        <p>Total Types</p>
-      </div>
-    </div>
-    <div class="stat-card active">
-      <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
-      <div class="stat-content">
-        <h3>{{ activeCount }}</h3>
-        <p>Active</p>
-      </div>
-    </div>
-    <div class="stat-card carry-forward">
-      <div class="stat-icon"><i class="bi bi-arrow-repeat"></i></div>
-      <div class="stat-content">
-        <h3>{{ carryForwardCount }}</h3>
-        <p>Carry Forward</p>
-      </div>
-    </div>
-    <div class="stat-card requires-doc">
-      <div class="stat-icon"><i class="bi bi-file-earmark-check"></i></div>
-      <div class="stat-content">
-        <h3>{{ requiresDocCount }}</h3>
-        <p>Requires Document</p>
-      </div>
-    </div>
-  </div> -->
-
-  <!-- Search and Actions -->
-  <div class="search-action-section">
-    <div class="search-bar">
-      <i class="bi bi-search search-icon"></i>
-      <input type="text" placeholder="Search by name or code..."
-        [(ngModel)]="searchTerm" (keyup)="onSearch()" class="search-input" />
-    </div>
-    <button class="btn btn-filter" (click)="showFilters = !showFilters">
-      <i class="bi bi-funnel"></i> Filters
-      <span class="filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
-    </button>
-    <button class="btn btn-clear"   (click)="clearFilters()">    <i class="bi bi-x-circle"></i> Clear    </button>
-    <button class="btn btn-refresh" (click)="loadLeaveTypes()">  <i class="bi bi-arrow-clockwise"></i> Refresh </button>
-    <button class="btn btn-export"  (click)="exportToExcel()">   <i class="bi bi-download"></i> Export   </button>
-    <button class="btn btn-primary" (click)="createLeaveType()"> <i class="bi bi-plus-circle"></i> Add Leave Type </button>
-  </div>
-
-  <!-- Filter Panel -->
-  <div class="filters-panel" [class.open]="showFilters">
-    <div class="filters-grid">
-      <div class="filter-group">
+  <!-- ── Filter Panel ───────────────────────────────────────────────── -->
+  <div class="hl-filter-panel" [class.hl-filter-panel-open]="showFilters">
+    <div class="hl-filter-grid">
+      <div class="hl-filter-group">
         <label>Status</label>
-        <select [(ngModel)]="filters.isActive" (change)="onFilterChange()">
+        <select [(ngModel)]="filters.isActive" (change)="onFilterChange()" class="hl-filter-select">
           <option [ngValue]="null">All Statuses</option>
           <option [ngValue]="true">Active Only</option>
           <option [ngValue]="false">Inactive Only</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="hl-filter-group">
         <label>Requires Approval</label>
-        <select [(ngModel)]="filters.requiresApproval" (change)="onFilterChange()">
+        <select [(ngModel)]="filters.requiresApproval" (change)="onFilterChange()" class="hl-filter-select">
           <option [ngValue]="null">All</option>
           <option [ngValue]="true">Yes</option>
           <option [ngValue]="false">No</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="hl-filter-group">
         <label>Requires Document</label>
-        <select [(ngModel)]="filters.requiresDocument" (change)="onFilterChange()">
+        <select [(ngModel)]="filters.requiresDocument" (change)="onFilterChange()" class="hl-filter-select">
           <option [ngValue]="null">All</option>
           <option [ngValue]="true">Yes</option>
           <option [ngValue]="false">No</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="hl-filter-group">
         <label>Carry Forward</label>
-        <select [(ngModel)]="filters.isCarryForward" (change)="onFilterChange()">
+        <select [(ngModel)]="filters.isCarryForward" (change)="onFilterChange()" class="hl-filter-select">
           <option [ngValue]="null">All</option>
           <option [ngValue]="true">Yes</option>
           <option [ngValue]="false">No</option>
@@ -95,89 +98,110 @@
     </div>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading leave types...</p>
+  <!-- ── Active Filters ─────────────────────────────────────────────── -->
+  <div class="hl-active-filters" *ngIf="activeFilterCount > 0 || searchTerm">
+    <span class="hl-filter-label">Active filters:</span>
+    <span class="hl-filter-badge" *ngIf="searchTerm">Search: "{{ searchTerm }}"</span>
+    <span class="hl-filter-badge" *ngIf="filters.isActive !== null && filters.isActive !== undefined">Status</span>
+    <span class="hl-filter-badge" *ngIf="filters.requiresApproval !== null && filters.requiresApproval !== undefined">Approval</span>
+    <span class="hl-filter-badge" *ngIf="filters.requiresDocument !== null && filters.requiresDocument !== undefined">Document</span>
+    <span class="hl-filter-badge" *ngIf="filters.isCarryForward !== null && filters.isCarryForward !== undefined">Carry Forward</span>
   </div>
 
-  <!-- Error -->
-  <div *ngIf="error && !loading" class="error-state">
-    <i class="bi bi-exclamation-circle"></i>
-    <p>{{ error }}</p>
-    <button class="btn btn-outline" (click)="loadLeaveTypes()">Try Again</button>
-  </div>
+  <!-- ── Grid Card ──────────────────────────────────────────────────── -->
+  <div class="hl-grid-card">
+    <div class="hl-grid-container">
 
-  <!-- Grid -->
-  <div *ngIf="!loading && !error" class="grid-container">
-    <div *ngIf="leaveTypes.length === 0" class="empty-state">
-      <i class="bi bi-calendar2-x"></i>
-      <h3>No leave types found</h3>
-      <p>Try adjusting your filters or create a new leave type</p>
-      <button class="btn btn-primary" (click)="createLeaveType()">Add Leave Type</button>
+      <div *ngIf="loading" class="hl-loading-state">
+        <div class="hl-spinner"></div>
+        <p>Loading leave types...</p>
+      </div>
+
+      <div *ngIf="error && !loading" class="hl-error-state">
+        <i class="bi bi-exclamation-circle"></i>
+        <p>{{ error }}</p>
+        <button class="hl-btn hl-btn-refresh" (click)="loadLeaveTypes()">Try Again</button>
+      </div>
+
+      <div *ngIf="!loading && !error && leaveTypes.length === 0" class="hl-empty-state">
+        <i class="bi bi-calendar2-x"></i>
+        <p>No leave types found. Adjust filters or add a new leave type.</p>
+        <button class="hl-btn hl-btn-primary" (click)="createLeaveType()">
+          <i class="bi bi-plus-circle"></i> Add Leave Type
+        </button>
+      </div>
+
+      <!-- KEY: [theme]="gridTheme" — same as leave-list, no class="ag-theme-quartz" -->
+      <ag-grid-angular
+        *ngIf="!loading && !error && leaveTypes.length > 0"
+        style="width:100%;"
+        [theme]="gridTheme"
+        [rowData]="leaveTypes"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        (gridReady)="onGridReady($event)"
+        [rowHeight]="52"
+        [headerHeight]="44"
+        [domLayout]="'autoHeight'"
+        [context]="context">
+      </ag-grid-angular>
     </div>
 
-    <ag-grid-angular
-      *ngIf="leaveTypes.length > 0"
-      class="ag-theme-quartz"
-      [rowData]="leaveTypes"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      [gridOptions]="gridOptions"
-      (gridReady)="onGridReady($event)"
-      [rowHeight]="64"
-      [headerHeight]="50"
-      [domLayout]="'autoHeight'">
-    </ag-grid-angular>
-
-    <!-- Pagination Bar -->
-    <div *ngIf="leaveTypes.length > 0" class="pagination-bar">
-
-      <div class="pagination-info">
-        <span class="items-label">
-          Showing <strong>{{ showingFrom }}</strong>–<strong>{{ showingTo }}</strong>
-          of <strong>{{ totalCount }}</strong> leave types
-        </span>
-        <label class="page-size-label">
-          Rows per page:
-          <select class="page-size-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+    <!-- ── Pagination ─────────────────────────────────────────────── -->
+    <div class="hl-pagination" *ngIf="!loading && leaveTypes.length > 0">
+      <div class="hl-pagination-inner">
+        <div class="hl-page-size">
+          <label>Show:</label>
+          <select class="hl-page-size-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
             <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
           </select>
-        </label>
+        </div>
+        <span class="hl-pagination-text">
+          {{ showingFrom }} to {{ showingTo }} of {{ totalCount }}
+        </span>
+        <div class="hl-pagination-btns">
+          <button class="hl-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(1)">
+            <i class="bi bi-chevron-bar-left"></i>
+          </button>
+          <button class="hl-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(currentPage - 1)">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <button *ngFor="let p of pages" class="hl-pgbtn"
+            [class.hl-pgbtn-active]="p === currentPage" (click)="onPageChange(p)">
+            {{ p }}
+          </button>
+          <button class="hl-pgbtn" [disabled]="!hasNextPage" (click)="onPageChange(currentPage + 1)">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          <button class="hl-pgbtn" [disabled]="!hasNextPage" (click)="onPageChange(totalPages)">
+            <i class="bi bi-chevron-bar-right"></i>
+          </button>
+        </div>
       </div>
-
-      <div class="pagination-nav">
-        <button class="page-btn" (click)="onPageChange(1)"               [disabled]="!hasPrevPage" title="First">    <i class="bi bi-chevron-double-left"></i>  </button>
-        <button class="page-btn" (click)="onPageChange(currentPage - 1)" [disabled]="!hasPrevPage" title="Previous"> <i class="bi bi-chevron-left"></i>         </button>
-
-        <button
-          *ngFor="let p of pages"
-          class="page-btn page-number"
-          [class.active]="p === currentPage"
-          (click)="onPageChange(p)">
-          {{ p }}
-        </button>
-
-        <button class="page-btn" (click)="onPageChange(currentPage + 1)" [disabled]="!hasNextPage" title="Next"> <i class="bi bi-chevron-right"></i>        </button>
-        <button class="page-btn" (click)="onPageChange(totalPages)"      [disabled]="!hasNextPage" title="Last"> <i class="bi bi-chevron-double-right"></i> </button>
-      </div>
-
     </div>
-    <!-- End Pagination Bar -->
-
   </div>
 </div>
 
-<!-- Form Modal -->
-<div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="closeFormModal()"><i class="bi bi-x-lg"></i></button>
-    <app-leave-type-form
-      [isModal]="true"
-      [leaveTypeId]="selectedLeaveTypeId"
-      [isEditMode]="formMode === 'edit'"
-      (formCancelled)="closeFormModal()"
-      (formSubmitted)="onFormSuccess()">
-    </app-leave-type-form>
+<!-- ── Form Modal ─────────────────────────────────────────────────── -->
+<div class="hl-modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+  <div class="hl-modal-container hl-modal-xlarge" (click)="$event.stopPropagation()">
+    <div class="hl-modal-header">
+      <h2 class="hl-modal-title">
+        <i class="bi" [ngClass]="formMode === 'create' ? 'bi-plus-circle-dotted' : 'bi-pencil-square'"></i>
+        {{ formMode === 'create' ? 'Add Leave Type' : 'Edit Leave Type' }}
+      </h2>
+      <button class="hl-modal-close" (click)="closeFormModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="hl-modal-body" style="padding:0; overflow-y:auto; max-height:calc(92vh - 70px);">
+      <app-leave-type-form
+        [isModal]="true"
+        [leaveTypeId]="selectedLeaveTypeId"
+        [isEditMode]="formMode === 'edit'"
+        (formCancelled)="closeFormModal()"
+        (formSubmitted)="onFormSuccess()">
+      </app-leave-type-form>
+    </div>
   </div>
 </div>
