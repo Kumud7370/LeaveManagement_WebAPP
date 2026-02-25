@@ -1,143 +1,125 @@
 <div class="designation-list-container">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Designation Management</h1>
-      <p class="page-subtitle">Manage your organization's designations</p>
+  <!-- Stat Cards -->
+  <div class="stat-cards">
+    <div class="stat-card stat-card--blue">
+      <span class="stat-label">Total Designations</span>
+      <span class="stat-value">{{ totalCount }}</span>
+    </div>
+    <div class="stat-card stat-card--green">
+      <span class="stat-label">Active</span>
+      <span class="stat-value">{{ activeCount }}</span>
+    </div>
+    <div class="stat-card stat-card--red">
+      <span class="stat-label">Inactive</span>
+      <span class="stat-value">{{ inactiveCount }}</span>
     </div>
   </div>
 
-  <!-- Search and Action Buttons (single line) -->
+  <!-- Search & Action Bar -->
   <div class="search-action-section">
     <div class="search-bar">
-      <i class="bi bi-search search-icon"></i>
       <input
         type="text"
         placeholder="Search designations..."
         [(ngModel)]="searchTerm"
-        (keyup)="onSearchChange()"
+        (input)="onSearchChange()"
         class="search-input"
       />
     </div>
-
-    <button class="btn btn-clear" (click)="clearFilters()">
-      <i class="bi bi-x-circle"></i>
-      <span class="btn-label">Clear</span>
-    </button>
-
-    <button class="btn btn-refresh" (click)="refreshData()">
-      <i class="bi bi-arrow-clockwise"></i>
-      <span class="btn-label">Refresh</span>
-    </button>
-
-    <button class="btn btn-export" (click)="exportData()">
-      <i class="bi bi-download"></i>
-      <span class="btn-label">Export</span>
-    </button>
-
+    <button class="btn btn-clear" (click)="clearFilters()">Clear</button>
+    <button class="btn btn-refresh" (click)="refreshData()">Refresh</button>
     <button class="btn btn-primary" (click)="openCreateModal()">
-      <i class="bi bi-plus-circle"></i>
-      <span class="btn-label">Add Designation</span>
+      Add Designation
     </button>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading designations...</p>
-  </div>
+  <!-- Grid Wrapper -->
+  <div class="grid-wrapper">
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading designations...</p>
+    </div>
 
-  <!-- AG Grid Container -->
-  <div *ngIf="!isLoading" class="grid-container">
-    <!-- Empty State -->
-    <div *ngIf="rowData.length === 0" class="empty-state">
-      <i class="bi bi-inbox"></i>
-      <h3>No Designations Found</h3>
-      <p>Get started by creating your first designation</p>
+    <!-- Empty -->
+    <div *ngIf="!isLoading && rowData.length === 0" class="empty-state">
+      <p>No designations found.</p>
       <button class="btn btn-primary" (click)="openCreateModal()">
-        Create Designation
+        Add Designation
       </button>
     </div>
 
     <!-- AG Grid -->
     <ag-grid-angular
-      *ngIf="rowData.length > 0"
+      *ngIf="!isLoading && rowData.length > 0"
       class="ag-theme-quartz"
       [rowData]="rowData"
       [columnDefs]="columnDefs"
       [defaultColDef]="defaultColDef"
       [gridOptions]="gridOptions"
-      [rowHeight]="60"
-      [headerHeight]="50"
+      [rowHeight]="50"
+      [headerHeight]="48"
       [domLayout]="'autoHeight'"
+      (gridReady)="onGridReady($event)"
     >
     </ag-grid-angular>
-  </div>
 
-  <!-- Pagination -->
-  <div *ngIf="!isLoading && rowData.length > 0" class="pagination-container">
-    <div class="pagination-info">
-      Showing {{ startRecord }} to {{ endRecord }} of
-      {{ totalCount }} designations
-    </div>
-
-    <div class="pagination-controls">
-      <select
-        class="page-size-select"
-        [value]="pageSize"
-        (change)="onPageSizeChange($event)"
-      >
-        <option [value]="10">10 per page</option>
-        <option [value]="25">25 per page</option>
-        <option [value]="50">50 per page</option>
-        <option [value]="100">100 per page</option>
-      </select>
-
-      <div class="pagination-buttons">
+    <!-- Pagination -->
+    <div *ngIf="!isLoading && rowData.length > 0" class="pagination-bar">
+      <div class="pagination-left">
+        <span>Show</span>
+        <select
+          [value]="pageSize"
+          (change)="onPageSizeChange($event)"
+          class="page-size-select"
+        >
+          <option [value]="10">10</option>
+          <option [value]="20">20</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+      </div>
+      <div class="pagination-center">
+        {{ startRecord }} to {{ endRecord }} of {{ totalCount }}
+      </div>
+      <div class="pagination-right">
         <button
-          class="btn-page"
+          class="pg-btn"
           [disabled]="currentPage === 1"
           (click)="onPageChange(1)"
         >
-          <i class="bi bi-chevron-bar-left"></i>
+          &#xAB;
         </button>
         <button
-          class="btn-page"
+          class="pg-btn"
           [disabled]="currentPage === 1"
           (click)="onPageChange(currentPage - 1)"
         >
-          <i class="bi bi-chevron-left"></i>
+          &#x2039;
         </button>
-
-        <button
-          *ngFor="let page of visiblePages"
-          class="btn-page"
-          [class.active]="page === currentPage"
-          (click)="onPageChange(page)"
+        <span class="page-info"
+          >Page {{ currentPage }} of {{ totalPages }}</span
         >
-          {{ page }}
-        </button>
-
         <button
-          class="btn-page"
+          class="pg-btn"
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(currentPage + 1)"
         >
-          <i class="bi bi-chevron-right"></i>
+          &#x203A;
         </button>
         <button
-          class="btn-page"
+          class="pg-btn"
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(totalPages)"
         >
-          <i class="bi bi-chevron-bar-right"></i>
+          &#xBB;
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Edit/Create Modal -->
+<!-- Modal -->
 <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -164,20 +146,17 @@
     </div>
 
     <div class="modal-body">
-      <!-- Loading State -->
       <div *ngIf="isLoadingForm" class="loading-state">
         <div class="spinner"></div>
         <p>Loading designation details...</p>
       </div>
 
-      <!-- Form -->
       <form
         *ngIf="!isLoadingForm"
         [formGroup]="designationForm"
         (ngSubmit)="onSubmit()"
       >
         <div class="form-grid">
-          <!-- Designation Code -->
           <div class="form-group">
             <label for="designationCode" class="required"
               >Designation Code</label
@@ -202,7 +181,6 @@
             </div>
           </div>
 
-          <!-- Designation Name -->
           <div class="form-group">
             <label for="designationName" class="required"
               >Designation Name</label
@@ -223,7 +201,6 @@
             </div>
           </div>
 
-          <!-- Level -->
           <div class="form-group">
             <label for="level" class="required">Hierarchy Level</label>
             <input
@@ -244,7 +221,6 @@
             </div>
           </div>
 
-          <!-- Status -->
           <div class="form-group">
             <label for="isActive">Status</label>
             <div class="toggle-container">
@@ -265,7 +241,6 @@
           </div>
         </div>
 
-        <!-- Description -->
         <div class="form-group">
           <label for="description">Description</label>
           <textarea
@@ -281,7 +256,6 @@
           </div>
         </div>
 
-        <!-- Form Actions -->
         <div class="form-actions">
           <button
             type="button"
@@ -289,8 +263,7 @@
             (click)="closeModal()"
             [disabled]="isSubmitting"
           >
-            <i class="bi bi-x-circle"></i>
-            Cancel
+            <i class="bi bi-x-circle"></i> Cancel
           </button>
           <button
             type="submit"

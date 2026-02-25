@@ -1,695 +1,716 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+// employee-list.component.ts
+
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ViewChild,
+  OnInit,
+  OnDestroy,
+  ElementRef,
+  ChangeDetectorRef,
+  ViewEncapsulation
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AgGridAngular } from 'ag-grid-angular';
+import {
+  GridApi,
+  GridReadyEvent,
+  ColDef,
+  ModuleRegistry,
+  AllCommunityModule,
+  SortChangedEvent,
+  FilterChangedEvent
+} from 'ag-grid-community';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
-import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
-import * as XLSX from 'xlsx';
 
 import { EmployeeService } from '../../../core/services/api/employee.api';
 import {
-    EmployeeResponseDto,
-    EmployeeFilterDto,
-    PagedResultDto,
-    EmployeeStatus,
-    EmploymentType,
-    Gender
+  EmployeeResponseDto,
+  EmployeeFilterDto,
+  PagedResultDto,
+  EmployeeStatus,
+  EmploymentType,
+  Gender
 } from '../../../core/Models/employee.model';
 
 import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
 import { EmployeeFormComponent } from '../employee-form/employee-form.component';
 import { EmployeeDetailsComponent } from '../employee-details/employee-details.component';
 
+import {
+  dateFormatter,
+  dateTimeFormatter,
+  exportToCsv,
+  clearAllFilters,
+  refreshGrid,
+  getActiveFiltersSummary
+} from '../../../utils/ag-grid-helpers';
+
+ModuleRegistry.registerModules([AllCommunityModule]);
+
 @Component({
-    selector: 'app-employee-list',
-    standalone: true,
-    imports: [CommonModule, FormsModule, AgGridAngular, EmployeeFormComponent, EmployeeDetailsComponent],
-    templateUrl: './employee-list.component.html',
-    styleUrl: './employee-list.component.scss'
+  selector: 'app-employee-list',
+  standalone: true,
+  templateUrl: './employee-list.component.html',
+  styleUrls: ['./employee-list.component.scss'],
+  encapsulation: ViewEncapsulation.None,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    AgGridAngular,
+    EmployeeFormComponent,
+    EmployeeDetailsComponent
+  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class EmployeeListComponent implements OnInit, OnDestroy {
-    private destroy$ = new Subject<void>();
 
-    rowData: EmployeeResponseDto[] = [];
-    isLoading = false;
-    error: string | null = null;
-    
-    // Pagination
-    currentPage = 1;
-    pageSize = 20;
-    totalPages = 0;
-    totalItems = 0;
-    
-    // Filters
-    isFilterVisible = false;
-    filter: EmployeeFilterDto = {
-        searchTerm: '',
-        departmentId: '',
-        designationId: '',
-        managerId: '',
-        employeeStatus: undefined,
-        employmentType: undefined,
-        gender: undefined,
-        joiningDateFrom: undefined,
-        joiningDateTo: undefined,
-        pageNumber: 1,
-        pageSize: 20,
-        sortBy: 'EmployeeCode',
-        sortDescending: false
-    };
+  @ViewChild('agGrid', { read: ElementRef })
+  agGridElement!: ElementRef<HTMLElement>;
 
-    // Modal States
-    showFormModal = false;
-    showDetailsModal = false;
-    formMode: 'create' | 'edit' = 'create';
-    selectedEmployeeId: string | null = null;
+  private destroy$ = new Subject<void>();
 
-    // Enums for dropdowns
-    EmployeeStatus = EmployeeStatus;
-    EmploymentType = EmploymentType;
-    Gender = Gender;
+  // ─── Grid state ──────────────────────────────────────────────────────────
+  rowData: EmployeeResponseDto[] = [];
+  gridApi!: GridApi;
+  searchTerm: string = '';
 
-    // Enum keys for iteration
-    employeeStatusKeys: number[];
-    employmentTypeKeys: number[];
-    genderKeys: number[];
+  // ─── Modal State ─────────────────────────────────────────────────────────
+  showFormModal    = false;
+  showDetailsModal = false;
+  formMode: 'create' | 'edit' = 'create';
+  selectedEmployeeId: string | null = null;
 
-    // Make Math available in template
-    Math = Math;
+  // ─── Filters ─────────────────────────────────────────────────────────────
+  filter: EmployeeFilterDto = {
+    searchTerm:      '',
+    departmentId:    '',
+    designationId:   '',
+    managerId:       '',
+    employeeStatus:  undefined,
+    employmentType:  undefined,
+    gender:          undefined,
+    joiningDateFrom: undefined,
+    joiningDateTo:   undefined,
+    pageNumber:      1,
+    pageSize:        20,
+    sortBy:          'EmployeeCode',
+    sortDescending:  false
+  };
 
-    // AG Grid
-    columnDefs: ColDef[] = [];
-    defaultColDef: ColDef = {
-        sortable: true,
-        filter: true,
-        resizable: true,
-        flex: 1,
-        minWidth: 100,
-    };
-    gridOptions: GridOptions = {
-        pagination: false,
-        rowSelection: undefined,
-        suppressRowClickSelection: true,
-        domLayout: 'autoHeight',
-        context: { componentParent: this }
-    };
+  // ─── Pagination ───────────────────────────────────────────────────────────
+  currentPage: number = 1;
+  pageSize:    number = 20;
+  totalItems:  number = 0;
+  totalPages:  number = 0;
+  private isLoadingData     = false;
+  private searchDebounceTimer: any = null;
+  Math = Math;
 
-    constructor(
-        private employeeService: EmployeeService,
-        private router: Router
-    ) {
-        // Initialize enum keys
-        this.employeeStatusKeys = Object.keys(EmployeeStatus)
-            .filter(key => !isNaN(Number(key)))
-            .map(key => Number(key));
-        
-        this.employmentTypeKeys = Object.keys(EmploymentType)
-            .filter(key => !isNaN(Number(key)))
-            .map(key => Number(key));
-        
-        this.genderKeys = Object.keys(Gender)
-            .filter(key => !isNaN(Number(key)))
-            .map(key => Number(key));
+  // ─── Enums ────────────────────────────────────────────────────────────────
+  EmployeeStatus = EmployeeStatus;
+  EmploymentType = EmploymentType;
+  Gender         = Gender;
 
-        this.initializeColumnDefs();
-    }
+  employeeStatusKeys: number[];
+  employmentTypeKeys: number[];
+  genderKeys:         number[];
 
-    ngOnInit(): void {
-        console.log('Employee List Component Initialized');
-        this.loadEmployees();
-    }
+  // ─── Stats ────────────────────────────────────────────────────────────────
+  stats = { total: 0, active: 0, inactive: 0, onLeave: 0 };
 
-    ngOnDestroy(): void {
-        this.destroy$.next();
-        this.destroy$.complete();
-    }
+  // ─── Active Filters ───────────────────────────────────────────────────────
+  activeFilters = {
+    hasActiveFilters: false,
+    filters: [] as string[],
+    count: 0
+  };
 
-    initializeColumnDefs(): void {
-        this.columnDefs = [
-            // Actions column FIRST
-            {
-                headerName: 'Actions',
-                width: 180,
-                minWidth: 180,
-                maxWidth: 180,
-                cellRenderer: ActionCellRendererComponent,
-                sortable: false,
-                filter: false,
-                pinned: 'left',
-                cellStyle: { 
-                    textAlign: 'center',
-                    justifyContent: 'center',
-                    padding: '0 8px'
-                }
-            },
-            {
-                headerName: 'Employee',
-                field: 'fullName',
-                width: 280,
-                minWidth: 250,
-                cellRenderer: (params: any) => {
-                    if (!params.value) return '';
-                    const code = params.data.employeeCode || '';
-                    const name = params.value;
-                    const nameParts = name.trim().split(' ');
-                    let initials = 'NA';
-                    if (nameParts.length >= 2) {
-                        initials = (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
-                    } else if (name.length >= 2) {
-                        initials = name.substring(0, 2).toUpperCase();
-                    }
-                    
-                    return `
-                        <div class="employee-name-cell">
-                            <div class="employee-avatar">${initials}</div>
-                            <div class="employee-info">
-                                <div class="employee-name">${name}</div>
-                                <div class="employee-code">${code}</div>
-                            </div>
-                        </div>
-                    `;
-                }
-            },
-            {
-                headerName: 'Email',
-                field: 'email',
-                width: 250,
-                minWidth: 200,
-                cellStyle: { color: '#3b82f6' }
-            },
-            {
-                headerName: 'Phone',
-                field: 'phoneNumber',
-                width: 150,
-                minWidth: 130,
-                cellStyle: { color: '#6b7280' }
-            },
-            {
-                headerName: 'Department',
-                field: 'departmentName',
-                width: 180,
-                minWidth: 150,
-                cellStyle: { color: '#6b7280' }
-            },
-            {
-                headerName: 'Designation',
-                field: 'designationName',
-                width: 180,
-                minWidth: 150,
-                cellStyle: { color: '#6b7280' }
-            },
-            {
-                headerName: 'Employment Type',
-                field: 'employmentTypeName',
-                width: 160,
-                minWidth: 150,
-                cellRenderer: (params: any) => {
-                    if (!params.value) return '';
-                    const type = params.value.toLowerCase();
-                    let badgeClass = 'badge-info';
-                    
-                    if (type.includes('full')) {
-                        badgeClass = 'badge-full-time';
-                    } else if (type.includes('part')) {
-                        badgeClass = 'badge-part-time';
-                    } else if (type.includes('contract')) {
-                        badgeClass = 'badge-contract';
-                    } else if (type.includes('intern')) {
-                        badgeClass = 'badge-intern';
-                    }
-                    
-                    return `<span class="badge ${badgeClass}">${params.value}</span>`;
-                }
-            },
-            {
-                headerName: 'Status',
-                field: 'employeeStatusName',
-                width: 130,
-                minWidth: 120,
-                cellRenderer: (params: any) => {
-                    if (!params.value) return '';
-                    const status = params.value.toLowerCase();
-                    let badgeClass = 'badge-info';
-                    
-                    if (status.includes('active')) {
-                        badgeClass = 'badge-active';
-                    } else if (status.includes('inactive')) {
-                        badgeClass = 'badge-inactive';
-                    } else if (status.includes('pending')) {
-                        badgeClass = 'badge-pending';
-                    } else if (status.includes('leave')) {
-                        badgeClass = 'badge-on-leave';
-                    }
-                    
-                    return `<span class="badge ${badgeClass}">${params.value}</span>`;
-                },
-                cellStyle: { textAlign: 'center' }
-            },
-            {
-                headerName: 'Joining Date',
-                field: 'dateOfJoining',
-                width: 150,
-                minWidth: 140,
-                valueFormatter: (params) => this.formatDate(params.value),
-                cellStyle: { color: '#6b7280', fontSize: '12px' }
-            }
-        ];
-    }
+  context = { componentParent: this };
 
-    onGridReady(params: GridReadyEvent): void {
-        params.api.sizeColumnsToFit();
-    }
+  // ─── Grid config ──────────────────────────────────────────────────────────
+  defaultColDef: ColDef = {
+    sortable:           true,
+    filter:             true,
+    floatingFilter:     true,
+    resizable:          true,
+    minWidth:           80,
+    suppressSizeToFit:  false,
+    suppressAutoSize:   false
+  };
 
-    loadEmployees(): void {
-        if (this.isLoading) {
-            return;
+  columnDefs: ColDef[] = [
+    {
+      headerName: 'Actions',
+      field:      'actions',
+      width:      155,
+      minWidth:   155,
+      maxWidth:   155,
+      sortable:   false,
+      filter:     false,
+      floatingFilter: false,
+      suppressFloatingFilterButton: true,
+      cellClass:  'actions-cell',
+      cellRenderer: ActionCellRendererComponent,
+      suppressSizeToFit: true
+    },
+    {
+      headerName: 'Employee',
+      field:      'fullName',
+      width:      240,
+      minWidth:   200,
+      cellRenderer: (params: any) => {
+        if (!params.value) return '';
+        const name   = params.value as string;
+        const code   = params.data?.employeeCode || '';
+        const search = params.context?.componentParent?.searchTerm || '';
+        const parts  = name.trim().split(' ');
+        let initials = 'NA';
+        if (parts.length >= 2) {
+          initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        } else if (name.length >= 2) {
+          initials = name.substring(0, 2).toUpperCase();
         }
-
-        this.isLoading = true;
-        this.error = null;
-        this.filter.pageNumber = this.currentPage;
-        this.filter.pageSize = this.pageSize;
-
-        console.log('Loading employees with filter:', this.filter);
-
-        this.employeeService.getFilteredEmployees(this.filter)
-            .pipe(takeUntil(this.destroy$))
-            .subscribe({
-                next: (result: PagedResultDto<EmployeeResponseDto>) => {
-                    console.log('Employee data received:', result);
-                    this.rowData = result.items || [];
-                    this.totalItems = result.totalCount || 0;
-                    this.totalPages = result.totalPages || 0;
-                    this.currentPage = result.pageNumber || 1;
-                    this.isLoading = false;
-                    console.log(`Loaded ${this.rowData.length} employees`);
-                },
-                error: (error: any) => {
-                    console.error('Error loading employees:', error);
-                    this.error = error.error?.message || 'Failed to load employees. Please try again.';
-                    this.isLoading = false;
-                }
-            });
+        const hl = (t: string) =>
+          params.context?.componentParent?.highlightText(t, search) || t;
+        return `
+          <div class="emp-name-cell">
+            <div class="emp-avatar">${initials}</div>
+            <div class="emp-info">
+              <div class="emp-name">${hl(name)}</div>
+              <div class="emp-code">${hl(code)}</div>
+            </div>
+          </div>`;
+      }
+    },
+    {
+      headerName: 'Email',
+      field:      'email',
+      width:      230,
+      minWidth:   180,
+      cellRenderer: (params: any) => {
+        if (!params.value) return '';
+        const search = params.context?.componentParent?.searchTerm || '';
+        const hl = params.context?.componentParent?.highlightText(params.value, search) || params.value;
+        return `<span style="color:#3b82f6;">${hl}</span>`;
+      }
+    },
+    {
+      headerName: 'Phone',
+      field:      'phoneNumber',
+      width:      145,
+      minWidth:   120,
+      cellStyle:  { color: '#6b7280' }
+    },
+    {
+      headerName: 'Department',
+      field:      'departmentName',
+      width:      170,
+      minWidth:   130,
+      cellRenderer: (params: any) => {
+        const val    = params.value || 'N/A';
+        const search = params.context?.componentParent?.searchTerm || '';
+        const hl     = params.context?.componentParent?.highlightText(val, search) || val;
+        return `<span style="color:#374151;">${hl}</span>`;
+      }
+    },
+    {
+      headerName: 'Designation',
+      field:      'designationName',
+      width:      170,
+      minWidth:   130,
+      cellStyle:  { color: '#6b7280' }
+    },
+    {
+      headerName: 'Employment Type',
+      field:      'employmentTypeName',
+      width:      165,
+      minWidth:   140,
+      cellRenderer: (params: any) => {
+        if (!params.value) return '';
+        const type = (params.value as string).toLowerCase();
+        const cls  = type.includes('full')     ? 'emp-type-badge emp-type-full-time'
+                   : type.includes('part')     ? 'emp-type-badge emp-type-part-time'
+                   : type.includes('contract') ? 'emp-type-badge emp-type-contract'
+                   : type.includes('intern')   ? 'emp-type-badge emp-type-intern'
+                   : type.includes('temp')     ? 'emp-type-badge emp-type-temp'
+                   : 'emp-type-badge emp-type-full-time';
+        return `<span class="${cls}">${params.value}</span>`;
+      }
+    },
+    {
+      headerName: 'Status',
+      field:      'employeeStatusName',
+      width:      130,
+      minWidth:   110,
+      cellRenderer: (params: any) => {
+        if (!params.value) return '';
+        const s   = (params.value as string).toLowerCase();
+        const cls = (s === 'active')       ? 'emp-status-badge emp-status-active'
+                  : (s === 'inactive')     ? 'emp-status-badge emp-status-inactive'
+                  : s.includes('leave')    ? 'emp-status-badge emp-status-leave'
+                  : s.includes('suspend')  ? 'emp-status-badge emp-status-suspended'
+                  : (s.includes('terminat') || s.includes('resign')) ? 'emp-status-badge emp-status-terminated'
+                  : 'emp-status-badge emp-status-inactive';
+        return `<span class="${cls}">${params.value}</span>`;
+      }
+    },
+    {
+      headerName: 'Gender',
+      field:      'genderName',
+      width:      110,
+      minWidth:   90,
+      cellStyle:  { color: '#6b7280' }
+    },
+    {
+      headerName: 'Joining Date',
+      field:      'dateOfJoining',
+      width:      150,
+      minWidth:   130,
+      valueFormatter: (params: any) => dateFormatter(params),
+      cellStyle:  { color: '#6b7280', fontSize: '12px' }
+    },
+    {
+      headerName: 'Created At',
+      field:      'createdAt',
+      width:      180,
+      minWidth:   150,
+      valueFormatter: (params: any) => dateTimeFormatter(params),
+      cellStyle:  { color: '#6b7280', fontSize: '12px' }
     }
+  ];
 
-    // NEW: Export to Excel functionality
-    exportToExcel(): void {
-        if (this.rowData.length === 0) {
+  constructor(
+    private employeeService: EmployeeService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.employeeStatusKeys = Object.keys(EmployeeStatus)
+      .filter(k => !isNaN(Number(k))).map(k => Number(k));
+    this.employmentTypeKeys = Object.keys(EmploymentType)
+      .filter(k => !isNaN(Number(k))).map(k => Number(k));
+    this.genderKeys = Object.keys(Gender)
+      .filter(k => !isNaN(Number(k))).map(k => Number(k));
+  }
+
+  ngOnInit(): void {
+    this.loadStats();
+    this.loadEmployees();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ─── Stats ────────────────────────────────────────────────────────────────
+
+  loadStats(): void {
+    const statsFilter: EmployeeFilterDto = {
+      searchTerm:     '',
+      pageNumber:     1,
+      pageSize:       1000,
+      sortBy:         'EmployeeCode',
+      sortDescending: false
+    };
+
+    this.employeeService.getFilteredEmployees(statsFilter)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result: PagedResultDto<EmployeeResponseDto>) => {
+          const items = result.items || [];
+          this.stats.total    = result.totalCount || 0;
+          this.stats.active   = items.filter(e =>
+            e.employeeStatus === EmployeeStatus.Active ||
+            (e as any).employeeStatusName?.toLowerCase() === 'active'
+          ).length;
+          this.stats.inactive = items.filter(e =>
+            e.employeeStatus === EmployeeStatus.Inactive ||
+            (e as any).employeeStatusName?.toLowerCase() === 'inactive'
+          ).length;
+          this.stats.onLeave  = items.filter(e =>
+            e.employeeStatus === EmployeeStatus.OnLeave ||
+            (e as any).employeeStatusName?.toLowerCase().includes('leave')
+          ).length;
+          this.cdr.detectChanges();
+        },
+        error: () => {}
+      });
+  }
+
+  // ─── Data Loading ─────────────────────────────────────────────────────────
+
+  loadEmployees(): void {
+    if (this.isLoadingData) return;
+    this.isLoadingData = true;
+
+    this.filter.searchTerm = this.searchTerm || undefined as any;
+    this.filter.pageNumber = this.currentPage;
+    this.filter.pageSize   = this.pageSize;
+
+    this.employeeService.getFilteredEmployees(this.filter)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result: PagedResultDto<EmployeeResponseDto>) => {
+          this.isLoadingData = false;
+          this.rowData       = result.items || [];
+          this.totalItems    = result.totalCount || 0;
+          this.totalPages    = Math.ceil(this.totalItems / this.pageSize);
+          this.currentPage   = result.pageNumber || 1;
+
+          if (this.gridApi) {
+            this.gridApi.setGridOption('rowData', this.rowData);
+            refreshGrid(this.gridApi);
+            setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
+          }
+          this.cdr.detectChanges();
+        },
+        error: (error: any) => {
+          this.isLoadingData = false;
+          if (error.status !== 401) {
             Swal.fire({
-                title: 'No Data',
-                text: 'There are no employees to export.',
-                icon: 'info',
-                confirmButtonColor: '#3b82f6'
+              icon: 'error',
+              title: 'Error',
+              text: 'Failed to load employees. Please try again.'
             });
-            return;
+          }
         }
+      });
+  }
 
-        // Show loading
-        Swal.fire({
-            title: 'Exporting...',
-            text: 'Please wait while we prepare your file.',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+  // ─── Grid ─────────────────────────────────────────────────────────────────
 
-        // Prepare data for export
-        const exportData = this.rowData.map(emp => ({
-            'Employee Code': emp.employeeCode,
-            'Full Name': emp.fullName,
-            'First Name': emp.firstName,
-            'Middle Name': emp.middleName || '—',
-            'Last Name': emp.lastName,
-            'Email': emp.email,
-            'Phone Number': emp.phoneNumber,
-            'Alternate Phone': emp.alternatePhoneNumber || '—',
-            'Date of Birth': emp.dateOfBirth ? new Date(emp.dateOfBirth).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }) : '—',
-            'Age': emp.age || '—',
-            'Gender': emp.genderName,
-            'Department': emp.departmentName || '—',
-            'Designation': emp.designationName || '—',
-            'Manager': emp.managerName || '—',
-            'Employment Type': emp.employmentTypeName,
-            'Status': emp.employeeStatusName,
-            'Date of Joining': emp.dateOfJoining ? new Date(emp.dateOfJoining).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }) : '—',
-            'Date of Leaving': emp.dateOfLeaving ? new Date(emp.dateOfLeaving).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }) : '—',
-            'Currently Employed': emp.isCurrentlyEmployed ? 'Yes' : 'No',
-            'Street': emp.address?.street || '—',
-            'City': emp.address?.city || '—',
-            'State': emp.address?.state || '—',
-            'Country': emp.address?.country || '—',
-            'Postal Code': emp.address?.postalCode || '—',
-            'Biometric ID': emp.biometricId || '—',
-            'Created At': emp.createdAt ? new Date(emp.createdAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            }) : '—',
-            'Updated At': emp.updatedAt ? new Date(emp.updatedAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            }) : '—'
-        }));
+  onGridReady(params: GridReadyEvent): void {
+    this.gridApi = params.api;
+    this.gridApi.addEventListener('sortChanged',   this.onSortChanged.bind(this));
+    this.gridApi.addEventListener('filterChanged', this.onFilterChanged.bind(this));
+    setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
+  }
 
-        // Create workbook and worksheet
-        const worksheet = XLSX.utils.json_to_sheet(exportData);
-        
-        // Set column widths
-        const columnWidths = [
-            { wch: 15 }, // Employee Code
-            { wch: 25 }, // Full Name
-            { wch: 15 }, // First Name
-            { wch: 15 }, // Middle Name
-            { wch: 15 }, // Last Name
-            { wch: 30 }, // Email
-            { wch: 15 }, // Phone Number
-            { wch: 15 }, // Alternate Phone
-            { wch: 20 }, // Date of Birth
-            { wch: 8 },  // Age
-            { wch: 12 }, // Gender
-            { wch: 20 }, // Department
-            { wch: 20 }, // Designation
-            { wch: 20 }, // Manager
-            { wch: 15 }, // Employment Type
-            { wch: 12 }, // Status
-            { wch: 20 }, // Date of Joining
-            { wch: 20 }, // Date of Leaving
-            { wch: 18 }, // Currently Employed
-            { wch: 30 }, // Street
-            { wch: 15 }, // City
-            { wch: 15 }, // State
-            { wch: 15 }, // Country
-            { wch: 12 }, // Postal Code
-            { wch: 15 }, // Biometric ID
-            { wch: 25 }, // Created At
-            { wch: 25 }  // Updated At
-        ];
-        worksheet['!cols'] = columnWidths;
+  onSortChanged(_event: SortChangedEvent): void {
+    this.currentPage = 1;
+    this.loadEmployees();
+  }
 
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Employees');
+  onFilterChanged(_event: FilterChangedEvent): void {
+    this.currentPage = 1;
+    this.loadEmployees();
+    this.updateActiveFilters();
+  }
 
-        // Generate file name with timestamp
-        const timestamp = new Date().toISOString().slice(0, 10);
-        const fileName = `Employees_Export_${timestamp}.xlsx`;
+  highlightText(text: string, term: string): string {
+    if (!term || !term.trim() || !text) return String(text);
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex   = new RegExp(`(${escaped})`, 'gi');
+    return String(text).replace(regex, '<mark class="search-highlight">$1</mark>');
+  }
 
-        // Save file
-        XLSX.writeFile(workbook, fileName);
+  // ─── Pagination ───────────────────────────────────────────────────────────
 
-        // Close loading and show success
-        Swal.fire({
-            title: 'Export Successful!',
-            text: `File "${fileName}" has been downloaded.`,
-            icon: 'success',
-            confirmButtonColor: '#3b82f6',
-            timer: 3000
-        });
+  onPageSizeChanged(newPageSize: number): void {
+    this.pageSize    = newPageSize;
+    this.currentPage = 1;
+    this.loadEmployees();
+  }
+
+  goToPage(page: number | string): void {
+    const p = typeof page === 'string' ? parseInt(page, 10) : page;
+    if (isNaN(p) || p < 1 || p > this.totalPages || p === this.currentPage) return;
+    this.currentPage = p;
+    this.loadEmployees();
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1);
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) this.goToPage(this.currentPage - 1);
+  }
+
+  // ─── Search & Filters ─────────────────────────────────────────────────────
+
+  onSearchChange(): void {
+    clearTimeout(this.searchDebounceTimer);
+    this.searchDebounceTimer = setTimeout(() => {
+      this.currentPage = 1;
+      this.loadEmployees();
+      this.updateActiveFilters();
+    }, 350);
+  }
+
+  clearSearch(): void {
+    clearTimeout(this.searchDebounceTimer);
+    this.searchTerm  = '';
+    this.currentPage = 1;
+    this.loadEmployees();
+    this.updateActiveFilters();
+  }
+
+  handleClearFilters(): void {
+    clearTimeout(this.searchDebounceTimer);
+    this.searchTerm  = '';
+    this.currentPage = 1;
+    this.filter = {
+      searchTerm:      '',
+      departmentId:    '',
+      designationId:   '',
+      managerId:       '',
+      employeeStatus:  undefined,
+      employmentType:  undefined,
+      gender:          undefined,
+      joiningDateFrom: undefined,
+      joiningDateTo:   undefined,
+      pageNumber:      1,
+      pageSize:        this.pageSize,
+      sortBy:          'EmployeeCode',
+      sortDescending:  false
+    };
+    clearAllFilters(this.gridApi);
+    this.loadEmployees();
+    this.updateActiveFilters();
+  }
+
+  applyFilter(): void {
+    this.currentPage = 1;
+    this.loadEmployees();
+    this.updateActiveFilters();
+  }
+
+  updateActiveFilters(): void {
+    const colFilterCount = this.gridApi
+      ? Object.keys(this.gridApi.getFilterModel()).length : 0;
+    const additional = colFilterCount > 0
+      ? { 'Column filters': `${colFilterCount} active` } : undefined;
+    const filters = getActiveFiltersSummary(this.searchTerm, undefined, additional);
+    this.activeFilters = { hasActiveFilters: filters.length > 0, filters, count: filters.length };
+  }
+
+  getEnumName(key: number, enumType: any): string {
+    return enumType[key] || '';
+  }
+
+  // ─── Modal ────────────────────────────────────────────────────────────────
+
+  addNewEmployee(): void {
+    this.formMode           = 'create';
+    this.selectedEmployeeId = null;
+    this.showFormModal      = true;
+    this.cdr.detectChanges();
+  }
+
+  closeFormModal(): void {
+    this.showFormModal      = false;
+    this.selectedEmployeeId = null;
+    this.cdr.detectChanges();
+  }
+
+  closeDetailsModal(): void {
+    this.showDetailsModal   = false;
+    this.selectedEmployeeId = null;
+    this.cdr.detectChanges();
+  }
+
+  onFormSuccess(): void {
+    this.closeFormModal();
+    this.loadEmployees();
+    this.loadStats();
+  }
+
+  onEditFromDetails(employeeId: string): void {
+    this.closeDetailsModal();
+    this.formMode           = 'edit';
+    this.selectedEmployeeId = employeeId;
+    this.showFormModal      = true;
+    this.cdr.detectChanges();
+  }
+
+  onDeleteFromDetails(_employeeId: string): void {
+    this.closeDetailsModal();
+    this.loadEmployees();
+    this.loadStats();
+  }
+
+  onOverlayClick(event: Event, modal: 'form' | 'details'): void {
+    if (event.target === event.currentTarget) {
+      modal === 'form' ? this.closeFormModal() : this.closeDetailsModal();
     }
+  }
 
-    // Filter operations
-    toggleFilter(): void {
-        this.isFilterVisible = !this.isFilterVisible;
-    }
+  // ─── ActionCellRenderer bridge ────────────────────────────────────────────
 
-    applyFilter(): void {
-        this.currentPage = 1;
-        this.loadEmployees();
-    }
+  viewDetails(employee: EmployeeResponseDto): void {
+    this.selectedEmployeeId = employee.id;
+    this.showDetailsModal   = true;
+    this.cdr.detectChanges();
+  }
 
-    resetFilter(): void {
-        this.filter = {
-            searchTerm: '',
-            departmentId: '',
-            designationId: '',
-            managerId: '',
-            employeeStatus: undefined,
-            employmentType: undefined,
-            gender: undefined,
-            joiningDateFrom: undefined,
-            joiningDateTo: undefined,
-            pageNumber: 1,
-            pageSize: 20,
-            sortBy: 'EmployeeCode',
-            sortDescending: false
-        };
-        this.currentPage = 1;
-        this.pageSize = 20;
-        this.loadEmployees();
-    }
+  editDepartment(employee: EmployeeResponseDto): void {
+    this.formMode           = 'edit';
+    this.selectedEmployeeId = employee.id;
+    this.showFormModal      = true;
+    this.cdr.detectChanges();
+  }
 
-    onSearchChange(): void {
-        const searchTerm = this.filter.searchTerm || '';
-        if (searchTerm.length === 0 || searchTerm.length >= 3) {
-            this.currentPage = 1;
-            this.loadEmployees();
+  async toggleStatus(employee: EmployeeResponseDto): Promise<void> {
+    if (!employee?.id) return;
+
+    const currentStatusName = (employee as any).employeeStatusName?.toLowerCase() || '';
+    const isActive = employee.employeeStatus === EmployeeStatus.Active
+      || currentStatusName === 'active';
+
+    const newStatus   = isActive ? EmployeeStatus.Inactive : EmployeeStatus.Active;
+    const actionText  = isActive ? 'deactivate' : 'activate';
+    const statusLabel = isActive ? 'Inactive' : 'Active';
+
+    const result = await Swal.fire({
+      title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Employee?`,
+      html: `
+        <div style="text-align:left;padding:10px;">
+          <p>Do you want to <strong>${actionText}</strong> this employee?</p>
+          <p style="margin:10px 0;"><strong>Employee:</strong> ${employee.fullName}</p>
+          <p style="margin:10px 0;"><strong>New Status:</strong>
+            <span style="color:${isActive ? '#ef4444' : '#10b981'};font-weight:600;">${statusLabel}</span>
+          </p>
+        </div>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: isActive ? '#ef4444' : '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: `Yes, ${actionText}!`
+    });
+
+    if (!result.isConfirmed) return;
+
+    const updateDto = {
+      firstName: employee.firstName, middleName: employee.middleName,
+      lastName: employee.lastName, dateOfBirth: employee.dateOfBirth,
+      gender: employee.gender, email: employee.email,
+      phoneNumber: employee.phoneNumber, alternatePhoneNumber: employee.alternatePhoneNumber,
+      address: employee.address, departmentId: employee.departmentId,
+      designationId: employee.designationId, managerId: employee.managerId,
+      dateOfJoining: employee.dateOfJoining, dateOfLeaving: employee.dateOfLeaving,
+      employmentType: employee.employmentType, employeeStatus: newStatus,
+      profileImageUrl: employee.profileImageUrl, biometricId: employee.biometricId
+    };
+
+    this.employeeService.updateEmployee(employee.id, updateDto)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          const idx = this.rowData.findIndex(r => r.id === employee.id);
+          if (idx !== -1) {
+            this.rowData[idx] = {
+              ...this.rowData[idx],
+              employeeStatus: newStatus,
+              employeeStatusName: statusLabel
+            } as any;
+            this.gridApi.setGridOption('rowData', [...this.rowData]);
+            refreshGrid(this.gridApi);
+          }
+          this.loadStats();
+          this.cdr.detectChanges();
+          Swal.fire({
+            icon: 'success', title: 'Status Updated!',
+            text: `Employee is now ${statusLabel}.`,
+            timer: 2000, showConfirmButton: false
+          });
+        },
+        error: (error: any) => {
+          Swal.fire({
+            icon: 'error', title: 'Error!',
+            text: error.error?.message || 'Failed to change employee status.'
+          });
         }
-    }
+      });
+  }
 
-    clearSearch(): void {
-        this.filter.searchTerm = '';
-        this.currentPage = 1;
-        this.loadEmployees();
-    }
+  async deleteDepartment(employee: EmployeeResponseDto): Promise<void> {
+    const result = await Swal.fire({
+      title: 'Delete Employee?',
+      html: `
+        <div style="text-align:left;padding:10px;">
+          <p>Are you sure you want to delete <strong>"${employee?.fullName || 'this employee'}"</strong>?</p>
+          <p style="color:#ef4444;margin-top:15px;padding:10px;background:#fee2e2;border-radius:6px;">
+            <strong>Warning:</strong> This action cannot be undone.
+          </p>
+        </div>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete!'
+    });
 
-    // Pagination
-    goToPage(page: number): void {
-        if (page >= 1 && page <= this.totalPages && page !== this.currentPage) {
-            this.currentPage = page;
-            this.loadEmployees();
-        }
-    }
+    if (!result.isConfirmed || !employee?.id) return;
 
-    previousPage(): void {
-        if (this.currentPage > 1) {
+    this.employeeService.deleteEmployee(employee.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          const idx = this.rowData.findIndex(r => r.id === employee.id);
+          if (idx !== -1) {
+            this.rowData.splice(idx, 1);
+            this.gridApi.setGridOption('rowData', [...this.rowData]);
+            refreshGrid(this.gridApi);
+          }
+          this.totalItems = Math.max(0, this.totalItems - 1);
+          this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+          if (this.rowData.length === 0 && this.currentPage > 1) {
             this.currentPage--;
             this.loadEmployees();
+          }
+          this.loadStats();
+          this.cdr.detectChanges();
+          Swal.fire({
+            icon: 'success', title: 'Deleted!',
+            text: 'Employee has been deleted.',
+            timer: 2500, showConfirmButton: false
+          });
+        },
+        error: (error: any) => {
+          Swal.fire({
+            icon: 'error', title: 'Error!',
+            text: error.error?.message || 'Failed to delete employee.'
+          });
         }
+      });
+  }
+
+  // ─── Grid action dispatcher ───────────────────────────────────────────────
+
+  onGridAction(event: { action: string; data: any }): void {
+    switch (event.action) {
+      case 'edit':   this.editDepartment(event.data);  break;
+      case 'view':   this.viewDetails(event.data);     break;
+      case 'toggle': this.toggleStatus(event.data);    break;
+      case 'delete': this.deleteDepartment(event.data); break;
     }
+  }
 
-    nextPage(): void {
-        if (this.currentPage < this.totalPages) {
-            this.currentPage++;
-            this.loadEmployees();
-        }
-    }
+  // ─── Export ───────────────────────────────────────────────────────────────
 
-    onPageSizeChanged(newPageSize: number): void {
-        this.pageSize = newPageSize;
-        this.currentPage = 1;
-        this.loadEmployees();
-    }
+  exportData(): void {
+    exportToCsv(this.gridApi, 'employees');
+    Swal.fire({
+      icon: 'success', title: 'Exported!',
+      text: 'Employee data exported as CSV.',
+      timer: 2000, showConfirmButton: false
+    });
+  }
 
-    get pages(): number[] {
-        const pages: number[] = [];
-        const maxPagesToShow = 5;
-        let startPage = Math.max(1, this.currentPage - Math.floor(maxPagesToShow / 2));
-        let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
-        
-        if (endPage - startPage < maxPagesToShow - 1) {
-            startPage = Math.max(1, endPage - maxPagesToShow + 1);
-        }
-        
-        for (let i = startPage; i <= endPage; i++) {
-            pages.push(i);
-        }
-        return pages;
-    }
+  // ─── Date helpers ─────────────────────────────────────────────────────────
 
-    // Navigation methods called by ActionCellRendererComponent
-    viewDetails(employee: EmployeeResponseDto): void {
-        this.selectedEmployeeId = employee.id;
-        this.showDetailsModal = true;
-    }
-
-    editDepartment(employee: EmployeeResponseDto): void {
-        this.formMode = 'edit';
-        this.selectedEmployeeId = employee.id;
-        this.showFormModal = true;
-    }
-
-    async toggleStatus(employee: EmployeeResponseDto): Promise<void> {
-        if (!employee || !employee.id) return;
-
-        const isCurrentlyActive = employee.employeeStatus === EmployeeStatus.Active;
-        const newStatus = isCurrentlyActive ? EmployeeStatus.Inactive : EmployeeStatus.Active;
-        const statusText = isCurrentlyActive ? 'deactivate' : 'activate';
-        const statusAction = isCurrentlyActive ? 'deactivated' : 'activated';
-
-        const result = await Swal.fire({
-            title: 'Change Employee Status?',
-            html: `Do you want to <strong>${statusText}</strong> employee "${employee?.fullName}"?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3b82f6',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: `Yes, ${statusText}!`,
-            cancelButtonText: 'Cancel'
-        });
-
-        if (result.isConfirmed) {
-            const updateDto = {
-                firstName: employee.firstName,
-                middleName: employee.middleName,
-                lastName: employee.lastName,
-                dateOfBirth: employee.dateOfBirth,
-                gender: employee.gender,
-                email: employee.email,
-                phoneNumber: employee.phoneNumber,
-                alternatePhoneNumber: employee.alternatePhoneNumber,
-                address: employee.address,
-                departmentId: employee.departmentId,
-                designationId: employee.designationId,
-                managerId: employee.managerId,
-                dateOfJoining: employee.dateOfJoining,
-                dateOfLeaving: employee.dateOfLeaving,
-                employmentType: employee.employmentType,
-                employeeStatus: newStatus,
-                profileImageUrl: employee.profileImageUrl,
-                biometricId: employee.biometricId
-            };
-
-            this.employeeService.updateEmployee(employee.id, updateDto)
-                .pipe(takeUntil(this.destroy$))
-                .subscribe({
-                    next: () => {
-                        Swal.fire({
-                            title: 'Success!',
-                            text: `Employee has been ${statusAction} successfully.`,
-                            icon: 'success',
-                            confirmButtonColor: '#3b82f6',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
-                        this.loadEmployees();
-                    },
-                    error: (error: any) => {
-                        console.error('Error changing employee status:', error);
-                        Swal.fire({
-                            title: 'Error!',
-                            text: error.error?.message || 'Failed to change employee status.',
-                            icon: 'error',
-                            confirmButtonColor: '#ef4444'
-                        });
-                    }
-                });
-        }
-    }
-
-    async deleteDepartment(employee: EmployeeResponseDto): Promise<void> {
-        const result = await Swal.fire({
-            title: 'Are you sure?',
-            html: `You are about to delete <strong>"${employee?.fullName || 'this employee'}"</strong>.<br>This action cannot be undone.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
-        });
-
-        if (result.isConfirmed && employee?.id) {
-            this.employeeService.deleteEmployee(employee.id)
-                .pipe(takeUntil(this.destroy$))
-                .subscribe({
-                    next: () => {
-                        Swal.fire({
-                            title: 'Deleted!',
-                            text: 'Employee has been deleted successfully.',
-                            icon: 'success',
-                            confirmButtonColor: '#3b82f6',
-                            timer: 2000
-                        });
-                        this.loadEmployees();
-                    },
-                    error: (error: any) => {
-                        console.error('Error deleting employee:', error);
-                        Swal.fire({
-                            title: 'Error!',
-                            text: error.error?.message || 'Failed to delete employee. Please try again.',
-                            icon: 'error',
-                            confirmButtonColor: '#ef4444'
-                        });
-                    }
-                });
-        }
-    }
-
-    // Helper methods
-    formatDate(date: Date | undefined): string {
-        if (!date) return 'N/A';
-        return new Date(date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    }
-
-    getEnumName(key: number, enumType: any): string {
-        return enumType[key] || '';
-    }
-
-    viewEmployee(employee: EmployeeResponseDto): void {
-        this.viewDetails(employee);
-    }
-
-    editEmployee(employee: EmployeeResponseDto): void {
-        this.editDepartment(employee);
-    }
-
-    deleteEmployee(employee: EmployeeResponseDto): void {
-        this.deleteDepartment(employee);
-    }
-
-    addNewEmployee(): void {
-        this.formMode = 'create';
-        this.selectedEmployeeId = null;
-        this.showFormModal = true;
-    }
-
-    closeFormModal(): void {
-        this.showFormModal = false;
-        this.selectedEmployeeId = null;
-    }
-
-    closeDetailsModal(): void {
-        this.showDetailsModal = false;
-        this.selectedEmployeeId = null;
-    }
-
-    onFormSuccess(): void {
-        this.closeFormModal();
-        this.loadEmployees();
-    }
-
-    onEditFromDetails(employeeId: string): void {
-        this.closeDetailsModal();
-        this.formMode = 'edit';
-        this.selectedEmployeeId = employeeId;
-        this.showFormModal = true;
-    }
-
-    onDeleteFromDetails(employeeId: string): void {
-        this.closeDetailsModal();
-        this.loadEmployees();
-    }
+  formatDate(date: Date | undefined): string {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
+  }
 }
