@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { LeaveTypeService } from '../../../core/services/api/leave-type.api';
@@ -9,24 +9,22 @@ import { LeaveType, CreateLeaveTypeDto, UpdateLeaveTypeDto } from '../../../core
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './leave-type-form.component.html',
-  styleUrls: ['./leave-type-form.component.scss']
+  styleUrls: ['./leave-type-form.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class LeaveTypeFormComponent implements OnInit {
   @Input() isModal = false;
   @Input() isEditMode = false;
   @Input() leaveTypeId: string | null = null;
-  @Output() formSubmitted = new EventEmitter<void>();
-  @Output() formCancelled = new EventEmitter<void>();
+  @Output() formSubmitted  = new EventEmitter<void>();
+  @Output() formCancelled  = new EventEmitter<void>();
 
   leaveTypeForm!: FormGroup;
-  submitting = false;
+  submitting      = false;
   loadingLeaveType = false;
   formError: string | null = null;
 
-  constructor(
-    private fb: FormBuilder,
-    private leaveTypeService: LeaveTypeService
-  ) {}
+  constructor(private fb: FormBuilder, private leaveTypeService: LeaveTypeService) {}
 
   ngOnInit(): void {
     this.buildForm();
@@ -40,15 +38,14 @@ export class LeaveTypeFormComponent implements OnInit {
       name:                ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       code:                ['', [Validators.required, Validators.minLength(2), Validators.maxLength(10), Validators.pattern(/^[A-Z]+$/)]],
       description:         ['', Validators.maxLength(500)],
-      // ✅ Use 0 not null — backend expects int, not int?
       maxDaysPerYear:      [1,  [Validators.required, Validators.min(1), Validators.max(365)]],
       isCarryForward:      [false],
       maxCarryForwardDays: [0,  [Validators.min(0)]],
       requiresApproval:    [true],
       requiresDocument:    [false],
       minimumNoticeDays:   [0,  [Validators.min(0)]],
-      colorPicker:         ['#3b82f6'],   
-      colorHex:            ['#3b82f6'],   
+      colorPicker:         ['#3b82f6'],
+      colorHex:            ['#3b82f6'],
       isActive:            [true],
       displayOrder:        [0,  [Validators.min(0)]]
     });
@@ -63,17 +60,17 @@ export class LeaveTypeFormComponent implements OnInit {
           this.leaveTypeForm.patchValue({
             name:                lt.name,
             code:                lt.code,
-            description:         lt.description       ?? '',
-            maxDaysPerYear:      lt.maxDaysPerYear     ?? 1,
-            isCarryForward:      lt.isCarryForward     ?? false,
+            description:         lt.description        ?? '',
+            maxDaysPerYear:      lt.maxDaysPerYear      ?? 1,
+            isCarryForward:      lt.isCarryForward      ?? false,
             maxCarryForwardDays: lt.maxCarryForwardDays ?? 0,
-            requiresApproval:    lt.requiresApproval   ?? true,
-            requiresDocument:    lt.requiresDocument   ?? false,
-            minimumNoticeDays:   lt.minimumNoticeDays  ?? 0,
-            colorPicker:         lt.color              || '#3b82f6',
-            colorHex:            lt.color              || '#3b82f6',
-            isActive:            lt.isActive           ?? true,
-            displayOrder:        lt.displayOrder       ?? 0
+            requiresApproval:    lt.requiresApproval    ?? true,
+            requiresDocument:    lt.requiresDocument    ?? false,
+            minimumNoticeDays:   lt.minimumNoticeDays   ?? 0,
+            colorPicker:         lt.color               || '#3b82f6',
+            colorHex:            lt.color               || '#3b82f6',
+            isActive:            lt.isActive            ?? true,
+            displayOrder:        lt.displayOrder        ?? 0
           });
         }
         this.loadingLeaveType = false;
@@ -82,7 +79,6 @@ export class LeaveTypeFormComponent implements OnInit {
     });
   }
 
-  // ✅ Keep both color controls in sync
   onColorPickerChange(e: Event): void {
     const val = (e.target as HTMLInputElement).value;
     this.leaveTypeForm.get('colorHex')?.setValue(val, { emitEvent: false });
@@ -111,11 +107,10 @@ export class LeaveTypeFormComponent implements OnInit {
   onSubmit(): void {
     if (this.leaveTypeForm.invalid) { this.markAllTouched(); return; }
     this.submitting = true;
-    this.formError = null;
+    this.formError  = null;
     const v = this.leaveTypeForm.value;
     const isCarryForward = v.isCarryForward as boolean;
 
-    // ✅ Build payload with guaranteed non-null values for all backend int/string fields
     const basePayload = {
       name:                (v.name as string).trim(),
       code:                (v.code as string).trim().toUpperCase(),
@@ -126,7 +121,7 @@ export class LeaveTypeFormComponent implements OnInit {
       requiresApproval:    v.requiresApproval as boolean,
       requiresDocument:    v.requiresDocument as boolean,
       minimumNoticeDays:   Number(v.minimumNoticeDays) || 0,
-      color:               (v.colorPicker as string) || '#3b82f6',  
+      color:               (v.colorPicker as string) || '#3b82f6',
       isActive:            v.isActive as boolean,
       displayOrder:        Number(v.displayOrder) || 0
     };
@@ -139,10 +134,7 @@ export class LeaveTypeFormComponent implements OnInit {
           if (r.success) { this.formSubmitted.emit(); }
           else { this.formError = r.message || 'Failed to update leave type'; }
         },
-        error: (e) => {
-          this.submitting = false;
-          this.formError = this.extractError(e);
-        }
+        error: (e) => { this.submitting = false; this.formError = this.extractError(e); }
       });
     } else {
       const dto: CreateLeaveTypeDto = { ...basePayload };
@@ -152,10 +144,7 @@ export class LeaveTypeFormComponent implements OnInit {
           if (r.success) { this.formSubmitted.emit(); }
           else { this.formError = r.message || 'Failed to create leave type. Code may already exist.'; }
         },
-        error: (e) => {
-          this.submitting = false;
-          this.formError = this.extractError(e);
-        }
+        error: (e) => { this.submitting = false; this.formError = this.extractError(e); }
       });
     }
   }
@@ -186,7 +175,6 @@ export class LeaveTypeFormComponent implements OnInit {
   private extractError(e: { error?: { errors?: Record<string, string[]>; message?: string; title?: string } }): string {
     const body = e.error;
     if (!body) return 'An unexpected error occurred.';
-    // ASP.NET ValidationProblemDetails: { errors: { FieldName: ['msg'] } }
     if (body.errors && typeof body.errors === 'object') {
       const messages = Object.entries(body.errors)
         .map(([field, msgs]) => `${field}: ${(Array.isArray(msgs) ? msgs : [msgs]).join(', ')}`);

@@ -1,115 +1,154 @@
-<div class="balance-form-container" [class.is-modal]="isModal">
+<!-- Rendered inside the list's modal body — no modal shell here -->
 
-  <div class="form-header">
-    <h2>{{ isEditMode ? 'Edit Leave Balance' : 'Add Leave Balance' }}</h2>
-    <p>{{ isEditMode ? 'Update allocation or carry-forward days' : 'Create a new leave balance record for an employee' }}</p>
-  </div>
+<div *ngIf="loadingBalance" class="hl-form-loading">
+  <div class="hl-loading-spinner"></div>
+  <p>Loading balance details...</p>
+</div>
 
-  <!-- Loading skeleton -->
-  <div *ngIf="loadingBalance" class="form-loading">
-    <div class="spinner"></div>
-    <p>Loading balance...</p>
-  </div>
+<form *ngIf="!loadingBalance" [formGroup]="balanceForm" (ngSubmit)="onSubmit()" class="hl-leave-form">
 
-  <form *ngIf="!loadingBalance" [formGroup]="balanceForm" (ngSubmit)="onSubmit()">
+  <!-- ── Section 1: Employee & Leave Type ───────────────────────────── -->
+  <div class="hl-form-section">
+    <h3 class="hl-section-title">Employee & Leave Type</h3>
 
-    <!-- Row 1: Employee + Leave Type -->
-    <div class="form-row">
-      <div class="form-group" [class.invalid]="isInvalid('employeeId')">
-        <label>Employee <span class="required">*</span></label>
-        <select formControlName="employeeId">
+    <div class="hl-form-row">
+      <!-- Employee -->
+      <div class="hl-form-group">
+        <label for="bfEmployee">Employee <span class="hl-required">*</span></label>
+        <select id="bfEmployee" formControlName="employeeId" class="hl-form-control"
+          [class.hl-invalid]="isInvalid('employeeId')">
           <option value="">Select employee...</option>
           <option *ngFor="let emp of employees" [value]="emp.id">
-            {{ emp.fullName }} ({{ emp.employeeCode }})
+            {{ emp.employeeCode }} — {{ emp.fullName }}
           </option>
         </select>
-        <span class="error-msg" *ngIf="isInvalid('employeeId')">{{ getError('employeeId') }}</span>
-        <span class="locked-hint" *ngIf="isEditMode">Locked — part of natural key</span>
+        <span class="hl-error-msg" *ngIf="isInvalid('employeeId')">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('employeeId') }}
+        </span>
+        <span class="hl-form-hint" *ngIf="isEditMode" style="color:#9ca3af;font-style:italic;">
+          Locked — part of natural key
+        </span>
       </div>
 
-      <div class="form-group" [class.invalid]="isInvalid('leaveTypeId')">
-        <label>Leave Type <span class="required">*</span></label>
-        <select formControlName="leaveTypeId" (change)="onLeaveTypeChange()">
+      <!-- Leave Type -->
+      <div class="hl-form-group">
+        <label for="bfLeaveType">Leave Type <span class="hl-required">*</span></label>
+        <select id="bfLeaveType" formControlName="leaveTypeId" class="hl-form-control"
+          [class.hl-invalid]="isInvalid('leaveTypeId')" (change)="onLeaveTypeChange()">
           <option value="">Select leave type...</option>
           <option *ngFor="let lt of leaveTypes" [value]="lt.id">
-            {{ lt.name }} ({{ lt.code }})
+            {{ lt.name }} ({{ lt.maxDaysPerYear }} days/yr)
           </option>
         </select>
-        <span class="error-msg" *ngIf="isInvalid('leaveTypeId')">{{ getError('leaveTypeId') }}</span>
-        <span class="locked-hint" *ngIf="isEditMode">Locked — part of natural key</span>
+        <span class="hl-error-msg" *ngIf="isInvalid('leaveTypeId')">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('leaveTypeId') }}
+        </span>
+        <span class="hl-form-hint" *ngIf="isEditMode" style="color:#9ca3af;font-style:italic;">
+          Locked — part of natural key
+        </span>
+
+        <!-- Leave type info panel -->
+        <div class="hl-balance-info" *ngIf="selectedLeaveType">
+          <span class="hl-type-dot" [style.background]="selectedLeaveType.color"></span>
+          <span><strong>{{ selectedLeaveType.name }}</strong> — max {{ selectedLeaveType.maxDaysPerYear }} days/year</span>
+          <span *ngIf="selectedLeaveType.isCarryForward" style="color:#15803d;">
+            &nbsp;· Carry-forward allowed (max {{ selectedLeaveType.maxCarryForwardDays }} days)
+          </span>
+          <span *ngIf="!selectedLeaveType.isCarryForward" style="color:#b45309;">
+            &nbsp;· No carry-forward
+          </span>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- Leave Type Info Panel -->
-    <div class="leave-type-info" *ngIf="selectedLeaveType">
-      <div class="info-dot" [style.background]="selectedLeaveType.color"></div>
-      <div class="info-details">
-        <span class="info-name">{{ selectedLeaveType.name }}</span>
-        <span class="info-meta">Max {{ selectedLeaveType.maxDaysPerYear }} days/year</span>
-        <span class="info-meta" *ngIf="selectedLeaveType.isCarryForward">
-          Carry-forward allowed (max {{ selectedLeaveType.maxCarryForwardDays }} days)
-        </span>
-        <span class="info-meta no-carry" *ngIf="!selectedLeaveType.isCarryForward">
-          Carry-forward not allowed
-        </span>
-      </div>
-    </div>
+  <!-- ── Section 2: Allocation Details ─────────────────────────────── -->
+  <div class="hl-form-section">
+    <h3 class="hl-section-title">Allocation Details</h3>
 
-    <!-- Row 2: Year + Allocated -->
-    <div class="form-row">
-      <div class="form-group" [class.invalid]="isInvalid('year')">
-        <label>Year <span class="required">*</span></label>
-        <select formControlName="year">
+    <div class="hl-form-row">
+      <!-- Year -->
+      <div class="hl-form-group">
+        <label for="bfYear">Year <span class="hl-required">*</span></label>
+        <select id="bfYear" formControlName="year" class="hl-form-control"
+          [class.hl-invalid]="isInvalid('year')">
           <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
         </select>
-        <span class="error-msg" *ngIf="isInvalid('year')">{{ getError('year') }}</span>
-        <span class="locked-hint" *ngIf="isEditMode">Locked — part of natural key</span>
+        <span class="hl-error-msg" *ngIf="isInvalid('year')">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('year') }}
+        </span>
+        <span class="hl-form-hint" *ngIf="isEditMode" style="color:#9ca3af;font-style:italic;">
+          Locked — part of natural key
+        </span>
       </div>
 
-      <div class="form-group" [class.invalid]="isInvalid('totalAllocated')">
-        <label>Total Allocated Days <span class="required">*</span></label>
-        <input type="number" formControlName="totalAllocated" min="0" max="365" step="0.5" placeholder="e.g. 12" />
-        <span class="error-msg" *ngIf="isInvalid('totalAllocated')">{{ getError('totalAllocated') }}</span>
-        <span class="field-hint" *ngIf="selectedLeaveType">
-          Default: {{ selectedLeaveType.maxDaysPerYear }} days
+      <!-- Total Allocated -->
+      <div class="hl-form-group">
+        <label for="bfAllocated">Total Allocated Days <span class="hl-required">*</span></label>
+        <div class="hl-days-wrapper">
+          <input type="number" id="bfAllocated" formControlName="totalAllocated"
+            class="hl-form-control" [class.hl-invalid]="isInvalid('totalAllocated')"
+            min="0" max="365" step="0.5" placeholder="e.g. 12" />
+          <span class="hl-days-unit">days</span>
+        </div>
+        <span class="hl-error-msg" *ngIf="isInvalid('totalAllocated')">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('totalAllocated') }}
+        </span>
+        <span class="hl-form-hint" *ngIf="selectedLeaveType && !isInvalid('totalAllocated')">
+          <i class="bi bi-info-circle"></i> Default: {{ selectedLeaveType.maxDaysPerYear }} days
         </span>
       </div>
     </div>
 
-    <!-- Carried Forward -->
-    <div class="form-row">
-      <div class="form-group" [class.invalid]="isInvalid('carriedForward')"
-           [class.disabled-group]="selectedLeaveType && !selectedLeaveType.isCarryForward">
-        <label>Carried Forward Days</label>
-        <input type="number" formControlName="carriedForward" min="0" max="365" step="0.5" placeholder="0" />
-        <span class="error-msg" *ngIf="isInvalid('carriedForward')">{{ getError('carriedForward') }}</span>
-        <span class="field-hint" *ngIf="selectedLeaveType && selectedLeaveType.isCarryForward">
-          Max {{ selectedLeaveType.maxCarryForwardDays }} days allowed
+    <!-- Carry Forward -->
+    <div class="hl-form-row">
+      <div class="hl-form-group"
+        [style.opacity]="selectedLeaveType && !selectedLeaveType.isCarryForward ? '0.5' : '1'">
+        <label for="bfCarry">Carried Forward Days</label>
+        <div class="hl-days-wrapper">
+          <input type="number" id="bfCarry" formControlName="carriedForward"
+            class="hl-form-control" [class.hl-invalid]="isInvalid('carriedForward')"
+            min="0" max="365" step="0.5" placeholder="0" />
+          <span class="hl-days-unit">days</span>
+        </div>
+        <span class="hl-error-msg" *ngIf="isInvalid('carriedForward')">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('carriedForward') }}
         </span>
-        <span class="field-hint disabled-hint" *ngIf="selectedLeaveType && !selectedLeaveType.isCarryForward">
-          Not applicable — this leave type does not support carry-forward
+        <span class="hl-form-hint" *ngIf="selectedLeaveType?.isCarryForward">
+          <i class="bi bi-info-circle"></i> Max {{ selectedLeaveType?.maxCarryForwardDays }} days allowed
+        </span>
+        <span class="hl-form-hint" style="color:#b45309;"
+          *ngIf="selectedLeaveType && !selectedLeaveType.isCarryForward">
+          <i class="bi bi-exclamation-triangle"></i> Not applicable — this leave type does not allow carry-forward
         </span>
       </div>
-      <!-- Spacer -->
-      <div class="form-group"></div>
+      <!-- spacer -->
+      <div class="hl-form-group"></div>
     </div>
+  </div>
 
-    <!-- Error Banner -->
-    <div class="form-error-banner" *ngIf="formError">
-      <i class="bi bi-exclamation-circle"></i>
-      {{ formError }}
-    </div>
+  <!-- ── Form Error ─────────────────────────────────────────────────── -->
+  <div class="hl-form-alert" *ngIf="formError">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ formError }}</span>
+  </div>
 
-    <!-- Actions -->
-    <div class="form-actions">
-      <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="submitting">
-        Cancel
-      </button>
-      <button type="submit" class="btn btn-submit" [disabled]="submitting">
-        <span *ngIf="submitting" class="btn-spinner"></span>
-        {{ submitting ? 'Saving...' : (isEditMode ? 'Update Balance' : 'Create Balance') }}
-      </button>
-    </div>
+  <!-- ── Footer ────────────────────────────────────────────────────── -->
+  <div class="hl-modal-footer">
+    <button type="button" class="hl-btn hl-btn-secondary" (click)="onCancel()" [disabled]="submitting">
+      Cancel
+    </button>
+    <button type="submit" class="hl-btn hl-btn-primary"
+      [disabled]="submitting || balanceForm.invalid">
+      <ng-container *ngIf="!submitting">
+        <i class="bi bi-check-circle"></i>
+        {{ isEditMode ? 'Update Balance' : 'Create Balance' }}
+      </ng-container>
+      <ng-container *ngIf="submitting">
+        <div class="hl-btn-spinner"></div>
+        {{ isEditMode ? 'Updating...' : 'Creating...' }}
+      </ng-container>
+    </button>
+  </div>
 
-  </form>
-</div>
+</form>

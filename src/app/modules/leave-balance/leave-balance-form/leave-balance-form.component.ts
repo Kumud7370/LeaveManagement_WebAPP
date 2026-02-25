@@ -2,8 +2,8 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { LeaveBalanceService } from '../../../core/services/api/leave-balance.api';
-import { LeaveTypeService } from '../../../core/services/api/leave-type.api';
-import { EmployeeService } from '../../../core/services/api/employee.api';
+import { LeaveTypeService }    from '../../../core/services/api/leave-type.api';
+import { EmployeeService }     from '../../../core/services/api/employee.api';
 import { LeaveBalance, CreateLeaveBalanceDto, UpdateLeaveBalanceDto } from '../../../core/Models/leave-balance.model';
 import { LeaveType } from '../../../core/Models/leave-type.model';
 
@@ -17,21 +17,21 @@ interface EmployeeSummary { id: string; employeeCode: string; fullName: string; 
   styleUrls: ['./leave-balance-form.component.scss']
 })
 export class LeaveBalanceFormComponent implements OnInit {
-  @Input() isModal = false;
-  @Input() isEditMode = false;
-  @Input() balanceId: string | null = null;
-  @Input() defaultYear = new Date().getFullYear();
+  @Input() isModal      = false;
+  @Input() isEditMode   = false;
+  @Input() balanceId:   string | null = null;
+  @Input() defaultYear  = new Date().getFullYear();
   @Output() formSubmitted = new EventEmitter<void>();
   @Output() formCancelled = new EventEmitter<void>();
 
-  balanceForm!: FormGroup;
-  leaveTypes: LeaveType[] = [];
-  employees: EmployeeSummary[] = [];
-  selectedLeaveType: LeaveType | null = null;
-  submitting = false;
-  loadingBalance = false;
-  formError: string | null = null;
-  yearOptions: number[] = [];
+  balanceForm!:       FormGroup;
+  leaveTypes:         LeaveType[]       = [];
+  employees:          EmployeeSummary[] = [];
+  selectedLeaveType:  LeaveType | null  = null;
+  submitting          = false;
+  loadingBalance      = false;
+  formError:          string | null     = null;
+  yearOptions:        number[]          = [];
 
   constructor(
     private fb: FormBuilder,
@@ -39,23 +39,15 @@ export class LeaveBalanceFormComponent implements OnInit {
     private leaveTypeService: LeaveTypeService,
     private employeeService: EmployeeService
   ) {
-    this.buildYearOptions();
+    const cur = new Date().getFullYear();
+    for (let y = cur + 1; y >= cur - 3; y--) this.yearOptions.push(y);
   }
 
   ngOnInit(): void {
     this.buildForm();
     this.loadLeaveTypes();
     this.loadEmployees();
-    if (this.isEditMode && this.balanceId) {
-      this.loadBalance(this.balanceId);
-    }
-  }
-
-  buildYearOptions(): void {
-    const current = new Date().getFullYear();
-    for (let y = current + 1; y >= current - 3; y--) {
-      this.yearOptions.push(y);
-    }
+    if (this.isEditMode && this.balanceId) this.loadBalance(this.balanceId);
   }
 
   buildForm(): void {
@@ -64,7 +56,7 @@ export class LeaveBalanceFormComponent implements OnInit {
       leaveTypeId:    ['', Validators.required],
       year:           [this.defaultYear, [Validators.required, Validators.min(2000), Validators.max(2100)]],
       totalAllocated: [null, [Validators.required, Validators.min(0), Validators.max(365)]],
-      carriedForward: [0,    [Validators.min(0),   Validators.max(365)]]
+      carriedForward: [0,    [Validators.min(0), Validators.max(365)]]
     });
   }
 
@@ -76,10 +68,9 @@ export class LeaveBalanceFormComponent implements OnInit {
 
   loadEmployees(): void {
     this.employeeService.getActiveEmployees().subscribe({
-      next: (employees) => {
-        this.employees = employees.map((e: any) => ({
-          id: e.id,
-          employeeCode: e.employeeCode,
+      next: (employees: any[]) => {
+        this.employees = employees.map(e => ({
+          id: e.id, employeeCode: e.employeeCode,
           fullName: `${e.firstName} ${e.lastName}`
         }));
       },
@@ -94,13 +85,10 @@ export class LeaveBalanceFormComponent implements OnInit {
         if (r.success) {
           const b: LeaveBalance = r.data;
           this.balanceForm.patchValue({
-            employeeId:     b.employeeId,
-            leaveTypeId:    b.leaveTypeId,
-            year:           b.year,
-            totalAllocated: b.totalAllocated,
-            carriedForward: b.carriedForward
+            employeeId: b.employeeId, leaveTypeId: b.leaveTypeId,
+            year: b.year, totalAllocated: b.totalAllocated, carriedForward: b.carriedForward
           });
-          // Lock employee + leave type + year in edit mode (natural key)
+          // Lock natural key fields in edit mode
           this.balanceForm.get('employeeId')?.disable();
           this.balanceForm.get('leaveTypeId')?.disable();
           this.balanceForm.get('year')?.disable();
@@ -115,11 +103,9 @@ export class LeaveBalanceFormComponent implements OnInit {
   onLeaveTypeChange(): void {
     const id = this.balanceForm.get('leaveTypeId')?.value;
     this.selectedLeaveType = this.leaveTypes.find(lt => lt.id === id) || null;
-    // Auto-fill totalAllocated from leave type default when creating
     if (!this.isEditMode && this.selectedLeaveType) {
       this.balanceForm.patchValue({ totalAllocated: this.selectedLeaveType.maxDaysPerYear });
     }
-    // Reset carriedForward if carry-forward not allowed
     if (this.selectedLeaveType && !this.selectedLeaveType.isCarryForward) {
       this.balanceForm.patchValue({ carriedForward: 0 });
     }
@@ -127,9 +113,8 @@ export class LeaveBalanceFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.balanceForm.invalid) { this.markAllTouched(); return; }
-    this.submitting = true;
-    this.formError = null;
-    const v = this.balanceForm.getRawValue(); // getRawValue includes disabled fields
+    this.submitting = true; this.formError = null;
+    const v = this.balanceForm.getRawValue();
 
     if (this.isEditMode && this.balanceId) {
       const dto: UpdateLeaveBalanceDto = {
@@ -139,24 +124,22 @@ export class LeaveBalanceFormComponent implements OnInit {
       this.leaveBalanceService.updateLeaveBalance(this.balanceId, dto).subscribe({
         next: (r) => {
           this.submitting = false;
-          if (r.success) { this.formSubmitted.emit(); }
-          else { this.formError = r.message || 'Failed to update balance'; }
+          if (r.success) this.formSubmitted.emit();
+          else this.formError = r.message || 'Failed to update balance';
         },
         error: (e) => { this.submitting = false; this.formError = e.error?.message || 'An error occurred'; }
       });
     } else {
       const dto: CreateLeaveBalanceDto = {
-        employeeId:     v.employeeId,
-        leaveTypeId:    v.leaveTypeId,
-        year:           v.year,
-        totalAllocated: v.totalAllocated,
+        employeeId: v.employeeId, leaveTypeId: v.leaveTypeId,
+        year: v.year, totalAllocated: v.totalAllocated,
         carriedForward: v.carriedForward || 0
       };
       this.leaveBalanceService.createLeaveBalance(dto).subscribe({
         next: (r) => {
           this.submitting = false;
-          if (r.success) { this.formSubmitted.emit(); }
-          else { this.formError = r.message || 'Failed to create balance. It may already exist.'; }
+          if (r.success) this.formSubmitted.emit();
+          else this.formError = r.message || 'Failed to create balance. It may already exist.';
         },
         error: (e) => { this.submitting = false; this.formError = e.error?.message || 'An error occurred'; }
       });

@@ -13,7 +13,8 @@ import {
   GridReadyEvent,
   ColDef,
   ModuleRegistry,
-  AllCommunityModule
+  AllCommunityModule,
+  themeQuartz         
 } from 'ag-grid-community';
 import Swal from 'sweetalert2';
 import { LeaveService } from '../../../core/services/api/leave.api';
@@ -27,43 +28,74 @@ import * as XLSX from 'xlsx';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+const leaveGridTheme = themeQuartz.withParams({
+  backgroundColor:              '#ffffff',
+  foregroundColor:              '#1f2937',
+  borderColor:                  '#e5e7eb',
+  headerBackgroundColor:        '#ffffff',
+  headerTextColor:              '#374151',
+  oddRowBackgroundColor:        '#ffffff',
+  rowHoverColor:                '#f8faff',
+  selectedRowBackgroundColor:   '#dbeafe',
+  fontFamily:                   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontSize:                     13,
+  // ── Column separator lines (v32+ param names) ─────────────────
+  columnBorder:                 true,
+  headerColumnBorder:           true,
+  headerColumnBorderHeight:     '50%',
+  // ── Resize handle ─────────────────────────────────────────────
+  headerColumnResizeHandleColor:  '#9ca3af',
+  headerColumnResizeHandleHeight: '50%',
+  headerColumnResizeHandleWidth:  2,
+  // ── Spacing ───────────────────────────────────────────────────
+  cellHorizontalPaddingScale:   0.8,
+});
+
 @Component({
   selector: 'app-leave-list',
   standalone: true,
   templateUrl: './leave-list.component.html',
   styleUrls: ['./leave-list.component.scss'],
-  encapsulation: ViewEncapsulation.None,           // same as HolidayListComponent
+  encapsulation: ViewEncapsulation.None,
   imports: [CommonModule, FormsModule, AgGridAngular, LeaveFormComponent, LeaveDetailsComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class LeaveListComponent implements OnInit {
 
-  // ─── Grid state ──────────────────────────────────────────────────────────
+  // ── Expose theme to template ─────────────────────────────────────────
+  readonly gridTheme = leaveGridTheme;
+
+  // ── Grid state ───────────────────────────────────────────────────────
   leaves: Leave[] = [];
   gridApi!: GridApi;
   searchTerm = '';
   context = { componentParent: this };
 
-  // ─── Modal state ──────────────────────────────────────────────────────────
+  // ── Modal state ──────────────────────────────────────────────────────
   showFormModal    = false;
   showDetailsModal = false;
   formMode: 'create' | 'edit' = 'create';
   selectedLeaveId: string | null = null;
 
-  // ─── Data / loading ───────────────────────────────────────────────────────
+  // ── Data / loading ───────────────────────────────────────────────────
   leaveTypes: LeaveType[] = [];
-  loading  = false;
+  loading      = false;
+  statsLoading = false;
   error: string | null = null;
   statistics: { [key: string]: number } = {};
 
-  // ─── Filters ──────────────────────────────────────────────────────────────
+  get statsTotal(): number {
+    return Object.values(this.statistics).reduce((sum, v) => sum + v, 0);
+  }
+
+  // ── Filters ──────────────────────────────────────────────────────────
   showFilters = false;
   filters: LeaveFilterDto = {
     pageNumber: 1, pageSize: 10,
     sortBy: 'AppliedDate', sortDescending: true
   };
 
-  // ─── Pagination ───────────────────────────────────────────────────────────
+  // ── Pagination ────────────────────────────────────────────────────────
   currentPage = 1;
   pageSize    = 10;
   totalPages  = 0;
@@ -71,11 +103,10 @@ export class LeaveListComponent implements OnInit {
   Math = Math;
   private searchDebounceTimer: any = null;
 
-  // ─── Grid config ──────────────────────────────────────────────────────────
+  // ── Grid config ───────────────────────────────────────────────────────
   defaultColDef: ColDef = {
     sortable: true, filter: true, floatingFilter: true,
     resizable: true, minWidth: 80,
-    suppressSizeToFit: false, suppressAutoSize: false
   };
 
   columnDefs: ColDef[] = [
@@ -105,13 +136,11 @@ export class LeaveListComponent implements OnInit {
       headerName: 'Start Date', field: 'startDate', width: 140, minWidth: 120,
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
-      cellStyle: { color: '#374151' }
     },
     {
       headerName: 'End Date', field: 'endDate', width: 140, minWidth: 120,
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
-      cellStyle: { color: '#374151' }
     },
     {
       headerName: 'Days', field: 'totalDays', width: 90, minWidth: 70,
@@ -143,12 +172,10 @@ export class LeaveListComponent implements OnInit {
       headerName: 'Applied On', field: 'appliedDate', width: 150, minWidth: 130,
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
-      cellStyle: { color: '#6b7280', fontSize: '12px' }
     },
     {
       headerName: 'Approved By', field: 'approvedByName', width: 160, minWidth: 130,
       valueFormatter: (p: any) => p.value || '—',
-      cellStyle: { color: '#6b7280' }
     }
   ];
 
@@ -164,13 +191,11 @@ export class LeaveListComponent implements OnInit {
     this.loadStatistics();
   }
 
-  // ─── Grid ─────────────────────────────────────────────────────────────────
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
   }
 
-  // ─── Data Loading ─────────────────────────────────────────────────────────
   loadLeaveTypes(): void {
     this.leaveTypeService.getActiveLeaveTypes().subscribe({
       next: (r) => { if (r.success) this.leaveTypes = r.data; }
@@ -204,18 +229,21 @@ export class LeaveListComponent implements OnInit {
   }
 
   loadStatistics(): void {
+    this.statsLoading = true;
     this.leaveService.getLeaveStatisticsByStatus().subscribe({
-      next: (r) => { if (r.success) { this.statistics = r.data; this.cdr.detectChanges(); } }
+      next: (r) => {
+        this.statsLoading = false;
+        if (r.success) { this.statistics = r.data; this.cdr.detectChanges(); }
+      },
+      error: () => { this.statsLoading = false; this.cdr.detectChanges(); }
     });
   }
 
-  // ─── Search ───────────────────────────────────────────────────────────────
   onSearch(): void {
     clearTimeout(this.searchDebounceTimer);
     this.searchDebounceTimer = setTimeout(() => { this.currentPage = 1; this.loadLeaves(); }, 350);
   }
 
-  // ─── Filters ──────────────────────────────────────────────────────────────
   onFilterChange(): void { this.currentPage = 1; this.loadLeaves(); }
 
   clearFilters(): void {
@@ -235,7 +263,6 @@ export class LeaveListComponent implements OnInit {
     ].filter(Boolean).length;
   }
 
-  // ─── Pagination ───────────────────────────────────────────────────────────
   onPageChange(page: number): void {
     if (page < 1 || page > this.totalPages || page === this.currentPage) return;
     this.currentPage = page; this.loadLeaves();
@@ -253,16 +280,14 @@ export class LeaveListComponent implements OnInit {
     return Array.from({ length: e - s + 1 }, (_, i) => s + i);
   }
 
-  // ─── Modal ────────────────────────────────────────────────────────────────
   createLeave(): void  { this.formMode = 'create'; this.selectedLeaveId = null; this.showFormModal = true; }
   editLeave(leave: Leave): void { this.formMode = 'edit'; this.selectedLeaveId = leave.id; this.showFormModal = true; }
   viewDetails(leave: Leave): void { this.selectedLeaveId = leave.id; this.showDetailsModal = true; }
   closeFormModal():    void { this.showFormModal    = false; this.selectedLeaveId = null; }
   closeDetailsModal(): void { this.showDetailsModal = false; this.selectedLeaveId = null; }
-  onFormSuccess():  void { this.closeFormModal();    this.loadLeaves(); this.loadStatistics(); }
+  onFormSuccess():  void { this.closeFormModal(); this.loadLeaves(); this.loadStatistics(); }
   onLeaveUpdated(): void { this.loadLeaves(); this.loadStatistics(); }
 
-  // ─── Action Cell bridge methods ───────────────────────────────────────────
   approveLeave(leave: Leave): void { this._doApprove(leave); }
   rejectLeave(leave: Leave):  void { this._doReject(leave); }
   cancelLeave(leave: Leave):  void { this._doCancel(leave); }
@@ -279,7 +304,7 @@ export class LeaveListComponent implements OnInit {
     this.leaveService.approveLeave(leave.id).subscribe({
       next: (res) => {
         if (res.success) {
-          Swal.fire({ title: 'Approved!', text: 'Leave approved.', icon: 'success', timer: 2000, showConfirmButton: false });
+          Swal.fire({ title: 'Approved!', icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadLeaves(); this.loadStatistics();
         } else { Swal.fire('Error!', res.message || 'Failed to approve', 'error'); }
       },
@@ -298,7 +323,7 @@ export class LeaveListComponent implements OnInit {
     this.leaveService.rejectLeave(leave.id, reason).subscribe({
       next: (res) => {
         if (res.success) {
-          Swal.fire({ title: 'Rejected!', text: 'Leave rejected.', icon: 'success', timer: 2000, showConfirmButton: false });
+          Swal.fire({ title: 'Rejected!', icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadLeaves(); this.loadStatistics();
         } else { Swal.fire('Error!', res.message || 'Failed to reject', 'error'); }
       },
@@ -317,7 +342,7 @@ export class LeaveListComponent implements OnInit {
     this.leaveService.cancelLeave(leave.id, reason).subscribe({
       next: (res) => {
         if (res.success) {
-          Swal.fire({ title: 'Cancelled!', text: 'Leave cancelled.', icon: 'success', timer: 2000, showConfirmButton: false });
+          Swal.fire({ title: 'Cancelled!', icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadLeaves(); this.loadStatistics();
         } else { Swal.fire('Error!', res.message || 'Failed to cancel', 'error'); }
       },
@@ -328,11 +353,9 @@ export class LeaveListComponent implements OnInit {
   private async _doDelete(leave: Leave): Promise<void> {
     const r = await Swal.fire({
       title: 'Delete Leave?',
-      html: `<div style="text-align:left;padding:10px;">
-        <p>Are you sure you want to delete <strong>${leave.employeeName}'s</strong> leave?</p>
-        <p style="color:#ef4444;margin-top:15px;padding:10px;background:#fee2e2;border-radius:6px;">
-          <strong>Warning:</strong> This action cannot be undone.
-        </p></div>`,
+      html: `<p>Delete <strong>${leave.employeeName}'s</strong> leave?</p>
+             <p style="color:#ef4444;padding:10px;background:#fee2e2;border-radius:6px;margin-top:10px;">
+               <strong>Warning:</strong> This cannot be undone.</p>`,
       icon: 'warning', showCancelButton: true,
       confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280', confirmButtonText: 'Yes, Delete'
     });
@@ -340,7 +363,7 @@ export class LeaveListComponent implements OnInit {
     this.leaveService.deleteLeave(leave.id).subscribe({
       next: (res) => {
         if (res.success) {
-          Swal.fire({ title: 'Deleted!', text: 'Leave deleted.', icon: 'success', timer: 2000, showConfirmButton: false });
+          Swal.fire({ title: 'Deleted!', icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadLeaves(); this.loadStatistics();
         } else { Swal.fire('Error!', res.message || 'Failed to delete', 'error'); }
       },
@@ -348,7 +371,6 @@ export class LeaveListComponent implements OnInit {
     });
   }
 
-  // ─── Export ───────────────────────────────────────────────────────────────
   exportToExcel(): void {
     if (!this.leaves.length) { Swal.fire('No Data', 'Nothing to export.', 'info'); return; }
     Swal.fire({ title: 'Exporting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
