@@ -1,225 +1,151 @@
-<div class="employee-list-container">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Employee Management</h1>
-      <p class="page-subtitle">Manage your organization's employees</p>
+<!-- employee-list.component.html -->
+
+<div class="el-page-container">
+
+  <!-- ── Page Title ──────────────────────────────────────────────── -->
+  <div class="el-page-header">
+    <h1 class="el-page-title">Employee Management</h1>
+  </div>
+
+  <!-- ── Stats Cards ──────────────────────────────────────────────── -->
+  <div class="el-stats-grid">
+    <div class="el-stat-card el-stat-total">
+      <p class="el-stat-label">Total Employees</p>
+      <p class="el-stat-value">{{ stats.total }}</p>
+    </div>
+    <div class="el-stat-card el-stat-active">
+      <p class="el-stat-label">Active</p>
+      <p class="el-stat-value">{{ stats.active }}</p>
+    </div>
+    <div class="el-stat-card el-stat-inactive">
+      <p class="el-stat-label">Inactive</p>
+      <p class="el-stat-value">{{ stats.inactive }}</p>
+    </div>
+    <div class="el-stat-card el-stat-leave">
+      <p class="el-stat-label">On Leave</p>
+      <p class="el-stat-value">{{ stats.onLeave }}</p>
     </div>
   </div>
 
-  <!-- Search and Action Buttons -->
-  <div class="search-action-section">
-    <div class="search-bar">
+  <!-- ── Toolbar Row ──────────────────────────────────────────────── -->
+  <div class="el-toolbar">
+
+    <!-- Search Input -->
+    <div class="el-search-wrapper">
       <input
         type="text"
         placeholder="Search employees..."
-        [(ngModel)]="filter.searchTerm"
-        (keyup)="onSearchChange()"
-        class="search-input"
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+        class="el-search-input"
       />
     </div>
 
-    <button class="btn btn-clear" (click)="clearSearch()">
-      <i class="bi bi-x-circle"></i>
-      <span class="btn-label">Clear</span>
-    </button>
-
-    <button class="btn btn-refresh" (click)="loadEmployees()">
-      <i class="bi bi-arrow-clockwise"></i>
-      <span class="btn-label">Refresh</span>
-    </button>
-
-    <button class="btn btn-export" (click)="exportToExcel()">
-      <i class="bi bi-download"></i>
-      <span class="btn-label">Export</span>
-    </button>
-
-    <button class="btn btn-primary" (click)="addNewEmployee()">
-      <i class="bi bi-plus-circle"></i>
-      <span class="btn-label">Add Employee</span>
-    </button>
-  </div>
-
-  <!-- Advanced Filters -->
-  <div class="advanced-filters" *ngIf="isFilterVisible">
-    <div class="filter-grid">
-      <div class="filter-item">
-        <label>Employee Status</label>
-        <select
-          [(ngModel)]="filter.employeeStatus"
-          (change)="applyFilter()"
-          class="filter-select"
-        >
-          <option [ngValue]="undefined">All Statuses</option>
-          <option *ngFor="let key of employeeStatusKeys" [ngValue]="+key">
-            {{ getEnumName(key, EmployeeStatus) }}
-          </option>
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label>Employment Type</label>
-        <select
-          [(ngModel)]="filter.employmentType"
-          (change)="applyFilter()"
-          class="filter-select"
-        >
-          <option [ngValue]="undefined">All Types</option>
-          <option *ngFor="let key of employmentTypeKeys" [ngValue]="+key">
-            {{ getEnumName(key, EmploymentType) }}
-          </option>
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label>Gender</label>
-        <select
-          [(ngModel)]="filter.gender"
-          (change)="applyFilter()"
-          class="filter-select"
-        >
-          <option [ngValue]="undefined">All Genders</option>
-          <option *ngFor="let key of genderKeys" [ngValue]="+key">
-            {{ getEnumName(key, Gender) }}
-          </option>
-        </select>
-      </div>
-
-      <div class="filter-item">
-        <label>Joining Date From</label>
-        <input
-          type="date"
-          [(ngModel)]="filter.joiningDateFrom"
-          (change)="applyFilter()"
-          class="filter-select"
-        />
-      </div>
-
-      <div class="filter-item">
-        <label>Joining Date To</label>
-        <input
-          type="date"
-          [(ngModel)]="filter.joiningDateTo"
-          (change)="applyFilter()"
-          class="filter-select"
-        />
-      </div>
-    </div>
-
-    <button class="btn btn-text" (click)="resetFilter()">
-      Clear All Filters
-    </button>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading employees...</p>
-  </div>
-
-  <!-- Error State -->
-  <div *ngIf="error && !isLoading" class="error-state">
-    <i class="bi bi-exclamation-circle"></i>
-    <p>{{ error }}</p>
-    <button class="btn btn-outline" (click)="loadEmployees()">Try Again</button>
-  </div>
-
-  <!-- AG Grid Table -->
-  <div *ngIf="!isLoading && !error" class="grid-container">
-    <!-- Empty State -->
-    <div *ngIf="rowData.length === 0" class="empty-state">
-      <i class="bi bi-inbox"></i>
-      <h3>No employees found</h3>
-      <p>Try adjusting your filters or add a new employee</p>
-      <button class="btn btn-primary" (click)="addNewEmployee()">
-        Create Employee
+    <!-- Action Buttons -->
+    <div class="el-toolbar-actions">
+      <button (click)="handleClearFilters()" class="el-btn el-btn-clear">
+        Clear
+      </button>
+      <button (click)="loadEmployees()" class="el-btn el-btn-refresh">
+        Refresh
+      </button>
+      <button (click)="exportData()" class="el-btn el-btn-export">
+        Export
+      </button>
+      <button (click)="addNewEmployee()" class="el-btn el-btn-primary">
+        Add Employee
       </button>
     </div>
-
-    <!-- AG Grid -->
-    <ag-grid-angular
-      *ngIf="rowData.length > 0"
-      class="ag-theme-quartz"
-      [rowData]="rowData"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      [gridOptions]="gridOptions"
-      (gridReady)="onGridReady($event)"
-      [rowHeight]="70"
-      [headerHeight]="50"
-      [domLayout]="'autoHeight'"
-    >
-    </ag-grid-angular>
   </div>
 
-  <!-- Pagination -->
-  <div *ngIf="!isLoading && rowData.length > 0" class="pagination-container">
-    <div class="pagination-info">
-      Showing {{ (currentPage - 1) * pageSize + 1 }} to
-      {{ Math.min(currentPage * pageSize, totalItems) }} of
-      {{ totalItems }} employees
+  <!-- ── Active Filters ───────────────────────────────────────────── -->
+  <div *ngIf="activeFilters.hasActiveFilters" class="el-active-filters">
+    <span class="el-filter-label">Active Filters:</span>
+    <span *ngFor="let f of activeFilters.filters" class="el-filter-badge">{{ f }}</span>
+  </div>
+
+  <!-- ── Grid Card ────────────────────────────────────────────────── -->
+  <div class="el-grid-card">
+    <div class="el-grid-container">
+      <ag-grid-angular
+        #agGrid
+        style="width: 100%; height: 520px;"
+        class="ag-theme-quartz"
+        [rowData]="rowData"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [pagination]="false"
+        [animateRows]="true"
+        [rowSelection]="'multiple'"
+        [enableCellTextSelection]="true"
+        [suppressRowClickSelection]="true"
+        [rowHeight]="56"
+        [headerHeight]="44"
+        [floatingFiltersHeight]="36"
+        [suppressMenuHide]="true"
+        [enableBrowserTooltips]="true"
+        [suppressColumnVirtualisation]="true"
+        [suppressRowVirtualisation]="false"
+        [rowBuffer]="10"
+        [suppressLoadingOverlay]="false"
+        [suppressNoRowsOverlay]="false"
+        (gridReady)="onGridReady($event)"
+        [context]="context">
+      </ag-grid-angular>
     </div>
 
-    <div class="pagination-controls">
-      <select
-        [(ngModel)]="pageSize"
-        (change)="onPageSizeChanged(pageSize)"
-        class="page-size-select"
-      >
-        <option [value]="10">10 per page</option>
-        <option [value]="20">20 per page</option>
-        <option [value]="50">50 per page</option>
-        <option [value]="100">100 per page</option>
-      </select>
+    <!-- ── Pagination (inside card, at bottom) ─────────────────── -->
+    <div class="el-pagination">
+      <div class="el-pagination-inner">
 
-      <div class="pagination-buttons">
-        <button
-          class="btn-page"
-          [disabled]="currentPage === 1"
-          (click)="goToPage(1)"
-        >
-          <i class="bi bi-chevron-bar-left"></i>
-        </button>
-        <button
-          class="btn-page"
-          [disabled]="currentPage === 1"
-          (click)="previousPage()"
-        >
-          <i class="bi bi-chevron-left"></i>
-        </button>
+        <!-- Page Size -->
+        <div class="el-page-size">
+          <label for="elPageSize">Show:</label>
+          <select
+            id="elPageSize"
+            [(ngModel)]="pageSize"
+            (change)="onPageSizeChanged(pageSize)"
+            class="el-page-size-select">
+            <option [value]="10">10</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </div>
 
-        <button
-          *ngFor="let page of pages"
-          class="btn-page"
-          [class.active]="page === currentPage"
-          (click)="goToPage(page)"
-        >
-          {{ page }}
-        </button>
+        <!-- Record Range -->
+        <span class="el-pagination-text">
+          {{ rowData.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0 }}
+          to {{ Math.min(currentPage * pageSize, totalItems) }}
+          of {{ totalItems }}
+        </span>
 
-        <button
-          class="btn-page"
-          [disabled]="currentPage === totalPages"
-          (click)="nextPage()"
-        >
-          <i class="bi bi-chevron-right"></i>
-        </button>
-        <button
-          class="btn-page"
-          [disabled]="currentPage === totalPages"
-          (click)="goToPage(totalPages)"
-        >
-          <i class="bi bi-chevron-bar-right"></i>
-        </button>
+        <!-- Page Number -->
+        <span class="el-pagination-text">
+          Page {{ currentPage }} of {{ totalPages || 1 }}
+        </span>
+
+        <!-- Nav Buttons -->
+        <div class="el-pagination-btns">
+          <button (click)="goToPage(1)"          [disabled]="currentPage === 1"                              class="el-pgbtn">«</button>
+          <button (click)="previousPage()"       [disabled]="currentPage === 1"                              class="el-pgbtn">‹</button>
+          <button (click)="nextPage()"           [disabled]="currentPage === totalPages || totalPages === 0" class="el-pgbtn">›</button>
+          <button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages || totalPages === 0" class="el-pgbtn">»</button>
+        </div>
+
       </div>
     </div>
-  </div>
-</div>
+  </div><!-- /el-grid-card -->
 
-<!-- Modal for Employee Form -->
-<div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="closeFormModal()">
+</div><!-- /el-page-container -->
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     EMPLOYEE FORM MODAL
+     ════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showFormModal" class="el-modal-overlay" (click)="onOverlayClick($event, 'form')">
+  <div class="el-modal-container el-modal-xlarge" (click)="$event.stopPropagation()">
+    <button class="el-modal-close" (click)="closeFormModal()" type="button">
       <i class="bi bi-x-lg"></i>
     </button>
     <app-employee-form
@@ -227,22 +153,17 @@
       [employeeId]="selectedEmployeeId"
       [isEditMode]="formMode === 'edit'"
       (formCancelled)="closeFormModal()"
-      (formSubmitted)="onFormSuccess()"
-    ></app-employee-form>
+      (formSubmitted)="onFormSuccess()">
+    </app-employee-form>
   </div>
 </div>
 
-<!-- Modal for Employee Details -->
-<div
-  class="modal-overlay"
-  *ngIf="showDetailsModal"
-  (click)="closeDetailsModal()"
->
-  <div
-    class="modal-container modal-container-large"
-    (click)="$event.stopPropagation()"
-  >
-    <button class="modal-close" (click)="closeDetailsModal()">
+<!-- ════════════════════════════════════════════════════════════════
+     EMPLOYEE DETAILS MODAL
+     ════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showDetailsModal" class="el-modal-overlay" (click)="onOverlayClick($event, 'details')">
+  <div class="el-modal-container el-modal-xlarge" (click)="$event.stopPropagation()">
+    <button class="el-modal-close" (click)="closeDetailsModal()" type="button">
       <i class="bi bi-x-lg"></i>
     </button>
     <app-employee-details
@@ -250,7 +171,7 @@
       [employeeId]="selectedEmployeeId"
       (modalClosed)="closeDetailsModal()"
       (editRequested)="onEditFromDetails($event)"
-      (deleteRequested)="onDeleteFromDetails($event)"
-    ></app-employee-details>
+      (deleteRequested)="onDeleteFromDetails($event)">
+    </app-employee-details>
   </div>
 </div>
