@@ -1,159 +1,177 @@
-<div class="department-list-container">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Department Management</h1>
-      <p class="page-subtitle">Manage your organization's departments</p>
+<div class="dept-page">
+  <!-- ── Stat Cards ─────────────────────────────────────────────────────── -->
+  <div class="stats-row" *ngIf="statCards.length > 0">
+    <div class="stat-card {{ card.colorClass }}" *ngFor="let card of statCards">
+      <div class="stat-label">{{ card.label }}</div>
+      <div class="stat-value">{{ card.value }}</div>
     </div>
   </div>
 
-  <!-- Search and Action Buttons -->
-  <div class="search-action-section">
-    <div class="search-bar">
-      <i class="bi bi-search search-icon"></i>
-      <input
-        type="text"
-        placeholder="Search departments..."
-        [(ngModel)]="searchTerm"
-        (keyup)="onSearch()"
-        class="search-input"
-      />
+  <!-- Stat skeleton while loading -->
+  <div class="stats-row" *ngIf="statCards.length === 0">
+    <div class="stat-card stat-skeleton card-blue">
+      <div class="skel-label"></div>
+      <div class="skel-value"></div>
     </div>
-
-    <div class="action-buttons-group">
-      <button class="btn btn-clear" (click)="clearSearch()" title="Clear">
-        <i class="bi bi-x-circle"></i>
-        <span class="btn-label">Clear</span>
-      </button>
-
-      <button class="btn btn-refresh" (click)="loadDepartments()" title="Refresh">
-        <i class="bi bi-arrow-clockwise"></i>
-        <span class="btn-label">Refresh</span>
-      </button>
-
-      <button class="btn btn-export" (click)="exportToExcel()" title="Export">
-        <i class="bi bi-download"></i>
-        <span class="btn-label">Export</span>
-      </button>
-
-      <button class="btn btn-primary" (click)="createDepartment()" title="Add Department">
-        <i class="bi bi-plus-circle"></i>
-        <span class="btn-label">Add Department</span>
-      </button>
+    <div class="stat-card stat-skeleton card-green">
+      <div class="skel-label"></div>
+      <div class="skel-value"></div>
+    </div>
+    <div class="stat-card stat-skeleton card-red">
+      <div class="skel-label"></div>
+      <div class="skel-value"></div>
     </div>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="loading" class="loading-state">
+  <!-- ── Toolbar ────────────────────────────────────────────────────────── -->
+  <div class="toolbar-card">
+    <!-- Search (always full-width row) -->
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search departments..."
+      [(ngModel)]="searchTerm"
+      (input)="onSearch()"
+    />
+
+    <!-- Action buttons wrapper -->
+    <div class="toolbar-actions">
+      <div class="toolbar-secondary-btns">
+        <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
+        <button class="btn btn-refresh" (click)="loadDepartments()">
+          Refresh
+        </button>
+      </div>
+
+      <div class="toolbar-primary-btns">
+        <button class="btn btn-primary" (click)="createDepartment()">
+          <i class="bi bi-plus-lg"></i> Add Department
+        </button>
+
+        <button class="btn btn-primary" (click)="exportDepartments()">
+          <i class="bi bi-download"></i> Export
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────── -->
+  <div *ngIf="loading" class="state-box">
     <div class="spinner"></div>
     <p>Loading departments...</p>
   </div>
 
-  <!-- Error State -->
-  <div *ngIf="error && !loading" class="error-state">
+  <!-- ── Error ──────────────────────────────────────────────────────────── -->
+  <div *ngIf="error && !loading" class="state-box error-box">
     <i class="bi bi-exclamation-circle"></i>
     <p>{{ error }}</p>
-    <button class="btn btn-outline" (click)="loadDepartments()">
+    <button class="btn btn-refresh" (click)="loadDepartments()">
       Try Again
     </button>
   </div>
 
-  <!-- AG Grid Table -->
-  <div *ngIf="!loading && !error" class="grid-container">
-    <!-- Empty State -->
-    <div *ngIf="departments.length === 0" class="empty-state">
+  <!-- ── AG Grid ────────────────────────────────────────────────────────── -->
+  <div *ngIf="!loading && !error" class="grid-card">
+    <div *ngIf="departments.length === 0" class="empty-box">
       <i class="bi bi-inbox"></i>
       <h3>No departments found</h3>
-      <p>Try adjusting your filters or create a new department</p>
+      <p>Adjust your search or create a new department</p>
       <button class="btn btn-primary" (click)="createDepartment()">
         Create Department
       </button>
     </div>
 
-    <!-- AG Grid -->
     <ag-grid-angular
       *ngIf="departments.length > 0"
-      class="ag-theme-quartz"
+      class="ag-theme-quartz dept-grid"
       [rowData]="departments"
       [columnDefs]="columnDefs"
       [defaultColDef]="defaultColDef"
       [gridOptions]="gridOptions"
       (gridReady)="onGridReady($event)"
-      [rowHeight]="60"
-      [headerHeight]="50"
+      [rowHeight]="52"
+      [headerHeight]="48"
+      [floatingFiltersHeight]="42"
       [domLayout]="'autoHeight'"
-    >
-    </ag-grid-angular>
+    ></ag-grid-angular>
   </div>
 
-  <!-- Pagination -->
-  <div *ngIf="!loading && departments.length > 0" class="pagination-container">
-    <div class="pagination-info">
-      Showing {{ (currentPage - 1) * pageSize + 1 }} to
-      {{ Math.min(currentPage * pageSize, totalCount) }} of
-      {{ totalCount }} departments
-    </div>
+  <!-- ── Pagination ─────────────────────────────────────────────────────── -->
+  <div *ngIf="!loading && departments.length > 0" class="pagination-bar">
+    <div class="page-controls">
+      <!-- Show per page -->
+      <div class="page-size-wrapper">
+        <span class="page-size-label">Show:</span>
+        <div class="page-size-select-wrap">
+          <select
+            [(ngModel)]="pageSize"
+            (change)="onPageSizeChange($event)"
+            class="page-size-sel"
+          >
+            <option [value]="10">10</option>
+            <option [value]="20">20</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+          <i class="bi bi-chevron-down sel-arrow"></i>
+        </div>
+      </div>
 
-    <div class="pagination-controls">
-      <select
-        [(ngModel)]="pageSize"
-        (change)="onPageSizeChange($event)"
-        class="page-size-select"
-      >
-        <option [value]="10">10 per page</option>
-        <option [value]="25">25 per page</option>
-        <option [value]="50">50 per page</option>
-        <option [value]="100">100 per page</option>
-      </select>
+      <!-- Range info -->
+      <span class="page-range">
+        {{ (currentPage - 1) * pageSize + 1 }} to
+        {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
+      </span>
 
-      <div class="pagination-buttons">
+      <!-- Page info -->
+      <span class="page-label">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+
+      <!-- Nav buttons -->
+      <div class="page-btns">
         <button
-          class="btn-page"
+          class="pbtn"
           [disabled]="currentPage === 1"
           (click)="onPageChange(1)"
+          title="First page"
         >
-          <i class="bi bi-chevron-bar-left"></i>
+          «
         </button>
         <button
-          class="btn-page"
+          class="pbtn"
           [disabled]="currentPage === 1"
           (click)="onPageChange(currentPage - 1)"
+          title="Previous page"
         >
-          <i class="bi bi-chevron-left"></i>
+          ‹
         </button>
-
         <button
-          *ngFor="let page of pages"
-          class="btn-page"
-          [class.active]="page === currentPage"
-          (click)="onPageChange(page)"
-        >
-          {{ page }}
-        </button>
-
-        <button
-          class="btn-page"
+          class="pbtn"
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(currentPage + 1)"
+          title="Next page"
         >
-          <i class="bi bi-chevron-right"></i>
+          ›
         </button>
         <button
-          class="btn-page"
+          class="pbtn"
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(totalPages)"
+          title="Last page"
         >
-          <i class="bi bi-chevron-bar-right"></i>
+          »
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal for Department Form -->
+<!-- ── Modal ─────────────────────────────────────────────────────────────── -->
 <div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="closeFormModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <button class="modal-close-btn" (click)="closeFormModal()">
       <i class="bi bi-x-lg"></i>
     </button>
     <app-department-form

@@ -275,11 +275,10 @@ export class HolidayListComponent implements OnInit {
       holidayType:          ['', Validators.required],
       isOptional:           [false],
       isActive:             [true],
-      description:          ['', Validators.maxLength(500)],
+      description:          ['', [Validators.maxLength(500)]],
       applicableDepartments:[[]]
     });
 
-    // Clear departments when National is selected
     this.holidayForm.get('holidayType')?.valueChanges.subscribe((type: string) => {
       if (type === HolidayType.National || type === String(HolidayType.National)) {
         this.selectedDepartmentSet.clear();
@@ -406,7 +405,6 @@ export class HolidayListComponent implements OnInit {
     });
   }
 
-
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     this.gridApi.addEventListener('sortChanged',   this.onSortChanged.bind(this));
@@ -510,6 +508,8 @@ export class HolidayListComponent implements OnInit {
       description:           '',
       applicableDepartments: []
     });
+    this.holidayForm.markAsPristine();
+    this.holidayForm.markAsUntouched();
     this.holidayForm.enable();
     this.isModalOpen = true;
     this.cdr.detectChanges();
@@ -529,9 +529,11 @@ export class HolidayListComponent implements OnInit {
       holidayType:           holiday.holidayType,
       isOptional:            holiday.isOptional,
       isActive:              holiday.isActive,
-      description:           holiday.description || '',
+      description:           holiday.description ?? '',
       applicableDepartments: Array.from(this.selectedDepartmentSet)
     });
+    this.holidayForm.markAsPristine();
+    this.holidayForm.markAsUntouched();
     this.holidayForm.enable();
     this.isModalOpen = true;
     this.cdr.detectChanges();
@@ -551,7 +553,7 @@ export class HolidayListComponent implements OnInit {
       holidayType:           holiday.holidayType,
       isOptional:            holiday.isOptional,
       isActive:              holiday.isActive,
-      description:           holiday.description || '',
+      description:           holiday.description ?? '',
       applicableDepartments: Array.from(this.selectedDepartmentSet)
     });
     this.holidayForm.disable();
@@ -566,6 +568,8 @@ export class HolidayListComponent implements OnInit {
     this.formSubmitAttempted = false;
     this.selectedDepartmentSet.clear();
     this.holidayForm.reset();
+    this.holidayForm.markAsPristine();
+    this.holidayForm.markAsUntouched();
     this.holidayForm.enable();
     this.cdr.detectChanges();
   }
@@ -579,7 +583,6 @@ export class HolidayListComponent implements OnInit {
   toggleStatus(data: any): void      { this.onToggleStatus(data); }
   deleteDepartment(data: any): void  { this.onDelete(data); }
 
-  // Grid action dispatcher (used if ActionCellRenderer emits generic events)
   onGridAction(event: { action: string; data: any }): void {
     switch (event.action) {
       case 'edit':   this.openEditModal(event.data);  break;
@@ -791,7 +794,7 @@ export class HolidayListComponent implements OnInit {
     });
   }
 
-  // ─── Date helpers 
+  // ─── Date helpers
 
   formatDateForInput(date: any): string {
     const d     = new Date(date);
