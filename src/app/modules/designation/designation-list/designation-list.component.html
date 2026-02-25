@@ -26,11 +26,16 @@
         class="search-input"
       />
     </div>
-    <button class="btn btn-clear" (click)="clearFilters()">Clear</button>
-    <button class="btn btn-refresh" (click)="refreshData()">Refresh</button>
-    <button class="btn btn-primary" (click)="openCreateModal()">
-      Add Designation
-    </button>
+    <div class="action-buttons">
+      <button class="btn btn-clear" (click)="clearFilters()">Clear</button>
+      <button class="btn btn-refresh" (click)="refreshData()">Refresh</button>
+      <button class="btn btn-export" (click)="exportData()">
+        <i class="bi bi-download"></i> Export
+      </button>
+      <button class="btn btn-add" (click)="openCreateModal()">
+        <i class="bi bi-plus-lg"></i> Add Designation
+      </button>
+    </div>
   </div>
 
   <!-- Grid Wrapper -->
@@ -44,7 +49,7 @@
     <!-- Empty -->
     <div *ngIf="!isLoading && rowData.length === 0" class="empty-state">
       <p>No designations found.</p>
-      <button class="btn btn-primary" (click)="openCreateModal()">
+      <button class="btn btn-add" (click)="openCreateModal()">
         Add Designation
       </button>
     </div>
@@ -52,13 +57,14 @@
     <!-- AG Grid -->
     <ag-grid-angular
       *ngIf="!isLoading && rowData.length > 0"
-      class="ag-theme-quartz"
+      class="ag-theme-quartz designation-grid"
       [rowData]="rowData"
       [columnDefs]="columnDefs"
       [defaultColDef]="defaultColDef"
       [gridOptions]="gridOptions"
-      [rowHeight]="50"
+      [rowHeight]="52"
       [headerHeight]="48"
+      [floatingFiltersHeight]="44"
       [domLayout]="'autoHeight'"
       (gridReady)="onGridReady($event)"
     >
@@ -66,55 +72,51 @@
 
     <!-- Pagination -->
     <div *ngIf="!isLoading && rowData.length > 0" class="pagination-bar">
-      <div class="pagination-left">
-        <span>Show</span>
-        <select
-          [value]="pageSize"
-          (change)="onPageSizeChange($event)"
-          class="page-size-select"
-        >
-          <option [value]="10">10</option>
-          <option [value]="20">20</option>
-          <option [value]="50">50</option>
-          <option [value]="100">100</option>
-        </select>
-      </div>
-      <div class="pagination-center">
-        {{ startRecord }} to {{ endRecord }} of {{ totalCount }}
-      </div>
-      <div class="pagination-right">
-        <button
-          class="pg-btn"
-          [disabled]="currentPage === 1"
-          (click)="onPageChange(1)"
-        >
-          &#xAB;
-        </button>
-        <button
-          class="pg-btn"
-          [disabled]="currentPage === 1"
-          (click)="onPageChange(currentPage - 1)"
-        >
-          &#x2039;
-        </button>
-        <span class="page-info"
-          >Page {{ currentPage }} of {{ totalPages }}</span
-        >
-        <button
-          class="pg-btn"
-          [disabled]="currentPage === totalPages"
-          (click)="onPageChange(currentPage + 1)"
-        >
-          &#x203A;
-        </button>
-        <button
-          class="pg-btn"
-          [disabled]="currentPage === totalPages"
-          (click)="onPageChange(totalPages)"
-        >
-          &#xBB;
-        </button>
-      </div>
+      <span class="pg-label">Show:</span>
+      <select
+        [value]="pageSize"
+        (change)="onPageSizeChange($event)"
+        class="page-size-select"
+      >
+        <option [value]="10">10</option>
+        <option [value]="20">20</option>
+        <option [value]="50">50</option>
+        <option [value]="100">100</option>
+      </select>
+
+      <span class="pagination-info"
+        >{{ startRecord }} to {{ endRecord }} of {{ totalCount }}</span
+      >
+      <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+
+      <button
+        class="pg-btn"
+        [disabled]="currentPage === 1"
+        (click)="onPageChange(1)"
+      >
+        &#xAB;
+      </button>
+      <button
+        class="pg-btn"
+        [disabled]="currentPage === 1"
+        (click)="onPageChange(currentPage - 1)"
+      >
+        &#x2039;
+      </button>
+      <button
+        class="pg-btn"
+        [disabled]="currentPage === totalPages"
+        (click)="onPageChange(currentPage + 1)"
+      >
+        &#x203A;
+      </button>
+      <button
+        class="pg-btn"
+        [disabled]="currentPage === totalPages"
+        (click)="onPageChange(totalPages)"
+      >
+        &#xBB;
+      </button>
     </div>
   </div>
 </div>
