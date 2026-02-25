@@ -1,88 +1,74 @@
-<div class="leave-list-container">
+<div class="hl-page-container">
 
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Leave Management</h1>
-      <p class="page-subtitle">Manage employee leave requests and approvals</p>
+  <!-- ── Page Header ──────────────────────────────────────────────────── -->
+  <div class="hl-page-header">
+    <h1 class="hl-page-title">Leave Management</h1>
+  </div>
+
+  <!-- ── Stats Cards ──────────────────────────────────────────────────── -->
+  <div class="hl-stats-grid">
+    <div class="hl-stat-card hl-stat-total">
+      <p class="hl-stat-label">Total Leaves</p>
+      <p class="hl-stat-value">{{ totalCount || 0 }}</p>
+    </div>
+    <div class="hl-stat-card hl-stat-pending">
+      <p class="hl-stat-label">Pending</p>
+      <p class="hl-stat-value">{{ statistics['Pending'] || 0 }}</p>
+    </div>
+    <div class="hl-stat-card hl-stat-approved">
+      <p class="hl-stat-label">Approved</p>
+      <p class="hl-stat-value">{{ statistics['Approved'] || 0 }}</p>
+    </div>
+    <div class="hl-stat-card hl-stat-rejected">
+      <p class="hl-stat-label">Rejected</p>
+      <p class="hl-stat-value">{{ statistics['Rejected'] || 0 }}</p>
     </div>
   </div>
 
-  <!-- Stats Cards -->
-  <!-- <div class="stats-cards">
-    <div class="stat-card pending">
-      <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
-      <div class="stat-content">
-        <h3>{{ statistics['Pending'] || 0 }}</h3>
-        <p>Pending</p>
-      </div>
-    </div>
-    <div class="stat-card approved">
-      <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
-      <div class="stat-content">
-        <h3>{{ statistics['Approved'] || 0 }}</h3>
-        <p>Approved</p>
-      </div>
-    </div>
-    <div class="stat-card rejected">
-      <div class="stat-icon"><i class="bi bi-x-circle"></i></div>
-      <div class="stat-content">
-        <h3>{{ statistics['Rejected'] || 0 }}</h3>
-        <p>Rejected</p>
-      </div>
-    </div>
-    <div class="stat-card cancelled">
-      <div class="stat-icon"><i class="bi bi-slash-circle"></i></div>
-      <div class="stat-content">
-        <h3>{{ statistics['Cancelled'] || 0 }}</h3>
-        <p>Cancelled</p>
-      </div>
-    </div>
-  </div> -->
-
-  <!-- Search and Actions -->
-  <div class="search-action-section">
-    <div class="search-bar">
-      <i class="bi bi-search search-icon"></i>
+  <!-- ── Toolbar ───────────────────────────────────────────────────────── -->
+  <div class="hl-toolbar">
+    <div class="hl-search-wrapper">
       <input
         type="text"
-        placeholder="Search by reason or employee..."
+        class="hl-search-input"
+        placeholder="Search leaves..."
         [(ngModel)]="searchTerm"
-        (keyup)="onSearch()"
-        class="search-input"
+        (input)="onSearch()"
       />
     </div>
-    <button class="btn btn-filter" (click)="showFilters = !showFilters">
-      <i class="bi bi-funnel"></i> Filters
-      <span class="filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
-    </button>
-    <button class="btn btn-clear" (click)="clearFilters()">
-      <i class="bi bi-x-circle"></i> Clear
-    </button>
-    <button class="btn btn-refresh" (click)="loadLeaves()">
-      <i class="bi bi-arrow-clockwise"></i> Refresh
-    </button>
-    <button class="btn btn-export" (click)="exportToExcel()">
-      <i class="bi bi-download"></i> Export
-    </button>
-    <button class="btn btn-primary" (click)="createLeave()">
-      <i class="bi bi-plus-circle"></i> Apply Leave
-    </button>
+    <div class="hl-toolbar-actions">
+      <button class="hl-btn hl-btn-filter" (click)="showFilters = !showFilters">
+        <i class="bi bi-funnel"></i> Filters
+        <span class="hl-filter-count" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+      </button>
+      <button class="hl-btn hl-btn-clear" (click)="clearFilters()">
+        <i class="bi bi-x-circle"></i> Clear
+      </button>
+      <button class="hl-btn hl-btn-refresh" (click)="loadLeaves()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+      <button class="hl-btn hl-btn-export" (click)="exportToExcel()">
+        <i class="bi bi-download"></i> Export
+      </button>
+      <button class="hl-btn hl-btn-primary" (click)="createLeave()">
+        <i class="bi bi-plus-circle"></i> Apply Leave
+      </button>
+    </div>
   </div>
 
-  <!-- Filter Panel -->
-  <div class="filters-panel" [class.open]="showFilters">
-    <div class="filters-grid">
-      <div class="filter-group">
+  <!-- ── Filter Panel ──────────────────────────────────────────────────── -->
+  <div class="hl-filter-panel" [class.hl-filter-panel-open]="showFilters">
+    <div class="hl-filter-grid">
+      <div class="hl-filter-group">
         <label>Leave Type</label>
-        <select [(ngModel)]="filters.leaveTypeId" (change)="onFilterChange()">
+        <select [(ngModel)]="filters.leaveTypeId" (change)="onFilterChange()" class="hl-filter-select">
           <option [ngValue]="undefined">All Types</option>
           <option *ngFor="let t of leaveTypes" [value]="t.id">{{ t.name }}</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="hl-filter-group">
         <label>Status</label>
-        <select [(ngModel)]="filters.leaveStatus" (change)="onFilterChange()">
+        <select [(ngModel)]="filters.leaveStatus" (change)="onFilterChange()" class="hl-filter-select">
           <option [ngValue]="null">All Statuses</option>
           <option [ngValue]="0">Pending</option>
           <option [ngValue]="1">Approved</option>
@@ -90,106 +76,158 @@
           <option [ngValue]="3">Cancelled</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="hl-filter-group">
         <label>Start Date From</label>
-        <input type="date" [(ngModel)]="filters.startDateFrom" (change)="onFilterChange()" />
+        <input type="date" [(ngModel)]="filters.startDateFrom" (change)="onFilterChange()" class="hl-filter-select" />
       </div>
-      <div class="filter-group">
+      <div class="hl-filter-group">
         <label>Start Date To</label>
-        <input type="date" [(ngModel)]="filters.startDateTo" (change)="onFilterChange()" />
+        <input type="date" [(ngModel)]="filters.startDateTo" (change)="onFilterChange()" class="hl-filter-select" />
       </div>
-      <div class="filter-group">
+      <div class="hl-filter-group">
         <label>Applied From</label>
-        <input type="date" [(ngModel)]="filters.appliedDateFrom" (change)="onFilterChange()" />
+        <input type="date" [(ngModel)]="filters.appliedDateFrom" (change)="onFilterChange()" class="hl-filter-select" />
       </div>
-      <div class="filter-group filter-check">
-        <label class="check-label">
+      <div class="hl-filter-group hl-filter-check-group">
+        <label class="hl-check-row" style="padding-top:20px;">
           <input type="checkbox" [(ngModel)]="filters.isEmergencyLeave" (change)="onFilterChange()" />
-          <span>Emergency Only</span>
+          <span class="hl-check-label">Emergency Only</span>
         </label>
       </div>
     </div>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading leaves...</p>
+  <!-- ── Active Filters ────────────────────────────────────────────────── -->
+  <div class="hl-active-filters" *ngIf="activeFilterCount > 0 || searchTerm">
+    <span class="hl-filter-label">Active filters:</span>
+    <span class="hl-filter-badge" *ngIf="searchTerm">Search: "{{ searchTerm }}"</span>
+    <span class="hl-filter-badge" *ngIf="filters.leaveTypeId">Leave Type</span>
+    <span class="hl-filter-badge" *ngIf="filters.leaveStatus !== null && filters.leaveStatus !== undefined">Status</span>
+    <span class="hl-filter-badge" *ngIf="filters.startDateFrom || filters.startDateTo">Date range</span>
+    <span class="hl-filter-badge" *ngIf="filters.isEmergencyLeave">Emergency only</span>
   </div>
 
-  <!-- Error -->
-  <div *ngIf="error && !loading" class="error-state">
-    <i class="bi bi-exclamation-circle"></i>
-    <p>{{ error }}</p>
-    <button class="btn btn-outline" (click)="loadLeaves()">Try Again</button>
-  </div>
+  <!-- ── Grid Card ─────────────────────────────────────────────────────── -->
+  <div class="hl-grid-card">
+    <div class="hl-grid-container">
 
-  <!-- Grid -->
-  <div *ngIf="!loading && !error" class="grid-container">
-    <div *ngIf="leaves.length === 0" class="empty-state">
-      <i class="bi bi-calendar-x"></i>
-      <h3>No leaves found</h3>
-      <p>Try adjusting your filters or apply for a new leave</p>
-      <button class="btn btn-primary" (click)="createLeave()">Apply Leave</button>
+      <!-- Loading -->
+      <div *ngIf="loading" class="hl-loading-state">
+        <div class="hl-spinner"></div>
+        <p>Loading leaves...</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="error && !loading" class="hl-error-state">
+        <i class="bi bi-exclamation-circle"></i>
+        <p>{{ error }}</p>
+        <button class="hl-btn hl-btn-refresh" (click)="loadLeaves()">Try Again</button>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!loading && !error && leaves.length === 0" class="hl-empty-state">
+        <i class="bi bi-calendar-x"></i>
+        <p>No leaves found. Adjust filters or apply for a new leave.</p>
+        <button class="hl-btn hl-btn-primary" (click)="createLeave()">
+          <i class="bi bi-plus-circle"></i> Apply Leave
+        </button>
+      </div>
+
+      <!-- AG Grid -->
+      <ag-grid-angular
+        *ngIf="!loading && !error && leaves.length > 0"
+        class="ag-theme-quartz"
+        [rowData]="leaves"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        (gridReady)="onGridReady($event)"
+        [rowHeight]="44"
+        [headerHeight]="44"
+        [domLayout]="'autoHeight'"
+        [context]="context"
+      ></ag-grid-angular>
     </div>
-    <ag-grid-angular
-      *ngIf="leaves.length > 0"
-      class="ag-theme-quartz"
-      [rowData]="leaves"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      [gridOptions]="gridOptions"
-      (gridReady)="onGridReady($event)"
-      [rowHeight]="70"
-      [headerHeight]="50"
-      [domLayout]="'autoHeight'"
-    ></ag-grid-angular>
-  </div>
 
-  <!-- Pagination -->
-  <div *ngIf="!loading && leaves.length > 0" class="pagination-container">
-    <div class="pagination-info">
-      Showing {{ (currentPage - 1) * pageSize + 1 }} to
-      {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} leaves
-    </div>
-    <div class="pagination-controls">
-      <select [(ngModel)]="pageSize" (change)="onPageSizeChange($event)" class="page-size-select">
-        <option [value]="10">10 per page</option>
-        <option [value]="25">25 per page</option>
-        <option [value]="50">50 per page</option>
-      </select>
-      <div class="pagination-buttons">
-        <button class="btn-page" [disabled]="currentPage === 1" (click)="onPageChange(1)"><i class="bi bi-chevron-bar-left"></i></button>
-        <button class="btn-page" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)"><i class="bi bi-chevron-left"></i></button>
-        <button *ngFor="let page of pages" class="btn-page" [class.active]="page === currentPage" (click)="onPageChange(page)">{{ page }}</button>
-        <button class="btn-page" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)"><i class="bi bi-chevron-right"></i></button>
-        <button class="btn-page" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)"><i class="bi bi-chevron-bar-right"></i></button>
+    <!-- ── Pagination ─────────────────────────────────────────────────── -->
+    <div class="hl-pagination" *ngIf="!loading && leaves.length > 0">
+      <div class="hl-pagination-inner">
+        <div class="hl-page-size">
+          <label>Show:</label>
+          <select class="hl-page-size-select" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+          </select>
+        </div>
+        <span class="hl-pagination-text">
+          {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
+        </span>
+        <div class="hl-pagination-btns">
+          <button class="hl-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">
+            <i class="bi bi-chevron-bar-left"></i>
+          </button>
+          <button class="hl-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <button
+            *ngFor="let page of pages"
+            class="hl-pgbtn"
+            [class.hl-pgbtn-active]="page === currentPage"
+            (click)="onPageChange(page)">
+            {{ page }}
+          </button>
+          <button class="hl-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          <button class="hl-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">
+            <i class="bi bi-chevron-bar-right"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Form Modal -->
-<div class="modal-overlay" *ngIf="showFormModal || showDetailsModal" (click)="showFormModal ? closeFormModal() : closeDetailsModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="closeFormModal()"><i class="bi bi-x-lg"></i></button>
-    <app-leave-form
-      [isModal]="true"
-      [leaveId]="selectedLeaveId"
-      [isEditMode]="formMode === 'edit'"
-      (formCancelled)="closeFormModal()"
-      (formSubmitted)="onFormSuccess()"
-    ></app-leave-form>
+<!-- ── Form Modal ─────────────────────────────────────────────────────── -->
+<div class="hl-modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+  <div class="hl-modal-container hl-modal-xlarge" (click)="$event.stopPropagation()">
+    <div class="hl-modal-header">
+      <h2 class="hl-modal-title">
+        <i class="bi" [ngClass]="formMode === 'create' ? 'bi-plus-circle-dotted' : 'bi-pencil-square'"></i>
+        {{ formMode === 'create' ? 'Apply for Leave' : 'Edit Leave Request' }}
+      </h2>
+      <button class="hl-modal-close" (click)="closeFormModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="hl-modal-body" style="padding:0;overflow-y:auto;max-height:calc(92vh - 70px);">
+      <app-leave-form
+        [isModal]="true"
+        [leaveId]="selectedLeaveId"
+        [isEditMode]="formMode === 'edit'"
+        (formCancelled)="closeFormModal()"
+        (formSubmitted)="onFormSuccess()"
+      ></app-leave-form>
+    </div>
   </div>
 </div>
 
-<!-- Details Modal -->
-<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
-  <div class="modal-container modal-large" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="closeDetailsModal()"><i class="bi bi-x-lg"></i></button>
-    <app-leave-details
-      [leaveId]="selectedLeaveId"
-      (leaveUpdated)="onLeaveUpdated()"
-    ></app-leave-details>
+<!-- ── Details Modal ─────────────────────────────────────────────────── -->
+<div class="hl-modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+  <div class="hl-modal-container hl-modal-xlarge" (click)="$event.stopPropagation()">
+    <div class="hl-modal-header">
+      <h2 class="hl-modal-title">
+        <i class="bi bi-eye"></i> Leave Details
+      </h2>
+      <button class="hl-modal-close" (click)="closeDetailsModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="hl-modal-body">
+      <app-leave-details
+        [leaveId]="selectedLeaveId"
+        (leaveUpdated)="onLeaveUpdated()"
+      ></app-leave-details>
+    </div>
   </div>
 </div>

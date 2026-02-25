@@ -1,183 +1,213 @@
-<div class="leave-form-container">
-  <div class="form-header">
-    <h2>{{ isEditMode ? 'Edit Leave Request' : 'Apply for Leave' }}</h2>
-    <p>{{ isEditMode ? 'Update the leave request details below' : 'Fill in the details to submit a leave request' }}</p>
-  </div>
+<!-- leave-form.component.html
+     Renders ONLY the form body — the modal shell (overlay, header, close btn)
+     is managed by leave-list.component.html.
+     Uses hl- design system classes.                                -->
 
-  <!-- Loading skeleton -->
-  <div *ngIf="loadingLeave" class="form-loading">
-    <div class="spinner"></div>
-    <p>Loading leave details...</p>
-  </div>
+<!-- Loading -->
+<div *ngIf="loadingLeave" class="hl-form-loading">
+  <div class="hl-loading-spinner"></div>
+  <p>Loading leave details...</p>
+</div>
 
-  <form *ngIf="!loadingLeave" [formGroup]="leaveForm" (ngSubmit)="onSubmit()">
+<form *ngIf="!loadingLeave" [formGroup]="leaveForm" (ngSubmit)="onSubmit()" class="hl-leave-form">
 
-    <!-- Employee + Leave Type Row -->
-    <div class="form-row two-col">
-      <div class="form-group">
-        <label>Employee <span class="required">*</span></label>
-        <select formControlName="employeeId" [class.is-error]="isInvalid('employeeId')">
+  <!-- ── Section 1: Leave Information ──────────────────────────────── -->
+  <div class="hl-form-section">
+    <h3 class="hl-section-title">Leave Information</h3>
+
+    <div class="hl-form-row">
+
+      <!-- Employee -->
+      <div class="hl-form-group">
+        <label for="lfEmployeeId">Employee <span class="hl-required">*</span></label>
+        <select
+          id="lfEmployeeId"
+          formControlName="employeeId"
+          class="hl-form-control"
+          [class.hl-invalid]="isInvalid('employeeId')"
+          (change)="onLeaveTypeChange()">
           <option value="">Select employee...</option>
           <option *ngFor="let emp of employees" [value]="emp.id">
             {{ emp.employeeCode }} — {{ emp.fullName }}
           </option>
         </select>
-        <span class="error-msg" *ngIf="isInvalid('employeeId')">{{ getError('employeeId') }}</span>
+        <span class="hl-error-msg" *ngIf="isInvalid('employeeId')">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('employeeId') }}
+        </span>
       </div>
 
-      <div class="form-group">
-        <label>Leave Type <span class="required">*</span></label>
-        <select formControlName="leaveTypeId" [class.is-error]="isInvalid('leaveTypeId')" (change)="onLeaveTypeChange()">
+      <!-- Leave Type -->
+      <div class="hl-form-group">
+        <label for="lfLeaveTypeId">Leave Type <span class="hl-required">*</span></label>
+        <select
+          id="lfLeaveTypeId"
+          formControlName="leaveTypeId"
+          class="hl-form-control"
+          [class.hl-invalid]="isInvalid('leaveTypeId')"
+          (change)="onLeaveTypeChange()">
           <option value="">Select leave type...</option>
           <option *ngFor="let lt of leaveTypes" [value]="lt.id">
-            {{ lt.name }} ({{ lt.maxDaysPerYear }} days/year)
+            {{ lt.name }} ({{ lt.maxDaysPerYear }} days/yr)
           </option>
         </select>
-        <span class="error-msg" *ngIf="isInvalid('leaveTypeId')">{{ getError('leaveTypeId') }}</span>
+        <span class="hl-error-msg" *ngIf="isInvalid('leaveTypeId')">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('leaveTypeId') }}
+        </span>
 
-        <!-- Loading balance -->
-        <div class="balance-loading" *ngIf="balanceLoading">
-          <div class="mini-spinner"></div>
+        <!-- Balance: loading -->
+        <div class="hl-balance-loading" *ngIf="balanceLoading">
+          <div class="hl-mini-spinner"></div>
           <span>Checking balance...</span>
         </div>
 
-        <!-- No balance record found - block with clear guidance -->
-        <div class="balance-warning" *ngIf="balanceNotFound && !balanceLoading">
+        <!-- Balance: no record -->
+        <div class="hl-balance-warning" *ngIf="balanceNotFound && !balanceLoading">
           <i class="bi bi-exclamation-triangle-fill"></i>
           <div>
             <strong>No leave balance found</strong> for this employee and leave type in {{ currentYear }}.
-            An admin must initialize the leave balance before this leave can be submitted.
-            Go to <strong>Leave Balance &rarr; Initialize</strong> to set it up.
+            Go to <strong>Leave Balance → Initialize</strong> to set it up.
           </div>
         </div>
 
-        <!-- Balance OK - show remaining days -->
-        <div class="balance-info" *ngIf="remainingDays !== null && !balanceLoading && !balanceNotFound">
+        <!-- Balance: OK -->
+        <div class="hl-balance-info" *ngIf="remainingDays !== null && !balanceLoading && !balanceNotFound">
           <i class="bi bi-info-circle"></i>
-          <span>Available balance: <strong>{{ remainingDays }} day(s)</strong></span>
-          <span class="balance-warn" *ngIf="computedDays > remainingDays">
-            &nbsp;&mdash; &cir; Requested {{ computedDays }} days exceeds balance
+          <span>Available: <strong>{{ remainingDays }} day(s)</strong></span>
+          <span class="hl-balance-warn" *ngIf="computedDays > remainingDays">
+            &nbsp;— Requested {{ computedDays }} days exceeds balance
           </span>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Date Range Row -->
-    <div class="form-row two-col">
-      <div class="form-group">
-        <label>Start Date <span class="required">*</span></label>
-        <input
-          type="date"
-          formControlName="startDate"
-          [class.is-error]="isInvalid('startDate')"
-          (change)="onDateChange()"
-        />
-        <span class="error-msg" *ngIf="isInvalid('startDate')">{{ getError('startDate') }}</span>
-      </div>
+  <!-- ── Section 2: Date Range ─────────────────────────────────────── -->
+  <div class="hl-form-section">
+    <h3 class="hl-section-title">Date Range</h3>
 
-      <div class="form-group">
-        <label>End Date <span class="required">*</span></label>
-        <input
-          type="date"
-          formControlName="endDate"
-          [class.is-error]="isInvalid('endDate')"
-          (change)="onDateChange()"
-        />
-        <span class="error-msg" *ngIf="isInvalid('endDate')">{{ getError('endDate') }}</span>
-      </div>
-    </div>
-
-    <!-- Total Days (computed) -->
-    <div class="form-row two-col">
-      <div class="form-group">
-        <label>Total Days <span class="required">*</span></label>
-        <div class="days-input-wrapper">
-          <input
-            type="number"
-            formControlName="totalDays"
-            [class.is-error]="isInvalid('totalDays')"
-            step="0.5" min="0.5"
-            placeholder="0"
-          />
-          <span class="days-unit">days</span>
-        </div>
-        <span class="error-msg" *ngIf="isInvalid('totalDays')">{{ getError('totalDays') }}</span>
-        <span class="hint-msg" *ngIf="computedDays > 0 && !isInvalid('totalDays')">
-          Auto-computed: {{ computedDays }} calendar day(s)
+    <div class="hl-form-row">
+      <!-- Start Date -->
+      <div class="hl-form-group">
+        <label for="lfStartDate">Start Date <span class="hl-required">*</span></label>
+        <input type="date" id="lfStartDate" formControlName="startDate"
+          class="hl-form-control"
+          [class.hl-invalid]="isInvalid('startDate')"
+          (change)="onDateChange()" />
+        <span class="hl-error-msg" *ngIf="isInvalid('startDate')">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('startDate') }}
         </span>
       </div>
 
-      <div class="form-group">
-        <label>Attachment URL</label>
-        <input
-          type="url"
-          formControlName="attachmentUrl"
-          placeholder="https://..."
-          [class.is-error]="isInvalid('attachmentUrl')"
-        />
-        <span class="error-msg" *ngIf="isInvalid('attachmentUrl')">{{ getError('attachmentUrl') }}</span>
-        <div class="doc-required-note" *ngIf="selectedLeaveType?.requiresDocument">
-          <i class="bi bi-paperclip"></i>
-          <span>Document required for this leave type</span>
-        </div>
+      <!-- End Date -->
+      <div class="hl-form-group">
+        <label for="lfEndDate">End Date <span class="hl-required">*</span></label>
+        <input type="date" id="lfEndDate" formControlName="endDate"
+          class="hl-form-control"
+          [class.hl-invalid]="isInvalid('endDate') || leaveForm.errors?.['dateRange']"
+          (change)="onDateChange()" />
+        <span class="hl-error-msg" *ngIf="isInvalid('endDate') || leaveForm.errors?.['dateRange']">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('endDate') }}
+        </span>
       </div>
     </div>
 
+    <div class="hl-form-row">
+      <!-- Total Days -->
+      <div class="hl-form-group">
+        <label for="lfTotalDays">Total Days <span class="hl-required">*</span></label>
+        <div class="hl-days-wrapper">
+          <input type="number" id="lfTotalDays" formControlName="totalDays"
+            class="hl-form-control"
+            [class.hl-invalid]="isInvalid('totalDays')"
+            step="0.5" min="0.5" placeholder="0" />
+          <span class="hl-days-unit">days</span>
+        </div>
+        <span class="hl-error-msg" *ngIf="isInvalid('totalDays')">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('totalDays') }}
+        </span>
+        <span class="hl-form-hint" *ngIf="computedDays > 0 && !isInvalid('totalDays')">
+          <i class="bi bi-calculator"></i> Auto-computed: {{ computedDays }} calendar day(s)
+        </span>
+      </div>
+
+      <!-- Attachment URL -->
+      <div class="hl-form-group">
+        <label for="lfAttachmentUrl">
+          Attachment URL <span class="hl-optional">(optional)</span>
+        </label>
+        <input type="url" id="lfAttachmentUrl" formControlName="attachmentUrl"
+          class="hl-form-control" placeholder="https://..."
+          [class.hl-invalid]="isInvalid('attachmentUrl')" />
+        <span class="hl-error-msg" *ngIf="isInvalid('attachmentUrl')">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('attachmentUrl') }}
+        </span>
+        <span class="hl-form-hint" *ngIf="selectedLeaveType?.requiresDocument">
+          <i class="bi bi-paperclip"></i> Document required for this leave type
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Section 3: Additional Details ─────────────────────────────── -->
+  <div class="hl-form-section">
+    <h3 class="hl-section-title">Additional Details</h3>
+
     <!-- Reason -->
-    <div class="form-group">
-      <label>Reason <span class="required">*</span></label>
-      <textarea
-        formControlName="reason"
-        rows="4"
+    <div class="hl-form-group">
+      <label for="lfReason">Reason <span class="hl-required">*</span></label>
+      <textarea id="lfReason" formControlName="reason" class="hl-form-control" rows="4"
         placeholder="Provide a reason for your leave request..."
-        [class.is-error]="isInvalid('reason')"
-      ></textarea>
-      <div class="textarea-footer">
-        <span class="error-msg" *ngIf="isInvalid('reason')">{{ getError('reason') }}</span>
-        <span class="char-count" [class.over]="(leaveForm.get('reason')?.value?.length || 0) > 450">
+        [class.hl-invalid]="isInvalid('reason')"></textarea>
+      <div class="hl-textarea-footer">
+        <span class="hl-error-msg" *ngIf="isInvalid('reason')">
+          <i class="bi bi-exclamation-circle"></i> {{ getError('reason') }}
+        </span>
+        <span class="hl-char-count"
+          [class.hl-char-over]="(leaveForm.get('reason')?.value?.length || 0) > 450">
           {{ leaveForm.get('reason')?.value?.length || 0 }}/500
         </span>
       </div>
     </div>
 
     <!-- Emergency toggle -->
-    <div class="form-group">
-      <div class="toggle-group">
-        <label class="toggle-label">
-          <div class="toggle-switch">
-            <input type="checkbox" formControlName="isEmergencyLeave" />
-            <span class="slider"></span>
-          </div>
-          <div class="toggle-text">
-            <span class="toggle-title">Emergency Leave</span>
-            <span class="toggle-desc">Mark this as an emergency / unplanned leave request</span>
+    <div class="hl-form-group">
+      <div class="hl-toggle-card" [class.hl-toggle-active]="leaveForm.get('isEmergencyLeave')?.value">
+        <label class="hl-check-row" for="lfEmergency">
+          <input type="checkbox" id="lfEmergency" formControlName="isEmergencyLeave"
+            style="width:36px;height:20px;cursor:pointer;flex-shrink:0;margin:0;" />
+          <div>
+            <span class="hl-check-label">Emergency Leave</span>
+            <span class="hl-form-hint" style="margin:2px 0 0 0;">
+              Mark this as an emergency / unplanned leave request
+            </span>
           </div>
         </label>
       </div>
     </div>
+  </div>
 
-    <!-- Validation error -->
-    <div class="alert alert-error" *ngIf="formError">
-      <i class="bi bi-exclamation-triangle"></i>
-      <span>{{ formError }}</span>
-    </div>
+  <!-- ── Form Error ─────────────────────────────────────────────────── -->
+  <div class="hl-form-alert" *ngIf="formError">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ formError }}</span>
+  </div>
 
-    <!-- Actions -->
-    <div class="form-actions">
-      <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="submitting">
-        Cancel
-      </button>
-      <button type="submit" class="btn btn-submit" [disabled]="submitting || leaveForm.invalid || balanceNotFound || balanceLoading">
-        <span *ngIf="!submitting">
-          <i class="bi bi-check-circle"></i>
-          {{ isEditMode ? 'Update Leave' : 'Submit Leave Request' }}
-        </span>
-        <span *ngIf="submitting">
-          <div class="btn-spinner"></div>
-          {{ isEditMode ? 'Updating...' : 'Submitting...' }}
-        </span>
-      </button>
-    </div>
+  <!-- ── Footer / Buttons ──────────────────────────────────────────── -->
+  <div class="hl-modal-footer">
+    <button type="button" class="hl-btn hl-btn-secondary" (click)="onCancel()" [disabled]="submitting">
+      Cancel
+    </button>
+    <button type="submit" class="hl-btn hl-btn-primary"
+      [disabled]="submitting || leaveForm.invalid || balanceNotFound || balanceLoading">
+      <ng-container *ngIf="!submitting">
+        <i class="bi bi-check-circle"></i>
+        {{ isEditMode ? 'Update Leave' : 'Submit Leave Request' }}
+      </ng-container>
+      <ng-container *ngIf="submitting">
+        <div class="hl-btn-spinner"></div>
+        {{ isEditMode ? 'Updating...' : 'Submitting...' }}
+      </ng-container>
+    </button>
+  </div>
 
-  </form>
-</div>
+</form>
