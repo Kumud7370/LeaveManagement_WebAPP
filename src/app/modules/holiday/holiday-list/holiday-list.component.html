@@ -21,9 +21,8 @@
     </div>
   </div>
 
-  <!-- ── Toolbar Row: Search + Buttons (OUTSIDE the grid card) ──── -->
+  <!-- ── Toolbar Row ──── -->
   <div class="hl-toolbar">
-    <!-- Search Input -->
     <div class="hl-search-wrapper">
       <input
         type="text"
@@ -33,8 +32,6 @@
         class="hl-search-input"
       />
     </div>
-
-    <!-- Action Buttons -->
     <div class="hl-toolbar-actions">
       <button (click)="handleClearFilters()" class="hl-btn hl-btn-clear">
         Clear
@@ -52,21 +49,24 @@
     </div>
   </div>
 
-  <!-- ── Active Filters (shown below toolbar when filters are set) ─ -->
+  <!-- ── Active Filters ─ -->
   <div *ngIf="activeFilters.hasActiveFilters" class="hl-active-filters">
     <span class="hl-filter-label">Active Filters:</span>
-    <span *ngFor="let filter of activeFilters.filters" class="hl-filter-badge">
-      {{ filter }}
-    </span>
+    <span
+      *ngFor="let filter of activeFilters.filters"
+      class="hl-filter-badge"
+      >{{ filter }}</span
+    >
   </div>
 
   <!-- ── Grid Card ─────────────────────────────────────────────── -->
   <div class="hl-grid-card">
     <div class="hl-grid-container">
+      <!-- KEY CHANGE: [theme]="gridTheme" instead of class="ag-theme-quartz" -->
       <ag-grid-angular
         #agGrid
         style="width: 100%"
-        class="ag-theme-quartz"
+        [theme]="gridTheme"
         [domLayout]="'autoHeight'"
         [rowData]="rowData"
         [columnDefs]="columnDefs"
@@ -92,10 +92,9 @@
       </ag-grid-angular>
     </div>
 
-    <!-- ── Pagination (inside card, at bottom) ─────────────────── -->
+    <!-- ── Pagination ─────────────────────────────────────────── -->
     <div class="hl-pagination">
       <div class="hl-pagination-inner">
-        <!-- Page Size -->
         <div class="hl-page-size">
           <label for="hlPageSize">Show:</label>
           <select
@@ -110,20 +109,14 @@
             <option [value]="100">100</option>
           </select>
         </div>
-
-        <!-- Record Range -->
         <span class="hl-pagination-text">
           {{ rowData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0 }}
           to {{ Math.min(currentPage * pageSize, totalItems) }} of
           {{ totalItems }}
         </span>
-
-        <!-- Page Number -->
         <span class="hl-pagination-text">
           Page {{ currentPage }} of {{ totalPages || 1 }}
         </span>
-
-        <!-- Nav Buttons -->
         <div class="hl-pagination-btns">
           <button
             (click)="goToPage(1)"
@@ -157,9 +150,7 @@
       </div>
     </div>
   </div>
-  <!-- /hl-grid-card -->
 </div>
-<!-- /hl-page-container -->
 
 <!-- ════════════════════════════════════════════════════════════════
      ADD / EDIT / VIEW MODAL
@@ -200,12 +191,10 @@
     <!-- Modal Body -->
     <div class="hl-modal-body">
       <form [formGroup]="holidayForm" (ngSubmit)="onSubmit()">
-        <!-- ─── Basic Information ─────────────────────────────────── -->
+        <!-- ─── Basic Information ───────────────────────────────── -->
         <div class="hl-form-section">
           <h3 class="hl-section-title">Basic Information</h3>
-
           <div class="hl-form-row">
-            <!-- Holiday Name -->
             <div class="hl-form-group">
               <label for="hlHolidayName">Holiday Name *</label>
               <input
@@ -228,8 +217,6 @@
                 characters)
               </div>
             </div>
-
-            <!-- Holiday Date -->
             <div class="hl-form-group">
               <label for="hlHolidayDate">Holiday Date *</label>
               <input
@@ -251,9 +238,7 @@
               </div>
             </div>
           </div>
-
           <div class="hl-form-row">
-            <!-- Holiday Type -->
             <div class="hl-form-group">
               <label for="hlHolidayType">Holiday Type *</label>
               <select
@@ -278,13 +263,10 @@
                 <i class="bi bi-exclamation-circle"></i> Please select a type
               </div>
             </div>
-
-            <!-- Description -->
             <div class="hl-form-group">
-              <label for="hlDescription">
-                Description
-                <span class="hl-optional">(optional)</span>
-              </label>
+              <label for="hlDescription"
+                >Description <span class="hl-optional">(optional)</span></label
+              >
               <textarea
                 id="hlDescription"
                 formControlName="description"
@@ -292,9 +274,7 @@
                 rows="3"
                 placeholder="Optional description..."
                 [readOnly]="modalMode === 'view'"
-              >
-              </textarea>
-              <!-- FIX: Only show error when actually invalid (maxlength exceeded), not just touched -->
+              ></textarea>
               <div
                 *ngIf="
                   holidayForm.get('description')?.errors?.['maxlength'] &&
@@ -308,7 +288,7 @@
           </div>
         </div>
 
-        <!-- ─── Applicable Departments ────────────────────────────── -->
+        <!-- ─── Applicable Departments ──────────────────────────── -->
         <div class="hl-form-section" *ngIf="!isNationalHoliday">
           <h3 class="hl-section-title">Applicable Departments</h3>
           <small class="hl-form-hint">
@@ -316,21 +296,18 @@
             Required for Regional and Optional holidays. Select one or more
             departments.
           </small>
-
           <div
             *ngIf="isLoadingDepartments"
             style="color: #3b82f6; font-size: 12px; margin: 12px 0"
           >
             <i class="bi bi-hourglass-split"></i> Loading departments...
           </div>
-
           <div
             *ngIf="!isLoadingDepartments && departments.length === 0"
             style="color: #dc2626; font-size: 12px; margin: 12px 0"
           >
             <i class="bi bi-exclamation-triangle"></i> No departments available.
           </div>
-
           <div
             class="hl-dept-grid"
             *ngIf="!isLoadingDepartments && departments.length > 0"
@@ -351,7 +328,6 @@
               <span class="hl-dept-code">{{ dept.departmentCode }}</span>
             </label>
           </div>
-
           <div
             class="hl-error-msg"
             style="margin-top: 8px"
@@ -364,7 +340,6 @@
             <i class="bi bi-exclamation-circle"></i> At least one department is
             required.
           </div>
-
           <div
             class="hl-selected-chips"
             *ngIf="selectedDepartments.length > 0"
@@ -392,7 +367,7 @@
           </div>
         </div>
 
-        <!-- ─── Settings ──────────────────────────────────────────── -->
+        <!-- ─── Settings ────────────────────────────────────────── -->
         <div class="hl-form-section">
           <h3 class="hl-section-title">Settings</h3>
           <div class="hl-form-row">
@@ -406,9 +381,9 @@
                   class="hl-toggle"
                   [attr.disabled]="modalMode === 'view' ? true : null"
                 />
-                <label class="hl-check-label" for="hlIsOptional">
-                  Mark as optional (employees can opt in/out)
-                </label>
+                <label class="hl-check-label" for="hlIsOptional"
+                  >Mark as optional (employees can opt in/out)</label
+                >
               </div>
             </div>
             <div class="hl-form-group">
@@ -427,7 +402,7 @@
           </div>
         </div>
 
-        <!-- ─── Additional Details (view only) ───────────────────── -->
+        <!-- ─── Additional Details (view only) ──────────────────── -->
         <div
           class="hl-form-section"
           *ngIf="modalMode === 'view' && selectedHoliday"
@@ -473,7 +448,7 @@
           </div>
         </div>
 
-        <!-- ─── Modal Footer ──────────────────────────────────────── -->
+        <!-- ─── Modal Footer ─────────────────────────────────────── -->
         <div class="hl-modal-footer">
           <button
             type="button"
@@ -489,12 +464,12 @@
             [disabled]="isSubmitting"
             (click)="formSubmitAttempted = true"
           >
-            <span *ngIf="!isSubmitting && modalMode === 'add'">
-              <i class="bi bi-save"></i> Create Holiday
-            </span>
-            <span *ngIf="!isSubmitting && modalMode === 'edit'">
-              <i class="bi bi-save"></i> Update Holiday
-            </span>
+            <span *ngIf="!isSubmitting && modalMode === 'add'"
+              ><i class="bi bi-save"></i> Create Holiday</span
+            >
+            <span *ngIf="!isSubmitting && modalMode === 'edit'"
+              ><i class="bi bi-save"></i> Update Holiday</span
+            >
             <span *ngIf="isSubmitting">
               <i class="bi bi-hourglass-split"></i>
               {{ modalMode === "add" ? "Creating..." : "Updating..." }}
@@ -503,8 +478,5 @@
         </div>
       </form>
     </div>
-    <!-- /hl-modal-body -->
   </div>
-  <!-- /hl-modal-container -->
 </div>
-<!-- /hl-modal-overlay -->
