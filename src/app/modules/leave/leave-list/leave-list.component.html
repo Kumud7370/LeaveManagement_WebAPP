@@ -1,40 +1,44 @@
 <div class="hl-page-container">
 
-  <!-- ── Page Header ──────────────────────────────────────────────────── -->
+  <!-- ── Page Header ────────────────────────────────────────────────── -->
   <div class="hl-page-header">
     <h1 class="hl-page-title">Leave Management</h1>
   </div>
 
-  <!-- ── Stats Cards ──────────────────────────────────────────────────── -->
+  <!-- ── Stats Cards ────────────────────────────────────────────────── -->
   <div class="hl-stats-grid">
-    <div class="hl-stat-card hl-stat-total">
+    <div class="hl-stat-card hl-stat-total" [class.hl-stat-loading]="statsLoading">
       <p class="hl-stat-label">Total Leaves</p>
-      <p class="hl-stat-value">{{ totalCount || 0 }}</p>
+      <p class="hl-stat-value">
+        <span *ngIf="!statsLoading; else statSkeleton">{{ statsTotal }}</span>
+      </p>
     </div>
-    <div class="hl-stat-card hl-stat-pending">
+    <div class="hl-stat-card hl-stat-pending" [class.hl-stat-loading]="statsLoading">
       <p class="hl-stat-label">Pending</p>
-      <p class="hl-stat-value">{{ statistics['Pending'] || 0 }}</p>
+      <p class="hl-stat-value">
+        <span *ngIf="!statsLoading; else statSkeleton">{{ statistics['Pending'] ?? 0 }}</span>
+      </p>
     </div>
-    <div class="hl-stat-card hl-stat-approved">
+    <div class="hl-stat-card hl-stat-approved" [class.hl-stat-loading]="statsLoading">
       <p class="hl-stat-label">Approved</p>
-      <p class="hl-stat-value">{{ statistics['Approved'] || 0 }}</p>
+      <p class="hl-stat-value">
+        <span *ngIf="!statsLoading; else statSkeleton">{{ statistics['Approved'] ?? 0 }}</span>
+      </p>
     </div>
-    <div class="hl-stat-card hl-stat-rejected">
+    <div class="hl-stat-card hl-stat-rejected" [class.hl-stat-loading]="statsLoading">
       <p class="hl-stat-label">Rejected</p>
-      <p class="hl-stat-value">{{ statistics['Rejected'] || 0 }}</p>
+      <p class="hl-stat-value">
+        <span *ngIf="!statsLoading; else statSkeleton">{{ statistics['Rejected'] ?? 0 }}</span>
+      </p>
     </div>
   </div>
+  <ng-template #statSkeleton><span class="hl-stat-skeleton"></span></ng-template>
 
-  <!-- ── Toolbar ───────────────────────────────────────────────────────── -->
+  <!-- ── Toolbar ────────────────────────────────────────────────────── -->
   <div class="hl-toolbar">
     <div class="hl-search-wrapper">
-      <input
-        type="text"
-        class="hl-search-input"
-        placeholder="Search leaves..."
-        [(ngModel)]="searchTerm"
-        (input)="onSearch()"
-      />
+      <input type="text" class="hl-search-input" placeholder="Search leaves..."
+        [(ngModel)]="searchTerm" (input)="onSearch()" />
     </div>
     <div class="hl-toolbar-actions">
       <button class="hl-btn hl-btn-filter" (click)="showFilters = !showFilters">
@@ -56,7 +60,7 @@
     </div>
   </div>
 
-  <!-- ── Filter Panel ──────────────────────────────────────────────────── -->
+  <!-- ── Filter Panel ───────────────────────────────────────────────── -->
   <div class="hl-filter-panel" [class.hl-filter-panel-open]="showFilters">
     <div class="hl-filter-grid">
       <div class="hl-filter-group">
@@ -97,7 +101,7 @@
     </div>
   </div>
 
-  <!-- ── Active Filters ────────────────────────────────────────────────── -->
+  <!-- ── Active Filters ─────────────────────────────────────────────── -->
   <div class="hl-active-filters" *ngIf="activeFilterCount > 0 || searchTerm">
     <span class="hl-filter-label">Active filters:</span>
     <span class="hl-filter-badge" *ngIf="searchTerm">Search: "{{ searchTerm }}"</span>
@@ -107,24 +111,21 @@
     <span class="hl-filter-badge" *ngIf="filters.isEmergencyLeave">Emergency only</span>
   </div>
 
-  <!-- ── Grid Card ─────────────────────────────────────────────────────── -->
+  <!-- ── Grid Card ──────────────────────────────────────────────────── -->
   <div class="hl-grid-card">
     <div class="hl-grid-container">
 
-      <!-- Loading -->
       <div *ngIf="loading" class="hl-loading-state">
         <div class="hl-spinner"></div>
         <p>Loading leaves...</p>
       </div>
 
-      <!-- Error -->
       <div *ngIf="error && !loading" class="hl-error-state">
         <i class="bi bi-exclamation-circle"></i>
         <p>{{ error }}</p>
         <button class="hl-btn hl-btn-refresh" (click)="loadLeaves()">Try Again</button>
       </div>
 
-      <!-- Empty -->
       <div *ngIf="!loading && !error && leaves.length === 0" class="hl-empty-state">
         <i class="bi bi-calendar-x"></i>
         <p>No leaves found. Adjust filters or apply for a new leave.</p>
@@ -133,10 +134,11 @@
         </button>
       </div>
 
-      <!-- AG Grid -->
+      <!-- ↓ KEY CHANGE: bind [theme]="gridTheme" instead of class="ag-theme-quartz" -->
       <ag-grid-angular
         *ngIf="!loading && !error && leaves.length > 0"
-        class="ag-theme-quartz"
+        style="width:100%;"
+        [theme]="gridTheme"
         [rowData]="leaves"
         [columnDefs]="columnDefs"
         [defaultColDef]="defaultColDef"
@@ -148,7 +150,7 @@
       ></ag-grid-angular>
     </div>
 
-    <!-- ── Pagination ─────────────────────────────────────────────────── -->
+    <!-- ── Pagination ─────────────────────────────────────────────── -->
     <div class="hl-pagination" *ngIf="!loading && leaves.length > 0">
       <div class="hl-pagination-inner">
         <div class="hl-page-size">
@@ -169,11 +171,8 @@
           <button class="hl-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
             <i class="bi bi-chevron-left"></i>
           </button>
-          <button
-            *ngFor="let page of pages"
-            class="hl-pgbtn"
-            [class.hl-pgbtn-active]="page === currentPage"
-            (click)="onPageChange(page)">
+          <button *ngFor="let page of pages" class="hl-pgbtn"
+            [class.hl-pgbtn-active]="page === currentPage" (click)="onPageChange(page)">
             {{ page }}
           </button>
           <button class="hl-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">
@@ -188,7 +187,7 @@
   </div>
 </div>
 
-<!-- ── Form Modal ─────────────────────────────────────────────────────── -->
+<!-- ── Form Modal ─────────────────────────────────────────────────── -->
 <div class="hl-modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
   <div class="hl-modal-container hl-modal-xlarge" (click)="$event.stopPropagation()">
     <div class="hl-modal-header">
@@ -196,38 +195,24 @@
         <i class="bi" [ngClass]="formMode === 'create' ? 'bi-plus-circle-dotted' : 'bi-pencil-square'"></i>
         {{ formMode === 'create' ? 'Apply for Leave' : 'Edit Leave Request' }}
       </h2>
-      <button class="hl-modal-close" (click)="closeFormModal()" type="button">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <button class="hl-modal-close" (click)="closeFormModal()" type="button"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="hl-modal-body" style="padding:0;overflow-y:auto;max-height:calc(92vh - 70px);">
-      <app-leave-form
-        [isModal]="true"
-        [leaveId]="selectedLeaveId"
-        [isEditMode]="formMode === 'edit'"
-        (formCancelled)="closeFormModal()"
-        (formSubmitted)="onFormSuccess()"
-      ></app-leave-form>
+      <app-leave-form [isModal]="true" [leaveId]="selectedLeaveId" [isEditMode]="formMode === 'edit'"
+        (formCancelled)="closeFormModal()" (formSubmitted)="onFormSuccess()"></app-leave-form>
     </div>
   </div>
 </div>
 
-<!-- ── Details Modal ─────────────────────────────────────────────────── -->
+<!-- ── Details Modal ─────────────────────────────────────────────── -->
 <div class="hl-modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
   <div class="hl-modal-container hl-modal-xlarge" (click)="$event.stopPropagation()">
     <div class="hl-modal-header">
-      <h2 class="hl-modal-title">
-        <i class="bi bi-eye"></i> Leave Details
-      </h2>
-      <button class="hl-modal-close" (click)="closeDetailsModal()" type="button">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <h2 class="hl-modal-title"><i class="bi bi-eye"></i> Leave Details</h2>
+      <button class="hl-modal-close" (click)="closeDetailsModal()" type="button"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="hl-modal-body">
-      <app-leave-details
-        [leaveId]="selectedLeaveId"
-        (leaveUpdated)="onLeaveUpdated()"
-      ></app-leave-details>
+      <app-leave-details [leaveId]="selectedLeaveId" (leaveUpdated)="onLeaveUpdated()"></app-leave-details>
     </div>
   </div>
 </div>
