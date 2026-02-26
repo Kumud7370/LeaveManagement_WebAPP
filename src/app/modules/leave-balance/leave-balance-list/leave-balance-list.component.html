@@ -1,200 +1,186 @@
-<div class="hl-page-container">
+<div class="lb-page">
 
-  <!-- ── Page Header ────────────────────────────────────────────────── -->
-  <div class="hl-page-header">
-    <h1 class="hl-page-title">Leave Balances</h1>
-  </div>
+  <h1 class="lb-page-title">Leave Balances</h1>
 
-  <!-- ── Stats Cards ────────────────────────────────────────────────── -->
-  <div class="hl-stats-grid">
-    <div class="hl-stat-card hl-stat-total" [class.hl-stat-loading]="loading">
-      <p class="hl-stat-label">Total Employees</p>
-      <p class="hl-stat-value">
-        <span *ngIf="!loading; else statSkeleton">{{ totalEmployees }}</span>
+  <!-- ── Stats ─────────────────────────────────────────────────────── -->
+  <div class="lb-stats-row">
+    <div class="lb-stat lb-stat-blue" [class.lb-stat-loading]="loading">
+      <p class="lb-stat-label">Total Employees</p>
+      <p class="lb-stat-value">
+        <ng-container *ngIf="!loading; else sk">{{ totalEmployees }}</ng-container>
       </p>
     </div>
-    <div class="hl-stat-card hl-stat-approved" [class.hl-stat-loading]="loading">
-      <p class="hl-stat-label">Total Available Days</p>
-      <p class="hl-stat-value">
-        <span *ngIf="!loading; else statSkeleton">{{ totalAvailable }}</span>
+    <div class="lb-stat lb-stat-green" [class.lb-stat-loading]="loading">
+      <p class="lb-stat-label">Total Available Days</p>
+      <p class="lb-stat-value">
+        <ng-container *ngIf="!loading; else sk">{{ totalAvailable }}</ng-container>
       </p>
     </div>
-    <div class="hl-stat-card hl-stat-pending" [class.hl-stat-loading]="loading">
-      <p class="hl-stat-label">Avg Utilization</p>
-      <p class="hl-stat-value">
-        <span *ngIf="!loading; else statSkeleton">{{ avgUtilization }}%</span>
+    <div class="lb-stat lb-stat-yellow" [class.lb-stat-loading]="loading">
+      <p class="lb-stat-label">Avg Utilization</p>
+      <p class="lb-stat-value">
+        <ng-container *ngIf="!loading; else sk">{{ avgUtilization }}%</ng-container>
       </p>
     </div>
-    <div class="hl-stat-card hl-stat-rejected" [class.hl-stat-loading]="loading">
-      <p class="hl-stat-label">Low Balance</p>
-      <p class="hl-stat-value">
-        <span *ngIf="!loading; else statSkeleton">{{ lowBalanceCount }}</span>
+    <div class="lb-stat lb-stat-red" [class.lb-stat-loading]="loading">
+      <p class="lb-stat-label">Low Balance</p>
+      <p class="lb-stat-value">
+        <ng-container *ngIf="!loading; else sk">{{ lowBalanceCount }}</ng-container>
       </p>
     </div>
   </div>
-  <ng-template #statSkeleton><span class="hl-stat-skeleton"></span></ng-template>
+  <ng-template #sk><span class="lb-skeleton"></span></ng-template>
 
-  <!-- ── Toolbar ────────────────────────────────────────────────────── -->
-  <div class="hl-toolbar">
-    <div class="hl-year-selector">
-      <label>Year:</label>
-      <select class="hl-year-select" [(ngModel)]="selectedYear" (change)="onYearChange()">
-        <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
-      </select>
-    </div>
-    <div class="hl-toolbar-actions">
-      <button class="hl-btn hl-btn-filter" (click)="showFilters = !showFilters">
-        <i class="bi bi-funnel"></i> Filters
-        <span class="hl-filter-count" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
-      </button>
-      <button class="hl-btn hl-btn-clear" (click)="clearFilters()">
-        <i class="bi bi-x-circle"></i> Clear
-      </button>
-      <button class="hl-btn hl-btn-refresh" (click)="loadBalances()">
-        <i class="bi bi-arrow-clockwise"></i> Refresh
-      </button>
-      <button class="hl-btn hl-btn-export" (click)="exportToExcel()">
-        <i class="bi bi-download"></i> Export
-      </button>
-      <button class="hl-btn hl-btn-init" (click)="initializeEmployee()">
-        <i class="bi bi-person-plus"></i> Init Employee
-      </button>
-      <button class="hl-btn hl-btn-primary" (click)="createBalance()">
-        <i class="bi bi-plus-circle"></i> Add Balance
-      </button>
-    </div>
-  </div>
+  <!-- ── ONE white card ────────────────────────────────────────────── -->
+  <div class="lb-card">
 
-  <!-- ── Filter Panel ───────────────────────────────────────────────── -->
-  <div class="hl-filter-panel" [class.hl-filter-panel-open]="showFilters">
-    <div class="hl-filter-grid">
-      <div class="hl-filter-group">
-        <label>Leave Type</label>
-        <select [(ngModel)]="filters.leaveTypeId" (change)="onFilterChange()" class="hl-filter-select">
-          <option [ngValue]="undefined">All Types</option>
-          <option *ngFor="let t of leaveTypes" [value]="t.id">{{ t.name }}</option>
+    <!-- Toolbar -->
+    <div class="lb-toolbar">
+
+      <!-- Year selector -->
+      <div class="lb-year-wrap">
+        <label>Year:</label>
+        <select class="lb-year-select" [(ngModel)]="selectedYear" (change)="onYearChange()">
+          <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
         </select>
       </div>
-      <div class="hl-filter-group">
-        <label>Low Balance Only</label>
-        <select [(ngModel)]="filters.isLowBalance" (change)="onFilterChange()" class="hl-filter-select">
-          <option [ngValue]="undefined">All</option>
-          <option [ngValue]="true">Yes</option>
-          <option [ngValue]="false">No</option>
-        </select>
-      </div>
-      <div class="hl-filter-group">
-        <label>Min Available Days</label>
-        <input type="number" [(ngModel)]="filters.minAvailableBalance" (change)="onFilterChange()"
-          class="hl-filter-select" placeholder="e.g. 0" min="0" />
-      </div>
-      <div class="hl-filter-group">
-        <label>Max Available Days</label>
-        <input type="number" [(ngModel)]="filters.maxAvailableBalance" (change)="onFilterChange()"
-          class="hl-filter-select" placeholder="e.g. 30" min="0" />
-      </div>
-    </div>
-  </div>
 
-  <!-- ── Active Filters ─────────────────────────────────────────────── -->
-  <div class="hl-active-filters" *ngIf="activeFilterCount > 0">
-    <span class="hl-filter-label">Active filters:</span>
-    <span class="hl-filter-badge" *ngIf="filters.leaveTypeId">Leave Type</span>
-    <span class="hl-filter-badge" *ngIf="filters.isLowBalance !== null && filters.isLowBalance !== undefined">Low Balance</span>
-    <span class="hl-filter-badge" *ngIf="filters.minAvailableBalance != null">Min Days</span>
-    <span class="hl-filter-badge" *ngIf="filters.maxAvailableBalance != null">Max Days</span>
-  </div>
-
-  <!-- ── Grid Card ──────────────────────────────────────────────────── -->
-  <div class="hl-grid-card">
-    <div class="hl-grid-container">
-
-      <div *ngIf="loading" class="hl-loading-state">
-        <div class="hl-spinner"></div>
-        <p>Loading leave balances...</p>
-      </div>
-
-      <div *ngIf="error && !loading" class="hl-error-state">
-        <i class="bi bi-exclamation-circle"></i>
-        <p>{{ error }}</p>
-        <button class="hl-btn hl-btn-refresh" (click)="loadBalances()">Try Again</button>
-      </div>
-
-      <div *ngIf="!loading && !error && balances.length === 0" class="hl-empty-state">
-        <i class="bi bi-bar-chart-line"></i>
-        <p>No leave balances found for {{ selectedYear }}. Adjust filters or initialize an employee.</p>
-        <button class="hl-btn hl-btn-init" (click)="initializeEmployee()">
+      <div class="lb-toolbar-btns">
+        <button class="lb-btn lb-btn-filter" (click)="showFilters = !showFilters">
+          <i class="bi bi-funnel"></i> Filters
+          <span class="lb-filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
+        </button>
+        <button class="lb-btn lb-btn-clear" (click)="clearFilters()">Clear</button>
+        <button class="lb-btn lb-btn-refresh" (click)="loadBalances()">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+        <button class="lb-btn lb-btn-export" (click)="exportToExcel()">
+          <i class="bi bi-download"></i> Export
+        </button>
+        <button class="lb-btn lb-btn-init" (click)="initializeEmployee()">
           <i class="bi bi-person-plus"></i> Init Employee
         </button>
+        <button class="lb-btn lb-btn-add" (click)="createBalance()">
+          <i class="bi bi-plus-circle"></i> Add Balance
+        </button>
       </div>
-
-      <!-- KEY: [theme]="gridTheme" — same as leave-list, no class="ag-theme-quartz" -->
-      <ag-grid-angular
-        *ngIf="!loading && !error && balances.length > 0"
-        style="width:100%;"
-        [theme]="gridTheme"
-        [rowData]="balances"
-        [columnDefs]="columnDefs"
-        [defaultColDef]="defaultColDef"
-        (gridReady)="onGridReady($event)"
-        [rowHeight]="52"
-        [headerHeight]="44"
-        [domLayout]="'autoHeight'"
-        [context]="context">
-      </ag-grid-angular>
     </div>
 
-    <!-- ── Pagination ─────────────────────────────────────────────── -->
-    <div class="hl-pagination" *ngIf="!loading && balances.length > 0">
-      <div class="hl-pagination-inner">
-        <div class="hl-page-size">
-          <label>Show:</label>
-          <select class="hl-page-size-select" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
-            <option [value]="10">10</option>
-            <option [value]="25">25</option>
-            <option [value]="50">50</option>
-            <option [value]="100">100</option>
+    <!-- Filter Panel -->
+    <div class="lb-filter-panel" [class.open]="showFilters">
+      <div class="lb-filter-inner">
+        <div class="lb-fg">
+          <label>Leave Type</label>
+          <select [(ngModel)]="filters.leaveTypeId" (change)="onFilterChange()">
+            <option [ngValue]="undefined">All Types</option>
+            <option *ngFor="let t of leaveTypes" [value]="t.id">{{ t.name }}</option>
           </select>
         </div>
-        <span class="hl-pagination-text">
-          {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
-        </span>
-        <div class="hl-pagination-btns">
-          <button class="hl-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">
-            <i class="bi bi-chevron-bar-left"></i>
-          </button>
-          <button class="hl-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">
-            <i class="bi bi-chevron-left"></i>
-          </button>
-          <button *ngFor="let p of pages" class="hl-pgbtn"
-            [class.hl-pgbtn-active]="p === currentPage" (click)="onPageChange(p)">
-            {{ p }}
-          </button>
-          <button class="hl-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">
-            <i class="bi bi-chevron-right"></i>
-          </button>
-          <button class="hl-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">
-            <i class="bi bi-chevron-bar-right"></i>
-          </button>
+        <div class="lb-fg">
+          <label>Low Balance Only</label>
+          <select [(ngModel)]="filters.isLowBalance" (change)="onFilterChange()">
+            <option [ngValue]="undefined">All</option>
+            <option [ngValue]="true">Yes</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
+        <div class="lb-fg">
+          <label>Min Available Days</label>
+          <input type="number" [(ngModel)]="filters.minAvailableBalance" (change)="onFilterChange()"
+            class="lb-fg-input" placeholder="e.g. 0" min="0" />
+        </div>
+        <div class="lb-fg">
+          <label>Max Available Days</label>
+          <input type="number" [(ngModel)]="filters.maxAvailableBalance" (change)="onFilterChange()"
+            class="lb-fg-input" placeholder="e.g. 30" min="0" />
         </div>
       </div>
     </div>
-  </div>
-</div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="lb-loading">
+      <div class="lb-spinner"></div>
+      <span>Loading leave balances...</span>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error && !loading" class="lb-error">
+      <i class="bi bi-exclamation-circle"></i>
+      <span>{{ error }}</span>
+      <button class="lb-btn lb-btn-refresh" (click)="loadBalances()">Try Again</button>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="!loading && !error && balances.length === 0" class="lb-empty">
+      <i class="bi bi-bar-chart-line"></i>
+      <span>No leave balances found for {{ selectedYear }}. Adjust filters or initialize an employee.</span>
+      <button class="lb-btn lb-btn-init" (click)="initializeEmployee()">
+        <i class="bi bi-person-plus"></i> Init Employee
+      </button>
+    </div>
+
+    <!-- AG Grid -->
+    <ag-grid-angular
+      *ngIf="!loading && !error && balances.length > 0"
+      style="width: 100%;"
+      [theme]="gridTheme"
+      [rowData]="balances"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      (gridReady)="onGridReady($event)"
+      [rowHeight]="52"
+      [headerHeight]="44"
+      [floatingFiltersHeight]="36"
+      [domLayout]="'autoHeight'"
+      [context]="context"
+      [suppressPaginationPanel]="true">
+    </ag-grid-angular>
+
+    <!-- Pagination -->
+    <div class="lb-pagination" *ngIf="!loading && balances.length > 0">
+      <div class="lb-ps-wrap">
+        <label>Show:</label>
+        <select class="lb-ps-select" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+      </div>
+      <span class="lb-pag-info">
+        {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
+      </span>
+      <span class="lb-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+      <div class="lb-pag-btns">
+        <button class="lb-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">«</button>
+        <button class="lb-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">‹</button>
+        <button *ngFor="let p of pages" class="lb-pgbtn"
+          [class.active]="p === currentPage" (click)="onPageChange(p)">
+          {{ p }}
+        </button>
+        <button class="lb-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">›</button>
+        <button class="lb-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">»</button>
+      </div>
+    </div>
+
+  </div><!-- /lb-card -->
+
+</div><!-- /lb-page -->
+
 
 <!-- ── Form Modal ─────────────────────────────────────────────────── -->
-<div class="hl-modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
-  <div class="hl-modal-container hl-modal-xlarge" (click)="$event.stopPropagation()">
-    <div class="hl-modal-header">
-      <h2 class="hl-modal-title">
+<div class="lb-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+  <div class="lb-modal" (click)="$event.stopPropagation()">
+    <div class="lb-modal-head">
+      <h2 class="lb-modal-title">
         <i class="bi" [ngClass]="formMode === 'create' ? 'bi-plus-circle-dotted' : 'bi-pencil-square'"></i>
         {{ formMode === 'create' ? 'Add Leave Balance' : 'Edit Leave Balance' }}
       </h2>
-      <button class="hl-modal-close" (click)="closeFormModal()" type="button">
+      <button class="lb-modal-close" (click)="closeFormModal()" type="button">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
-    <div class="hl-modal-body" style="padding:0; overflow-y:auto; max-height:calc(92vh - 70px);">
+    <div class="lb-modal-body">
       <app-leave-balance-form
         [isModal]="true"
         [balanceId]="selectedBalanceId"

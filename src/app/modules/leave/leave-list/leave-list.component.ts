@@ -2,8 +2,10 @@ import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
   OnInit,
+  OnDestroy,
   ChangeDetectorRef,
-  ViewEncapsulation
+  ViewEncapsulation,
+  HostListener
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -28,7 +30,6 @@ import * as XLSX from 'xlsx';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// ── Matches leave-type-list theme exactly ─────────────────────────
 const leaveGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
   foregroundColor:                '#374151',
@@ -61,7 +62,7 @@ const leaveGridTheme = themeQuartz.withParams({
   imports: [CommonModule, FormsModule, AgGridAngular, LeaveFormComponent, LeaveDetailsComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class LeaveListComponent implements OnInit {
+export class LeaveListComponent implements OnInit, OnDestroy {
 
   readonly gridTheme = leaveGridTheme;
 
@@ -97,6 +98,8 @@ export class LeaveListComponent implements OnInit {
   totalCount  = 0;
   Math = Math;
   private searchDebounceTimer: any = null;
+  private resizeObserver!: ResizeObserver;
+  private sidebarResizeTimer: any = null;
 
   defaultColDef: ColDef = {
     sortable: true, filter: true, floatingFilter: true,
@@ -234,9 +237,40 @@ export class LeaveListComponent implements OnInit {
     this.loadStatistics();
   }
 
+  ngOnDestroy(): void {
+    if (this.resizeObserver) this.resizeObserver.disconnect();
+    clearTimeout(this.sidebarResizeTimer);
+    clearTimeout(this.searchDebounceTimer);
+  }
+
+  // ── Respond to window resize (also catches sidebar toggle via layout reflow) ──
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.scheduleSizeColumnsToFit();
+  }
+
+  /** Debounced sizeColumnsToFit — safe to call repeatedly */
+  private scheduleSizeColumnsToFit(delay = 320): void {
+    clearTimeout(this.sidebarResizeTimer);
+    this.sidebarResizeTimer = setTimeout(() => {
+      if (this.gridApi) this.gridApi.sizeColumnsToFit();
+    }, delay);
+  }
+
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
+
+    // Initial fit
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
+
+    // Watch the grid wrapper element for size changes caused by sidebar toggling
+    const gridEl = document.querySelector('app-leave-list ag-grid-angular') as HTMLElement;
+    if (gridEl && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.scheduleSizeColumnsToFit(50);
+      });
+      this.resizeObserver.observe(gridEl);
+    }
   }
 
   loadLeaveTypes(): void {
