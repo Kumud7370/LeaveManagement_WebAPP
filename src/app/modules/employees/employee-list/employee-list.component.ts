@@ -23,7 +23,8 @@ import {
   ModuleRegistry,
   AllCommunityModule,
   SortChangedEvent,
-  FilterChangedEvent
+  FilterChangedEvent,
+  themeQuartz          // ← ADD THIS (same as holiday)
 } from 'ag-grid-community';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -53,6 +54,27 @@ import {
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+// ── Same pattern as Holiday — themeQuartz.withParams() ───────────────────────
+const employeeGridTheme = themeQuartz.withParams({
+  backgroundColor:                '#ffffff',
+  foregroundColor:                '#1f2937',
+  borderColor:                    '#e5e7eb',
+  headerBackgroundColor:          '#ffffff',
+  headerTextColor:                '#374151',
+  oddRowBackgroundColor:          '#ffffff',
+  rowHoverColor:                  '#f8faff',
+  selectedRowBackgroundColor:     '#dbeafe',
+  fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontSize:                       13,
+  columnBorder:                   true,
+  headerColumnBorder:             true,
+  headerColumnBorderHeight:       '50%',
+  headerColumnResizeHandleColor:  '#9ca3af',
+  headerColumnResizeHandleHeight: '50%',
+  headerColumnResizeHandleWidth:  2,
+  cellHorizontalPaddingScale:     0.8,
+});
+
 @Component({
   selector: 'app-employee-list',
   standalone: true,
@@ -75,6 +97,9 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   agGridElement!: ElementRef<HTMLElement>;
 
   private destroy$ = new Subject<void>();
+
+  // ── Expose theme to template ─────────────────────────────────────────────
+  readonly gridTheme = employeeGridTheme;
 
   // ─── Grid state ──────────────────────────────────────────────────────────
   rowData: EmployeeResponseDto[] = [];
@@ -310,7 +335,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ─── Helper: numeric enum value → string name for backend ────────────────
-  // Backend uses JsonStringEnumConverter → MUST send "Active" not 1
   private enumToString<T extends object>(enumObj: T, value: any): string {
     const numVal = Number(value);
     const name   = enumObj[numVal as keyof T] as string;
@@ -585,7 +609,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
 
     if (!result.isConfirmed) return;
 
-    // ── KEY FIX: send enum STRING names, not numbers ──────────────────────
     const updateDto: any = {
       firstName:            employee.firstName,
       middleName:           employee.middleName,
@@ -602,7 +625,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       dateOfJoining:        employee.dateOfJoining ? new Date(employee.dateOfJoining).toISOString() : undefined,
       dateOfLeaving:        employee.dateOfLeaving ? new Date(employee.dateOfLeaving).toISOString() : undefined,
       employmentType:       this.enumToString(EmploymentType, employee.employmentType),
-      employeeStatus:       this.enumToString(EmployeeStatus, newStatus),   // "Active" or "Inactive"
+      employeeStatus:       this.enumToString(EmployeeStatus, newStatus),
       profileImageUrl:      employee.profileImageUrl,
       biometricId:          employee.biometricId
     };
