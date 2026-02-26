@@ -77,6 +77,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
         { label: "Attendance List", route: "/attendance/list", icon: "fas fa-list" },
         { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
+      ]
+    },
+    {
+      label: "Attendance Regularization",
+      icon: "fas fa-calendar-check",
+      expanded: false,
+      children: [
         { label: "Regularization", route: "/attendance-regularization/list", icon: "fas fa-edit" }
       ]
     },
@@ -245,6 +252,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
             { label: "Attendance List", route: "/attendance/list", icon: "fas fa-list" },
             { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
+          ]
+        },
+        {
+          label: "Attendance Regularization",
+          icon: "fas fa-calendar-check",
+          expanded: false,
+          children: [
             { label: "Regularization", route: "/attendance-regularization/list", icon: "fas fa-edit" }
           ]
         },
@@ -289,10 +303,18 @@ export class SidebarComponent implements OnInit, OnDestroy {
           children: [
             { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
             { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
+          ]
+        },
+        {
+          label: "Attendance Regularization",
+          icon: "fas fa-calendar-check",
+          expanded: false,
+          children: [
             { label: "Request Regularization", route: "/attendance-regularization/create", icon: "fas fa-plus-circle" },
             { label: "My Requests", route: "/attendance-regularization/list", icon: "fas fa-list-alt" }
           ]
         },
+
         {
           label: "Work From Home",
           icon: "fas fa-house-user",
