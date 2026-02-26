@@ -309,8 +309,15 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ─── Stats ────────────────────────────────────────────────────────────────
+  // ─── Helper: numeric enum value → string name for backend ────────────────
+  // Backend uses JsonStringEnumConverter → MUST send "Active" not 1
+  private enumToString<T extends object>(enumObj: T, value: any): string {
+    const numVal = Number(value);
+    const name   = enumObj[numVal as keyof T] as string;
+    return name || String(value);
+  }
 
+  // ─── Stats ────────────────────────────────────────────────────────────────
   loadStats(): void {
     const statsFilter: EmployeeFilterDto = {
       searchTerm:     '',
@@ -345,7 +352,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ─── Data Loading ─────────────────────────────────────────────────────────
-
   loadEmployees(): void {
     if (this.isLoadingData) return;
     this.isLoadingData = true;
@@ -374,18 +380,13 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         error: (error: any) => {
           this.isLoadingData = false;
           if (error.status !== 401) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'Failed to load employees. Please try again.'
-            });
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load employees. Please try again.' });
           }
         }
       });
   }
 
   // ─── Grid ─────────────────────────────────────────────────────────────────
-
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     this.gridApi.addEventListener('sortChanged',   this.onSortChanged.bind(this));
@@ -412,7 +413,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ─── Pagination ───────────────────────────────────────────────────────────
-
   onPageSizeChanged(newPageSize: number): void {
     this.pageSize    = newPageSize;
     this.currentPage = 1;
@@ -435,7 +435,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ─── Search & Filters ─────────────────────────────────────────────────────
-
   onSearchChange(): void {
     clearTimeout(this.searchDebounceTimer);
     this.searchDebounceTimer = setTimeout(() => {
@@ -497,7 +496,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ─── Modal ────────────────────────────────────────────────────────────────
-
   addNewEmployee(): void {
     this.formMode           = 'create';
     this.selectedEmployeeId = null;
@@ -544,7 +542,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ─── ActionCellRenderer bridge ────────────────────────────────────────────
-
   viewDetails(employee: EmployeeResponseDto): void {
     this.selectedEmployeeId = employee.id;
     this.showDetailsModal   = true;
@@ -588,16 +585,26 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
 
     if (!result.isConfirmed) return;
 
-    const updateDto = {
-      firstName: employee.firstName, middleName: employee.middleName,
-      lastName: employee.lastName, dateOfBirth: employee.dateOfBirth,
-      gender: employee.gender, email: employee.email,
-      phoneNumber: employee.phoneNumber, alternatePhoneNumber: employee.alternatePhoneNumber,
-      address: employee.address, departmentId: employee.departmentId,
-      designationId: employee.designationId, managerId: employee.managerId,
-      dateOfJoining: employee.dateOfJoining, dateOfLeaving: employee.dateOfLeaving,
-      employmentType: employee.employmentType, employeeStatus: newStatus,
-      profileImageUrl: employee.profileImageUrl, biometricId: employee.biometricId
+    // ── KEY FIX: send enum STRING names, not numbers ──────────────────────
+    const updateDto: any = {
+      firstName:            employee.firstName,
+      middleName:           employee.middleName,
+      lastName:             employee.lastName,
+      dateOfBirth:          employee.dateOfBirth ? new Date(employee.dateOfBirth).toISOString() : undefined,
+      gender:               this.enumToString(Gender, employee.gender),
+      email:                employee.email,
+      phoneNumber:          employee.phoneNumber,
+      alternatePhoneNumber: employee.alternatePhoneNumber,
+      address:              employee.address,
+      departmentId:         employee.departmentId,
+      designationId:        employee.designationId,
+      managerId:            employee.managerId,
+      dateOfJoining:        employee.dateOfJoining ? new Date(employee.dateOfJoining).toISOString() : undefined,
+      dateOfLeaving:        employee.dateOfLeaving ? new Date(employee.dateOfLeaving).toISOString() : undefined,
+      employmentType:       this.enumToString(EmploymentType, employee.employmentType),
+      employeeStatus:       this.enumToString(EmployeeStatus, newStatus),   // "Active" or "Inactive"
+      profileImageUrl:      employee.profileImageUrl,
+      biometricId:          employee.biometricId
     };
 
     this.employeeService.updateEmployee(employee.id, updateDto)
@@ -608,7 +615,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
           if (idx !== -1) {
             this.rowData[idx] = {
               ...this.rowData[idx],
-              employeeStatus: newStatus,
+              employeeStatus:     newStatus,
               employeeStatusName: statusLabel
             } as any;
             this.gridApi.setGridOption('rowData', [...this.rowData]);
@@ -684,18 +691,16 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ─── Grid action dispatcher ───────────────────────────────────────────────
-
   onGridAction(event: { action: string; data: any }): void {
     switch (event.action) {
-      case 'edit':   this.editDepartment(event.data);  break;
-      case 'view':   this.viewDetails(event.data);     break;
-      case 'toggle': this.toggleStatus(event.data);    break;
+      case 'edit':   this.editDepartment(event.data);   break;
+      case 'view':   this.viewDetails(event.data);      break;
+      case 'toggle': this.toggleStatus(event.data);     break;
       case 'delete': this.deleteDepartment(event.data); break;
     }
   }
 
   // ─── Export ───────────────────────────────────────────────────────────────
-
   exportData(): void {
     exportToCsv(this.gridApi, 'employees');
     Swal.fire({
@@ -706,7 +711,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ─── Date helpers ─────────────────────────────────────────────────────────
-
   formatDate(date: Date | undefined): string {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('en-US', {

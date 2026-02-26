@@ -3,18 +3,21 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridOptions, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, GridOptions, GridReadyEvent, GridApi } from 'ag-grid-community';
 import { DepartmentService } from '../../../core/services/api/department.api';
 import {
   Department,
-  DepartmentFilterRequest,
-  PaginatedResponse
+  DepartmentFilterRequest
 } from '../../../../app/core/Models/department.model';
 import Swal from 'sweetalert2';
-import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
-import { StatusCellRendererComponent } from '../../../shared/status-cell-renderer.component';
 import { DepartmentFormComponent } from '../department-form/department-form.component';
 import * as XLSX from 'xlsx';
+
+interface StatCard {
+  label: string;
+  value: number;
+  colorClass: string;
+}
 
 @Component({
   selector: 'app-department-list',
@@ -24,58 +27,61 @@ import * as XLSX from 'xlsx';
   styleUrls: ['./department-list.component.scss']
 })
 export class DepartmentListComponent implements OnInit {
+
   departments: Department[] = [];
   loading = false;
   error: string | null = null;
-  
+
+  // Stat cards
+  statCards: StatCard[] = [];
+
   // Pagination
   currentPage = 1;
   pageSize = 10;
   totalPages = 0;
   totalCount = 0;
-  
-  
+
   // Filters
   searchTerm = '';
-  isActiveFilter: boolean | null = null;
-  rootLevelOnly = false;
   sortBy = 'DepartmentName';
   sortDirection: 'asc' | 'desc' = 'asc';
-  
-  // UI States
-  showFilters = false;
-  selectedDepartments: Set<string> = new Set();
 
-  // Modal States
+  // Modal
   showFormModal = false;
   formMode: 'create' | 'edit' = 'create';
   selectedDepartmentId: string | null = null;
 
-  // AG Grid
+  // Grid
+  private gridApi!: GridApi;
   columnDefs: ColDef[] = [];
+
   defaultColDef: ColDef = {
     sortable: true,
-    filter: true,
     resizable: true,
+    filter: 'agTextColumnFilter',
+    floatingFilter: true,
+    suppressFloatingFilterButton: false,
     flex: 1,
-    minWidth: 100,
+    minWidth: 80
   };
+
   gridOptions: GridOptions = {
     pagination: false,
     rowSelection: 'multiple',
     suppressRowClickSelection: true,
     domLayout: 'autoHeight',
-    context: { componentParent: this }
+    context: { componentParent: this },
+    suppressCellFocus: true,
+    suppressMovableColumns: false
   };
 
-  // Make Math available in template
   Math = Math;
 
   constructor(
     private departmentService: DepartmentService,
     private router: Router
   ) {
-    this.initializeColumnDefs();
+    this.buildColumnDefs();
   }
 
   ngOnInit(): void {
@@ -83,102 +89,118 @@ export class DepartmentListComponent implements OnInit {
     this.loadStats();
   }
 
-  initializeColumnDefs(): void {
+  buildColumnDefs(): void {
     this.columnDefs = [
       {
-        headerName: 'ACTIONS',
-        width: 150,
-        cellRenderer: ActionCellRendererComponent,
+        headerName: 'Actions',
+        width: 155,
+        minWidth: 155,
+        maxWidth: 155,
         sortable: false,
         filter: false,
+        floatingFilter: false,
         pinned: 'left',
-        cellStyle: { textAlign: 'center' }
-      },
-      {
-        headerName: 'CODE',
-        field: 'departmentCode',
-        width: 140,
-        cellClass: 'dept-code-cell',
-        cellStyle: { 
-          fontFamily: 'Monaco, Courier New, monospace',
-          fontWeight: '600'
-        }
-      },
-      {
-        headerName: 'DEPARTMENT NAME',
-        field: 'departmentName',
-        width: 280,
         cellRenderer: (params: any) => {
-          if (!params.value) return '';
-          const description = params.data.description 
-            ? `<span class="dept-description">${params.data.description}</span>` 
-            : '';
-          return `
-            <div class="dept-name-cell">
-              <span class="dept-name">${params.value}</span>
-              ${description}
-            </div>
+          const el = document.createElement('div');
+          el.className = 'action-cell';
+          const isActive = params.data?.isActive;
+          el.innerHTML = `
+            <button class="act-btn view-btn"   title="View"   data-action="view"><i class="bi bi-eye"></i></button>
+            <button class="act-btn edit-btn"   title="Edit"   data-action="edit"><i class="bi bi-pencil"></i></button>
+            <button class="act-btn power-btn ${isActive ? 'power-on' : 'power-off'}" title="${isActive ? 'Deactivate' : 'Activate'}" data-action="toggle"><i class="bi bi-power"></i></button>
+            <button class="act-btn del-btn"    title="Delete" data-action="delete"><i class="bi bi-trash"></i></button>
           `;
-        }
-      },
-      {
-        headerName: 'PARENT DEPARTMENT',
-        field: 'parentDepartmentName',
-        width: 200,
-        valueFormatter: (params) => params.value || '—'
-      },
-      {
-        headerName: 'HEAD OF DEPARTMENT',
-        field: 'headOfDepartmentName',
-        width: 220,
-        valueFormatter: (params) => params.value || '—'
-      },
-      {
-        headerName: 'EMPLOYEES',
-        field: 'employeeCount',
-        width: 120,
-        type: 'numericColumn',
-        cellStyle: { textAlign: 'center' },
-        cellRenderer: (params: any) => {
-          return `<span class="badge badge-info">${params.value || 0}</span>`;
-        }
-      },
-      {
-        headerName: 'SUB-DEPTS',
-        field: 'childDepartmentCount',
-        width: 120,
-        type: 'numericColumn',
-        cellStyle: { textAlign: 'center' },
-        cellRenderer: (params: any) => {
-          return `<span class="badge badge-secondary">${params.value || 0}</span>`;
-        }
-      },
-      {
-        headerName: 'STATUS',
-        field: 'isActive',
-        width: 120,
-        cellRenderer: StatusCellRendererComponent,
-        cellStyle: { textAlign: 'center' }
-      },
-      {
-        headerName: 'CREATED',
-        field: 'createdAt',
-        width: 140,
-        valueFormatter: (params) => {
-          if (!params.value) return '—';
-          const date = new Date(params.value);
-          return date.toLocaleDateString('en-US', { 
-            day: 'numeric', 
-            month: 'short', 
-            year: 'numeric' 
+          el.addEventListener('click', (e: MouseEvent) => {
+            const btn = (e.target as HTMLElement).closest('[data-action]') as HTMLElement;
+            if (!btn) return;
+            const dept = params.data as Department;
+            switch (btn.getAttribute('data-action')) {
+              case 'view':   this.viewDetails(dept); break;
+              case 'edit':   this.editDepartment(dept); break;
+              case 'toggle': this.toggleStatus(dept); break;
+              case 'delete': this.deleteDepartment(dept); break;
+            }
           });
+          return el;
+        }
+      },
+      {
+        headerName: 'Department Name',
+        field: 'departmentName',
+        minWidth: 200,
+        flex: 2,
+        cellRenderer: (p: any) => `<span class="cell-name">${p.value ?? ''}</span>`
+      },
+      {
+        headerName: 'Code',
+        field: 'departmentCode',
+        minWidth: 100,
+        flex: 1,
+        cellRenderer: (p: any) => `<span class="cell-code">${p.value ?? ''}</span>`
+      },
+      {
+        headerName: 'Parent Dept',
+        field: 'parentDepartmentName',
+        minWidth: 140,
+        flex: 1.5,
+        valueFormatter: (p) => p.value || '—'
+      },
+      {
+        headerName: 'Head of Dept',
+        field: 'headOfDepartmentName',
+        minWidth: 150,
+        flex: 1.5,
+        valueFormatter: (p) => p.value || '—'
+      },
+      {
+        headerName: 'Employees',
+        field: 'employeeCount',
+        minWidth: 120,
+        flex: 1,
+        filter: 'agNumberColumnFilter',
+        cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+        cellRenderer: (p: any) => `<span class="cell-emp">${p.value ?? 0} Employee(s)</span>`
+      },
+      {
+        headerName: 'Description',
+        field: 'description',
+        minWidth: 180,
+        flex: 2,
+        cellRenderer: (p: any) =>
+          p.value
+            ? `<span class="cell-desc" title="${p.value}">${p.value}</span>`
+            : `<span class="cell-dash">—</span>`
+      },
+      {
+        headerName: 'Active',
+        field: 'isActive',
+        minWidth: 90,
+        flex: 0.9,
+        filter: false,
+        floatingFilter: false,
+        cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+        cellRenderer: (p: any) =>
+          `<span class="cell-status ${p.value ? 'is-active' : 'is-inactive'}">${p.value ? 'Active' : 'Inactive'}</span>`
+      },
+      {
+        headerName: 'Created At',
+        field: 'createdAt',
+        minWidth: 170,
+        flex: 1.2,
+        filter: 'agDateColumnFilter',
+        valueFormatter: (p) => {
+          if (!p.value) return '—';
+          const d = new Date(p.value);
+          const date = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+          const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase();
+          return `${date}, ${time}`;
         }
       }
     ];
   }
 
   onGridReady(params: GridReadyEvent): void {
-    params.api.sizeColumnsToFit();
+    this.gridApi = params.api;
   }
 
   loadDepartments(): void {
@@ -187,8 +209,6 @@ export class DepartmentListComponent implements OnInit {
 
     const filter: DepartmentFilterRequest = {
       searchTerm: this.searchTerm || undefined,
-      isActive: this.isActiveFilter ?? undefined,
-      rootLevelOnly: this.rootLevelOnly || undefined,
       sortBy: this.sortBy,
       sortDirection: this.sortDirection,
       pageNumber: this.currentPage,
@@ -196,269 +216,131 @@ export class DepartmentListComponent implements OnInit {
     };
 
     this.departmentService.getFilteredDepartments(filter).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.departments = response.data.items;
-          this.currentPage = response.data.pageNumber;
-          this.pageSize = response.data.pageSize;
-          this.totalPages = response.data.totalPages;
-          this.totalCount = response.data.totalCount;
+      next: (res) => {
+        if (res.success) {
+          this.departments = res.data.items;
+          this.currentPage = res.data.pageNumber;
+          this.pageSize    = res.data.pageSize;
+          this.totalPages  = res.data.totalPages;
+          this.totalCount  = res.data.totalCount;
         } else {
-          this.error = response.message || 'Failed to load departments';
+          this.error = res.message || 'Failed to load departments';
         }
         this.loading = false;
       },
       error: (err) => {
-        this.error = err.error?.message || 'An error occurred while loading departments';
+        this.error = err.error?.message || 'An error occurred';
         this.loading = false;
       }
     });
   }
 
   loadStats(): void {
-    const statsFilter: DepartmentFilterRequest = {
-      pageNumber: 1,
-      pageSize: 10000, 
-      sortBy: 'DepartmentName',
-      sortDirection: 'asc'
-    };
-
-  }
-  exportToExcel(): void {
-    if (this.departments.length === 0) {
-      Swal.fire({
-        title: 'No Data',
-        text: 'There are no departments to export.',
-        icon: 'info',
-        confirmButtonColor: '#3b82f6'
-      });
-      return;
-    }
-
-    // Show loading
-    Swal.fire({
-      title: 'Exporting...',
-      text: 'Please wait while we prepare your file.',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
+    this.departmentService.getDepartmentStatistics().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          const stats = res.data;
+          this.statCards = [
+            { label: 'TOTAL DEPARTMENTS', value: stats['TotalDepartments'] ?? 0, colorClass: 'card-blue'  },
+            { label: 'ACTIVE',            value: stats['ActiveDepartments'] ?? 0, colorClass: 'card-green' },
+            { label: 'INACTIVE',          value: stats['InactiveDepartments'] ?? 0, colorClass: 'card-red' }
+          ];
+        }
+      },
+      error: () => { this.statCards = []; }
     });
+  }
 
-    // Prepare data for export
-    const exportData = this.departments.map(dept => ({
-      'Department Code': dept.departmentCode,
-      'Department Name': dept.departmentName,
-      'Description': dept.description || '—',
-      'Parent Department': dept.parentDepartmentName || '—',
-      'Head of Department': dept.headOfDepartmentName || '—',
-      'Employees': dept.employeeCount || 0,
-      'Sub-Departments': dept.childDepartmentCount || 0,
-      'Status': dept.isActive ? 'Active' : 'Inactive',
-      'Display Order': dept.displayOrder || 0,
-      'Created At': dept.createdAt ? new Date(dept.createdAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }) : '—',
-      'Updated At': dept.updatedAt ? new Date(dept.updatedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }) : '—'
+  // ── Export to Excel ────────────────────────────────────────────────────────
+  exportDepartments(): void {
+    const exportData = this.departments.map(d => ({
+      'Department Name': d.departmentName,
+      'Code':            d.departmentCode,
+      'Parent Dept':     d.parentDepartmentName || '—',
+      'Head of Dept':    d.headOfDepartmentName || '—',
+      'Employees':       d.employeeCount ?? 0,
+      'Description':     d.description || '—',
+      'Status':          d.isActive ? 'Active' : 'Inactive',
+      'Created At':      d.createdAt ? new Date(d.createdAt).toLocaleDateString('en-GB') : '—'
     }));
 
-    // Create workbook and worksheet
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    
-    // Set column widths
-    const columnWidths = [
-      { wch: 18 }, 
-      { wch: 30 }, 
-      { wch: 40 }, 
-      { wch: 25 }, 
-      { wch: 25 }, 
-      { wch: 12 }, 
-      { wch: 15 }, 
-      { wch: 10 }, 
-      { wch: 14 }, 
-      { wch: 25 }, 
-      { wch: 25 }  
+    const ws = XLSX.utils.json_to_sheet(exportData);
+
+    // Column widths
+    ws['!cols'] = [
+      { wch: 25 }, { wch: 12 }, { wch: 20 },
+      { wch: 20 }, { wch: 12 }, { wch: 35 },
+      { wch: 10 }, { wch: 18 }
     ];
-    worksheet['!cols'] = columnWidths;
 
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Departments');
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Departments');
 
-    // Generate file name with timestamp
-    const timestamp = new Date().toISOString().slice(0, 10);
-    const fileName = `Departments_Export_${timestamp}.xlsx`;
-
-    // Save file
-    XLSX.writeFile(workbook, fileName);
-
-    // Close loading and show success
-    Swal.fire({
-      title: 'Export Successful!',
-      text: `File "${fileName}" has been downloaded.`,
-      icon: 'success',
-      confirmButtonColor: '#3b82f6',
-      timer: 3000
-    });
+    const fileName = `Departments_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   }
 
-  onSearch(): void {
-    this.currentPage = 1;
-    this.loadDepartments();
+  onSearch(): void { this.currentPage = 1; this.loadDepartments(); }
+  clearSearch(): void { this.searchTerm = ''; this.currentPage = 1; this.loadDepartments(); }
+  onPageChange(p: number): void { this.currentPage = p; this.loadDepartments(); }
+  onPageSizeChange(e: any): void { this.pageSize = +e.target.value; this.currentPage = 1; this.loadDepartments(); }
+
+  viewDetails(dept: Department): void {
+    this.router.navigate(['/departments', dept.departmentId]);
   }
 
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.currentPage = 1;
-    this.loadDepartments();
-  }
-
-  onFilterChange(): void {
-    this.currentPage = 1;
-    this.loadDepartments();
-  }
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.loadDepartments();
-  }
-
-  onPageSizeChange(event: any): void {
-    this.pageSize = parseInt(event.target.value, 10);
-    this.currentPage = 1;
-    this.loadDepartments();
-  }
-
-  viewDetails(department: Department): void {
-    this.router.navigate(['/departments', department.departmentId]);
-  }
-
-  editDepartment(department: Department): void {
+  editDepartment(dept: Department): void {
     this.formMode = 'edit';
-    this.selectedDepartmentId = department.departmentId;
+    this.selectedDepartmentId = dept.departmentId;
     this.showFormModal = true;
   }
 
-  async toggleStatus(department: Department): Promise<void> {
-    const action = department.isActive ? 'deactivate' : 'activate';
-    
+  async toggleStatus(dept: Department): Promise<void> {
+    const action = dept.isActive ? 'deactivate' : 'activate';
     const result = await Swal.fire({
       title: 'Are you sure?',
-      text: `Do you want to ${action} "${department.departmentName}"?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3b82f6',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: `Yes, ${action} it!`,
-      cancelButtonText: 'Cancel'
+      text: `Do you want to ${action} "${dept.departmentName}"?`,
+      icon: 'warning', showCancelButton: true,
+      confirmButtonColor: '#3b82f6', cancelButtonColor: '#6b7280',
+      confirmButtonText: `Yes, ${action} it!`
     });
-
     if (result.isConfirmed) {
-      this.departmentService.toggleDepartmentStatus(department.departmentId).subscribe({
-        next: (response) => {
-          if (response.success) {
-            Swal.fire({
-              title: 'Success!',
-              text: `Department has been ${action}d successfully.`,
-              icon: 'success',
-              confirmButtonColor: '#3b82f6',
-              timer: 2000
-            });
-            this.loadDepartments();
-            this.loadStats();
-          } else {
-            Swal.fire({
-              title: 'Error!',
-              text: response.message || 'Failed to update department status',
-              icon: 'error',
-              confirmButtonColor: '#ef4444'
-            });
+      this.departmentService.toggleDepartmentStatus(dept.departmentId).subscribe({
+        next: (res) => {
+          if (res.success) {
+            Swal.fire({ title: 'Success!', text: `Department ${action}d.`, icon: 'success', timer: 2000, confirmButtonColor: '#3b82f6' });
+            this.loadDepartments(); this.loadStats();
           }
         },
-        error: (err) => {
-          Swal.fire({
-            title: 'Error!',
-            text: err.error?.message || 'An error occurred',
-            icon: 'error',
-            confirmButtonColor: '#ef4444'
-          });
-        }
+        error: (err) => Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error', confirmButtonColor: '#ef4444' })
       });
     }
   }
 
-  async deleteDepartment(department: Department): Promise<void> {
-    this.departmentService.canDeleteDepartment(department.departmentId).subscribe({
-      next: async (canDeleteResponse) => {
-        if (canDeleteResponse.success && canDeleteResponse.data) {
-          const result = await Swal.fire({
+  async deleteDepartment(dept: Department): Promise<void> {
+    this.departmentService.canDeleteDepartment(dept.departmentId).subscribe({
+      next: async (res) => {
+        if (res.success && res.data) {
+          const confirm = await Swal.fire({
             title: 'Are you sure?',
-            html: `You are about to delete <strong>"${department.departmentName}"</strong>.<br>This action cannot be undone.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
+            html: `Delete <strong>"${dept.departmentName}"</strong>? This cannot be undone.`,
+            icon: 'warning', showCancelButton: true,
+            confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!'
           });
-
-          if (result.isConfirmed) {
-            this.departmentService.deleteDepartment(department.departmentId).subscribe({
-              next: (response) => {
-                if (response.success) {
-                  Swal.fire({
-                    title: 'Deleted!',
-                    text: 'Department has been deleted successfully.',
-                    icon: 'success',
-                    confirmButtonColor: '#3b82f6',
-                    timer: 2000
-                  });
-                  this.loadDepartments();
-                  this.loadStats();
-                } else {
-                  Swal.fire({
-                    title: 'Error!',
-                    text: response.message || 'Failed to delete department',
-                    icon: 'error',
-                    confirmButtonColor: '#ef4444'
-                  });
+          if (confirm.isConfirmed) {
+            this.departmentService.deleteDepartment(dept.departmentId).subscribe({
+              next: (r) => {
+                if (r.success) {
+                  Swal.fire({ title: 'Deleted!', text: 'Department deleted.', icon: 'success', timer: 2000, confirmButtonColor: '#3b82f6' });
+                  this.loadDepartments(); this.loadStats();
                 }
-              },
-              error: (err) => {
-                Swal.fire({
-                  title: 'Error!',
-                  text: err.error?.message || 'An error occurred',
-                  icon: 'error',
-                  confirmButtonColor: '#ef4444'
-                });
               }
             });
           }
         } else {
-          Swal.fire({
-            title: 'Cannot Delete',
-            text: 'This department cannot be deleted. It has employees or child departments assigned.',
-            icon: 'warning',
-            confirmButtonColor: '#3b82f6'
-          });
+          Swal.fire({ title: 'Cannot Delete', text: 'This department has employees or sub-departments.', icon: 'warning', confirmButtonColor: '#3b82f6' });
         }
-      },
-      error: (err) => {
-        Swal.fire({
-          title: 'Error!',
-          text: err.error?.message || 'An error occurred',
-          icon: 'error',
-          confirmButtonColor: '#ef4444'
-        });
       }
     });
   }
@@ -469,42 +351,14 @@ export class DepartmentListComponent implements OnInit {
     this.showFormModal = true;
   }
 
-  closeFormModal(): void {
-    this.showFormModal = false;
-    this.selectedDepartmentId = null;
-  }
-
-  onFormSuccess(): void {
-    this.closeFormModal();
-    this.loadDepartments();
-    this.loadStats();
-  }
-
-  clearFilters(): void {
-    this.searchTerm = '';
-    this.isActiveFilter = null;
-    this.rootLevelOnly = false;
-    this.currentPage = 1;
-    this.loadDepartments();
-  }
-
-  get hasSelection(): boolean {
-    return this.selectedDepartments.size > 0;
-  }
+  closeFormModal(): void { this.showFormModal = false; this.selectedDepartmentId = null; }
+  onFormSuccess(): void { this.closeFormModal(); this.loadDepartments(); this.loadStats(); }
 
   get pages(): number[] {
-    const pages: number[] = [];
-    const maxPagesToShow = 5;
-    let startPage = Math.max(1, this.currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(this.totalPages, startPage + maxPagesToShow - 1);
-    
-    if (endPage - startPage < maxPagesToShow - 1) {
-      startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-    return pages;
+    const max = 5;
+    let start = Math.max(1, this.currentPage - Math.floor(max / 2));
+    let end   = Math.min(this.totalPages, start + max - 1);
+    if (end - start < max - 1) start = Math.max(1, end - max + 1);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 }

@@ -1,7 +1,6 @@
 <!-- holiday-list.component.html -->
 
 <div class="hl-page-container">
-
   <!-- ── Page Title ──────────────────────────────────────────────── -->
   <div class="hl-page-header">
     <h1 class="hl-page-title">Holiday Management</h1>
@@ -22,10 +21,8 @@
     </div>
   </div>
 
-  <!-- ── Toolbar Row: Search + Buttons (OUTSIDE the grid card) ──── -->
+  <!-- ── Toolbar Row ──── -->
   <div class="hl-toolbar">
-
-    <!-- Search Input -->
     <div class="hl-search-wrapper">
       <input
         type="text"
@@ -35,8 +32,6 @@
         class="hl-search-input"
       />
     </div>
-
-    <!-- Action Buttons -->
     <div class="hl-toolbar-actions">
       <button (click)="handleClearFilters()" class="hl-btn hl-btn-clear">
         Clear
@@ -44,27 +39,35 @@
       <button (click)="loadHolidays()" class="hl-btn hl-btn-refresh">
         Refresh
       </button>
+      <button (click)="exportData()" class="hl-btn hl-btn-export">
+        <i class="bi bi-download"></i> Export
+      </button>
+      <div class="hl-toolbar-divider"></div>
       <button (click)="openAddModal()" class="hl-btn hl-btn-primary">
-        Add Holiday
+        <i class="bi bi-plus-lg"></i> Add Holiday
       </button>
     </div>
   </div>
 
-  <!-- ── Active Filters (shown below toolbar when filters are set) ─ -->
+  <!-- ── Active Filters ─ -->
   <div *ngIf="activeFilters.hasActiveFilters" class="hl-active-filters">
     <span class="hl-filter-label">Active Filters:</span>
-    <span *ngFor="let filter of activeFilters.filters" class="hl-filter-badge">
-      {{ filter }}
-    </span>
+    <span
+      *ngFor="let filter of activeFilters.filters"
+      class="hl-filter-badge"
+      >{{ filter }}</span
+    >
   </div>
 
   <!-- ── Grid Card ─────────────────────────────────────────────── -->
   <div class="hl-grid-card">
     <div class="hl-grid-container">
+      <!-- KEY CHANGE: [theme]="gridTheme" instead of class="ag-theme-quartz" -->
       <ag-grid-angular
         #agGrid
-        style="width: 100%; height: 500px;"
-        class="ag-theme-quartz"
+        style="width: 100%"
+        [theme]="gridTheme"
+        [domLayout]="'autoHeight'"
         [rowData]="rowData"
         [columnDefs]="columnDefs"
         [defaultColDef]="defaultColDef"
@@ -84,66 +87,101 @@
         [suppressLoadingOverlay]="false"
         [suppressNoRowsOverlay]="false"
         (gridReady)="onGridReady($event)"
-        [context]="context">
+        [context]="context"
+      >
       </ag-grid-angular>
     </div>
 
-    <!-- ── Pagination (inside card, at bottom) ─────────────────── -->
+    <!-- ── Pagination ─────────────────────────────────────────── -->
     <div class="hl-pagination">
       <div class="hl-pagination-inner">
-
-        <!-- Page Size -->
         <div class="hl-page-size">
           <label for="hlPageSize">Show:</label>
-          <select id="hlPageSize" [(ngModel)]="pageSize" (change)="onPageSizeChanged(pageSize)" class="hl-page-size-select">
+          <select
+            id="hlPageSize"
+            [(ngModel)]="pageSize"
+            (change)="onPageSizeChanged(pageSize)"
+            class="hl-page-size-select"
+          >
             <option [value]="10">10</option>
             <option [value]="20">20</option>
             <option [value]="50">50</option>
             <option [value]="100">100</option>
           </select>
         </div>
-
-        <!-- Record Range -->
         <span class="hl-pagination-text">
-          {{ rowData.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0 }}
-          to {{ Math.min(currentPage * pageSize, totalItems) }}
-          of {{ totalItems }}
+          {{ rowData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0 }}
+          to {{ Math.min(currentPage * pageSize, totalItems) }} of
+          {{ totalItems }}
         </span>
-
-        <!-- Page Number -->
         <span class="hl-pagination-text">
           Page {{ currentPage }} of {{ totalPages || 1 }}
         </span>
-
-        <!-- Nav Buttons -->
         <div class="hl-pagination-btns">
-          <button (click)="goToPage(1)"        [disabled]="currentPage === 1"                             class="hl-pgbtn">«</button>
-          <button (click)="previousPage()"     [disabled]="currentPage === 1"                             class="hl-pgbtn">‹</button>
-          <button (click)="nextPage()"         [disabled]="currentPage === totalPages || totalPages === 0" class="hl-pgbtn">›</button>
-          <button (click)="goToPage(totalPages)"[disabled]="currentPage === totalPages || totalPages === 0" class="hl-pgbtn">»</button>
+          <button
+            (click)="goToPage(1)"
+            [disabled]="currentPage === 1"
+            class="hl-pgbtn"
+          >
+            «
+          </button>
+          <button
+            (click)="previousPage()"
+            [disabled]="currentPage === 1"
+            class="hl-pgbtn"
+          >
+            ‹
+          </button>
+          <button
+            (click)="nextPage()"
+            [disabled]="currentPage === totalPages || totalPages === 0"
+            class="hl-pgbtn"
+          >
+            ›
+          </button>
+          <button
+            (click)="goToPage(totalPages)"
+            [disabled]="currentPage === totalPages || totalPages === 0"
+            class="hl-pgbtn"
+          >
+            »
+          </button>
         </div>
-
       </div>
     </div>
-  </div><!-- /hl-grid-card -->
-
-</div><!-- /hl-page-container -->
-
+  </div>
+</div>
 
 <!-- ════════════════════════════════════════════════════════════════
      ADD / EDIT / VIEW MODAL
      ════════════════════════════════════════════════════════════════ -->
-<div *ngIf="isModalOpen" class="hl-modal-overlay" (click)="onOverlayClick($event)">
-  <div class="hl-modal-container hl-modal-xlarge" (click)="$event.stopPropagation()">
-
+<div
+  *ngIf="isModalOpen"
+  class="hl-modal-overlay"
+  (click)="onOverlayClick($event)"
+>
+  <div
+    class="hl-modal-container hl-modal-xlarge"
+    (click)="$event.stopPropagation()"
+  >
     <!-- Modal Header -->
     <div class="hl-modal-header">
       <h2 class="hl-modal-title">
-        <i class="bi"
-           [ngClass]="{'bi-plus-circle-dotted': modalMode==='add',
-                       'bi-pencil-square':      modalMode==='edit',
-                       'bi-eye':                modalMode==='view'}"></i>
-        {{ modalMode==='add' ? 'Add Holiday' : modalMode==='edit' ? 'Edit Holiday' : 'Holiday Details' }}
+        <i
+          class="bi"
+          [ngClass]="{
+            'bi-plus-circle-dotted': modalMode === 'add',
+            'bi-pencil-square': modalMode === 'edit',
+            'bi-eye': modalMode === 'view',
+          }"
+        ></i>
+        {{
+          modalMode === "add"
+            ? "Add Holiday"
+            : modalMode === "edit"
+              ? "Edit Holiday"
+              : "Holiday Details"
+        }}
       </h2>
       <button (click)="closeModal()" class="hl-modal-close" type="button">
         <i class="bi bi-x-lg"></i>
@@ -153,13 +191,10 @@
     <!-- Modal Body -->
     <div class="hl-modal-body">
       <form [formGroup]="holidayForm" (ngSubmit)="onSubmit()">
-
-        <!-- ─── Basic Information ─────────────────────────────────── -->
+        <!-- ─── Basic Information ───────────────────────────────── -->
         <div class="hl-form-section">
           <h3 class="hl-section-title">Basic Information</h3>
-
           <div class="hl-form-row">
-            <!-- Holiday Name -->
             <div class="hl-form-group">
               <label for="hlHolidayName">Holiday Name *</label>
               <input
@@ -168,15 +203,20 @@
                 formControlName="holidayName"
                 class="hl-form-control"
                 placeholder="e.g., Republic Day"
-                [readOnly]="modalMode==='view'"
+                [readOnly]="modalMode === 'view'"
               />
-              <div *ngIf="holidayForm.get('holidayName')?.invalid && (holidayForm.get('holidayName')?.touched || formSubmitAttempted)"
-                class="hl-error-msg">
-                <i class="bi bi-exclamation-circle"></i> Required (min 3 characters)
+              <div
+                *ngIf="
+                  holidayForm.get('holidayName')?.invalid &&
+                  (holidayForm.get('holidayName')?.touched ||
+                    formSubmitAttempted)
+                "
+                class="hl-error-msg"
+              >
+                <i class="bi bi-exclamation-circle"></i> Required (min 3
+                characters)
               </div>
             </div>
-
-            <!-- Holiday Date -->
             <div class="hl-form-group">
               <label for="hlHolidayDate">Holiday Date *</label>
               <input
@@ -184,107 +224,150 @@
                 id="hlHolidayDate"
                 formControlName="holidayDate"
                 class="hl-form-control"
-                [readOnly]="modalMode==='view'"
+                [readOnly]="modalMode === 'view'"
               />
-              <div *ngIf="holidayForm.get('holidayDate')?.invalid && (holidayForm.get('holidayDate')?.touched || formSubmitAttempted)"
-                class="hl-error-msg">
+              <div
+                *ngIf="
+                  holidayForm.get('holidayDate')?.invalid &&
+                  (holidayForm.get('holidayDate')?.touched ||
+                    formSubmitAttempted)
+                "
+                class="hl-error-msg"
+              >
                 <i class="bi bi-exclamation-circle"></i> Date is required
               </div>
             </div>
           </div>
-
           <div class="hl-form-row">
-            <!-- Holiday Type -->
             <div class="hl-form-group">
               <label for="hlHolidayType">Holiday Type *</label>
               <select
                 id="hlHolidayType"
                 formControlName="holidayType"
                 class="hl-form-control"
-                [attr.disabled]="modalMode==='view' ? true : null">
+                [attr.disabled]="modalMode === 'view' ? true : null"
+              >
                 <option value="">-- Select Type --</option>
-                <option *ngFor="let t of holidayTypes" [value]="t.value">{{ t.label }}</option>
+                <option *ngFor="let t of holidayTypes" [value]="t.value">
+                  {{ t.label }}
+                </option>
               </select>
-              <div *ngIf="holidayForm.get('holidayType')?.invalid && (holidayForm.get('holidayType')?.touched || formSubmitAttempted)"
-                class="hl-error-msg">
+              <div
+                *ngIf="
+                  holidayForm.get('holidayType')?.invalid &&
+                  (holidayForm.get('holidayType')?.touched ||
+                    formSubmitAttempted)
+                "
+                class="hl-error-msg"
+              >
                 <i class="bi bi-exclamation-circle"></i> Please select a type
               </div>
             </div>
-
-            <!-- Description -->
             <div class="hl-form-group">
-              <label for="hlDescription">
-                Description
-                <span class="hl-optional">(optional)</span>
-              </label>
+              <label for="hlDescription"
+                >Description <span class="hl-optional">(optional)</span></label
+              >
               <textarea
                 id="hlDescription"
                 formControlName="description"
                 class="hl-form-control"
                 rows="3"
                 placeholder="Optional description..."
-                [readOnly]="modalMode==='view'">
-              </textarea>
-              <div *ngIf="holidayForm.get('description')?.invalid && holidayForm.get('description')?.touched"
-                class="hl-error-msg">
+                [readOnly]="modalMode === 'view'"
+              ></textarea>
+              <div
+                *ngIf="
+                  holidayForm.get('description')?.errors?.['maxlength'] &&
+                  holidayForm.get('description')?.touched
+                "
+                class="hl-error-msg"
+              >
                 <i class="bi bi-exclamation-circle"></i> Max 500 characters
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ─── Applicable Departments ────────────────────────────── -->
+        <!-- ─── Applicable Departments ──────────────────────────── -->
         <div class="hl-form-section" *ngIf="!isNationalHoliday">
           <h3 class="hl-section-title">Applicable Departments</h3>
           <small class="hl-form-hint">
             <i class="bi bi-info-circle"></i>
-            Required for Regional and Optional holidays. Select one or more departments.
+            Required for Regional and Optional holidays. Select one or more
+            departments.
           </small>
-
-          <div *ngIf="isLoadingDepartments" style="color:#3b82f6;font-size:12px;margin:12px 0;">
+          <div
+            *ngIf="isLoadingDepartments"
+            style="color: #3b82f6; font-size: 12px; margin: 12px 0"
+          >
             <i class="bi bi-hourglass-split"></i> Loading departments...
           </div>
-
-          <div *ngIf="!isLoadingDepartments && departments.length === 0"
-            style="color:#dc2626;font-size:12px;margin:12px 0;">
+          <div
+            *ngIf="!isLoadingDepartments && departments.length === 0"
+            style="color: #dc2626; font-size: 12px; margin: 12px 0"
+          >
             <i class="bi bi-exclamation-triangle"></i> No departments available.
           </div>
-
-          <div class="hl-dept-grid" *ngIf="!isLoadingDepartments && departments.length > 0">
+          <div
+            class="hl-dept-grid"
+            *ngIf="!isLoadingDepartments && departments.length > 0"
+          >
             <label
               *ngFor="let dept of departments"
               class="hl-dept-card"
-              [class.hl-dept-selected]="isDepartmentSelected(dept.id)">
+              [class.hl-dept-selected]="isDepartmentSelected(dept.id)"
+            >
               <input
                 type="checkbox"
                 [checked]="isDepartmentSelected(dept.id)"
                 (change)="toggleDepartment(dept.id)"
-                [disabled]="modalMode==='view'"
+                [disabled]="modalMode === 'view'"
                 class="hl-dept-cb"
               />
               <span class="hl-dept-name">{{ dept.departmentName }}</span>
               <span class="hl-dept-code">{{ dept.departmentCode }}</span>
             </label>
           </div>
-
-          <div class="hl-error-msg" style="margin-top:8px;"
-            *ngIf="!isNationalHoliday && selectedDepartments.length===0 && formSubmitAttempted">
-            <i class="bi bi-exclamation-circle"></i> At least one department is required.
+          <div
+            class="hl-error-msg"
+            style="margin-top: 8px"
+            *ngIf="
+              !isNationalHoliday &&
+              selectedDepartments.length === 0 &&
+              formSubmitAttempted
+            "
+          >
+            <i class="bi bi-exclamation-circle"></i> At least one department is
+            required.
           </div>
-
-          <div class="hl-selected-chips" *ngIf="selectedDepartments.length > 0" style="margin-top:16px;">
-            <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:#374151;">
+          <div
+            class="hl-selected-chips"
+            *ngIf="selectedDepartments.length > 0"
+            style="margin-top: 16px"
+          >
+            <div
+              style="
+                font-size: 12px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #374151;
+              "
+            >
               Selected ({{ selectedDepartments.length }}):
             </div>
             <span class="hl-chip" *ngFor="let id of selectedDepartments">
               <i class="bi bi-building"></i>
               {{ getDepartmentName(id) }}
-              <i *ngIf="modalMode!=='view'" class="bi bi-x" (click)="removeDepartment(id)"></i>
+              <i
+                *ngIf="modalMode !== 'view'"
+                class="bi bi-x"
+                (click)="removeDepartment(id)"
+              ></i>
             </span>
           </div>
         </div>
 
-        <!-- ─── Settings ──────────────────────────────────────────── -->
+        <!-- ─── Settings ────────────────────────────────────────── -->
         <div class="hl-form-section">
           <h3 class="hl-section-title">Settings</h3>
           <div class="hl-form-row">
@@ -296,11 +379,11 @@
                   id="hlIsOptional"
                   formControlName="isOptional"
                   class="hl-toggle"
-                  [attr.disabled]="modalMode==='view' ? true : null"
+                  [attr.disabled]="modalMode === 'view' ? true : null"
                 />
-                <label class="hl-check-label" for="hlIsOptional">
-                  Mark as optional (employees can opt in/out)
-                </label>
+                <label class="hl-check-label" for="hlIsOptional"
+                  >Mark as optional (employees can opt in/out)</label
+                >
               </div>
             </div>
             <div class="hl-form-group">
@@ -311,7 +394,7 @@
                   id="hlIsActive"
                   formControlName="isActive"
                   class="hl-toggle"
-                  [attr.disabled]="modalMode==='view' ? true : null"
+                  [attr.disabled]="modalMode === 'view' ? true : null"
                 />
                 <label class="hl-check-label" for="hlIsActive">Active</label>
               </div>
@@ -319,23 +402,32 @@
           </div>
         </div>
 
-        <!-- ─── Additional Details (view only) ───────────────────── -->
-        <div class="hl-form-section" *ngIf="modalMode==='view' && selectedHoliday">
+        <!-- ─── Additional Details (view only) ──────────────────── -->
+        <div
+          class="hl-form-section"
+          *ngIf="modalMode === 'view' && selectedHoliday"
+        >
           <h3 class="hl-section-title">Additional Details</h3>
           <div class="hl-form-row">
             <div class="hl-form-group">
               <label>Status</label>
               <div>
-                <span class="hl-status-badge"
-                  [style.background]="selectedHoliday.isUpcoming ? '#dcfce7' : '#f1f5f9'"
-                  [style.color]="selectedHoliday.isUpcoming ? '#166534' : '#475569'">
-                  {{ selectedHoliday.isUpcoming ? 'Upcoming' : 'Past' }}
+                <span
+                  class="hl-status-badge"
+                  [style.background]="
+                    selectedHoliday.isUpcoming ? '#dcfce7' : '#f1f5f9'
+                  "
+                  [style.color]="
+                    selectedHoliday.isUpcoming ? '#166534' : '#475569'
+                  "
+                >
+                  {{ selectedHoliday.isUpcoming ? "Upcoming" : "Past" }}
                 </span>
               </div>
             </div>
             <div class="hl-form-group" *ngIf="selectedHoliday.isUpcoming">
               <label>Days Until Holiday</label>
-              <div style="font-weight:700;font-size:18px;color:#1f2937;">
+              <div style="font-weight: 700; font-size: 18px; color: #1f2937">
                 {{ selectedHoliday.daysUntilHoliday }} days
               </div>
             </div>
@@ -343,40 +435,48 @@
           <div class="hl-form-row">
             <div class="hl-form-group">
               <label>Created At</label>
-              <div style="color:#6b7280;">{{ formatDate(selectedHoliday.createdAt) }}</div>
+              <div style="color: #6b7280">
+                {{ formatDate(selectedHoliday.createdAt) }}
+              </div>
             </div>
             <div class="hl-form-group" *ngIf="selectedHoliday.updatedAt">
               <label>Last Updated</label>
-              <div style="color:#6b7280;">{{ formatDate(selectedHoliday.updatedAt) }}</div>
+              <div style="color: #6b7280">
+                {{ formatDate(selectedHoliday.updatedAt) }}
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- ─── Modal Footer ──────────────────────────────────────── -->
+        <!-- ─── Modal Footer ─────────────────────────────────────── -->
         <div class="hl-modal-footer">
-          <button type="button" (click)="closeModal()" class="hl-btn hl-btn-secondary">
-            {{ modalMode==='view' ? 'Close' : 'Cancel' }}
+          <button
+            type="button"
+            (click)="closeModal()"
+            class="hl-btn hl-btn-secondary"
+          >
+            {{ modalMode === "view" ? "Close" : "Cancel" }}
           </button>
           <button
-            *ngIf="modalMode!=='view'"
+            *ngIf="modalMode !== 'view'"
             type="submit"
             class="hl-btn hl-btn-primary"
             [disabled]="isSubmitting"
-            (click)="formSubmitAttempted=true">
-            <span *ngIf="!isSubmitting && modalMode==='add'">
-              <i class="bi bi-save"></i> Create Holiday
-            </span>
-            <span *ngIf="!isSubmitting && modalMode==='edit'">
-              <i class="bi bi-save"></i> Update Holiday
-            </span>
+            (click)="formSubmitAttempted = true"
+          >
+            <span *ngIf="!isSubmitting && modalMode === 'add'"
+              ><i class="bi bi-save"></i> Create Holiday</span
+            >
+            <span *ngIf="!isSubmitting && modalMode === 'edit'"
+              ><i class="bi bi-save"></i> Update Holiday</span
+            >
             <span *ngIf="isSubmitting">
               <i class="bi bi-hourglass-split"></i>
-              {{ modalMode==='add' ? 'Creating...' : 'Updating...' }}
+              {{ modalMode === "add" ? "Creating..." : "Updating..." }}
             </span>
           </button>
         </div>
-
       </form>
-    </div><!-- /hl-modal-body -->
-  </div><!-- /hl-modal-container -->
-</div><!-- /hl-modal-overlay -->
+    </div>
+  </div>
+</div>

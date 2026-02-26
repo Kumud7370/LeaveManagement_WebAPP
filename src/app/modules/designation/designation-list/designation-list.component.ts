@@ -14,8 +14,6 @@ import {
 import Swal from 'sweetalert2';
 import { DesignationService } from '../../../core/services/api/designation.api';
 import { DesignationResponseDto, DesignationFilterDto } from '../../../core/Models/designation.model';
-import { StatusCellRendererComponent } from '../../../shared/status-cell-renderer.component';
-
 import {
   dateFormatter,
   applyQuickFilter,
@@ -46,12 +44,11 @@ export class DesignationListComponent implements OnInit, OnDestroy {
 
   defaultColDef: ColDef = {
     sortable: true,
-    filter: true,
+    filter: 'agTextColumnFilter',
     resizable: true,
-    flex: 1,
-    minWidth: 100,
-    floatingFilter: true,        // ← enables per-column filter input row (like reference image)
-    floatingFilterComponentParams: { suppressFilterButton: false },
+    minWidth: 80,
+    floatingFilter: true,
+    suppressFloatingFilterButton: false,
   };
 
   gridOptions: GridOptions = {
@@ -62,8 +59,9 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     suppressCellFocus: true,
     animateRows: true,
     enableBrowserTooltips: true,
-    rowHeight: 50,
+    rowHeight: 52,
     headerHeight: 48,
+    floatingFiltersHeight: 44,
 
     onCellClicked: (event: any) => {
       const target = event.event?.target as HTMLElement;
@@ -79,8 +77,9 @@ export class DesignationListComponent implements OnInit, OnDestroy {
       const designation: DesignationResponseDto = event.data;
 
       switch (action) {
-        case 'edit':   this.openEditModal(designation); break;
-        case 'toggle': this.toggleStatus(designation);  break;
+        case 'view':   this.viewDesignation(designation);  break;
+        case 'edit':   this.openEditModal(designation);    break;
+        case 'toggle': this.toggleStatus(designation);     break;
         case 'delete': this.deleteDesignation(designation); break;
       }
     },
@@ -114,7 +113,6 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     private router: Router
   ) {}
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.initializeForm();
     this.initializeGrid();
@@ -125,13 +123,10 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     this.gridApi = undefined;
   }
 
-  // ── Form Setup ────────────────────────────────────────────────────────────
+  // ── Form ──────────────────────────────────────────────────────────────────
   initializeForm(): void {
     this.designationForm = this.fb.group({
-      designationCode: [
-        '',
-        [Validators.required, Validators.maxLength(50), Validators.pattern(/^[A-Z0-9\-_]+$/)],
-      ],
+      designationCode: ['', [Validators.required, Validators.maxLength(50), Validators.pattern(/^[A-Z0-9\-_]+$/)]],
       designationName: ['', [Validators.required, Validators.maxLength(100)]],
       description:     ['', [Validators.maxLength(500)]],
       level:           [1,  [Validators.required, Validators.min(1), Validators.max(100)]],
@@ -144,7 +139,7 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     this.columnDefs = [
       {
         headerName: 'Actions',
-        width: 130,
+        width: 155,
         sortable: false,
         filter: false,
         floatingFilter: false,
@@ -153,107 +148,135 @@ export class DesignationListComponent implements OnInit, OnDestroy {
         cellStyle: {
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'flex-start',
+          gap: '6px',
+          paddingLeft: '14px',
           overflow: 'visible',
         },
         cellRenderer: (params: ICellRendererParams) => {
           const isActive = params.data?.isActive;
           const toggleTitle = isActive ? 'Deactivate' : 'Activate';
-          const toggleBg    = isActive ? '#fef9c3' : '#dcfce7';
-          const toggleColor = isActive ? '#854d0e' : '#166534';
+          const toggleColor = isActive ? '#22c55e' : '#94a3b8';
           return `
-            <div style="display:flex;gap:0.35rem;align-items:center;height:100%;pointer-events:all;">
+            <div style="display:flex;gap:8px;align-items:center;height:100%;pointer-events:all;">
+              <button data-action="view" title="View"
+                style="background:none;border:none;cursor:pointer;padding:2px;
+                       display:flex;align-items:center;pointer-events:all;line-height:1;">
+                <i class="bi bi-eye" style="font-size:1.1rem;color:#22c55e;pointer-events:none;"></i>
+              </button>
               <button data-action="edit" title="Edit"
-                style="width:1.85rem;height:1.85rem;border:none;border-radius:0.3rem;
-                       cursor:pointer;display:flex;align-items:center;justify-content:center;
-                       background:#fef3c7;color:#92400e;font-size:0.85rem;pointer-events:all;">
-                <i class="bi bi-pencil" style="pointer-events:none;"></i>
+                style="background:none;border:none;cursor:pointer;padding:2px;
+                       display:flex;align-items:center;pointer-events:all;line-height:1;">
+                <i class="bi bi-pencil" style="font-size:1rem;color:#3b82f6;pointer-events:none;"></i>
               </button>
               <button data-action="toggle" title="${toggleTitle}"
-                style="width:1.85rem;height:1.85rem;border:none;border-radius:0.3rem;
-                       cursor:pointer;display:flex;align-items:center;justify-content:center;
-                       background:${toggleBg};color:${toggleColor};font-size:0.85rem;pointer-events:all;">
-                <i class="bi bi-power" style="pointer-events:none;"></i>
+                style="background:none;border:none;cursor:pointer;padding:2px;
+                       display:flex;align-items:center;pointer-events:all;line-height:1;">
+                <i class="bi bi-power" style="font-size:1.1rem;color:${toggleColor};pointer-events:none;"></i>
               </button>
               <button data-action="delete" title="Delete"
-                style="width:1.85rem;height:1.85rem;border:none;border-radius:0.3rem;
-                       cursor:pointer;display:flex;align-items:center;justify-content:center;
-                       background:#fee2e2;color:#991b1b;font-size:0.85rem;pointer-events:all;">
-                <i class="bi bi-trash" style="pointer-events:none;"></i>
+                style="background:none;border:none;cursor:pointer;padding:2px;
+                       display:flex;align-items:center;pointer-events:all;line-height:1;">
+                <i class="bi bi-trash" style="font-size:1rem;color:#ef4444;pointer-events:none;"></i>
               </button>
             </div>
           `;
         },
       },
       {
-        headerName: 'Code',
-        field: 'designationCode',
-        width: 150,
-        cellRenderer: (params: ICellRendererParams) =>
-          params.value
-            ? `<span style="font-family:'Monaco','Courier New',monospace;background:#f1f5f9;
-                             padding:0.25rem 0.6rem;border-radius:0.3rem;font-size:0.82rem;
-                             font-weight:600;color:#334155;">${params.value}</span>`
-            : '—',
-      },
-      {
         headerName: 'Designation Name',
         field: 'designationName',
         flex: 1,
         minWidth: 180,
-        cellStyle: { fontWeight: '500', color: '#1e293b' },
+        cellStyle: { fontWeight: '600', color: '#111827', fontSize: '0.875rem' },
       },
       {
-        headerName: 'Description',
-        field: 'description',
-        flex: 1,
-        minWidth: 180,
-        cellRenderer: (params: ICellRendererParams) => params.value || '—',
+        headerName: 'Code',
+        field: 'designationCode',
+        width: 140,
+        cellRenderer: (params: ICellRendererParams) =>
+          params.value
+            ? `<span style="font-family:'Monaco','Courier New',monospace;font-size:0.82rem;
+                             font-weight:600;color:#374151;">${params.value}</span>`
+            : '<span style="color:#9ca3af;">—</span>',
       },
       {
         headerName: 'Level',
         field: 'level',
         width: 100,
+        filter: 'agNumberColumnFilter',
         cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
         cellRenderer: (params: ICellRendererParams) =>
-          `<span style="display:inline-flex;align-items:center;justify-content:center;
-                        padding:0.25rem 0.6rem;border-radius:0.3rem;font-size:0.78rem;
-                        font-weight:600;background:#dbeafe;color:#1e40af;">
-             ${params.value ?? '—'}
-           </span>`,
+          params.value != null
+            ? `<span style="display:inline-flex;align-items:center;justify-content:center;
+                            width:2rem;height:2rem;border-radius:50%;font-size:0.8rem;
+                            font-weight:700;background:#dbeafe;color:#1d4ed8;">
+                 ${params.value}
+               </span>`
+            : '<span style="color:#9ca3af;">—</span>',
       },
       {
         headerName: 'Employees',
         field: 'employeeCount',
         width: 120,
+        filter: 'agNumberColumnFilter',
         cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
-        cellRenderer: (params: ICellRendererParams) =>
-          `<span style="display:inline-flex;align-items:center;justify-content:center;
-                        padding:0.25rem 0.6rem;border-radius:0.3rem;font-size:0.78rem;
-                        font-weight:600;background:#e0e7ff;color:#3730a3;">
-             ${params.value ?? 0}
-           </span>`,
+        cellRenderer: (params: ICellRendererParams) => {
+          const count = params.value ?? 0;
+          return `<span style="display:inline-flex;align-items:center;justify-content:center;
+                               padding:0.2rem 0.65rem;border-radius:999px;font-size:0.78rem;
+                               font-weight:600;background:#e0e7ff;color:#4338ca;cursor:default;"
+                        title="${count} employee(s)">
+                    ${count} Employee(s)
+                  </span>`;
+        },
       },
       {
-        headerName: 'Status',
+        headerName: 'Description',
+        field: 'description',
+        flex: 1,
+        minWidth: 160,
+        cellStyle: { color: '#6b7280', fontSize: '0.85rem' },
+        cellRenderer: (params: ICellRendererParams) =>
+          params.value
+            ? `<span style="color:#6b7280;">${params.value}</span>`
+            : '<span style="color:#d1d5db;">—</span>',
+      },
+      {
+        headerName: 'Active',
         field: 'isActive',
         width: 120,
-        cellRenderer: StatusCellRendererComponent,
         cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+        cellRenderer: (params: ICellRendererParams) => {
+          const isActive = params.value;
+          if (isActive) {
+            return `<span style="font-size:0.875rem;font-weight:700;color:#16a34a;letter-spacing:0.01em;">Active</span>`;
+          } else {
+            return `<span style="font-size:0.875rem;font-weight:700;color:#dc2626;letter-spacing:0.01em;">Inactive</span>`;
+          }
+        },
       },
       {
-        headerName: 'Created',
+        headerName: 'Created At',
         field: 'createdAt',
-        width: 140,
-        valueFormatter: dateFormatter,
+        width: 170,
+        valueFormatter: (params: any) => {
+          if (!params.value) return '';
+          return new Date(params.value).toLocaleString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+        },
+        cellStyle: { color: '#6b7280', fontSize: '0.82rem' },
       },
     ];
   }
 
-  // ── Grid Ready ────────────────────────────────────────────────────────────
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
-    autoSizeAll(this.gridApi);
   }
 
   // ── Data Loading ──────────────────────────────────────────────────────────
@@ -274,19 +297,14 @@ export class DesignationListComponent implements OnInit, OnDestroy {
 
         const pagination = response?.pagination;
         if (pagination) {
-          this.totalCount  = pagination.totalCount  ?? 0;
-          this.totalPages  = pagination.totalPages  ?? 0;
+          this.totalCount = pagination.totalCount ?? 0;
+          this.totalPages = pagination.totalPages ?? 0;
         } else {
-          this.totalCount  = this.rowData.length;
-          this.totalPages  = Math.ceil(this.totalCount / this.pageSize);
+          this.totalCount = this.rowData.length;
+          this.totalPages = Math.ceil(this.totalCount / this.pageSize);
         }
 
-        // ── Dynamic stat counts ──────────────────────────────────────────
-        this.activeCount   = this.rowData.filter(d => d.isActive).length;
-        this.inactiveCount = this.rowData.filter(d => !d.isActive).length;
-        // If server gives totalCount across all pages, fetch all-active count separately
         this.loadStatCounts();
-
         refreshGrid(this.gridApi);
         this.isLoading = false;
       },
@@ -299,35 +317,21 @@ export class DesignationListComponent implements OnInit, OnDestroy {
         else if (error.error?.message) msg += error.error.message;
 
         Swal.fire({ icon: 'error', title: 'Error Loading Data', text: msg });
-        this.isLoading    = false;
-        this.rowData      = [];
-        this.totalCount   = 0;
-        this.totalPages   = 0;
-        this.activeCount  = 0;
+        this.isLoading     = false;
+        this.rowData       = [];
+        this.totalCount    = 0;
+        this.totalPages    = 0;
+        this.activeCount   = 0;
         this.inactiveCount = 0;
       },
     });
   }
 
-  // ── Fetch accurate stat counts using isActive filter ─────────────────────
   private loadStatCounts(): void {
-    // Active count
-    const activeFilter: DesignationFilterDto = {
-      isActive:   true,
-      pageNumber: 1,
-      pageSize:   1,
-    };
-    this.designationService.getFilteredDesignations(activeFilter).subscribe({
+    this.designationService.getFilteredDesignations({ isActive: true,  pageNumber: 1, pageSize: 1 }).subscribe({
       next: (r) => { this.activeCount = r?.pagination?.totalCount ?? 0; }
     });
-
-    // Inactive count
-    const inactiveFilter: DesignationFilterDto = {
-      isActive:   false,
-      pageNumber: 1,
-      pageSize:   1,
-    };
-    this.designationService.getFilteredDesignations(inactiveFilter).subscribe({
+    this.designationService.getFilteredDesignations({ isActive: false, pageNumber: 1, pageSize: 1 }).subscribe({
       next: (r) => { this.inactiveCount = r?.pagination?.totalCount ?? 0; }
     });
   }
@@ -358,6 +362,13 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     exportToCsv(this.gridApi, 'designations');
   }
 
+  // ── View ──────────────────────────────────────────────────────────────────
+  viewDesignation(designation: DesignationResponseDto): void {
+    const id = designation.designationId || (designation as any).id || (designation as any).Id;
+    if (!id) { Swal.fire('Error', 'Could not determine designation ID.', 'error'); return; }
+    this.router.navigate(['/designations', id]);
+  }
+
   // ── Modal ─────────────────────────────────────────────────────────────────
   openCreateModal(): void {
     this.isModalOpen          = true;
@@ -368,11 +379,7 @@ export class DesignationListComponent implements OnInit, OnDestroy {
 
   openEditModal(designation: DesignationResponseDto): void {
     const id = designation.designationId || (designation as any).id || (designation as any).Id;
-
-    if (!id) {
-      Swal.fire('Error', 'Could not determine designation ID.', 'error');
-      return;
-    }
+    if (!id) { Swal.fire('Error', 'Could not determine designation ID.', 'error'); return; }
 
     this.isModalOpen           = true;
     this.isEditMode            = true;
@@ -407,7 +414,6 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     this.designationForm.reset({ designationCode: '', designationName: '', description: '', level: 1, isActive: true });
   }
 
-  // ── Submit ────────────────────────────────────────────────────────────────
   onSubmit(): void {
     if (this.designationForm.invalid) {
       this.markFormGroupTouched(this.designationForm);
@@ -415,8 +421,8 @@ export class DesignationListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isSubmitting      = true;
-    const formValue        = this.designationForm.value;
+    this.isSubmitting = true;
+    const formValue   = this.designationForm.value;
 
     if (this.isEditMode && this.selectedDesignationId) {
       this.designationService.updateDesignation(this.selectedDesignationId, formValue).subscribe({
@@ -445,22 +451,20 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── Toggle Status ─────────────────────────────────────────────────────────
   toggleStatus(designation: DesignationResponseDto): void {
     const action      = designation.isActive ? 'deactivate' : 'activate';
     const actionLabel = action.charAt(0).toUpperCase() + action.slice(1);
     const id          = designation.designationId || (designation as any).id;
-
     if (!id) { Swal.fire('Error', 'Could not determine designation ID.', 'error'); return; }
 
     Swal.fire({
-      title: `${actionLabel} Designation?`,
-      text:  `Are you sure you want to ${action} "${designation.designationName}"?`,
-      icon:  'warning',
-      showCancelButton:     true,
-      confirmButtonColor:   '#3b82f6',
-      cancelButtonColor:    '#6b7280',
-      confirmButtonText:    `Yes, ${action} it!`,
+      title:              `${actionLabel} Designation?`,
+      text:               `Are you sure you want to ${action} "${designation.designationName}"?`,
+      icon:               'warning',
+      showCancelButton:   true,
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor:  '#6b7280',
+      confirmButtonText:  `Yes, ${action} it!`,
     }).then((result) => {
       if (result.isConfirmed) {
         this.designationService.toggleDesignationStatus(id).subscribe({
@@ -476,10 +480,8 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Delete ────────────────────────────────────────────────────────────────
   deleteDesignation(designation: DesignationResponseDto): void {
     const id = designation.designationId || (designation as any).id;
-
     if (!id) { Swal.fire('Error', 'Could not determine designation ID.', 'error'); return; }
 
     if ((designation.employeeCount ?? 0) > 0) {
