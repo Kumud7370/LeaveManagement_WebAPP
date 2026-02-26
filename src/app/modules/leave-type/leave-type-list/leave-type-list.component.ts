@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
@@ -16,7 +16,6 @@ import * as XLSX from 'xlsx';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// ── Grid theme matching reference UI exactly ──────────────────────
 const leaveTypeGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
   foregroundColor:                '#374151',
@@ -26,7 +25,6 @@ const leaveTypeGridTheme = themeQuartz.withParams({
   oddRowBackgroundColor:          '#ffffff',
   rowHoverColor:                  '#f8faff',
   selectedRowBackgroundColor:     '#dbeafe',
-  // Match Inter / system font used in reference UI
   fontFamily:                     '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   fontSize:                       13,
   columnBorder:                   true,
@@ -36,10 +34,8 @@ const leaveTypeGridTheme = themeQuartz.withParams({
   headerColumnResizeHandleHeight: '50%',
   headerColumnResizeHandleWidth:  2,
   cellHorizontalPaddingScale:     0.75,
-  // Lighter header font weight
   headerFontWeight:               500,
   headerFontSize:                 13,
-  // Tighter row border
   rowBorder:                      true,
 });
 
@@ -50,7 +46,7 @@ const leaveTypeGridTheme = themeQuartz.withParams({
   styleUrls: ['./leave-type-list.component.scss'],
   imports: [CommonModule, FormsModule, AgGridAngular, LeaveTypeFormComponent]
 })
-export class LeaveTypeListComponent implements OnInit {
+export class LeaveTypeListComponent implements OnInit, OnDestroy {
 
   readonly gridTheme = leaveTypeGridTheme;
 
@@ -79,13 +75,12 @@ export class LeaveTypeListComponent implements OnInit {
   formMode: 'create' | 'edit' = 'create';
   selectedLeaveTypeId: string | null = null;
 
+  private resizeObserver!: ResizeObserver;
+  private sidebarResizeTimer: any = null;
+
   defaultColDef: ColDef = {
-    sortable: true,
-    filter: true,
-    floatingFilter: true,
-    resizable: true,
-    minWidth: 80,
-    // Ensure all cell text is vertically centered
+    sortable: true, filter: true, floatingFilter: true,
+    resizable: true, minWidth: 80,
     cellStyle: { display: 'flex', alignItems: 'center' }
   };
 
@@ -214,9 +209,34 @@ export class LeaveTypeListComponent implements OnInit {
 
   ngOnInit(): void { this.loadLeaveTypes(); }
 
+  ngOnDestroy(): void {
+    if (this.resizeObserver) this.resizeObserver.disconnect();
+    clearTimeout(this.sidebarResizeTimer);
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.scheduleSizeColumnsToFit(320);
+  }
+
+  private scheduleSizeColumnsToFit(delay = 320): void {
+    clearTimeout(this.sidebarResizeTimer);
+    this.sidebarResizeTimer = setTimeout(() => {
+      if (this.gridApi) this.gridApi.sizeColumnsToFit();
+    }, delay);
+  }
+
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
+
+    const gridEl = document.querySelector('app-leave-type-list ag-grid-angular') as HTMLElement;
+    if (gridEl && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.scheduleSizeColumnsToFit(50);
+      });
+      this.resizeObserver.observe(gridEl);
+    }
   }
 
   /* ── Pagination getters ── */

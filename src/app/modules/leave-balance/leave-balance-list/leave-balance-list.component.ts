@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgGridAngular } from 'ag-grid-angular';
@@ -19,22 +19,25 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 const balanceGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
-  foregroundColor:                '#1f2937',
+  foregroundColor:                '#374151',
   borderColor:                    '#e5e7eb',
   headerBackgroundColor:          '#ffffff',
   headerTextColor:                '#374151',
   oddRowBackgroundColor:          '#ffffff',
   rowHoverColor:                  '#f8faff',
   selectedRowBackgroundColor:     '#dbeafe',
-  fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontFamily:                     '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   fontSize:                       13,
   columnBorder:                   true,
   headerColumnBorder:             true,
   headerColumnBorderHeight:       '50%',
-  headerColumnResizeHandleColor:  '#9ca3af',
+  headerColumnResizeHandleColor:  '#d1d5db',
   headerColumnResizeHandleHeight: '50%',
   headerColumnResizeHandleWidth:  2,
-  cellHorizontalPaddingScale:     0.8,
+  cellHorizontalPaddingScale:     0.75,
+  headerFontWeight:               500,
+  headerFontSize:                 13,
+  rowBorder:                      true,
 });
 
 @Component({
@@ -44,7 +47,7 @@ const balanceGridTheme = themeQuartz.withParams({
   styleUrls: ['./leave-balance-list.component.scss'],
   imports: [CommonModule, FormsModule, AgGridAngular, LeaveBalanceFormComponent]
 })
-export class LeaveBalanceListComponent implements OnInit {
+export class LeaveBalanceListComponent implements OnInit, OnDestroy {
 
   readonly gridTheme = balanceGridTheme;
 
@@ -69,82 +72,114 @@ export class LeaveBalanceListComponent implements OnInit {
   selectedYear = new Date().getFullYear();
   yearOptions: number[] = [];
 
-  // ── Stats bound in the template ──────────────────────────────────────────
   totalEmployees  = 0;
   totalAvailable  = 0;
   avgUtilization  = 0;
   lowBalanceCount = 0;
-  // ─────────────────────────────────────────────────────────────────────────
 
   filters: LeaveBalanceFilterDto = {
     pageNumber: 1, pageSize: 10, sortBy: 'year', sortDescending: true
   };
 
+  private resizeObserver!: ResizeObserver;
+  private sidebarResizeTimer: any = null;
+
   defaultColDef: ColDef = {
-    sortable: true, filter: true, floatingFilter: true, resizable: true, minWidth: 80
+    sortable: true, filter: true, floatingFilter: true,
+    resizable: true, minWidth: 80,
+    cellStyle: { display: 'flex', alignItems: 'center' }
   };
 
   columnDefs: ColDef[] = [
     {
-      headerName: 'Actions', field: 'actions',
+      headerName: 'Actions',
       width: 160, minWidth: 160, maxWidth: 160,
       sortable: false, filter: false, floatingFilter: false,
       suppressFloatingFilterButton: true,
-      cellClass: 'actions-cell',
+      headerClass: 'lb-action-col',
+      cellClass: 'lb-action-cell lb-action-col',
+      cellStyle: { display: 'flex', alignItems: 'center', padding: '0', overflow: 'visible' },
       cellRenderer: LeaveBalanceActionCellRendererComponent,
       suppressSizeToFit: true
     },
     {
-      headerName: 'Employee', field: 'employeeName', width: 200, minWidth: 160,
+      headerName: 'Employee',
+      field: 'employeeName',
+      width: 200, minWidth: 160,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => p.value
         ? `<div style="display:flex;flex-direction:column;gap:2px;justify-content:center;height:100%;">
-             <span style="font-weight:600;color:#1f2937;font-size:13px;">${p.value}</span>
-             <span style="font-size:11px;color:#6b7280;">${p.data?.employeeCode || ''}</span>
+             <span style="font-weight:600;color:#111827;font-size:13px;
+               font-family:'Inter',-apple-system,sans-serif;">${p.value}</span>
+             <span style="font-size:11px;color:#9ca3af;font-family:monospace;letter-spacing:0.3px;">
+               ${p.data?.employeeCode || ''}</span>
            </div>` : ''
     },
     {
-      headerName: 'Leave Type', field: 'leaveTypeName', width: 160, minWidth: 130,
+      headerName: 'Leave Type',
+      field: 'leaveTypeName',
+      width: 160, minWidth: 130,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
         if (!p.value) return '';
         const c = p.data?.leaveTypeColor || '#3b82f6';
-        return `<span class="hl-type-badge" style="background:${c}22;color:${c};border:1px solid ${c}44;">${p.value}</span>`;
+        return `<span class="lb-type-badge" style="background:${c}18;color:${c};border:1px solid ${c}40;">${p.value}</span>`;
       }
     },
     {
-      headerName: 'Year', field: 'year', width: 90, minWidth: 80,
+      headerName: 'Year',
+      field: 'year',
+      width: 90, minWidth: 80,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => p.data?.isCurrentYear
-        ? `<span class="hl-year-badge hl-year-current">${p.value}</span>`
-        : `<span class="hl-year-badge">${p.value}</span>`
+        ? `<span class="lb-year-badge lb-year-current">${p.value}</span>`
+        : `<span class="lb-year-badge">${p.value}</span>`
     },
     {
-      headerName: 'Allocated', field: 'totalAllocated', width: 110, minWidth: 100,
+      headerName: 'Allocated',
+      field: 'totalAllocated',
+      width: 115, minWidth: 100,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
         const total = (p.value || 0) + (p.data?.carriedForward || 0);
-        return `<span class="hl-days-chip hl-days-allocated">${total} days</span>`;
+        return `<span class="lb-days-chip lb-days-allocated">${total} days</span>`;
       }
     },
     {
-      headerName: 'Consumed', field: 'consumed', width: 110, minWidth: 100,
+      headerName: 'Consumed',
+      field: 'consumed',
+      width: 115, minWidth: 100,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) =>
-        `<span class="hl-days-chip hl-days-consumed">${p.value ?? 0} days</span>`
+        `<span class="lb-days-chip lb-days-consumed">${p.value ?? 0} days</span>`
     },
     {
-      headerName: 'Carry Fwd', field: 'carriedForward', width: 110, minWidth: 100,
+      headerName: 'Carry Fwd',
+      field: 'carriedForward',
+      width: 110, minWidth: 100,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => p.value > 0
-        ? `<span class="hl-days-chip hl-days-carry">${p.value} days</span>`
-        : `<span style="color:#9ca3af;">—</span>`
+        ? `<span class="lb-days-chip lb-days-carry">${p.value} days</span>`
+        : `<span style="color:#d1d5db;font-size:13px;">—</span>`
     },
     {
-      headerName: 'Available', field: 'available', width: 110, minWidth: 100,
+      headerName: 'Available',
+      field: 'available',
+      width: 115, minWidth: 100,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
         const low = p.data?.isLowBalance;
-        const cls = low ? 'hl-days-chip hl-days-available hl-days-low' : 'hl-days-chip hl-days-available';
-        const icon = low ? ' <i class="bi bi-exclamation-triangle-fill" style="font-size:10px;"></i>' : '';
+        const cls = low ? 'lb-days-chip lb-days-available lb-days-low' : 'lb-days-chip lb-days-available';
+        const icon = low
+          ? ` <i class="bi bi-exclamation-triangle-fill" style="font-size:10px;"></i>` : '';
         return `<span class="${cls}">${p.value ?? 0} days${icon}</span>`;
       }
     },
     {
-      headerName: 'Utilization', field: 'utilizationPercentage', width: 150, minWidth: 130,
+      headerName: 'Utilization',
+      field: 'utilizationPercentage',
+      width: 160, minWidth: 140,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
         const pct   = Math.round(p.value ?? 0);
         const color = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#10b981';
@@ -152,12 +187,16 @@ export class LeaveBalanceListComponent implements OnInit {
           <div style="flex:1;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;">
             <div style="width:${Math.min(pct, 100)}%;height:100%;background:${color};border-radius:3px;"></div>
           </div>
-          <span style="font-size:12px;font-weight:700;color:${color};min-width:36px;text-align:right;">${pct}%</span>
+          <span style="font-size:12px;font-weight:700;color:${color};min-width:36px;text-align:right;
+            font-family:'Inter',-apple-system,sans-serif;">${pct}%</span>
         </div>`;
       }
     },
     {
-      headerName: 'Last Updated', field: 'lastUpdated', width: 140, minWidth: 120,
+      headerName: 'Last Updated',
+      field: 'lastUpdated',
+      width: 140, minWidth: 120,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
     }
@@ -174,9 +213,34 @@ export class LeaveBalanceListComponent implements OnInit {
 
   ngOnInit(): void { this.loadLeaveTypes(); this.loadBalances(); }
 
+  ngOnDestroy(): void {
+    if (this.resizeObserver) this.resizeObserver.disconnect();
+    clearTimeout(this.sidebarResizeTimer);
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.scheduleSizeColumnsToFit(320);
+  }
+
+  private scheduleSizeColumnsToFit(delay = 320): void {
+    clearTimeout(this.sidebarResizeTimer);
+    this.sidebarResizeTimer = setTimeout(() => {
+      if (this.gridApi) this.gridApi.sizeColumnsToFit();
+    }, delay);
+  }
+
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
+
+    const gridEl = document.querySelector('app-leave-balance-list ag-grid-angular') as HTMLElement;
+    if (gridEl && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.scheduleSizeColumnsToFit(50);
+      });
+      this.resizeObserver.observe(gridEl);
+    }
   }
 
   loadLeaveTypes(): void {
@@ -200,7 +264,7 @@ export class LeaveBalanceListComponent implements OnInit {
           this.balances   = r.data.items;
           this.totalPages = r.data.totalPages;
           this.totalCount = r.data.totalCount;
-          this.computeStats();   // ← recompute every time data arrives
+          this.computeStats();
           if (this.gridApi) {
             this.gridApi.setGridOption('rowData', this.balances);
             setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
@@ -239,7 +303,7 @@ export class LeaveBalanceListComponent implements OnInit {
   get activeFilterCount(): number {
     return [
       this.filters.leaveTypeId,
-      this.filters.isLowBalance,
+      this.filters.isLowBalance !== undefined && this.filters.isLowBalance !== null,
       this.filters.minAvailableBalance != null,
       this.filters.maxAvailableBalance != null
     ].filter(Boolean).length;
@@ -252,8 +316,7 @@ export class LeaveBalanceListComponent implements OnInit {
 
   onPageSizeChange(e: Event): void {
     this.pageSize = +(e.target as HTMLSelectElement).value;
-    this.currentPage = 1;
-    this.loadBalances();
+    this.currentPage = 1; this.loadBalances();
   }
 
   get pages(): number[] {
@@ -297,8 +360,10 @@ export class LeaveBalanceListComponent implements OnInit {
     };
     this.leaveBalanceService.adjustLeaveBalance(balance.id, dto).subscribe({
       next: (r) => {
-        if (r.success) { Swal.fire({ title: 'Adjusted!', icon: 'success', timer: 2000, showConfirmButton: false }); this.loadBalances(); }
-        else Swal.fire('Error!', r.message || 'Failed to adjust', 'error');
+        if (r.success) {
+          Swal.fire({ title: 'Adjusted!', icon: 'success', timer: 2000, showConfirmButton: false });
+          this.loadBalances();
+        } else { Swal.fire('Error!', r.message || 'Failed to adjust', 'error'); }
       },
       error: (e) => Swal.fire('Error!', e.error?.message || 'Error occurred', 'error')
     });
@@ -315,8 +380,10 @@ export class LeaveBalanceListComponent implements OnInit {
     if (!r.isConfirmed) return;
     this.leaveBalanceService.recalculateBalance(balance.id).subscribe({
       next: (res) => {
-        if (res.success) { Swal.fire({ title: 'Done!', icon: 'success', timer: 2000, showConfirmButton: false }); this.loadBalances(); }
-        else Swal.fire('Error!', res.message || 'Failed', 'error');
+        if (res.success) {
+          Swal.fire({ title: 'Done!', icon: 'success', timer: 2000, showConfirmButton: false });
+          this.loadBalances();
+        } else { Swal.fire('Error!', res.message || 'Failed', 'error'); }
       },
       error: (e) => Swal.fire('Error!', e.error?.message || 'Error occurred', 'error')
     });
@@ -333,8 +400,10 @@ export class LeaveBalanceListComponent implements OnInit {
     if (!r.isConfirmed) return;
     this.leaveBalanceService.deleteLeaveBalance(balance.id).subscribe({
       next: (res) => {
-        if (res.success) { Swal.fire({ title: 'Deleted!', icon: 'success', timer: 2000, showConfirmButton: false }); this.loadBalances(); }
-        else Swal.fire('Error!', res.message || 'Failed', 'error');
+        if (res.success) {
+          Swal.fire({ title: 'Deleted!', icon: 'success', timer: 2000, showConfirmButton: false });
+          this.loadBalances();
+        } else { Swal.fire('Error!', res.message || 'Failed', 'error'); }
       },
       error: (e) => Swal.fire('Error!', e.error?.message || 'Error occurred', 'error')
     });
@@ -350,8 +419,10 @@ export class LeaveBalanceListComponent implements OnInit {
     if (!employeeId) return;
     this.leaveBalanceService.initializeBalanceForEmployee(employeeId, this.selectedYear).subscribe({
       next: (res) => {
-        if (res.success) { Swal.fire({ title: 'Done!', text: 'Balances initialized.', icon: 'success', timer: 2000, showConfirmButton: false }); this.loadBalances(); }
-        else Swal.fire('Error!', res.message || 'Failed to initialize', 'error');
+        if (res.success) {
+          Swal.fire({ title: 'Done!', text: 'Balances initialized.', icon: 'success', timer: 2000, showConfirmButton: false });
+          this.loadBalances();
+        } else { Swal.fire('Error!', res.message || 'Failed to initialize', 'error'); }
       },
       error: (e) => Swal.fire('Error!', e.error?.message || 'Error occurred', 'error')
     });

@@ -1,17 +1,13 @@
 @import 'ag-grid-community/styles/ag-grid.css';
 @import 'ag-grid-community/styles/ag-theme-quartz.css';
 
-/* ── Host = the entire gray page background ──────────────────────── */
 :host {
   display: block;
-  // background: #e8ecf0;
   min-height: 100%;
   padding: 24px;
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 }
-
-/* .lt-page REMOVED — :host is the page container now */
 
 .lt-page-title {
   font-size: 26px;
@@ -57,7 +53,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
 }
 
-/* ── Toolbar: inside card, border-bottom divides from grid ──────── */
+/* ── Toolbar ─────────────────────────────────────────────────────── */
 .lt-toolbar {
   display: flex;
   align-items: center;
@@ -66,7 +62,6 @@
   background: #ffffff;
   border-bottom: 1px solid #dde3ed;
 }
-
 .lt-search {
   flex: 1;
   height: 38px;
@@ -85,7 +80,6 @@
   box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
 }
 .lt-search::placeholder { color: #9ca3af; }
-
 .lt-toolbar-btns { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
 /* ── Buttons ─────────────────────────────────────────────────────── */
@@ -97,15 +91,15 @@
   transition: all 0.15s; white-space: nowrap;
   font-family: inherit; line-height: 1;
 }
-.lt-btn-filter  { background: #fff; color: #374151; border-color: #d1d9e6; }
+.lt-btn-filter        { background: #fff; color: #374151; border-color: #d1d9e6; }
 .lt-btn-filter:hover  { background: #f9fafb; }
-.lt-btn-clear   { background: #fff; color: #dc2626; border-color: #fca5a5; }
+.lt-btn-clear         { background: #fff; color: #dc2626; border-color: #fca5a5; }
 .lt-btn-clear:hover   { background: #fef2f2; }
-.lt-btn-refresh { background: #fff; color: #374151; border-color: #d1d9e6; }
+.lt-btn-refresh       { background: #fff; color: #374151; border-color: #d1d9e6; }
 .lt-btn-refresh:hover { background: #f9fafb; }
-.lt-btn-export  { background: #10b981; color: #fff; border-color: #10b981; font-weight: 600; }
+.lt-btn-export        { background: #10b981; color: #fff; border-color: #10b981; font-weight: 600; }
 .lt-btn-export:hover  { background: #059669; }
-.lt-btn-add     { background: #3b82f6; color: #fff; border-color: #3b82f6; font-weight: 600; }
+.lt-btn-add           { background: #3b82f6; color: #fff; border-color: #3b82f6; font-weight: 600; }
 .lt-btn-add:hover     { background: #2563eb; }
 
 .lt-filter-badge {
@@ -114,7 +108,7 @@
   border-radius: 50%; font-size: 10px; font-weight: 700;
 }
 
-/* ── Filter panel: inside card ───────────────────────────────────── */
+/* ── Filter panel ────────────────────────────────────────────────── */
 .lt-filter-panel { max-height: 0; overflow: hidden; transition: max-height 0.28s ease; }
 .lt-filter-panel.open { max-height: 140px; }
 .lt-filter-inner {
@@ -152,46 +146,23 @@ ag-grid-angular {
   --ag-header-height: 44px;
   --ag-floating-filter-height: 36px;
 }
-
-/* Header row: white */
-::ng-deep ag-grid-angular .ag-header-row.ag-header-row-column {
-  background-color: #ffffff !important;
-}
-/* Floating filter row: subtle gray */
-::ng-deep ag-grid-angular .ag-header-row.ag-header-row-floating-filter {
-  background-color: #f8fafc !important;
-  border-top: 1px solid #e5e7eb !important;
-}
-::ng-deep ag-grid-angular .ag-floating-filter {
-  background-color: #f8fafc !important;
-}
-
-/* Actions column full-height divider */
-::ng-deep .ag-header-cell.lt-action-col,
-::ng-deep .ag-floating-filter.lt-action-col {
-  border-right: 1px solid #d1d5db !important;
-}
-::ng-deep .ag-cell.lt-action-col {
-  border-right: 1px solid #d1d5db !important;
-}
-
-.lt-action-cell {
-  display: flex !important; align-items: center !important;
-  gap: 2px !important; padding: 0 8px !important; overflow: visible !important;
-}
+::ng-deep ag-grid-angular .ag-header-row.ag-header-row-column { background-color: #ffffff !important; }
+::ng-deep ag-grid-angular .ag-header-row.ag-header-row-floating-filter { background-color: #f8fafc !important; border-top: 1px solid #e5e7eb !important; }
+::ng-deep ag-grid-angular .ag-floating-filter { background-color: #f8fafc !important; }
+::ng-deep .ag-header-cell.lt-action-col, ::ng-deep .ag-floating-filter.lt-action-col { border-right: 1px solid #d1d5db !important; }
+::ng-deep .ag-cell.lt-action-col { border-right: 1px solid #d1d5db !important; }
+.lt-action-cell { display: flex !important; align-items: center !important; gap: 2px !important; padding: 0 8px !important; overflow: visible !important; }
 
 /* ── Pagination ──────────────────────────────────────────────────── */
 .lt-pagination {
   border-top: 1px solid #dde3ed; background: #ffffff;
   padding: 10px 16px; display: flex;
-  align-items: center; justify-content: flex-end;
-  gap: 16px;
+  align-items: center; justify-content: flex-end; gap: 16px;
 }
 .lt-ps-wrap { display: flex; align-items: center; gap: 8px; }
 .lt-ps-wrap label { font-size: 13px; color: #6b7280; margin: 0; white-space: nowrap; }
 .lt-ps-select {
-  height: 30px; padding: 4px 24px 4px 8px;
-  border: 1px solid #d1d5db; border-radius: 4px;
+  height: 30px; padding: 4px 24px 4px 8px; border: 1px solid #d1d5db; border-radius: 4px;
   font-size: 13px; color: #374151; background-color: #fff;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 6px center;
@@ -222,28 +193,60 @@ ag-grid-angular {
   width: 95vw; max-width: 760px; max-height: 92vh;
   display: flex; flex-direction: column; z-index: 10000 !important;
 }
-.lt-modal-head {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 24px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;
-}
-.lt-modal-title {
-  font-size: 17px; font-weight: 700; color: #1f2937;
-  margin: 0; display: flex; align-items: center; gap: 9px;
-}
+.lt-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; }
+.lt-modal-title { font-size: 17px; font-weight: 700; color: #1f2937; margin: 0; display: flex; align-items: center; gap: 9px; }
 .lt-modal-title i { color: #3b82f6; }
-.lt-modal-close {
-  background: none; border: none; color: #9ca3af; cursor: pointer;
-  padding: 6px; border-radius: 6px; display: flex; align-items: center; font-size: 18px;
-}
+.lt-modal-close { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; font-size: 18px; }
 .lt-modal-close:hover { background: #f3f4f6; color: #374151; }
 .lt-modal-body { flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; }
 
 /* ── Responsive ──────────────────────────────────────────────────── */
 @media (max-width: 1024px) { .lt-stats-row { grid-template-columns: repeat(2, 1fr); } }
+
 @media (max-width: 768px) {
   .lt-stats-row { grid-template-columns: 1fr 1fr; }
-  .lt-toolbar { flex-wrap: wrap; }
-  .lt-toolbar-btns { flex-wrap: wrap; }
-  .lt-pagination { flex-wrap: wrap; justify-content: center; }
+
+  .lt-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  /* Row 1: Filters | Clear   Row 2: Refresh | Export   Row 3: Add full width */
+  .lt-toolbar-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .lt-btn-filter  { grid-column: 1 / 2; justify-content: center; }
+  .lt-btn-clear   { grid-column: 2 / 3; justify-content: center; }
+  .lt-btn-refresh { grid-column: 1 / 2; justify-content: center; }
+  .lt-btn-export  { grid-column: 2 / 3; justify-content: center; }
+  .lt-btn-add     { grid-column: 1 / 3; justify-content: center; }
+
+  .lt-filter-panel.open { max-height: 360px; }
+  .lt-filter-inner      { grid-template-columns: 1fr; }
+
+  .lt-pagination { flex-wrap: wrap; justify-content: center; gap: 10px; }
 }
-@media (max-width: 480px) { .lt-stats-row { grid-template-columns: 1fr; } }
+
+@media (max-width: 480px) {
+  .lt-stats-row  { grid-template-columns: 1fr; }
+  .lt-page-title { font-size: 22px; }
+
+  .lt-toolbar { padding: 10px; }
+  .lt-toolbar-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .lt-btn-filter  { grid-column: 1 / 2; justify-content: center; }
+  .lt-btn-clear   { grid-column: 2 / 3; justify-content: center; }
+  .lt-btn-refresh { grid-column: 1 / 2; justify-content: center; }
+  .lt-btn-export  { grid-column: 2 / 3; justify-content: center; }
+  .lt-btn-add     { grid-column: 1 / 3; justify-content: center; }
+
+  .lt-ps-wrap { display: none; }
+  .lt-pagination { justify-content: center; }
+}
