@@ -1,200 +1,163 @@
-<div class="hl-page-container">
+<div class="lt-page">
 
-  <!-- ── Page Header ────────────────────────────────────────────────── -->
-  <div class="hl-page-header">
-    <h1 class="hl-page-title">Leave Types</h1>
-  </div>
+  <h1 class="lt-page-title">Leave Types</h1>
 
-  <!-- ── Stats Cards ────────────────────────────────────────────────── -->
-  <div class="hl-stats-grid">
-    <div class="hl-stat-card hl-stat-total" [class.hl-stat-loading]="loading">
-      <p class="hl-stat-label">Total Types</p>
-      <p class="hl-stat-value">
-        <span *ngIf="!loading; else statSkeleton">{{ totalCount }}</span>
-      </p>
+  <!-- Stats -->
+  <div class="lt-stats-row">
+    <div class="lt-stat lt-stat-blue" [class.lt-stat-loading]="loading">
+      <p class="lt-stat-label">Total Types</p>
+      <p class="lt-stat-value"><ng-container *ngIf="!loading; else sk">{{ totalCount }}</ng-container></p>
     </div>
-    <div class="hl-stat-card hl-stat-approved" [class.hl-stat-loading]="loading">
-      <p class="hl-stat-label">Active</p>
-      <p class="hl-stat-value">
-        <span *ngIf="!loading; else statSkeleton">{{ activeCount }}</span>
-      </p>
+    <div class="lt-stat lt-stat-green" [class.lt-stat-loading]="loading">
+      <p class="lt-stat-label">Active</p>
+      <p class="lt-stat-value"><ng-container *ngIf="!loading; else sk">{{ activeCount }}</ng-container></p>
     </div>
-    <div class="hl-stat-card hl-stat-pending" [class.hl-stat-loading]="loading">
-      <p class="hl-stat-label">Carry Forward</p>
-      <p class="hl-stat-value">
-        <span *ngIf="!loading; else statSkeleton">{{ carryForwardCount }}</span>
-      </p>
+    <div class="lt-stat lt-stat-yellow" [class.lt-stat-loading]="loading">
+      <p class="lt-stat-label">Carry Forward</p>
+      <p class="lt-stat-value"><ng-container *ngIf="!loading; else sk">{{ carryForwardCount }}</ng-container></p>
     </div>
-    <div class="hl-stat-card hl-stat-rejected" [class.hl-stat-loading]="loading">
-      <p class="hl-stat-label">Requires Document</p>
-      <p class="hl-stat-value">
-        <span *ngIf="!loading; else statSkeleton">{{ requiresDocCount }}</span>
-      </p>
+    <div class="lt-stat lt-stat-red" [class.lt-stat-loading]="loading">
+      <p class="lt-stat-label">Requires Document</p>
+      <p class="lt-stat-value"><ng-container *ngIf="!loading; else sk">{{ requiresDocCount }}</ng-container></p>
     </div>
   </div>
-  <ng-template #statSkeleton><span class="hl-stat-skeleton"></span></ng-template>
+  <ng-template #sk><span class="lt-skeleton"></span></ng-template>
 
-  <!-- ── Toolbar ────────────────────────────────────────────────────── -->
-  <div class="hl-toolbar">
-    <div class="hl-search-wrapper">
-      <input type="text" class="hl-search-input" placeholder="Search by name or code..."
-        [(ngModel)]="searchTerm" (input)="onSearch()" />
-    </div>
-    <div class="hl-toolbar-actions">
-      <button class="hl-btn hl-btn-filter" (click)="showFilters = !showFilters">
-        <i class="bi bi-funnel"></i> Filters
-        <span class="hl-filter-count" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
-      </button>
-      <button class="hl-btn hl-btn-clear" (click)="clearFilters()">
-        <i class="bi bi-x-circle"></i> Clear
-      </button>
-      <button class="hl-btn hl-btn-refresh" (click)="loadLeaveTypes()">
-        <i class="bi bi-arrow-clockwise"></i> Refresh
-      </button>
-      <button class="hl-btn hl-btn-export" (click)="exportToExcel()">
-        <i class="bi bi-download"></i> Export
-      </button>
-      <button class="hl-btn hl-btn-primary" (click)="createLeaveType()">
-        <i class="bi bi-plus-circle"></i> Add Leave Type
-      </button>
-    </div>
-  </div>
+  <!-- ═══════════════════════════════════════════════════════════
+       ONE white card — toolbar on top, grid below, same border
+       Exactly like reference Image 2
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="lt-card">
 
-  <!-- ── Filter Panel ───────────────────────────────────────────────── -->
-  <div class="hl-filter-panel" [class.hl-filter-panel-open]="showFilters">
-    <div class="hl-filter-grid">
-      <div class="hl-filter-group">
-        <label>Status</label>
-        <select [(ngModel)]="filters.isActive" (change)="onFilterChange()" class="hl-filter-select">
-          <option [ngValue]="null">All Statuses</option>
-          <option [ngValue]="true">Active Only</option>
-          <option [ngValue]="false">Inactive Only</option>
-        </select>
-      </div>
-      <div class="hl-filter-group">
-        <label>Requires Approval</label>
-        <select [(ngModel)]="filters.requiresApproval" (change)="onFilterChange()" class="hl-filter-select">
-          <option [ngValue]="null">All</option>
-          <option [ngValue]="true">Yes</option>
-          <option [ngValue]="false">No</option>
-        </select>
-      </div>
-      <div class="hl-filter-group">
-        <label>Requires Document</label>
-        <select [(ngModel)]="filters.requiresDocument" (change)="onFilterChange()" class="hl-filter-select">
-          <option [ngValue]="null">All</option>
-          <option [ngValue]="true">Yes</option>
-          <option [ngValue]="false">No</option>
-        </select>
-      </div>
-      <div class="hl-filter-group">
-        <label>Carry Forward</label>
-        <select [(ngModel)]="filters.isCarryForward" (change)="onFilterChange()" class="hl-filter-select">
-          <option [ngValue]="null">All</option>
-          <option [ngValue]="true">Yes</option>
-          <option [ngValue]="false">No</option>
-        </select>
-      </div>
-    </div>
-  </div>
+    <!-- Toolbar row: inside card, white bg, border-bottom separates from grid -->
+    <div class="lt-toolbar">
+      <input
+        type="text"
+        class="lt-search"
+        placeholder="Search by name or code..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()" />
 
-  <!-- ── Active Filters ─────────────────────────────────────────────── -->
-  <div class="hl-active-filters" *ngIf="activeFilterCount > 0 || searchTerm">
-    <span class="hl-filter-label">Active filters:</span>
-    <span class="hl-filter-badge" *ngIf="searchTerm">Search: "{{ searchTerm }}"</span>
-    <span class="hl-filter-badge" *ngIf="filters.isActive !== null && filters.isActive !== undefined">Status</span>
-    <span class="hl-filter-badge" *ngIf="filters.requiresApproval !== null && filters.requiresApproval !== undefined">Approval</span>
-    <span class="hl-filter-badge" *ngIf="filters.requiresDocument !== null && filters.requiresDocument !== undefined">Document</span>
-    <span class="hl-filter-badge" *ngIf="filters.isCarryForward !== null && filters.isCarryForward !== undefined">Carry Forward</span>
-  </div>
-
-  <!-- ── Grid Card ──────────────────────────────────────────────────── -->
-  <div class="hl-grid-card">
-    <div class="hl-grid-container">
-
-      <div *ngIf="loading" class="hl-loading-state">
-        <div class="hl-spinner"></div>
-        <p>Loading leave types...</p>
-      </div>
-
-      <div *ngIf="error && !loading" class="hl-error-state">
-        <i class="bi bi-exclamation-circle"></i>
-        <p>{{ error }}</p>
-        <button class="hl-btn hl-btn-refresh" (click)="loadLeaveTypes()">Try Again</button>
-      </div>
-
-      <div *ngIf="!loading && !error && leaveTypes.length === 0" class="hl-empty-state">
-        <i class="bi bi-calendar2-x"></i>
-        <p>No leave types found. Adjust filters or add a new leave type.</p>
-        <button class="hl-btn hl-btn-primary" (click)="createLeaveType()">
-          <i class="bi bi-plus-circle"></i> Add Leave Type
+      <div class="lt-toolbar-btns">
+        <button class="lt-btn lt-btn-filter" (click)="showFilters = !showFilters">
+          <i class="bi bi-funnel"></i> Filters
+          <span class="lt-filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
         </button>
+        <button class="lt-btn lt-btn-clear" (click)="clearFilters()">Clear</button>
+        <button class="lt-btn lt-btn-refresh" (click)="loadLeaveTypes()">Refresh</button>
+        <button class="lt-btn lt-btn-export" (click)="exportToExcel()">
+          <i class="bi bi-download"></i> Export
+        </button>
+        <button class="lt-btn lt-btn-add" (click)="createLeaveType()">Add Leave Type</button>
       </div>
-
-      <!-- KEY: [theme]="gridTheme" — same as leave-list, no class="ag-theme-quartz" -->
-      <ag-grid-angular
-        *ngIf="!loading && !error && leaveTypes.length > 0"
-        style="width:100%;"
-        [theme]="gridTheme"
-        [rowData]="leaveTypes"
-        [columnDefs]="columnDefs"
-        [defaultColDef]="defaultColDef"
-        (gridReady)="onGridReady($event)"
-        [rowHeight]="52"
-        [headerHeight]="44"
-        [domLayout]="'autoHeight'"
-        [context]="context">
-      </ag-grid-angular>
     </div>
 
-    <!-- ── Pagination ─────────────────────────────────────────────── -->
-    <div class="hl-pagination" *ngIf="!loading && leaveTypes.length > 0">
-      <div class="hl-pagination-inner">
-        <div class="hl-page-size">
-          <label>Show:</label>
-          <select class="hl-page-size-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
-            <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+    <!-- Filter panel slides open inside card -->
+    <div class="lt-filter-panel" [class.open]="showFilters">
+      <div class="lt-filter-inner">
+        <div class="lt-fg">
+          <label>Status</label>
+          <select [(ngModel)]="filters.isActive" (change)="onFilterChange()">
+            <option [ngValue]="null">All</option>
+            <option [ngValue]="true">Active</option>
+            <option [ngValue]="false">Inactive</option>
           </select>
         </div>
-        <span class="hl-pagination-text">
-          {{ showingFrom }} to {{ showingTo }} of {{ totalCount }}
-        </span>
-        <div class="hl-pagination-btns">
-          <button class="hl-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(1)">
-            <i class="bi bi-chevron-bar-left"></i>
-          </button>
-          <button class="hl-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(currentPage - 1)">
-            <i class="bi bi-chevron-left"></i>
-          </button>
-          <button *ngFor="let p of pages" class="hl-pgbtn"
-            [class.hl-pgbtn-active]="p === currentPage" (click)="onPageChange(p)">
-            {{ p }}
-          </button>
-          <button class="hl-pgbtn" [disabled]="!hasNextPage" (click)="onPageChange(currentPage + 1)">
-            <i class="bi bi-chevron-right"></i>
-          </button>
-          <button class="hl-pgbtn" [disabled]="!hasNextPage" (click)="onPageChange(totalPages)">
-            <i class="bi bi-chevron-bar-right"></i>
-          </button>
+        <div class="lt-fg">
+          <label>Requires Approval</label>
+          <select [(ngModel)]="filters.requiresApproval" (change)="onFilterChange()">
+            <option [ngValue]="null">All</option>
+            <option [ngValue]="true">Yes</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
+        <div class="lt-fg">
+          <label>Requires Document</label>
+          <select [(ngModel)]="filters.requiresDocument" (change)="onFilterChange()">
+            <option [ngValue]="null">All</option>
+            <option [ngValue]="true">Yes</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </div>
+        <div class="lt-fg">
+          <label>Carry Forward</label>
+          <select [(ngModel)]="filters.isCarryForward" (change)="onFilterChange()">
+            <option [ngValue]="null">All</option>
+            <option [ngValue]="true">Yes</option>
+            <option [ngValue]="false">No</option>
+          </select>
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- ── Form Modal ─────────────────────────────────────────────────── -->
-<div class="hl-modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
-  <div class="hl-modal-container hl-modal-xlarge" (click)="$event.stopPropagation()">
-    <div class="hl-modal-header">
-      <h2 class="hl-modal-title">
+    <!-- Grid -->
+    <div *ngIf="loading" class="lt-loading">
+      <div class="lt-spinner"></div>
+      <span>Loading leave types...</span>
+    </div>
+
+    <div *ngIf="error && !loading" class="lt-error">
+      <i class="bi bi-exclamation-circle"></i>
+      <span>{{ error }}</span>
+      <button class="lt-btn lt-btn-refresh" (click)="loadLeaveTypes()">Try Again</button>
+    </div>
+
+    <div *ngIf="!loading && !error && leaveTypes.length === 0" class="lt-empty">
+      <i class="bi bi-calendar2-x"></i>
+      <span>No leave types found.</span>
+      <button class="lt-btn lt-btn-add" (click)="createLeaveType()"><i class="bi bi-plus-circle"></i>Add Leave Type</button>
+    </div>
+
+
+    <ag-grid-angular
+      *ngIf="!loading && !error && leaveTypes.length > 0"
+      style="width: 100%;"
+      [theme]="gridTheme"
+      [rowData]="leaveTypes"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      (gridReady)="onGridReady($event)"
+      [rowHeight]="52"
+      [headerHeight]="44"
+      [floatingFiltersHeight]="36"
+      [domLayout]="'autoHeight'"
+      [context]="context"
+      [suppressPaginationPanel]="true">
+    </ag-grid-angular>
+
+    <!-- Pagination inside card -->
+    <div class="lt-pagination" *ngIf="!loading && leaveTypes.length > 0">
+      <div class="lt-ps-wrap">
+        <label>Show:</label>
+        <select class="lt-ps-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+          <option *ngFor="let o of pageSizeOptions" [value]="o">{{ o }}</option>
+        </select>
+      </div>
+      <span class="lt-pag-info">{{ showingFrom }} to {{ showingTo }} of {{ totalCount }}</span>
+      <span class="lt-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+      <div class="lt-pag-btns">
+        <button class="lt-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(1)">«</button>
+        <button class="lt-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(currentPage - 1)">‹</button>
+        <button class="lt-pgbtn" [disabled]="!hasNextPage" (click)="onPageChange(currentPage + 1)">›</button>
+        <button class="lt-pgbtn" [disabled]="!hasNextPage" (click)="onPageChange(totalPages)">»</button>
+      </div>
+    </div>
+
+  </div><!-- /lt-card -->
+</div><!-- /lt-page -->
+
+<div class="lt-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+  <div class="lt-modal" (click)="$event.stopPropagation()">
+    <div class="lt-modal-head">
+      <h2 class="lt-modal-title">
         <i class="bi" [ngClass]="formMode === 'create' ? 'bi-plus-circle-dotted' : 'bi-pencil-square'"></i>
         {{ formMode === 'create' ? 'Add Leave Type' : 'Edit Leave Type' }}
       </h2>
-      <button class="hl-modal-close" (click)="closeFormModal()" type="button">
+      <button class="lt-modal-close" (click)="closeFormModal()" type="button">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
-    <div class="hl-modal-body" style="padding:0; overflow-y:auto; max-height:calc(92vh - 70px);">
+    <div class="lt-modal-body">
       <app-leave-type-form
         [isModal]="true"
         [leaveTypeId]="selectedLeaveTypeId"
