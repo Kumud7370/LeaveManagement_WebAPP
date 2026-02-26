@@ -14,7 +14,7 @@ import {
   ColDef,
   ModuleRegistry,
   AllCommunityModule,
-  themeQuartz         
+  themeQuartz
 } from 'ag-grid-community';
 import Swal from 'sweetalert2';
 import { LeaveService } from '../../../core/services/api/leave.api';
@@ -28,27 +28,28 @@ import * as XLSX from 'xlsx';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+// ── Matches leave-type-list theme exactly ─────────────────────────
 const leaveGridTheme = themeQuartz.withParams({
-  backgroundColor:              '#ffffff',
-  foregroundColor:              '#1f2937',
-  borderColor:                  '#e5e7eb',
-  headerBackgroundColor:        '#ffffff',
-  headerTextColor:              '#374151',
-  oddRowBackgroundColor:        '#ffffff',
-  rowHoverColor:                '#f8faff',
-  selectedRowBackgroundColor:   '#dbeafe',
-  fontFamily:                   '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-  fontSize:                     13,
-  // ── Column separator lines (v32+ param names) ─────────────────
-  columnBorder:                 true,
-  headerColumnBorder:           true,
-  headerColumnBorderHeight:     '50%',
-  // ── Resize handle ─────────────────────────────────────────────
-  headerColumnResizeHandleColor:  '#9ca3af',
+  backgroundColor:                '#ffffff',
+  foregroundColor:                '#374151',
+  borderColor:                    '#e5e7eb',
+  headerBackgroundColor:          '#ffffff',
+  headerTextColor:                '#374151',
+  oddRowBackgroundColor:          '#ffffff',
+  rowHoverColor:                  '#f8faff',
+  selectedRowBackgroundColor:     '#dbeafe',
+  fontFamily:                     '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontSize:                       13,
+  columnBorder:                   true,
+  headerColumnBorder:             true,
+  headerColumnBorderHeight:       '50%',
+  headerColumnResizeHandleColor:  '#d1d5db',
   headerColumnResizeHandleHeight: '50%',
   headerColumnResizeHandleWidth:  2,
-  // ── Spacing ───────────────────────────────────────────────────
-  cellHorizontalPaddingScale:   0.8,
+  cellHorizontalPaddingScale:     0.75,
+  headerFontWeight:               500,
+  headerFontSize:                 13,
+  rowBorder:                      true,
 });
 
 @Component({
@@ -62,22 +63,18 @@ const leaveGridTheme = themeQuartz.withParams({
 })
 export class LeaveListComponent implements OnInit {
 
-  // ── Expose theme to template ─────────────────────────────────────────
   readonly gridTheme = leaveGridTheme;
 
-  // ── Grid state ───────────────────────────────────────────────────────
   leaves: Leave[] = [];
   gridApi!: GridApi;
   searchTerm = '';
   context = { componentParent: this };
 
-  // ── Modal state ──────────────────────────────────────────────────────
   showFormModal    = false;
   showDetailsModal = false;
   formMode: 'create' | 'edit' = 'create';
   selectedLeaveId: string | null = null;
 
-  // ── Data / loading ───────────────────────────────────────────────────
   leaveTypes: LeaveType[] = [];
   loading      = false;
   statsLoading = false;
@@ -88,14 +85,12 @@ export class LeaveListComponent implements OnInit {
     return Object.values(this.statistics).reduce((sum, v) => sum + v, 0);
   }
 
-  // ── Filters ──────────────────────────────────────────────────────────
   showFilters = false;
   filters: LeaveFilterDto = {
     pageNumber: 1, pageSize: 10,
     sortBy: 'AppliedDate', sortDescending: true
   };
 
-  // ── Pagination ────────────────────────────────────────────────────────
   currentPage = 1;
   pageSize    = 10;
   totalPages  = 0;
@@ -103,79 +98,127 @@ export class LeaveListComponent implements OnInit {
   Math = Math;
   private searchDebounceTimer: any = null;
 
-  // ── Grid config ───────────────────────────────────────────────────────
   defaultColDef: ColDef = {
     sortable: true, filter: true, floatingFilter: true,
     resizable: true, minWidth: 80,
+    cellStyle: { display: 'flex', alignItems: 'center' }
   };
 
   columnDefs: ColDef[] = [
     {
-      headerName: 'Actions', field: 'actions',
-      width: 155, minWidth: 155, maxWidth: 155,
+      headerName: 'Actions',
+      width: 190, minWidth: 190, maxWidth: 190,
       sortable: false, filter: false, floatingFilter: false,
       suppressFloatingFilterButton: true,
-      cellClass: 'actions-cell',
+      headerClass: 'll-action-col',
+      cellClass: 'll-action-cell ll-action-col',
+      cellStyle: { display: 'flex', alignItems: 'center', padding: '0', overflow: 'visible' },
       cellRenderer: LeaveActionCellRendererComponent,
       suppressSizeToFit: true
     },
     {
-      headerName: 'Employee', field: 'employeeName', width: 200, minWidth: 160,
+      headerName: 'Employee',
+      field: 'employeeName',
+      width: 200, minWidth: 160,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => p.value
-        ? `<span style="font-weight:600;color:#1f2937;">${p.value}</span>` : ''
+        ? `<span style="font-weight:600;font-size:13px;color:#111827;font-family:'Inter',-apple-system,sans-serif;">${p.value}</span>`
+        : ''
     },
     {
-      headerName: 'Leave Type', field: 'leaveTypeName', width: 160, minWidth: 130,
+      headerName: 'Leave Type',
+      field: 'leaveTypeName',
+      width: 155, minWidth: 130,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
         if (!p.value) return '';
         const c = p.data?.leaveTypeColor || '#3b82f6';
-        return `<span class="hl-type-badge" style="background:${c}22;color:${c};border:1px solid ${c}44;">${p.value}</span>`;
+        return `<span style="display:inline-flex;align-items:center;padding:3px 10px;
+          background:${c}18;color:${c};border:1px solid ${c}40;
+          border-radius:5px;font-size:12px;font-weight:600;
+          font-family:'Inter',-apple-system,sans-serif;">${p.value}</span>`;
       }
     },
     {
-      headerName: 'Start Date', field: 'startDate', width: 140, minWidth: 120,
+      headerName: 'Start Date',
+      field: 'startDate',
+      width: 135, minWidth: 120,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
     },
     {
-      headerName: 'End Date', field: 'endDate', width: 140, minWidth: 120,
+      headerName: 'End Date',
+      field: 'endDate',
+      width: 135, minWidth: 120,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
     },
     {
-      headerName: 'Days', field: 'totalDays', width: 90, minWidth: 70,
-      cellRenderer: (p: any) => `<span style="font-weight:600;color:#374151;">${p.value ?? 0}</span>`
+      headerName: 'Days',
+      field: 'totalDays',
+      width: 85, minWidth: 70,
+      cellStyle: { display: 'flex', alignItems: 'center' },
+      cellRenderer: (p: any) =>
+        `<span style="display:inline-flex;align-items:center;justify-content:center;
+          width:28px;height:24px;background:#f1f5f9;border-radius:5px;
+          font-size:12px;font-weight:700;color:#475569;
+          font-family:'Inter',-apple-system,sans-serif;">${p.value ?? 0}</span>`
     },
     {
-      headerName: 'Reason', field: 'reason', width: 240, minWidth: 180,
+      headerName: 'Reason',
+      field: 'reason',
+      width: 230, minWidth: 180,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
-        const txt = p.value?.length > 50 ? p.value.substring(0, 50) + '…' : (p.value || '');
-        const em  = p.data?.isEmergencyLeave
-          ? '<span class="hl-emergency-tag">Emergency</span>' : '';
-        return `<div style="display:flex;align-items:center;gap:4px;">${txt}${em}</div>`;
+        const txt = p.value?.length > 45 ? p.value.substring(0, 45) + '…' : (p.value || '');
+        const em = p.data?.isEmergencyLeave
+          ? `<span style="display:inline-flex;align-items:center;background:#fee2e2;color:#991b1b;
+              padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;
+              margin-left:5px;white-space:nowrap;font-family:'Inter',-apple-system,sans-serif;">Emergency</span>` : '';
+        return `<div style="display:flex;align-items:center;font-size:13px;color:#6b7280;
+          font-family:'Inter',-apple-system,sans-serif;"><span>${txt}</span>${em}</div>`;
       }
     },
     {
-      headerName: 'Status', field: 'leaveStatus', width: 130, minWidth: 110,
+      headerName: 'Status',
+      field: 'leaveStatus',
+      width: 120, minWidth: 110,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
-        const map: Record<string, [string, string]> = {
-          '0': ['pending','Pending'], '1': ['approved','Approved'],
-          '2': ['rejected','Rejected'], '3': ['cancelled','Cancelled'],
-          'Pending': ['pending','Pending'], 'Approved': ['approved','Approved'],
-          'Rejected': ['rejected','Rejected'], 'Cancelled': ['cancelled','Cancelled']
+        const map: Record<string, [string, string, string]> = {
+          '0':         ['#fef9c3','#92400e','Pending'],
+          '1':         ['#dcfce7','#166534','Approved'],
+          '2':         ['#fee2e2','#991b1b','Rejected'],
+          '3':         ['#f1f5f9','#475569','Cancelled'],
+          'Pending':   ['#fef9c3','#92400e','Pending'],
+          'Approved':  ['#dcfce7','#166534','Approved'],
+          'Rejected':  ['#fee2e2','#991b1b','Rejected'],
+          'Cancelled': ['#f1f5f9','#475569','Cancelled'],
         };
-        const [cls, lbl] = map[String(p.value)] ?? ['pending','Pending'];
-        return `<span class="hl-status-chip ${cls}">${lbl}</span>`;
+        const [bg, color, lbl] = map[String(p.value)] ?? ['#fef9c3','#92400e','Pending'];
+        return `<span style="display:inline-flex;padding:2px 12px;border-radius:9999px;
+          font-size:12px;font-weight:600;background:${bg};color:${color};
+          font-family:'Inter',-apple-system,sans-serif;">${lbl}</span>`;
       }
     },
     {
-      headerName: 'Applied On', field: 'appliedDate', width: 150, minWidth: 130,
+      headerName: 'Applied On',
+      field: 'appliedDate',
+      width: 135, minWidth: 120,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
     },
     {
-      headerName: 'Approved By', field: 'approvedByName', width: 160, minWidth: 130,
-      valueFormatter: (p: any) => p.value || '—',
+      headerName: 'Approved By',
+      field: 'approvedByName',
+      width: 150, minWidth: 130,
+      cellStyle: { display: 'flex', alignItems: 'center' },
+      cellRenderer: (p: any) => p.value
+        ? `<span style="font-size:13px;color:#374151;font-family:'Inter',-apple-system,sans-serif;">${p.value}</span>`
+        : `<span style="color:#d1d5db;font-size:13px;font-family:'Inter',-apple-system,sans-serif;">—</span>`
     }
   ];
 
@@ -224,7 +267,11 @@ export class LeaveListComponent implements OnInit {
         } else { this.error = r.message || 'Failed to load leaves'; }
         this.cdr.detectChanges();
       },
-      error: (e) => { this.loading = false; this.error = e.error?.message || 'Error loading leaves'; this.cdr.detectChanges(); }
+      error: (e) => {
+        this.loading = false;
+        this.error = e.error?.message || 'Error loading leaves';
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -249,7 +296,7 @@ export class LeaveListComponent implements OnInit {
   clearFilters(): void {
     clearTimeout(this.searchDebounceTimer);
     this.searchTerm = '';
-    this.filters    = { pageNumber: 1, pageSize: 10, sortBy: 'AppliedDate', sortDescending: true };
+    this.filters = { pageNumber: 1, pageSize: 10, sortBy: 'AppliedDate', sortDescending: true };
     this.currentPage = 1;
     this.loadLeaves();
   }
@@ -269,7 +316,8 @@ export class LeaveListComponent implements OnInit {
   }
 
   onPageSizeChange(e: Event): void {
-    this.pageSize = +(e.target as HTMLSelectElement).value; this.currentPage = 1; this.loadLeaves();
+    this.pageSize = +(e.target as HTMLSelectElement).value;
+    this.currentPage = 1; this.loadLeaves();
   }
 
   get pages(): number[] {
@@ -280,7 +328,7 @@ export class LeaveListComponent implements OnInit {
     return Array.from({ length: e - s + 1 }, (_, i) => s + i);
   }
 
-  createLeave(): void  { this.formMode = 'create'; this.selectedLeaveId = null; this.showFormModal = true; }
+  createLeave(): void { this.formMode = 'create'; this.selectedLeaveId = null; this.showFormModal = true; }
   editLeave(leave: Leave): void { this.formMode = 'edit'; this.selectedLeaveId = leave.id; this.showFormModal = true; }
   viewDetails(leave: Leave): void { this.selectedLeaveId = leave.id; this.showDetailsModal = true; }
   closeFormModal():    void { this.showFormModal    = false; this.selectedLeaveId = null; }
@@ -386,7 +434,7 @@ export class LeaveListComponent implements OnInit {
     ws['!cols'] = [10,20,15,12,12,10,30,12,10,12,18,20].map(w => ({ wch: w }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Leaves');
-    const fn = `Leaves_${new Date().toISOString().slice(0,10)}.xlsx`;
+    const fn = `Leaves_${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(wb, fn);
     Swal.fire({ title: 'Done!', text: `${fn} downloaded.`, icon: 'success', timer: 2500, showConfirmButton: false });
   }

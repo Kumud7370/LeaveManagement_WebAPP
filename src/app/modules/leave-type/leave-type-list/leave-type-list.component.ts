@@ -16,24 +16,31 @@ import * as XLSX from 'xlsx';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+// ── Grid theme matching reference UI exactly ──────────────────────
 const leaveTypeGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
-  foregroundColor:                '#1f2937',
+  foregroundColor:                '#374151',
   borderColor:                    '#e5e7eb',
   headerBackgroundColor:          '#ffffff',
   headerTextColor:                '#374151',
   oddRowBackgroundColor:          '#ffffff',
   rowHoverColor:                  '#f8faff',
   selectedRowBackgroundColor:     '#dbeafe',
-  fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  // Match Inter / system font used in reference UI
+  fontFamily:                     '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   fontSize:                       13,
   columnBorder:                   true,
   headerColumnBorder:             true,
   headerColumnBorderHeight:       '50%',
-  headerColumnResizeHandleColor:  '#9ca3af',
+  headerColumnResizeHandleColor:  '#d1d5db',
   headerColumnResizeHandleHeight: '50%',
   headerColumnResizeHandleWidth:  2,
-  cellHorizontalPaddingScale:     0.8,
+  cellHorizontalPaddingScale:     0.75,
+  // Lighter header font weight
+  headerFontWeight:               500,
+  headerFontSize:                 13,
+  // Tighter row border
+  rowBorder:                      true,
 });
 
 @Component({
@@ -54,115 +61,149 @@ export class LeaveTypeListComponent implements OnInit {
   loading = false;
   error: string | null = null;
 
-  // Pagination
   paginationManager = new PaginationManager(1, 10);
   pagedResult: PagedResultDto<LeaveType> | null = null;
   pageSizeOptions = [5, 10, 20, 50, 100];
 
-  // Stats
   activeCount       = 0;
   carryForwardCount = 0;
   requiresDocCount  = 0;
 
-  // Filters
   searchTerm  = '';
   showFilters = false;
   filters: LeaveTypeFilterDto = {
     pageNumber: 1, pageSize: 10, sortBy: 'DisplayOrder', sortDescending: false
   };
 
-  // Modal
   showFormModal       = false;
   formMode: 'create' | 'edit' = 'create';
   selectedLeaveTypeId: string | null = null;
 
   defaultColDef: ColDef = {
-    sortable: true, filter: true, floatingFilter: true, resizable: true, minWidth: 80
+    sortable: true,
+    filter: true,
+    floatingFilter: true,
+    resizable: true,
+    minWidth: 80,
+    // Ensure all cell text is vertically centered
+    cellStyle: { display: 'flex', alignItems: 'center' }
   };
 
   columnDefs: ColDef[] = [
     {
       headerName: 'Actions',
-      width: 130, minWidth: 130, maxWidth: 130,
+      width: 120, minWidth: 120, maxWidth: 130,
       sortable: false, filter: false, floatingFilter: false,
       suppressFloatingFilterButton: true,
-      cellClass: 'actions-cell',
+      headerClass: 'lt-action-col',
+      cellClass: 'lt-action-cell lt-action-col',
+      cellStyle: { display: 'flex', alignItems: 'center', padding: '0' },
       cellRenderer: LeaveTypeActionCellRendererComponent,
       suppressSizeToFit: true
     },
     {
-      headerName: 'Order', field: 'displayOrder', width: 90, minWidth: 80,
+      headerName: 'Order',
+      field: 'displayOrder',
+      width: 88, minWidth: 80,
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'flex-start' },
       cellRenderer: (p: any) =>
-        `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;
-          background:#f1f5f9;border-radius:6px;font-size:12px;font-weight:700;color:#475569;">${p.value}</span>`
+        `<span style="display:inline-flex;align-items:center;justify-content:center;
+          width:26px;height:26px;background:#f1f5f9;border-radius:5px;
+          font-size:12px;font-weight:600;color:#475569;font-family:inherit;">${p.value}</span>`
     },
     {
-      headerName: 'Leave Type', field: 'name', width: 220, minWidth: 180,
+      headerName: 'Leave Type',
+      field: 'name',
+      width: 200, minWidth: 160,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
         const color = p.data?.color || '#3b82f6';
         const code  = p.data?.code  || '';
         return `<div style="display:flex;align-items:center;gap:8px;height:100%;">
-          <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block;"></span>
-          <div style="display:flex;flex-direction:column;justify-content:center;line-height:1.3;">
-            <span style="font-weight:600;font-size:13px;color:#1f2937;">${p.value}</span>
-            <span style="font-size:11px;color:#6b7280;font-family:monospace;background:#f3f4f6;
-              padding:1px 4px;border-radius:3px;width:fit-content;">${code}</span>
+          <span style="width:9px;height:9px;border-radius:50%;background:${color};
+            flex-shrink:0;display:inline-block;"></span>
+          <div style="display:flex;flex-direction:column;justify-content:center;gap:1px;">
+            <span style="font-weight:600;font-size:13px;color:#111827;line-height:1.2;
+              font-family:'Inter',-apple-system,sans-serif;">${p.value}</span>
+            <span style="font-size:11px;color:#9ca3af;font-family:monospace;letter-spacing:0.3px;">${code}</span>
           </div>
         </div>`;
       }
     },
     {
-      headerName: 'Description', field: 'description', width: 260, minWidth: 180,
+      headerName: 'Description',
+      field: 'description',
+      width: 260, minWidth: 180,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
-        if (!p.value) return '<span style="color:#9ca3af;">—</span>';
+        if (!p.value) return '<span style="color:#d1d5db;font-size:13px;">—</span>';
         const txt = p.value.length > 55 ? p.value.substring(0, 55) + '…' : p.value;
-        return `<span style="font-size:13px;color:#6b7280;">${txt}</span>`;
+        return `<span style="font-size:13px;color:#6b7280;font-family:'Inter',-apple-system,sans-serif;">${txt}</span>`;
       }
     },
     {
-      headerName: 'Max Days/Year', field: 'maxDaysPerYear', width: 140, minWidth: 120,
+      headerName: 'Max Days/Year',
+      field: 'maxDaysPerYear',
+      width: 140, minWidth: 110,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) =>
-        `<span style="display:inline-flex;align-items:center;padding:3px 8px;background:#eff6ff;
-          color:#1d4ed8;border-radius:6px;font-size:12px;font-weight:600;">${p.value} days</span>`
+        `<span style="display:inline-flex;align-items:center;padding:2px 10px;
+          background:#dbeafe;color:#1d4ed8;border-radius:9999px;
+          font-size:12px;font-weight:600;font-family:'Inter',-apple-system,sans-serif;">${p.value} days</span>`
     },
     {
-      headerName: 'Carry Fwd', field: 'isCarryForward', width: 120, minWidth: 100,
+      headerName: 'Carry Fwd',
+      field: 'isCarryForward',
+      width: 115, minWidth: 100,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => !p.value
-        ? `<span style="display:inline-flex;padding:3px 10px;background:#f1f5f9;color:#6b7280;
-            border-radius:9999px;font-size:12px;font-weight:600;">No</span>`
-        : `<span style="display:inline-flex;padding:3px 10px;background:#dcfce7;color:#15803d;
-            border-radius:9999px;font-size:12px;font-weight:600;">${p.data?.maxCarryForwardDays} days</span>`
+        ? `<span style="display:inline-flex;padding:2px 10px;background:#f3f4f6;color:#6b7280;
+            border-radius:9999px;font-size:12px;font-weight:500;font-family:'Inter',-apple-system,sans-serif;">No</span>`
+        : `<span style="display:inline-flex;padding:2px 10px;background:#dcfce7;color:#15803d;
+            border-radius:9999px;font-size:12px;font-weight:600;font-family:'Inter',-apple-system,sans-serif;">${p.data?.maxCarryForwardDays} days</span>`
     },
     {
-      headerName: 'Approval', field: 'requiresApproval', width: 120, minWidth: 100,
+      headerName: 'Approval',
+      field: 'requiresApproval',
+      width: 115, minWidth: 100,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => p.value
-        ? `<span style="display:inline-flex;padding:3px 10px;background:#dcfce7;color:#15803d;
-            border-radius:9999px;font-size:12px;font-weight:600;">Required</span>`
-        : `<span style="display:inline-flex;padding:3px 10px;background:#f1f5f9;color:#6b7280;
-            border-radius:9999px;font-size:12px;font-weight:600;">Auto</span>`
+        ? `<span style="display:inline-flex;padding:2px 10px;background:#dcfce7;color:#15803d;
+            border-radius:9999px;font-size:12px;font-weight:600;font-family:'Inter',-apple-system,sans-serif;">Required</span>`
+        : `<span style="display:inline-flex;padding:2px 10px;background:#f3f4f6;color:#6b7280;
+            border-radius:9999px;font-size:12px;font-weight:500;font-family:'Inter',-apple-system,sans-serif;">Auto</span>`
     },
     {
-      headerName: 'Document', field: 'requiresDocument', width: 120, minWidth: 100,
+      headerName: 'Document',
+      field: 'requiresDocument',
+      width: 115, minWidth: 100,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => p.value
-        ? `<span style="display:inline-flex;padding:3px 10px;background:#dcfce7;color:#15803d;
-            border-radius:9999px;font-size:12px;font-weight:600;">Required</span>`
-        : `<span style="display:inline-flex;padding:3px 10px;background:#fef9c3;color:#854d0e;
-            border-radius:9999px;font-size:12px;font-weight:600;">Optional</span>`
+        ? `<span style="display:inline-flex;padding:2px 10px;background:#dcfce7;color:#15803d;
+            border-radius:9999px;font-size:12px;font-weight:600;font-family:'Inter',-apple-system,sans-serif;">Required</span>`
+        : `<span style="display:inline-flex;padding:2px 10px;background:#fef9c3;color:#854d0e;
+            border-radius:9999px;font-size:12px;font-weight:500;font-family:'Inter',-apple-system,sans-serif;">Optional</span>`
     },
     {
-      headerName: 'Notice Days', field: 'minimumNoticeDays', width: 120, minWidth: 100,
+      headerName: 'Notice Days',
+      field: 'minimumNoticeDays',
+      width: 115, minWidth: 100,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => p.value > 0
-        ? `<span style="display:inline-flex;padding:3px 8px;background:#eff6ff;color:#1d4ed8;
-            border-radius:6px;font-size:12px;font-weight:600;">${p.value} days</span>`
-        : `<span style="color:#9ca3af;">None</span>`
+        ? `<span style="display:inline-flex;padding:2px 10px;background:#dbeafe;color:#1d4ed8;
+            border-radius:9999px;font-size:12px;font-weight:600;font-family:'Inter',-apple-system,sans-serif;">${p.value} days</span>`
+        : `<span style="color:#d1d5db;font-size:13px;font-family:'Inter',-apple-system,sans-serif;">None</span>`
     },
     {
-      headerName: 'Status', field: 'isActive', width: 110, minWidth: 100,
+      headerName: 'Status',
+      field: 'isActive',
+      width: 105, minWidth: 90,
+      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => p.value
-        ? `<span style="display:inline-flex;padding:3px 10px;background:#dcfce7;color:#166534;
-            border-radius:9999px;font-size:12px;font-weight:600;">Active</span>`
-        : `<span style="display:inline-flex;padding:3px 10px;background:#fee2e2;color:#991b1b;
-            border-radius:9999px;font-size:12px;font-weight:600;">Inactive</span>`
+        ? `<span style="display:inline-flex;padding:2px 12px;background:#dcfce7;color:#15803d;
+            border-radius:9999px;font-size:12px;font-weight:600;font-family:'Inter',-apple-system,sans-serif;">Active</span>`
+        : `<span style="display:inline-flex;padding:2px 12px;background:#fee2e2;color:#b91c1c;
+            border-radius:9999px;font-size:12px;font-weight:600;font-family:'Inter',-apple-system,sans-serif;">Inactive</span>`
     }
   ];
 
@@ -178,11 +219,12 @@ export class LeaveTypeListComponent implements OnInit {
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
   }
 
+  /* ── Pagination getters ── */
   get currentPage(): number  { return this.paginationManager.pageNumber; }
   get pageSize(): number     { return this.paginationManager.pageSize; }
-  get totalPages(): number   { return this.pagedResult?.totalPages   ?? 0; }
-  get totalCount(): number   { return this.pagedResult?.totalCount   ?? 0; }
-  get hasNextPage(): boolean { return this.pagedResult?.hasNextPage  ?? false; }
+  get totalPages(): number   { return this.pagedResult?.totalPages    ?? 0; }
+  get totalCount(): number   { return this.pagedResult?.totalCount    ?? 0; }
+  get hasNextPage(): boolean { return this.pagedResult?.hasNextPage   ?? false; }
   get hasPrevPage(): boolean { return this.pagedResult?.hasPreviousPage ?? false; }
   get showingFrom(): number  { return this.totalCount === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1; }
   get showingTo(): number    { return Math.min(this.currentPage * this.pageSize, this.totalCount); }
@@ -283,7 +325,7 @@ export class LeaveTypeListComponent implements OnInit {
     this.leaveTypeService.toggleLeaveTypeStatus(lt.id, !lt.isActive).subscribe({
       next: (res) => {
         if (res.success) {
-          Swal.fire({ title: 'Done!', text: `Leave type ${action}d.`, icon: 'success', timer: 2000, showConfirmButton: false });
+          Swal.fire({ title: 'Done!', icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadLeaveTypes();
         } else { Swal.fire('Error!', res.message || `Failed to ${action}`, 'error'); }
       },
@@ -293,7 +335,8 @@ export class LeaveTypeListComponent implements OnInit {
 
   async deleteLeaveType(lt: LeaveType): Promise<void> {
     const r = await Swal.fire({
-      title: 'Delete Leave Type?', html: `Delete <strong>${lt.name}</strong>? This cannot be undone.`,
+      title: 'Delete Leave Type?',
+      html: `Delete <strong>${lt.name}</strong>? This cannot be undone.`,
       icon: 'warning', showCancelButton: true,
       confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280', confirmButtonText: 'Yes, Delete'
     });
@@ -301,7 +344,7 @@ export class LeaveTypeListComponent implements OnInit {
     this.leaveTypeService.deleteLeaveType(lt.id).subscribe({
       next: (res) => {
         if (res.success) {
-          Swal.fire({ title: 'Deleted!', text: 'Leave type deleted.', icon: 'success', timer: 2000, showConfirmButton: false });
+          Swal.fire({ title: 'Deleted!', icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadLeaveTypes();
         } else { Swal.fire('Error!', res.message || 'Failed to delete', 'error'); }
       },
@@ -313,8 +356,9 @@ export class LeaveTypeListComponent implements OnInit {
     if (!this.leaveTypes.length) { Swal.fire('No Data', 'Nothing to export.', 'info'); return; }
     Swal.fire({ title: 'Exporting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     const data = this.leaveTypes.map(lt => ({
-      'Order': lt.displayOrder, 'Name': lt.name, 'Code': lt.code, 'Description': lt.description,
-      'Max Days/Year': lt.maxDaysPerYear, 'Carry Forward': lt.isCarryForward ? 'Yes' : 'No',
+      'Order': lt.displayOrder, 'Name': lt.name, 'Code': lt.code,
+      'Description': lt.description, 'Max Days/Year': lt.maxDaysPerYear,
+      'Carry Forward': lt.isCarryForward ? 'Yes' : 'No',
       'Max Carry Forward Days': lt.maxCarryForwardDays,
       'Requires Approval': lt.requiresApproval ? 'Yes' : 'No',
       'Requires Document': lt.requiresDocument ? 'Yes' : 'No',
