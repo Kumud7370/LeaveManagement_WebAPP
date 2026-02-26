@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -6,22 +6,45 @@ import { Router } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
 import {
   ColDef,
-  GridOptions,
   GridReadyEvent,
   GridApi,
-  ICellRendererParams
+  ICellRendererParams,
+  ModuleRegistry,
+  AllCommunityModule,
+  themeQuartz
 } from 'ag-grid-community';
 import Swal from 'sweetalert2';
 import { DesignationService } from '../../../core/services/api/designation.api';
 import { DesignationResponseDto, DesignationFilterDto } from '../../../core/Models/designation.model';
 import {
-  dateFormatter,
   applyQuickFilter,
   clearAllFilters,
   exportToCsv,
   refreshGrid,
-  autoSizeAll,
 } from '../../../utils/ag-grid-helpers';
+
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+// ── Same themeQuartz pattern as Holiday — columnBorder: true is the KEY ──────
+const designationGridTheme = themeQuartz.withParams({
+  backgroundColor:                '#ffffff',
+  foregroundColor:                '#1f2937',
+  borderColor:                    '#e5e7eb',
+  headerBackgroundColor:          '#f9fafb',
+  headerTextColor:                '#374151',
+  oddRowBackgroundColor:          '#ffffff',
+  rowHoverColor:                  '#f8faff',
+  selectedRowBackgroundColor:     '#dbeafe',
+  fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontSize:                       13,
+  columnBorder:                   true,   // ← THIS draws the column dividers
+  headerColumnBorder:             true,
+  headerColumnBorderHeight:       '50%',
+  headerColumnResizeHandleColor:  '#9ca3af',
+  headerColumnResizeHandleHeight: '50%',
+  headerColumnResizeHandleWidth:  2,
+  cellHorizontalPaddingScale:     0.8,
+});
 
 @Component({
   selector: 'app-designation-list',
@@ -37,6 +60,9 @@ import {
 })
 export class DesignationListComponent implements OnInit, OnDestroy {
 
+  // ── Theme ─────────────────────────────────────────────────────────────────
+  readonly gridTheme = designationGridTheme;
+
   // ── Grid ──────────────────────────────────────────────────────────────────
   rowData: DesignationResponseDto[] = [];
   columnDefs: ColDef[] = [];
@@ -49,40 +75,6 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     minWidth: 80,
     floatingFilter: true,
     suppressFloatingFilterButton: false,
-  };
-
-  gridOptions: GridOptions = {
-    pagination: false,
-    domLayout: 'autoHeight',
-    rowSelection: 'single',
-    suppressRowClickSelection: true,
-    suppressCellFocus: true,
-    animateRows: true,
-    enableBrowserTooltips: true,
-    rowHeight: 52,
-    headerHeight: 48,
-    floatingFiltersHeight: 44,
-
-    onCellClicked: (event: any) => {
-      const target = event.event?.target as HTMLElement;
-      if (!target) return;
-
-      const actionBtn = target.closest
-        ? (target.closest('[data-action]') as HTMLElement | null)
-        : null;
-
-      const action = actionBtn?.getAttribute('data-action');
-      if (!action || !event.data) return;
-
-      const designation: DesignationResponseDto = event.data;
-
-      switch (action) {
-        case 'view':   this.viewDesignation(designation);  break;
-        case 'edit':   this.openEditModal(designation);    break;
-        case 'toggle': this.toggleStatus(designation);     break;
-        case 'delete': this.deleteDesignation(designation); break;
-      }
-    },
   };
 
   // ── Stat Counts ───────────────────────────────────────────────────────────
@@ -100,17 +92,18 @@ export class DesignationListComponent implements OnInit, OnDestroy {
   isLoading = false;
 
   // ── Modal ─────────────────────────────────────────────────────────────────
-  isModalOpen           = false;
-  isEditMode            = false;
-  isLoadingForm         = false;
-  isSubmitting          = false;
+  isModalOpen            = false;
+  isEditMode             = false;
+  isLoadingForm          = false;
+  isSubmitting           = false;
   designationForm!: FormGroup;
   selectedDesignationId: string | null = null;
 
   constructor(
     private fb: FormBuilder,
     private designationService: DesignationService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -139,44 +132,37 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     this.columnDefs = [
       {
         headerName: 'Actions',
-        width: 155,
+        width: 110,           // narrower — only 3 buttons now (no view)
+        minWidth: 110,
+        maxWidth: 110,
         sortable: false,
         filter: false,
         floatingFilter: false,
+        suppressFloatingFilterButton: true,
         pinned: 'left',
         suppressKeyboardEvent: () => true,
-        cellStyle: {
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          gap: '6px',
-          paddingLeft: '14px',
-          overflow: 'visible',
-        },
         cellRenderer: (params: ICellRendererParams) => {
-          const isActive = params.data?.isActive;
+          const isActive   = params.data?.isActive;
           const toggleTitle = isActive ? 'Deactivate' : 'Activate';
           const toggleColor = isActive ? '#22c55e' : '#94a3b8';
           return `
-            <div style="display:flex;gap:8px;align-items:center;height:100%;pointer-events:all;">
-              <button data-action="view" title="View"
-                style="background:none;border:none;cursor:pointer;padding:2px;
-                       display:flex;align-items:center;pointer-events:all;line-height:1;">
-                <i class="bi bi-eye" style="font-size:1.1rem;color:#22c55e;pointer-events:none;"></i>
-              </button>
+            <div style="display:flex;gap:8px;align-items:center;height:100%;padding:0 4px;">
               <button data-action="edit" title="Edit"
-                style="background:none;border:none;cursor:pointer;padding:2px;
-                       display:flex;align-items:center;pointer-events:all;line-height:1;">
+                style="width:28px;height:28px;background:transparent;border:none;cursor:pointer;
+                       display:flex;align-items:center;justify-content:center;border-radius:4px;
+                       transition:background 0.15s;">
                 <i class="bi bi-pencil" style="font-size:1rem;color:#3b82f6;pointer-events:none;"></i>
               </button>
               <button data-action="toggle" title="${toggleTitle}"
-                style="background:none;border:none;cursor:pointer;padding:2px;
-                       display:flex;align-items:center;pointer-events:all;line-height:1;">
+                style="width:28px;height:28px;background:transparent;border:none;cursor:pointer;
+                       display:flex;align-items:center;justify-content:center;border-radius:4px;
+                       transition:background 0.15s;">
                 <i class="bi bi-power" style="font-size:1.1rem;color:${toggleColor};pointer-events:none;"></i>
               </button>
               <button data-action="delete" title="Delete"
-                style="background:none;border:none;cursor:pointer;padding:2px;
-                       display:flex;align-items:center;pointer-events:all;line-height:1;">
+                style="width:28px;height:28px;background:transparent;border:none;cursor:pointer;
+                       display:flex;align-items:center;justify-content:center;border-radius:4px;
+                       transition:background 0.15s;">
                 <i class="bi bi-trash" style="font-size:1rem;color:#ef4444;pointer-events:none;"></i>
               </button>
             </div>
@@ -188,7 +174,7 @@ export class DesignationListComponent implements OnInit, OnDestroy {
         field: 'designationName',
         flex: 1,
         minWidth: 180,
-        cellStyle: { fontWeight: '600', color: '#111827', fontSize: '0.875rem' },
+        cellStyle: { fontWeight: '600', color: '#1f2937', fontSize: '13px' },
       },
       {
         headerName: 'Code',
@@ -218,7 +204,7 @@ export class DesignationListComponent implements OnInit, OnDestroy {
       {
         headerName: 'Employees',
         field: 'employeeCount',
-        width: 120,
+        width: 140,
         filter: 'agNumberColumnFilter',
         cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
         cellRenderer: (params: ICellRendererParams) => {
@@ -236,7 +222,7 @@ export class DesignationListComponent implements OnInit, OnDestroy {
         field: 'description',
         flex: 1,
         minWidth: 160,
-        cellStyle: { color: '#6b7280', fontSize: '0.85rem' },
+        cellStyle: { color: '#6b7280', fontSize: '13px' },
         cellRenderer: (params: ICellRendererParams) =>
           params.value
             ? `<span style="color:#6b7280;">${params.value}</span>`
@@ -247,36 +233,44 @@ export class DesignationListComponent implements OnInit, OnDestroy {
         field: 'isActive',
         width: 120,
         cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
-        cellRenderer: (params: ICellRendererParams) => {
-          const isActive = params.value;
-          if (isActive) {
-            return `<span style="font-size:0.875rem;font-weight:700;color:#16a34a;letter-spacing:0.01em;">Active</span>`;
-          } else {
-            return `<span style="font-size:0.875rem;font-weight:700;color:#dc2626;letter-spacing:0.01em;">Inactive</span>`;
-          }
-        },
+        cellRenderer: (params: ICellRendererParams) =>
+          params.value
+            ? `<span style="font-size:13px;font-weight:700;color:#16a34a;">Active</span>`
+            : `<span style="font-size:13px;font-weight:700;color:#dc2626;">Inactive</span>`,
       },
       {
         headerName: 'Created At',
         field: 'createdAt',
-        width: 170,
+        width: 180,
         valueFormatter: (params: any) => {
           if (!params.value) return '';
           return new Date(params.value).toLocaleString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
+            day: '2-digit', month: 'short', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
           });
         },
-        cellStyle: { color: '#6b7280', fontSize: '0.82rem' },
+        cellStyle: { color: '#6b7280', fontSize: '12px' },
       },
     ];
   }
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
+    // Wire up action button clicks via cell click
+    this.gridApi.addEventListener('cellClicked', (event: any) => {
+      const target = event.event?.target as HTMLElement;
+      if (!target) return;
+      const actionBtn = target.closest('[data-action]') as HTMLElement | null;
+      const action = actionBtn?.getAttribute('data-action');
+      if (!action || !event.data) return;
+      const designation: DesignationResponseDto = event.data;
+      switch (action) {
+        case 'edit':   this.openEditModal(designation);     break;
+        case 'toggle': this.toggleStatus(designation);      break;
+        case 'delete': this.deleteDesignation(designation); break;
+      }
+    });
+    setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
   }
 
   // ── Data Loading ──────────────────────────────────────────────────────────
@@ -305,8 +299,13 @@ export class DesignationListComponent implements OnInit, OnDestroy {
         }
 
         this.loadStatCounts();
-        refreshGrid(this.gridApi);
+        if (this.gridApi) {
+          this.gridApi.setGridOption('rowData', this.rowData);
+          refreshGrid(this.gridApi);
+          setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
+        }
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading designations:', error);
@@ -323,16 +322,17 @@ export class DesignationListComponent implements OnInit, OnDestroy {
         this.totalPages    = 0;
         this.activeCount   = 0;
         this.inactiveCount = 0;
+        this.cdr.detectChanges();
       },
     });
   }
 
   private loadStatCounts(): void {
     this.designationService.getFilteredDesignations({ isActive: true,  pageNumber: 1, pageSize: 1 }).subscribe({
-      next: (r) => { this.activeCount = r?.pagination?.totalCount ?? 0; }
+      next: (r) => { this.activeCount = r?.pagination?.totalCount ?? 0; this.cdr.detectChanges(); }
     });
     this.designationService.getFilteredDesignations({ isActive: false, pageNumber: 1, pageSize: 1 }).subscribe({
-      next: (r) => { this.inactiveCount = r?.pagination?.totalCount ?? 0; }
+      next: (r) => { this.inactiveCount = r?.pagination?.totalCount ?? 0; this.cdr.detectChanges(); }
     });
   }
 
@@ -350,9 +350,7 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     this.loadDesignations();
   }
 
-  refreshData(): void {
-    this.loadDesignations();
-  }
+  refreshData(): void { this.loadDesignations(); }
 
   exportData(): void {
     if (this.rowData.length === 0) {
@@ -362,17 +360,10 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     exportToCsv(this.gridApi, 'designations');
   }
 
-  // ── View ──────────────────────────────────────────────────────────────────
-  viewDesignation(designation: DesignationResponseDto): void {
-    const id = designation.designationId || (designation as any).id || (designation as any).Id;
-    if (!id) { Swal.fire('Error', 'Could not determine designation ID.', 'error'); return; }
-    this.router.navigate(['/designations', id]);
-  }
-
   // ── Modal ─────────────────────────────────────────────────────────────────
   openCreateModal(): void {
-    this.isModalOpen          = true;
-    this.isEditMode           = false;
+    this.isModalOpen           = true;
+    this.isEditMode            = false;
     this.selectedDesignationId = null;
     this.designationForm.reset({ designationCode: '', designationName: '', description: '', level: 1, isActive: true });
   }
@@ -566,15 +557,5 @@ export class DesignationListComponent implements OnInit, OnDestroy {
 
   get endRecord(): number {
     return Math.min(this.currentPage * this.pageSize, this.totalCount);
-  }
-
-  get visiblePages(): number[] {
-    const pages: number[] = [];
-    const maxVisible = 5;
-    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
-    let endPage   = Math.min(this.totalPages, startPage + maxVisible - 1);
-    if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
-    for (let i = startPage; i <= endPage; i++) pages.push(i);
-    return pages;
   }
 }
