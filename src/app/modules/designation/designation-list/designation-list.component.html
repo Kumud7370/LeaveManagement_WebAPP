@@ -1,4 +1,9 @@
 <div class="designation-list-container">
+  <!-- Page Title -->
+  <div class="page-header">
+    <h1 class="page-title">Designation Management</h1>
+  </div>
+
   <!-- Stat Cards -->
   <div class="stat-cards">
     <div class="stat-card stat-card--blue">
@@ -32,13 +37,14 @@
       <button class="btn btn-export" (click)="exportData()">
         <i class="bi bi-download"></i> Export
       </button>
+      <div class="toolbar-divider"></div>
       <button class="btn btn-add" (click)="openCreateModal()">
         <i class="bi bi-plus-lg"></i> Add Designation
       </button>
     </div>
   </div>
 
-  <!-- Grid Wrapper -->
+  <!-- Grid Card -->
   <div class="grid-wrapper">
     <!-- Loading -->
     <div *ngIf="isLoading" class="loading-state">
@@ -54,18 +60,24 @@
       </button>
     </div>
 
-    <!-- AG Grid -->
+    <!-- AG Grid — [theme] binding activates themeQuartz.withParams (columnBorder) -->
     <ag-grid-angular
       *ngIf="!isLoading && rowData.length > 0"
-      class="ag-theme-quartz designation-grid"
+      style="width: 100%"
+      [theme]="gridTheme"
+      [domLayout]="'autoHeight'"
       [rowData]="rowData"
       [columnDefs]="columnDefs"
       [defaultColDef]="defaultColDef"
-      [gridOptions]="gridOptions"
+      [pagination]="false"
+      [animateRows]="true"
+      [rowSelection]="'single'"
+      [suppressRowClickSelection]="true"
+      [suppressCellFocus]="true"
       [rowHeight]="52"
       [headerHeight]="48"
       [floatingFiltersHeight]="44"
-      [domLayout]="'autoHeight'"
+      [enableBrowserTooltips]="true"
       (gridReady)="onGridReady($event)"
     >
     </ag-grid-angular>
@@ -83,52 +95,52 @@
         <option [value]="50">50</option>
         <option [value]="100">100</option>
       </select>
-
       <span class="pagination-info"
         >{{ startRecord }} to {{ endRecord }} of {{ totalCount }}</span
       >
       <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
-
-      <button
-        class="pg-btn"
-        [disabled]="currentPage === 1"
-        (click)="onPageChange(1)"
-      >
-        &#xAB;
-      </button>
-      <button
-        class="pg-btn"
-        [disabled]="currentPage === 1"
-        (click)="onPageChange(currentPage - 1)"
-      >
-        &#x2039;
-      </button>
-      <button
-        class="pg-btn"
-        [disabled]="currentPage === totalPages"
-        (click)="onPageChange(currentPage + 1)"
-      >
-        &#x203A;
-      </button>
-      <button
-        class="pg-btn"
-        [disabled]="currentPage === totalPages"
-        (click)="onPageChange(totalPages)"
-      >
-        &#xBB;
-      </button>
+      <div class="pg-btns">
+        <button
+          class="pg-btn"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(1)"
+        >
+          &#xAB;
+        </button>
+        <button
+          class="pg-btn"
+          [disabled]="currentPage === 1"
+          (click)="onPageChange(currentPage - 1)"
+        >
+          &#x2039;
+        </button>
+        <button
+          class="pg-btn"
+          [disabled]="currentPage === totalPages"
+          (click)="onPageChange(currentPage + 1)"
+        >
+          &#x203A;
+        </button>
+        <button
+          class="pg-btn"
+          [disabled]="currentPage === totalPages"
+          (click)="onPageChange(totalPages)"
+        >
+          &#xBB;
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Modal -->
+<!-- ══════════════════════════════════════════════
+     MODAL
+     ══════════════════════════════════════════════ -->
 <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-icon">
-          <i class="bi bi-award"></i>
-        </div>
+        <div class="modal-icon"><i class="bi bi-award"></i></div>
         <div>
           <h2 class="modal-title">
             {{ isEditMode ? "Edit Designation" : "Create New Designation" }}

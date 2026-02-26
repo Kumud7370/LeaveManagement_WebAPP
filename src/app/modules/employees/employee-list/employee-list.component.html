@@ -50,10 +50,11 @@
         Refresh
       </button>
       <button (click)="exportData()" class="el-btn el-btn-export">
-        Export
+        <i class="bi bi-download"></i> Export
       </button>
+      <div class="el-toolbar-divider"></div>
       <button (click)="addNewEmployee()" class="el-btn el-btn-primary">
-        Add Employee
+        <i class="bi bi-plus-lg"></i> Add Employee
       </button>
     </div>
   </div>
@@ -67,10 +68,18 @@
   <!-- ── Grid Card ────────────────────────────────────────────────── -->
   <div class="el-grid-card">
     <div class="el-grid-container">
+
+      <!--
+        KEY CHANGES vs old version:
+          • [theme]="gridTheme"   instead of  class="ag-theme-quartz"
+          • [domLayout]="'autoHeight'"  instead of  style="height:520px"
+          • no fixed inline height style
+      -->
       <ag-grid-angular
         #agGrid
-        style="width: 100%; height: 520px;"
-        class="ag-theme-quartz"
+        style="width: 100%"
+        [theme]="gridTheme"
+        [domLayout]="'autoHeight'"
         [rowData]="rowData"
         [columnDefs]="columnDefs"
         [defaultColDef]="defaultColDef"
@@ -92,6 +101,7 @@
         (gridReady)="onGridReady($event)"
         [context]="context">
       </ag-grid-angular>
+
     </div>
 
     <!-- ── Pagination (inside card, at bottom) ─────────────────── -->
