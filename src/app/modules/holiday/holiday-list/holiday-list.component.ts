@@ -3,6 +3,7 @@ import {
   CUSTOM_ELEMENTS_SCHEMA,
   ViewChild,
   OnInit,
+  OnDestroy,
   ElementRef,
   ChangeDetectorRef,
   ViewEncapsulation
@@ -43,7 +44,6 @@ import {
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// ── Same pattern as Leave Type — themeQuartz with columnBorder: true ──
 const holidayGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
   foregroundColor:                '#1f2937',
@@ -78,7 +78,7 @@ const holidayGridTheme = themeQuartz.withParams({
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class HolidayListComponent implements OnInit {
+export class HolidayListComponent implements OnInit, OnDestroy {
 
   @ViewChild('agGrid', { read: ElementRef })
   agGridElement!: ElementRef<HTMLElement>;
@@ -113,6 +113,9 @@ export class HolidayListComponent implements OnInit {
   private isLoadingData: boolean = false;
   private searchDebounceTimer: any = null;
   Math = Math;
+
+  // ─── ResizeObserver ───────
+  private resizeObserver: ResizeObserver | null = null;
 
   // ─── Lookup data ───────────
   holidayTypes = [
@@ -290,6 +293,17 @@ export class HolidayListComponent implements OnInit {
     this.loadHolidays();
   }
 
+  ngOnDestroy(): void {
+    // Clean up ResizeObserver to prevent memory leaks
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+  }
+
   // ─── Form ────────
 
   initializeForm(): void {
@@ -434,6 +448,20 @@ export class HolidayListComponent implements OnInit {
     this.gridApi.addEventListener('sortChanged',   this.onSortChanged.bind(this));
     this.gridApi.addEventListener('filterChanged', this.onFilterChanged.bind(this));
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
+
+    const hostEl = this.agGridElement?.nativeElement;
+    const container = (hostEl?.closest('.hl-grid-container') as HTMLElement) ?? hostEl;
+
+    if (container && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.gridApi) {
+          requestAnimationFrame(() => {
+            this.gridApi?.sizeColumnsToFit();
+          });
+        }
+      });
+      this.resizeObserver.observe(container);
+    }
   }
 
   onSortChanged(_event: SortChangedEvent): void {
@@ -793,13 +821,11 @@ export class HolidayListComponent implements OnInit {
     });
   }
 
-  // ─── Export ───────────
   exportData(): void {
     exportToCsv(this.gridApi, 'holidays');
     Swal.fire({ icon: 'success', title: 'Exported!', text: 'Holiday data exported as CSV.', timer: 2000, showConfirmButton: false });
   }
 
-  // ─── Date helpers ──────
   formatDateForInput(date: any): string {
     const d     = new Date(date);
     const year  = d.getUTCFullYear();
