@@ -1,194 +1,252 @@
 <!-- attendance-summary.component.html -->
-<div class="summary-container">
+<div class="as-page-container">
 
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-left">
-      <h1 class="page-title">
-        <i class="fas fa-chart-bar"></i>
-        {{ isAdmin ? 'Employee Summary' : 'My Attendance Summary' }}
-      </h1>
-      <p class="page-subtitle">Detailed breakdown of attendance statistics</p>
-    </div>
+  <!-- ── Page Header ── -->
+  <div class="as-page-header">
+    <h1 class="as-page-title">
+      {{ isAdmin ? 'Employee Attendance Summary' : 'My Attendance Summary' }}
+    </h1>
   </div>
 
-  <!-- Filter Panel -->
-  <div class="filter-panel">
-    <div class="filter-row">
-      <div class="form-group" *ngIf="isAdmin">
+  <!-- ── Filter Toolbar ── -->
+  <div class="as-filter-card">
+    <div class="as-filter-row">
+
+      <!-- Admin: employee ID lookup -->
+      <div class="as-form-group" *ngIf="isAdmin">
         <label>Employee ID</label>
         <input
           type="text"
+          class="as-input"
           [(ngModel)]="lookupEmployeeId"
           placeholder="Enter employee ID..."
-          (keyup.enter)="loadSummary()"
+          (keyup.enter)="loadAll()"
         />
       </div>
-      <div class="form-group">
+
+      <div class="as-form-group">
         <label>From</label>
-        <input type="date" [(ngModel)]="startDate" (change)="loadSummary()" />
+        <input type="date" class="as-input" [(ngModel)]="startDate" />
       </div>
-      <div class="form-group">
+
+      <div class="as-form-group">
         <label>To</label>
-        <input type="date" [(ngModel)]="endDate" (change)="loadSummary()" />
+        <input type="date" class="as-input" [(ngModel)]="endDate" />
       </div>
-      <div class="quick-btns">
-        <button class="btn btn-outline" (click)="setCurrentMonth()">This Month</button>
-        <button class="btn btn-outline" (click)="setLastMonth()">Last Month</button>
-        <button class="btn btn-primary" (click)="loadSummary()">
-          <i class="fas fa-search"></i> Search
+
+      <div class="as-filter-btns">
+        <button class="as-btn as-btn-outline" (click)="setCurrentMonthAndLoad()">
+          <i class="fas fa-calendar"></i> This Month
+        </button>
+        <button class="as-btn as-btn-outline" (click)="setLastMonth()">
+          <i class="fas fa-calendar-minus"></i> Last Month
+        </button>
+        <button
+          class="as-btn as-btn-primary"
+          (click)="loadAll()"
+          [disabled]="summaryLoading"
+        >
+          <i class="fas fa-search"></i>
+          {{ summaryLoading ? 'Loading...' : 'Search' }}
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="loading-state">
-    <div class="spinner"></div><p>Loading summary...</p>
+  <!-- ── Error Banner ── -->
+  <div *ngIf="errorMsg" class="as-error-banner">
+    <i class="fas fa-exclamation-triangle"></i>
+    {{ errorMsg }}
   </div>
 
-  <ng-container *ngIf="!loading && summary">
+  <!-- ── KPI Cards + Stats (only when summary loaded) ── -->
+  <ng-container *ngIf="summary && !summaryLoading">
 
-    <!-- Employee Info Banner -->
-    <div class="employee-banner">
-      <div class="emp-avatar">
-        {{ summary.employeeName.charAt(0).toUpperCase() }}
+    <!-- Employee Banner -->
+    <div class="as-emp-banner">
+      <div class="as-emp-avatar">
+        {{ summary.employeeName?.charAt(0)?.toUpperCase() || '?' }}
       </div>
-      <div class="emp-info">
+      <div class="as-emp-info">
         <h2>{{ summary.employeeName }}</h2>
-        <span class="emp-code">{{ summary.employeeCode }}</span>
+        <span class="as-emp-code">{{ summary.employeeCode }}</span>
       </div>
-      <div class="period-info">
-        <span>{{ summary.startDate | date:'d MMM' }} – {{ summary.endDate | date:'d MMM yyyy' }}</span>
+      <div class="as-period-badge">
+        <i class="fas fa-calendar-alt"></i>
+        {{ formatDate(summary.startDate) }} – {{ formatDate(summary.endDate) }}
       </div>
     </div>
 
     <!-- KPI Cards -->
-    <div class="kpi-grid">
-      <div class="kpi-card kpi-attendance">
-        <div class="kpi-circle">
-          <svg viewBox="0 0 100 60">
-            <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e2e8f0" stroke-width="8" stroke-linecap="round"/>
-            <path [attr.d]="getAttendanceArc()" fill="none" stroke="#6366f1" stroke-width="8" stroke-linecap="round"/>
+    <div class="as-kpi-grid">
+      <div class="as-kpi-card as-kpi-attendance">
+        <div class="as-kpi-gauge">
+          <svg viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 10 50 A 40 40 0 0 1 90 50"
+              fill="none" stroke="#e2e8f0" stroke-width="9" stroke-linecap="round"/>
+            <path [attr.d]="getAttendanceArc()"
+              fill="none" stroke="#6366f1" stroke-width="9" stroke-linecap="round"/>
           </svg>
-          <span class="kpi-pct">{{ summary.attendancePercentage }}%</span>
+          <span class="as-gauge-pct">{{ summary.attendancePercentage | number:'1.0-1' }}%</span>
         </div>
-        <span class="kpi-label">Attendance Rate</span>
-      </div>
-      <div class="kpi-card kpi-hours">
-        <div class="kpi-value">{{ summary.totalWorkingHours | number:'1.1-1' }}<span class="kpi-unit">h</span></div>
-        <span class="kpi-label">Total Hours Worked</span>
-      </div>
-      <div class="kpi-card kpi-avg">
-        <div class="kpi-value">{{ summary.averageWorkingHours | number:'1.1-1' }}<span class="kpi-unit">h</span></div>
-        <span class="kpi-label">Avg. Daily Hours</span>
-      </div>
-      <div class="kpi-card kpi-overtime">
-        <div class="kpi-value">{{ summary.totalOvertimeHours | number:'1.1-1' }}<span class="kpi-unit">h</span></div>
-        <span class="kpi-label">Total Overtime</span>
-      </div>
-    </div>
-
-    <!-- Stats Grid -->
-    <div class="stats-grid">
-
-      <!-- Attendance Breakdown -->
-      <div class="stats-card">
-        <h3 class="card-title"><i class="fas fa-calendar-check"></i> Attendance Breakdown</h3>
-        <div class="stat-rows">
-          <div class="stat-row">
-            <div class="dot present"></div>
-            <span class="sr-label">Present Days</span>
-            <div class="sr-bar-wrap">
-              <div class="sr-bar present" [style.width.%]="(summary.presentDays / summary.totalWorkingDays) * 100"></div>
-            </div>
-            <span class="sr-count">{{ summary.presentDays }}</span>
-          </div>
-          <div class="stat-row">
-            <div class="dot absent"></div>
-            <span class="sr-label">Absent Days</span>
-            <div class="sr-bar-wrap">
-              <div class="sr-bar absent" [style.width.%]="(summary.absentDays / summary.totalWorkingDays) * 100"></div>
-            </div>
-            <span class="sr-count">{{ summary.absentDays }}</span>
-          </div>
-          <div class="stat-row">
-            <div class="dot halfday"></div>
-            <span class="sr-label">Half Days</span>
-            <div class="sr-bar-wrap">
-              <div class="sr-bar halfday" [style.width.%]="(summary.halfDays / summary.totalWorkingDays) * 100"></div>
-            </div>
-            <span class="sr-count">{{ summary.halfDays }}</span>
-          </div>
-          <div class="stat-row">
-            <div class="dot leave"></div>
-            <span class="sr-label">Leave Days</span>
-            <div class="sr-bar-wrap">
-              <div class="sr-bar leave" [style.width.%]="(summary.leaveDays / summary.totalWorkingDays) * 100"></div>
-            </div>
-            <span class="sr-count">{{ summary.leaveDays }}</span>
-          </div>
-          <div class="stat-row">
-            <div class="dot wfh"></div>
-            <span class="sr-label">Work From Home</span>
-            <div class="sr-bar-wrap">
-              <div class="sr-bar wfh" [style.width.%]="0"></div>
-            </div>
-            <span class="sr-count">0</span>
-          </div>
-        </div>
+        <span class="as-kpi-label">Attendance Rate</span>
       </div>
 
-      <!-- Compliance -->
-      <div class="stats-card">
-        <h3 class="card-title"><i class="fas fa-clipboard-check"></i> Compliance</h3>
-        <div class="compliance-items">
-          <div class="compliance-item">
-            <div class="c-icon late"><i class="fas fa-clock"></i></div>
-            <div class="c-info">
-              <span class="c-val">{{ summary.lateDays }}</span>
-              <span class="c-lbl">Late Check-Ins</span>
-            </div>
-          </div>
-          <div class="compliance-item">
-            <div class="c-icon early"><i class="fas fa-running"></i></div>
-            <div class="c-info">
-              <span class="c-val">{{ summary.earlyLeaveDays }}</span>
-              <span class="c-lbl">Early Exits</span>
-            </div>
-          </div>
-          <div class="compliance-item">
-            <div class="c-icon holiday"><i class="fas fa-umbrella-beach"></i></div>
-            <div class="c-info">
-              <span class="c-val">{{ summary.holidays }}</span>
-              <span class="c-lbl">Holidays</span>
-            </div>
-          </div>
-          <div class="compliance-item">
-            <div class="c-icon weekoff"><i class="fas fa-couch"></i></div>
-            <div class="c-info">
-              <span class="c-val">{{ summary.weekOffs }}</span>
-              <span class="c-lbl">Week Offs</span>
-            </div>
-          </div>
-          <div class="compliance-item total">
-            <div class="c-icon total"><i class="fas fa-calendar-alt"></i></div>
-            <div class="c-info">
-              <span class="c-val">{{ summary.totalWorkingDays }}</span>
-              <span class="c-lbl">Total Working Days</span>
-            </div>
-          </div>
-        </div>
+      <div class="as-kpi-card as-kpi-hours">
+        <div class="as-kpi-icon"><i class="fas fa-clock"></i></div>
+        <div class="as-kpi-value">{{ summary.totalWorkingHours | number:'1.1-1' }}<span class="as-kpi-unit">h</span></div>
+        <span class="as-kpi-label">Total Hours</span>
       </div>
 
+      <div class="as-kpi-card as-kpi-avg">
+        <div class="as-kpi-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="as-kpi-value">{{ summary.averageWorkingHours | number:'1.1-1' }}<span class="as-kpi-unit">h</span></div>
+        <span class="as-kpi-label">Avg. Daily Hours</span>
+      </div>
+
+      <div class="as-kpi-card as-kpi-overtime">
+        <div class="as-kpi-icon"><i class="fas fa-bolt"></i></div>
+        <div class="as-kpi-value">{{ summary.totalOvertimeHours | number:'1.1-1' }}<span class="as-kpi-unit">h</span></div>
+        <span class="as-kpi-label">Overtime</span>
+      </div>
+
+      <div class="as-kpi-card as-kpi-present">
+        <div class="as-kpi-icon"><i class="fas fa-user-check"></i></div>
+        <div class="as-kpi-value">{{ summary.presentDays }}</div>
+        <span class="as-kpi-label">Present Days</span>
+      </div>
+
+      <div class="as-kpi-card as-kpi-absent">
+        <div class="as-kpi-icon"><i class="fas fa-user-times"></i></div>
+        <div class="as-kpi-value">{{ summary.absentDays }}</div>
+        <span class="as-kpi-label">Absent Days</span>
+      </div>
+
+      <div class="as-kpi-card as-kpi-leave">
+        <div class="as-kpi-icon"><i class="fas fa-plane-departure"></i></div>
+        <div class="as-kpi-value">{{ summary.leaveDays }}</div>
+        <span class="as-kpi-label">Leave Days</span>
+      </div>
+
+      <div class="as-kpi-card as-kpi-late">
+        <div class="as-kpi-icon"><i class="fas fa-exclamation-circle"></i></div>
+        <div class="as-kpi-value">{{ summary.lateDays }}</div>
+        <span class="as-kpi-label">Late Check-ins</span>
+      </div>
     </div>
 
   </ng-container>
 
-  <!-- Empty state -->
-  <div *ngIf="!loading && !summary" class="empty-state">
+  <!-- ── Summary loading spinner ── -->
+  <div *ngIf="summaryLoading" class="as-loading-state">
+    <div class="as-spinner"></div>
+    <p>Loading summary...</p>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       AG GRID SECTION — Daily Records
+       ════════════════════════════════════════════ -->
+  <div class="as-grid-section">
+
+    <!-- Grid Toolbar -->
+    <div class="as-toolbar">
+      <div class="as-search-wrapper">
+        <input
+          type="text"
+          class="as-search-input"
+          placeholder="Search records..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+        />
+      </div>
+      <div class="as-toolbar-actions">
+        <button (click)="onClearFilters()" class="as-btn as-btn-clear">
+          Clear
+        </button>
+        <button (click)="loadRecords()" class="as-btn as-btn-refresh">
+          Refresh
+        </button>
+        <button (click)="exportData()" class="as-btn as-btn-export">
+          <i class="fas fa-download"></i> Export
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Filters -->
+    <div *ngIf="activeFilters.hasActiveFilters" class="as-active-filters">
+      <span class="as-filter-label">Active Filters:</span>
+      <span *ngFor="let f of activeFilters.filters" class="as-filter-badge">{{ f }}</span>
+    </div>
+
+    <!-- Grid Card -->
+    <div class="as-grid-card">
+      <div class="as-grid-container">
+        <ag-grid-angular
+          #agGrid
+          style="width: 100%"
+          [theme]="gridTheme"
+          [domLayout]="'autoHeight'"
+          [rowData]="rowData"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [pagination]="false"
+          [animateRows]="true"
+          [rowSelection]="'single'"
+          [enableCellTextSelection]="true"
+          [suppressRowClickSelection]="true"
+          [rowHeight]="44"
+          [headerHeight]="44"
+          [floatingFiltersHeight]="36"
+          [suppressMenuHide]="true"
+          [enableBrowserTooltips]="true"
+          [suppressColumnVirtualisation]="true"
+          [rowBuffer]="10"
+          (gridReady)="onGridReady($event)"
+          [context]="context"
+        >
+        </ag-grid-angular>
+      </div>
+
+      <!-- Pagination -->
+      <div class="as-pagination">
+        <div class="as-pagination-inner">
+          <div class="as-page-size">
+            <label for="asPageSize">Show:</label>
+            <select
+              id="asPageSize"
+              [(ngModel)]="pageSize"
+              (change)="onPageSizeChanged(pageSize)"
+              class="as-page-size-select"
+            >
+              <option [value]="10">10</option>
+              <option [value]="20">20</option>
+              <option [value]="50">50</option>
+              <option [value]="100">100</option>
+            </select>
+          </div>
+          <span class="as-pagination-text">
+            {{ rowData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0 }}
+            – {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }}
+          </span>
+          <span class="as-pagination-text">
+            Page {{ currentPage }} of {{ totalPages || 1 }}
+          </span>
+          <div class="as-pagination-btns">
+            <button (click)="goToPage(1)"      [disabled]="currentPage === 1"                        class="as-pgbtn">«</button>
+            <button (click)="previousPage()"   [disabled]="currentPage === 1"                        class="as-pgbtn">‹</button>
+            <button (click)="nextPage()"        [disabled]="currentPage === totalPages || totalPages === 0" class="as-pgbtn">›</button>
+            <button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages || totalPages === 0" class="as-pgbtn">»</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /as-grid-section -->
+
+  <!-- ── Empty state (no search done yet) ── -->
+  <div *ngIf="!summaryLoading && !summary && !errorMsg && allRecords.length === 0" class="as-empty-state">
     <i class="fas fa-chart-bar"></i>
-    <p>Enter details and click Search to view the summary.</p>
+    <p>Select a date range and click <strong>Search</strong> to view the summary.</p>
   </div>
 
 </div>
