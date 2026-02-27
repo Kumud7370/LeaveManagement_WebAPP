@@ -111,18 +111,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
   private searchDebounceTimer: any = null;
   Math = Math;
 
-  // ─── Filters ─────────────
-  filterStatus: ShiftChangeStatus | '' = '';
-  filterOnlyCurrent: boolean = false;
-
   ShiftChangeStatus = ShiftChangeStatus;
-  statusOptions = [
-    { label: 'All Statuses', value: '' as const },
-    { label: 'Pending',      value: ShiftChangeStatus.Pending },
-    { label: 'Approved',     value: ShiftChangeStatus.Approved },
-    { label: 'Rejected',     value: ShiftChangeStatus.Rejected },
-    { label: 'Cancelled',    value: ShiftChangeStatus.Cancelled },
-  ];
 
   // ─── Stats ─────────────
   stats: Record<string, number> = {};
@@ -332,13 +321,11 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
     this.isLoadingData = true;
 
     const filter: EmployeeShiftFilterDto = {
-      searchTerm:             this.searchTerm || undefined,
-      pageNumber:             this.currentPage,
-      pageSize:               this.pageSize,
-      sortBy:                 'EffectiveFrom',
-      sortDescending:         true,
-      status:                 this.filterStatus === '' ? undefined : (this.filterStatus as ShiftChangeStatus),
-      onlyCurrentAssignments: this.filterOnlyCurrent || undefined,
+      searchTerm:     this.searchTerm || undefined,
+      pageNumber:     this.currentPage,
+      pageSize:       this.pageSize,
+      sortBy:         'EffectiveFrom',
+      sortDescending: true,
     };
 
     this.svc.getFilteredEmployeeShifts(filter)
@@ -407,10 +394,8 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
 
   handleClearFilters(): void {
     clearTimeout(this.searchDebounceTimer);
-    this.searchTerm        = '';
-    this.filterStatus      = '';
-    this.filterOnlyCurrent = false;
-    this.currentPage       = 1;
+    this.searchTerm  = '';
+    this.currentPage = 1;
     clearAllFilters(this.gridApi);
     this.loadShifts();
     this.updateActiveFilters();
@@ -421,16 +406,11 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
       ? Object.keys(this.gridApi.getFilterModel()).length
       : 0;
     const additionalFilters: Record<string, any> = {};
-    if (this.filterStatus !== '') additionalFilters['Status'] = this.filterStatus;
-    if (this.filterOnlyCurrent)   additionalFilters['Current only'] = 'Yes';
-    if (columnFilterCount > 0)    additionalFilters['Column filters'] = `${columnFilterCount} active`;
+    if (columnFilterCount > 0) additionalFilters['Column filters'] = `${columnFilterCount} active`;
 
     const filters = getActiveFiltersSummary(this.searchTerm, undefined, additionalFilters);
     this.activeFilters = { hasActiveFilters: filters.length > 0, filters, count: filters.length };
   }
-
-  onStatusChange(): void  { this.currentPage = 1; this.loadShifts(); this.updateActiveFilters(); }
-  onCurrentToggle(): void { this.currentPage = 1; this.loadShifts(); this.updateActiveFilters(); }
 
   // ─── Modal ────────────
 
