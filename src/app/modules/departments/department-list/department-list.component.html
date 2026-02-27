@@ -1,4 +1,9 @@
 <div class="dept-page">
+  <!-- ── Page Title ────────────────────────────────────────────────────────── -->
+  <div class="dept-page-header">
+    <h1 class="dept-page-title">Department Management</h1>
+  </div>
+
   <!-- ── Stat Cards ─────────────────────────────────────────────────────── -->
   <div class="stats-row" *ngIf="statCards.length > 0">
     <div class="stat-card {{ card.colorClass }}" *ngFor="let card of statCards">
@@ -25,7 +30,6 @@
 
   <!-- ── Toolbar ────────────────────────────────────────────────────────── -->
   <div class="toolbar-card">
-    <!-- Search (always full-width row) -->
     <input
       type="text"
       class="search-input"
@@ -33,25 +37,18 @@
       [(ngModel)]="searchTerm"
       (input)="onSearch()"
     />
-
-    <!-- Action buttons wrapper -->
     <div class="toolbar-actions">
-      <div class="toolbar-secondary-btns">
-        <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
-        <button class="btn btn-refresh" (click)="loadDepartments()">
-          Refresh
-        </button>
-      </div>
-
-      <div class="toolbar-primary-btns">
-        <button class="btn btn-primary" (click)="createDepartment()">
-          <i class="bi bi-plus-lg"></i> Add Department
-        </button>
-
-        <button class="btn btn-primary" (click)="exportDepartments()">
-          <i class="bi bi-download"></i> Export
-        </button>
-      </div>
+      <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
+      <button class="btn btn-refresh" (click)="loadDepartments()">
+        Refresh
+      </button>
+      <button class="btn btn-export" (click)="exportDepartments()">
+        <i class="bi bi-download"></i> Export
+      </button>
+      <div class="toolbar-divider"></div>
+      <button class="btn btn-primary" (click)="createDepartment()">
+        <i class="bi bi-plus-lg"></i> Add Department
+      </button>
     </div>
   </div>
 
@@ -70,7 +67,7 @@
     </button>
   </div>
 
-  <!-- ── AG Grid ────────────────────────────────────────────────────────── -->
+  <!-- ── Grid Card ─────────────────────────────────────────────────────── -->
   <div *ngIf="!loading && !error" class="grid-card">
     <div *ngIf="departments.length === 0" class="empty-box">
       <i class="bi bi-inbox"></i>
@@ -83,26 +80,31 @@
 
     <ag-grid-angular
       *ngIf="departments.length > 0"
-      class="ag-theme-quartz dept-grid"
+      style="width: 100%"
+      [theme]="gridTheme"
       [rowData]="departments"
       [columnDefs]="columnDefs"
       [defaultColDef]="defaultColDef"
       [gridOptions]="gridOptions"
       (gridReady)="onGridReady($event)"
-      [rowHeight]="52"
-      [headerHeight]="48"
-      [floatingFiltersHeight]="42"
+      [rowHeight]="44"
+      [headerHeight]="44"
+      [floatingFiltersHeight]="36"
       [domLayout]="'autoHeight'"
+      [animateRows]="true"
+      [enableCellTextSelection]="true"
+      [suppressRowClickSelection]="true"
+      [suppressMenuHide]="true"
+      [enableBrowserTooltips]="true"
+      [suppressColumnVirtualisation]="true"
+      [rowBuffer]="10"
     ></ag-grid-angular>
-  </div>
 
-  <!-- ── Pagination ─────────────────────────────────────────────────────── -->
-  <div *ngIf="!loading && departments.length > 0" class="pagination-bar">
-    <div class="page-controls">
-      <!-- Show per page -->
-      <div class="page-size-wrapper">
-        <span class="page-size-label">Show:</span>
-        <div class="page-size-select-wrap">
+    <!-- ── Pagination ─────────────────────────────────────────────────── -->
+    <div *ngIf="departments.length > 0" class="pagination-bar">
+      <div class="pagination-inner">
+        <div class="page-size-wrapper">
+          <label class="page-size-label">Show:</label>
           <select
             [(ngModel)]="pageSize"
             (change)="onPageSizeChange($event)"
@@ -114,61 +116,54 @@
             <option [value]="50">50</option>
             <option [value]="100">100</option>
           </select>
-          <i class="bi bi-chevron-down sel-arrow"></i>
         </div>
-      </div>
-
-      <!-- Range info -->
-      <span class="page-range">
-        {{ (currentPage - 1) * pageSize + 1 }} to
-        {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
-      </span>
-
-      <!-- Page info -->
-      <span class="page-label">
-        Page {{ currentPage }} of {{ totalPages }}
-      </span>
-
-      <!-- Nav buttons -->
-      <div class="page-btns">
-        <button
-          class="pbtn"
-          [disabled]="currentPage === 1"
-          (click)="onPageChange(1)"
-          title="First page"
+        <span class="page-range">
+          {{ (currentPage - 1) * pageSize + 1 }} to
+          {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
+        </span>
+        <span class="page-label"
+          >Page {{ currentPage }} of {{ totalPages }}</span
         >
-          «
-        </button>
-        <button
-          class="pbtn"
-          [disabled]="currentPage === 1"
-          (click)="onPageChange(currentPage - 1)"
-          title="Previous page"
-        >
-          ‹
-        </button>
-        <button
-          class="pbtn"
-          [disabled]="currentPage === totalPages"
-          (click)="onPageChange(currentPage + 1)"
-          title="Next page"
-        >
-          ›
-        </button>
-        <button
-          class="pbtn"
-          [disabled]="currentPage === totalPages"
-          (click)="onPageChange(totalPages)"
-          title="Last page"
-        >
-          »
-        </button>
+        <div class="page-btns">
+          <button
+            class="pbtn"
+            [disabled]="currentPage === 1"
+            (click)="onPageChange(1)"
+            title="First"
+          >
+            «
+          </button>
+          <button
+            class="pbtn"
+            [disabled]="currentPage === 1"
+            (click)="onPageChange(currentPage - 1)"
+            title="Previous"
+          >
+            ‹
+          </button>
+          <button
+            class="pbtn"
+            [disabled]="currentPage === totalPages"
+            (click)="onPageChange(currentPage + 1)"
+            title="Next"
+          >
+            ›
+          </button>
+          <button
+            class="pbtn"
+            [disabled]="currentPage === totalPages"
+            (click)="onPageChange(totalPages)"
+            title="Last"
+          >
+            »
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ── Modal ─────────────────────────────────────────────────────────────── -->
+<!-- ── Modal ─────────────────────────────────────────────────────────────────── -->
 <div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
   <div class="modal-box" (click)="$event.stopPropagation()">
     <button class="modal-close-btn" (click)="closeFormModal()">

@@ -1,9 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridOptions, GridReadyEvent, GridApi } from 'ag-grid-community';
+import {
+  ColDef,
+  GridOptions,
+  GridReadyEvent,
+  GridApi,
+  ModuleRegistry,
+  AllCommunityModule,
+  themeQuartz
+} from 'ag-grid-community';
 import { DepartmentService } from '../../../core/services/api/department.api';
 import {
   Department,
@@ -12,6 +20,29 @@ import {
 import Swal from 'sweetalert2';
 import { DepartmentFormComponent } from '../department-form/department-form.component';
 import * as XLSX from 'xlsx';
+
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+// ── EXACT same pattern as Holiday — themeQuartz with columnBorder: true ──────
+const deptGridTheme = themeQuartz.withParams({
+  backgroundColor:                '#ffffff',
+  foregroundColor:                '#1f2937',
+  borderColor:                    '#e5e7eb',
+  headerBackgroundColor:          '#f9fafb',
+  headerTextColor:                '#374151',
+  oddRowBackgroundColor:          '#ffffff',
+  rowHoverColor:                  '#f8faff',
+  selectedRowBackgroundColor:     '#dbeafe',
+  fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontSize:                       13,
+  columnBorder:                   true,   // ← THIS is what makes dividers visible
+  headerColumnBorder:             true,
+  headerColumnBorderHeight:       '50%',
+  headerColumnResizeHandleColor:  '#9ca3af',
+  headerColumnResizeHandleHeight: '50%',
+  headerColumnResizeHandleWidth:  2,
+  cellHorizontalPaddingScale:     0.8,
+});
 
 interface StatCard {
   label: string;
@@ -22,36 +53,34 @@ interface StatCard {
 @Component({
   selector: 'app-department-list',
   standalone: true,
+  encapsulation: ViewEncapsulation.None,
   imports: [CommonModule, FormsModule, AgGridAngular, DepartmentFormComponent],
   templateUrl: './department-list.component.html',
   styleUrls: ['./department-list.component.scss']
 })
 export class DepartmentListComponent implements OnInit {
 
+  readonly gridTheme = deptGridTheme;
+
   departments: Department[] = [];
   loading = false;
   error: string | null = null;
 
-  // Stat cards
   statCards: StatCard[] = [];
 
-  // Pagination
   currentPage = 1;
-  pageSize = 10;
+  pageSize = 20;
   totalPages = 0;
   totalCount = 0;
 
-  // Filters
   searchTerm = '';
   sortBy = 'DepartmentName';
   sortDirection: 'asc' | 'desc' = 'asc';
 
-  // Modal
   showFormModal = false;
   formMode: 'create' | 'edit' = 'create';
   selectedDepartmentId: string | null = null;
 
-  // Grid
   private gridApi!: GridApi;
   columnDefs: ColDef[] = [];
 
@@ -62,7 +91,9 @@ export class DepartmentListComponent implements OnInit {
     floatingFilter: true,
     suppressFloatingFilterButton: false,
     flex: 1,
-    minWidth: 80
+    minWidth: 80,
+    suppressSizeToFit: false,
+    suppressAutoSize: false
   };
 
   gridOptions: GridOptions = {
@@ -79,7 +110,8 @@ export class DepartmentListComponent implements OnInit {
 
   constructor(
     private departmentService: DepartmentService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
     this.buildColumnDefs();
   }
@@ -93,31 +125,37 @@ export class DepartmentListComponent implements OnInit {
     this.columnDefs = [
       {
         headerName: 'Actions',
-        width: 155,
-        minWidth: 155,
-        maxWidth: 155,
+        width: 120,
+        minWidth: 120,
+        maxWidth: 120,
         sortable: false,
         filter: false,
         floatingFilter: false,
-        pinned: 'left',
+        suppressFloatingFilterButton: true,
+        suppressSizeToFit: true,
         cellRenderer: (params: any) => {
           const el = document.createElement('div');
-          el.className = 'action-cell';
+          el.className = 'dept-action-cell';
           const isActive = params.data?.isActive;
           el.innerHTML = `
-            <button class="act-btn view-btn"   title="View"   data-action="view"><i class="bi bi-eye"></i></button>
-            <button class="act-btn edit-btn"   title="Edit"   data-action="edit"><i class="bi bi-pencil"></i></button>
-            <button class="act-btn power-btn ${isActive ? 'power-on' : 'power-off'}" title="${isActive ? 'Deactivate' : 'Activate'}" data-action="toggle"><i class="bi bi-power"></i></button>
-            <button class="act-btn del-btn"    title="Delete" data-action="delete"><i class="bi bi-trash"></i></button>
+            <button class="dept-act-btn dept-edit-btn" title="Edit" data-action="edit">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="dept-act-btn dept-power-btn ${isActive ? 'power-on' : 'power-off'}"
+              title="${isActive ? 'Deactivate' : 'Activate'}" data-action="toggle">
+              <i class="bi bi-power"></i>
+            </button>
+            <button class="dept-act-btn dept-del-btn" title="Delete" data-action="delete">
+              <i class="bi bi-trash"></i>
+            </button>
           `;
           el.addEventListener('click', (e: MouseEvent) => {
             const btn = (e.target as HTMLElement).closest('[data-action]') as HTMLElement;
             if (!btn) return;
             const dept = params.data as Department;
             switch (btn.getAttribute('data-action')) {
-              case 'view':   this.viewDetails(dept); break;
-              case 'edit':   this.editDepartment(dept); break;
-              case 'toggle': this.toggleStatus(dept); break;
+              case 'edit':   this.editDepartment(dept);   break;
+              case 'toggle': this.toggleStatus(dept);     break;
               case 'delete': this.deleteDepartment(dept); break;
             }
           });
@@ -127,60 +165,65 @@ export class DepartmentListComponent implements OnInit {
       {
         headerName: 'Department Name',
         field: 'departmentName',
-        minWidth: 200,
+        minWidth: 180,
         flex: 2,
-        cellRenderer: (p: any) => `<span class="cell-name">${p.value ?? ''}</span>`
+        cellRenderer: (p: any) =>
+          `<span style="font-weight:600;color:#1f2937;">${p.value ?? ''}</span>`
       },
       {
         headerName: 'Code',
         field: 'departmentCode',
-        minWidth: 100,
+        minWidth: 90,
         flex: 1,
-        cellRenderer: (p: any) => `<span class="cell-code">${p.value ?? ''}</span>`
+        cellRenderer: (p: any) =>
+          `<span style="font-family:'Courier New',monospace;font-size:12px;font-weight:600;color:#475569;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${p.value ?? ''}</span>`
       },
       {
         headerName: 'Parent Dept',
         field: 'parentDepartmentName',
-        minWidth: 140,
+        minWidth: 130,
         flex: 1.5,
         valueFormatter: (p) => p.value || '—'
       },
       {
         headerName: 'Head of Dept',
         field: 'headOfDepartmentName',
-        minWidth: 150,
+        minWidth: 140,
         flex: 1.5,
         valueFormatter: (p) => p.value || '—'
       },
       {
         headerName: 'Employees',
         field: 'employeeCount',
-        minWidth: 120,
+        minWidth: 130,
         flex: 1,
         filter: 'agNumberColumnFilter',
         cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
-        cellRenderer: (p: any) => `<span class="cell-emp">${p.value ?? 0} Employee(s)</span>`
+        cellRenderer: (p: any) =>
+          `<span style="background:#e0e7ff;color:#3730a3;font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap;">${p.value ?? 0} Employee(s)</span>`
       },
       {
         headerName: 'Description',
         field: 'description',
-        minWidth: 180,
+        minWidth: 170,
         flex: 2,
         cellRenderer: (p: any) =>
           p.value
-            ? `<span class="cell-desc" title="${p.value}">${p.value}</span>`
-            : `<span class="cell-dash">—</span>`
+            ? `<span style="font-size:12px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:100%;" title="${p.value}">${p.value}</span>`
+            : `<span style="color:#9ca3af;">—</span>`
       },
       {
         headerName: 'Active',
         field: 'isActive',
-        minWidth: 90,
+        minWidth: 100,
         flex: 0.9,
         filter: false,
         floatingFilter: false,
         cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
         cellRenderer: (p: any) =>
-          `<span class="cell-status ${p.value ? 'is-active' : 'is-inactive'}">${p.value ? 'Active' : 'Inactive'}</span>`
+          p.value
+            ? `<span style="background:#dcfce7;color:#166534;font-size:12px;font-weight:600;padding:3px 12px;border-radius:999px;display:inline-block;">Active</span>`
+            : `<span style="background:#fee2e2;color:#991b1b;font-size:12px;font-weight:600;padding:3px 12px;border-radius:999px;display:inline-block;">Inactive</span>`
       },
       {
         headerName: 'Created At',
@@ -188,9 +231,10 @@ export class DepartmentListComponent implements OnInit {
         minWidth: 170,
         flex: 1.2,
         filter: 'agDateColumnFilter',
+        cellStyle: { color: '#6b7280', fontSize: '12px' },
         valueFormatter: (p) => {
           if (!p.value) return '—';
-          const d = new Date(p.value);
+          const d    = new Date(p.value);
           const date = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
           const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toLowerCase();
           return `${date}, ${time}`;
@@ -201,18 +245,19 @@ export class DepartmentListComponent implements OnInit {
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
+    setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
   }
 
   loadDepartments(): void {
     this.loading = true;
-    this.error = null;
+    this.error   = null;
 
     const filter: DepartmentFilterRequest = {
-      searchTerm: this.searchTerm || undefined,
-      sortBy: this.sortBy,
+      searchTerm:    this.searchTerm || undefined,
+      sortBy:        this.sortBy,
       sortDirection: this.sortDirection,
-      pageNumber: this.currentPage,
-      pageSize: this.pageSize
+      pageNumber:    this.currentPage,
+      pageSize:      this.pageSize
     };
 
     this.departmentService.getFilteredDepartments(filter).subscribe({
@@ -223,14 +268,20 @@ export class DepartmentListComponent implements OnInit {
           this.pageSize    = res.data.pageSize;
           this.totalPages  = res.data.totalPages;
           this.totalCount  = res.data.totalCount;
+          if (this.gridApi) {
+            this.gridApi.setGridOption('rowData', this.departments);
+            setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
+          }
         } else {
           this.error = res.message || 'Failed to load departments';
         }
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.error = err.error?.message || 'An error occurred';
+        this.error   = err.error?.message || 'An error occurred';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -239,19 +290,19 @@ export class DepartmentListComponent implements OnInit {
     this.departmentService.getDepartmentStatistics().subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          const stats = res.data;
+          const s = res.data;
           this.statCards = [
-            { label: 'TOTAL DEPARTMENTS', value: stats['TotalDepartments'] ?? 0, colorClass: 'card-blue'  },
-            { label: 'ACTIVE',            value: stats['ActiveDepartments'] ?? 0, colorClass: 'card-green' },
-            { label: 'INACTIVE',          value: stats['InactiveDepartments'] ?? 0, colorClass: 'card-red' }
+            { label: 'Total Departments', value: s['TotalDepartments']    ?? 0, colorClass: 'card-blue'  },
+            { label: 'Active',            value: s['ActiveDepartments']   ?? 0, colorClass: 'card-green' },
+            { label: 'Inactive',          value: s['InactiveDepartments'] ?? 0, colorClass: 'card-red'   }
           ];
+          this.cdr.detectChanges();
         }
       },
       error: () => { this.statCards = []; }
     });
   }
 
-  // ── Export to Excel ────────────────────────────────────────────────────────
   exportDepartments(): void {
     const exportData = this.departments.map(d => ({
       'Department Name': d.departmentName,
@@ -259,35 +310,22 @@ export class DepartmentListComponent implements OnInit {
       'Parent Dept':     d.parentDepartmentName || '—',
       'Head of Dept':    d.headOfDepartmentName || '—',
       'Employees':       d.employeeCount ?? 0,
-      'Description':     d.description || '—',
+      'Description':     d.description   || '—',
       'Status':          d.isActive ? 'Active' : 'Inactive',
       'Created At':      d.createdAt ? new Date(d.createdAt).toLocaleDateString('en-GB') : '—'
     }));
-
     const ws = XLSX.utils.json_to_sheet(exportData);
-
-    // Column widths
-    ws['!cols'] = [
-      { wch: 25 }, { wch: 12 }, { wch: 20 },
-      { wch: 20 }, { wch: 12 }, { wch: 35 },
-      { wch: 10 }, { wch: 18 }
-    ];
-
+    ws['!cols'] = [{ wch: 25 }, { wch: 12 }, { wch: 20 }, { wch: 20 }, { wch: 12 }, { wch: 35 }, { wch: 10 }, { wch: 18 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Departments');
-
-    const fileName = `Departments_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    XLSX.writeFile(wb, `Departments_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    Swal.fire({ icon: 'success', title: 'Exported!', text: 'Department data exported.', timer: 2000, showConfirmButton: false });
   }
 
-  onSearch(): void { this.currentPage = 1; this.loadDepartments(); }
-  clearSearch(): void { this.searchTerm = ''; this.currentPage = 1; this.loadDepartments(); }
-  onPageChange(p: number): void { this.currentPage = p; this.loadDepartments(); }
-  onPageSizeChange(e: any): void { this.pageSize = +e.target.value; this.currentPage = 1; this.loadDepartments(); }
-
-  viewDetails(dept: Department): void {
-    this.router.navigate(['/departments', dept.departmentId]);
-  }
+  onSearch(): void         { this.currentPage = 1; this.loadDepartments(); }
+  clearSearch(): void      { this.searchTerm = ''; this.currentPage = 1; this.loadDepartments(); }
+  onPageChange(p: number)  { this.currentPage = p; this.loadDepartments(); }
+  onPageSizeChange(e: any) { this.pageSize = +e.target.value; this.currentPage = 1; this.loadDepartments(); }
 
   editDepartment(dept: Department): void {
     this.formMode = 'edit';
@@ -308,11 +346,11 @@ export class DepartmentListComponent implements OnInit {
       this.departmentService.toggleDepartmentStatus(dept.departmentId).subscribe({
         next: (res) => {
           if (res.success) {
-            Swal.fire({ title: 'Success!', text: `Department ${action}d.`, icon: 'success', timer: 2000, confirmButtonColor: '#3b82f6' });
+            Swal.fire({ title: 'Success!', text: `Department ${action}d.`, icon: 'success', timer: 2000, showConfirmButton: false });
             this.loadDepartments(); this.loadStats();
           }
         },
-        error: (err) => Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error', confirmButtonColor: '#ef4444' })
+        error: (err) => Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error' })
       });
     }
   }
@@ -332,7 +370,7 @@ export class DepartmentListComponent implements OnInit {
             this.departmentService.deleteDepartment(dept.departmentId).subscribe({
               next: (r) => {
                 if (r.success) {
-                  Swal.fire({ title: 'Deleted!', text: 'Department deleted.', icon: 'success', timer: 2000, confirmButtonColor: '#3b82f6' });
+                  Swal.fire({ title: 'Deleted!', text: 'Department deleted.', icon: 'success', timer: 2000, showConfirmButton: false });
                   this.loadDepartments(); this.loadStats();
                 }
               }
@@ -345,14 +383,9 @@ export class DepartmentListComponent implements OnInit {
     });
   }
 
-  createDepartment(): void {
-    this.formMode = 'create';
-    this.selectedDepartmentId = null;
-    this.showFormModal = true;
-  }
-
-  closeFormModal(): void { this.showFormModal = false; this.selectedDepartmentId = null; }
-  onFormSuccess(): void { this.closeFormModal(); this.loadDepartments(); this.loadStats(); }
+  createDepartment(): void { this.formMode = 'create'; this.selectedDepartmentId = null; this.showFormModal = true; }
+  closeFormModal(): void   { this.showFormModal = false; this.selectedDepartmentId = null; }
+  onFormSuccess(): void    { this.closeFormModal(); this.loadDepartments(); this.loadStats(); }
 
   get pages(): number[] {
     const max = 5;
