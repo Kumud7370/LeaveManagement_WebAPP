@@ -1,138 +1,207 @@
 <!-- attendance-list.component.html -->
-<div class="attendance-list-container">
 
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-left">
-      <h1 class="page-title">
-        <i class="fas fa-calendar-check"></i> Attendance Management
-      </h1>
-      <p class="page-subtitle">View, manage, and approve employee attendance records</p>
+<div class="att-page-container">
+
+  <!-- ── Page Title ── -->
+  <div class="att-page-header">
+    <h1 class="att-page-title">
+      <i class="fas fa-calendar-check"></i> Attendance Management
+    </h1>
+  </div>
+
+  <!-- ── Stats Cards ── -->
+  <div class="att-stats-grid">
+    <div class="att-stat-card att-stat-present">
+      <div class="att-stat-icon"><i class="fas fa-user-check"></i></div>
+      <div class="att-stat-body">
+        <p class="att-stat-label">Present</p>
+        <p class="att-stat-value">{{ stats.present }}</p>
+      </div>
     </div>
-    <div class="header-actions">
-      <button class="btn btn-secondary" (click)="loadAttendance()">
-        <i class="fas fa-sync-alt"></i> Refresh
+    <div class="att-stat-card att-stat-absent">
+      <div class="att-stat-icon"><i class="fas fa-user-times"></i></div>
+      <div class="att-stat-body">
+        <p class="att-stat-label">Absent</p>
+        <p class="att-stat-value">{{ stats.absent }}</p>
+      </div>
+    </div>
+    <div class="att-stat-card att-stat-halfday">
+      <div class="att-stat-icon"><i class="fas fa-adjust"></i></div>
+      <div class="att-stat-body">
+        <p class="att-stat-label">Half Day</p>
+        <p class="att-stat-value">{{ stats.halfDay }}</p>
+      </div>
+    </div>
+    <div class="att-stat-card att-stat-leave">
+      <div class="att-stat-icon"><i class="fas fa-plane-departure"></i></div>
+      <div class="att-stat-body">
+        <p class="att-stat-label">On Leave</p>
+        <p class="att-stat-value">{{ stats.leave }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toolbar Row ── -->
+  <div class="att-toolbar">
+    <div class="att-search-wrapper">
+      <input
+        type="text"
+        placeholder="Search by Employee ID or Name..."
+        [(ngModel)]="searchEmployeeId"
+        (input)="onSearchChange()"
+        class="att-search-input"
+      />
+    </div>
+    <div class="att-toolbar-actions">
+      <button (click)="onClearFilters()" class="att-btn att-btn-clear">
+        Clear
       </button>
-      <button class="btn btn-export" (click)="exportData()">
+      <button (click)="loadAttendance()" class="att-btn att-btn-refresh">
+        Refresh
+      </button>
+      <button (click)="exportData()" class="att-btn att-btn-export">
         <i class="fas fa-download"></i> Export
       </button>
-      <button class="btn btn-primary" (click)="openCreateForm()">
+      <div class="att-toolbar-divider"></div>
+      <button (click)="openCreateForm()" class="att-btn att-btn-primary">
         <i class="fas fa-plus"></i> Mark Attendance
       </button>
     </div>
   </div>
 
-  <!-- Stats Row -->
-  <div class="stats-row">
-    <div class="stat-card stat-present">
-      <div class="stat-icon"><i class="fas fa-user-check"></i></div>
-      <div class="stat-body">
-        <span class="stat-count">{{ getStatCount('Present') }}</span>
-        <span class="stat-label">Present</span>
-      </div>
+  <!-- ── Active Filters ── -->
+  <div *ngIf="activeFilters.hasActiveFilters" class="att-active-filters">
+    <span class="att-filter-label">Active Filters:</span>
+    <span
+      *ngFor="let filter of activeFilters.filters"
+      class="att-filter-badge"
+    >{{ filter }}</span>
+  </div>
+
+  <!-- ── Grid Card ── -->
+  <div class="att-grid-card">
+    <div class="att-grid-container">
+      <ag-grid-angular
+        #agGrid
+        style="width: 100%"
+        [theme]="gridTheme"
+        [domLayout]="'autoHeight'"
+        [rowData]="rowData"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [pagination]="false"
+        [animateRows]="true"
+        [rowSelection]="'multiple'"
+        [enableCellTextSelection]="true"
+        [suppressRowClickSelection]="true"
+        [rowHeight]="44"
+        [headerHeight]="44"
+        [floatingFiltersHeight]="36"
+        [suppressMenuHide]="true"
+        [enableBrowserTooltips]="true"
+        [suppressColumnVirtualisation]="true"
+        [suppressRowVirtualisation]="false"
+        [rowBuffer]="10"
+        [suppressLoadingOverlay]="false"
+        [suppressNoRowsOverlay]="false"
+        (gridReady)="onGridReady($event)"
+        [context]="context"
+      >
+      </ag-grid-angular>
     </div>
-    <div class="stat-card stat-absent">
-      <div class="stat-icon"><i class="fas fa-user-times"></i></div>
-      <div class="stat-body">
-        <span class="stat-count">{{ getStatCount('Absent') }}</span>
-        <span class="stat-label">Absent</span>
-      </div>
-    </div>
-    <div class="stat-card stat-halfday">
-      <div class="stat-icon"><i class="fas fa-adjust"></i></div>
-      <div class="stat-body">
-        <span class="stat-count">{{ getStatCount('HalfDay') }}</span>
-        <span class="stat-label">Half Day</span>
-      </div>
-    </div>
-    <div class="stat-card stat-leave">
-      <div class="stat-icon"><i class="fas fa-plane-departure"></i></div>
-      <div class="stat-body">
-        <span class="stat-count">{{ getStatCount('Leave') }}</span>
-        <span class="stat-label">On Leave</span>
+
+    <!-- ── Pagination ── -->
+    <div class="att-pagination">
+      <div class="att-pagination-inner">
+        <div class="att-page-size">
+          <label for="attPageSize">Show:</label>
+          <select
+            id="attPageSize"
+            [(ngModel)]="pageSize"
+            (change)="onPageSizeChanged(pageSize)"
+            class="att-page-size-select"
+          >
+            <option [value]="10">10</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </div>
+        <span class="att-pagination-text">
+          {{ rowData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0 }}
+          to {{ Math.min(currentPage * pageSize, totalItems) }} of
+          {{ totalItems }}
+        </span>
+        <span class="att-pagination-text">
+          Page {{ currentPage }} of {{ totalPages || 1 }}
+        </span>
+        <div class="att-pagination-btns">
+          <button (click)="goToPage(1)" [disabled]="currentPage === 1" class="att-pgbtn">«</button>
+          <button (click)="previousPage()" [disabled]="currentPage === 1" class="att-pgbtn">‹</button>
+          <button (click)="nextPage()" [disabled]="currentPage === totalPages || totalPages === 0" class="att-pgbtn">›</button>
+          <button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages || totalPages === 0" class="att-pgbtn">»</button>
+        </div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Content -->
-  <div class="content-wrapper" [class.sidebar-open]="showDetails">
-    <!-- Grid Panel -->
-    <div class="grid-panel">
-      <!-- Filter Bar -->
-      <div class="filter-bar">
-        <input
-          type="text"
-          class="filter-input"
-          placeholder="Employee ID..."
-          [(ngModel)]="searchEmployeeId"
-          (keyup.enter)="loadAttendance()"
-        />
-        <input type="date" class="filter-input date-input" [(ngModel)]="startDate" (change)="loadAttendance()" />
-        <input type="date" class="filter-input date-input" [(ngModel)]="endDate" (change)="loadAttendance()" />
-        <select class="filter-select" [(ngModel)]="selectedStatus" (change)="loadAttendance()">
-          <option value="">All Statuses</option>
-          <option [value]="AttendanceStatus.Present">Present</option>
-          <option [value]="AttendanceStatus.Absent">Absent</option>
-          <option [value]="AttendanceStatus.HalfDay">Half Day</option>
-          <option [value]="AttendanceStatus.Leave">Leave</option>
-          <option [value]="AttendanceStatus.Holiday">Holiday</option>
-          <option [value]="AttendanceStatus.WeekOff">Week Off</option>
-          <option [value]="AttendanceStatus.WorkFromHome">WFH</option>
-        </select>
-        <button class="btn btn-sm btn-clear" (click)="onClearFilters()">
-          <i class="fas fa-times"></i> Clear
-        </button>
-        <span class="result-count">{{ rowData.length }} records</span>
-      </div>
-
-      <!-- Grid -->
-      <div class="grid-wrapper ag-theme-quartz">
-        <div *ngIf="loading" class="grid-loading">
-          <div class="spinner"></div><p>Loading attendance...</p>
-        </div>
-        <ag-grid-angular
-          *ngIf="!loading"
-          [rowData]="rowData"
-          [columnDefs]="columnDefs"
-          [gridOptions]="gridOptions"
-          (gridReady)="onGridReady($event)"
-          style="width:100%;height:100%;"
-        ></ag-grid-angular>
-      </div>
+<!-- ════════════════════════════════════════════
+     DETAILS SIDEBAR MODAL
+     ════════════════════════════════════════════ -->
+<div
+  *ngIf="showDetails"
+  class="att-modal-overlay"
+  (click)="onOverlayClick($event)"
+>
+  <div
+    class="att-modal-container att-modal-xlarge"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="att-modal-header">
+      <h2 class="att-modal-title">
+        <i class="fas fa-eye"></i> Attendance Details
+      </h2>
+      <button (click)="onSidebarClose()" class="att-modal-close" type="button">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
-
-    <!-- Sidebar: Details -->
-    <div class="sidebar-panel" *ngIf="showDetails">
-      <div class="sidebar-header">
-        <h3>Attendance Details</h3>
-        <button class="close-btn" (click)="onSidebarClose()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
+    <div class="att-modal-body">
       <app-attendance-details
-        *ngIf="showDetails && selectedAttendanceId"
-        [attendanceId]="selectedAttendanceId"
+        [attendanceId]="selectedAttendanceId!"
         (recordUpdated)="onRecordUpdated()"
       ></app-attendance-details>
     </div>
   </div>
-
 </div>
 
-<!-- Manual Attendance Form Modal -->
-<div class="modal-overlay" *ngIf="showForm" (click)="onSidebarClose()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="onSidebarClose()">
-      <i class="fas fa-times"></i>
-    </button>
-    <div class="modal-header">
-      <h2>{{ editingRecord ? 'Edit Attendance' : 'Mark Manual Attendance' }}</h2>
-      <p>{{ editingRecord ? 'Update the attendance record below' : 'Manually record attendance for an employee' }}</p>
+<!-- ════════════════════════════════════════════
+     MARK / EDIT ATTENDANCE MODAL
+     ════════════════════════════════════════════ -->
+<div
+  *ngIf="showForm"
+  class="att-modal-overlay"
+  (click)="onOverlayClick($event)"
+>
+  <div
+    class="att-modal-container"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="att-modal-header">
+      <h2 class="att-modal-title">
+        <i class="fas" [ngClass]="editingRecord ? 'fa-pencil-alt' : 'fa-plus-circle'"></i>
+        {{ editingRecord ? 'Edit Attendance' : 'Mark Manual Attendance' }}
+      </h2>
+      <button (click)="onSidebarClose()" class="att-modal-close" type="button">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
-    <app-manual-attendance-form
-      [existingRecord]="editingRecord"
-      (saved)="onRecordSaved()"
-      (cancelled)="onSidebarClose()"
-    ></app-manual-attendance-form>
+    <div class="att-modal-body">
+      <app-manual-attendance-form
+        [existingRecord]="editingRecord"
+        (saved)="onRecordSaved()"
+        (cancelled)="onSidebarClose()"
+      ></app-manual-attendance-form>
+    </div>
   </div>
 </div>
