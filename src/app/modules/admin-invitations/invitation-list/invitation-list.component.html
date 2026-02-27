@@ -1,191 +1,208 @@
-<div class="invitation-list-container">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Admin Invitations</h1>
-      <p class="page-subtitle">Manage admin user invitations</p>
+<div class="ll-page">
+
+  <h1 class="ll-page-title">Admin Invitations</h1>
+
+  <!-- ── Stats ─────────────────────────────────────────────────────── -->
+  <div class="ll-stats-row">
+    <div class="ll-stat ll-stat-blue">
+      <p class="ll-stat-label">Total Invitations</p>
+      <p class="ll-stat-value">{{ stats.total }}</p>
+    </div>
+    <div class="ll-stat ll-stat-yellow">
+      <p class="ll-stat-label">Pending</p>
+      <p class="ll-stat-value">{{ stats.pending }}</p>
+    </div>
+    <div class="ll-stat ll-stat-green">
+      <p class="ll-stat-label">Accepted</p>
+      <p class="ll-stat-value">{{ stats.accepted }}</p>
+    </div>
+    <div class="ll-stat ll-stat-red">
+      <p class="ll-stat-label">Expired</p>
+      <p class="ll-stat-value">{{ stats.expired }}</p>
     </div>
   </div>
 
-  <!-- Success/Error Messages -->
-  <div *ngIf="successMessage" class="alert alert-success">
-    <i class="bi bi-check-circle"></i>{{ successMessage }}
-  </div>
-  <div *ngIf="error" class="alert alert-error">
-    <i class="bi bi-exclamation-circle"></i>{{ error }}
-  </div>
+  <!-- ── ONE white card ── -->
+  <div class="ll-card">
 
-  <!-- Search and Action Section -->
-  <div class="search-action-section">
-    <div class="search-bar">
-      <i class="bi bi-search search-icon"></i>
-      <input type="text" placeholder="Search by email, role..."
-        [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" class="search-input" />
-    </div>
+    <!-- Toolbar -->
+    <div class="ll-toolbar">
+      <input
+        type="text"
+        class="ll-search"
+        placeholder="Search by email, role..."
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="onSearch()" />
 
-    <select [(ngModel)]="statusFilter" (change)="onSearch()" class="status-filter">
-      <option value="all">All Status</option>
-      <option value="pending">Pending</option>
-      <option value="accepted">Accepted</option>
-      <option value="expired">Expired</option>
-    </select>
-
-    <button class="btn btn-clear"   (click)="clearSearch()">     <i class="bi bi-funnel"></i> Clear </button>
-    <button class="btn btn-refresh" (click)="loadInvitations()"> <i class="bi bi-arrow-clockwise"></i> Refresh </button>
-    <button class="btn btn-export"  (click)="exportToExcel()">   <i class="bi bi-download"></i> Export </button>
-    <button class="btn btn-primary" (click)="openAddModal()">    <i class="bi bi-plus-circle"></i> Send Invitation </button>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="loading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading invitations...</p>
-  </div>
-
-  <!-- Error State -->
-  <div *ngIf="error && !loading && invitations.length === 0" class="error-state">
-    <i class="bi bi-exclamation-circle"></i>
-    <p>{{ error }}</p>
-    <button class="btn btn-outline" (click)="loadInvitations()">Try Again</button>
-  </div>
-
-  <!-- Grid + Pagination -->
-  <div *ngIf="!loading" class="grid-container">
-
-    <!-- Empty State -->
-    <div *ngIf="invitations.length === 0" class="empty-state">
-      <i class="bi bi-inbox"></i>
-      <h3>No invitations found</h3>
-      <p>Try adjusting your filters or send a new invitation</p>
-      <button class="btn btn-primary" (click)="openAddModal()">Send Invitation</button>
-    </div>
-
-    <!-- AG Grid -->
-    <ag-grid-angular
-      *ngIf="invitations.length > 0"
-      class="ag-theme-quartz"
-      [rowData]="invitations"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      [gridOptions]="gridOptions"
-      (gridReady)="onGridReady($event)"
-      [rowHeight]="70"
-      [headerHeight]="50"
-      [domLayout]="'autoHeight'">
-    </ag-grid-angular>
-
-    <!-- ── Pagination Bar ── -->
-    <div *ngIf="invitations.length > 0" class="pagination-bar">
-
-      <div class="pagination-info">
-        <span class="items-label">
-          Showing <strong>{{ showingFrom }}</strong>–<strong>{{ showingTo }}</strong>
-          of <strong>{{ totalItems }}</strong> results
-        </span>
-        <label class="page-size-label">
-          Rows per page:
-          <select class="page-size-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
-            <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
-          </select>
-        </label>
+      <!-- Custom dropdown replaces native <select> to avoid OS-level clipping on mobile -->
+      <div class="ll-custom-select" [class.open]="statusDropdownOpen" (click)="$event.stopPropagation()">
+        <button type="button" class="ll-custom-select-trigger" (click)="toggleStatusDropdown()">
+          <span>{{ statusLabel }}</span>
+          <i class="bi bi-chevron-down ll-custom-select-arrow"></i>
+        </button>
+        <div class="ll-custom-select-menu">
+          <button type="button" class="ll-custom-select-option" [class.selected]="statusFilter === 'all'"     (click)="selectStatus('all')">All Statuses</button>
+          <button type="button" class="ll-custom-select-option" [class.selected]="statusFilter === 'pending'" (click)="selectStatus('pending')">Pending</button>
+          <button type="button" class="ll-custom-select-option" [class.selected]="statusFilter === 'accepted'"(click)="selectStatus('accepted')">Accepted</button>
+          <button type="button" class="ll-custom-select-option" [class.selected]="statusFilter === 'expired'" (click)="selectStatus('expired')">Expired</button>
+        </div>
       </div>
 
-      <div class="pagination-nav">
-        <button class="page-btn" (click)="goToPage(1)" [disabled]="!hasPrevPage" title="First">
-          <i class="bi bi-chevron-double-left"></i>
+      <div class="ll-toolbar-btns">
+        <button class="ll-btn ll-btn-clear" (click)="clearSearch()">
+          <i class="bi bi-funnel"></i> Clear
         </button>
-        <button class="page-btn" (click)="prevPage()" [disabled]="!hasPrevPage" title="Previous">
-          <i class="bi bi-chevron-left"></i>
+        <button class="ll-btn ll-btn-refresh" (click)="loadInvitations()">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
         </button>
+        <button class="ll-btn ll-btn-export" (click)="exportToExcel()">
+          <i class="bi bi-download"></i> Export
+        </button>
+        <button class="ll-btn ll-btn-add" (click)="openAddModal()">
+          <i class="bi bi-plus-circle"></i> Send Invitation
+        </button>
+      </div>
+    </div>
 
-        <button
-          *ngFor="let p of pageNumbers"
-          class="page-btn page-number"
-          [class.active]="p === currentPage"
-          (click)="goToPage(p)">
+    <!-- Success / Error banners -->
+    <div *ngIf="successMessage" class="ll-banner ll-banner-success">
+      <i class="bi bi-check-circle"></i> {{ successMessage }}
+    </div>
+    <div *ngIf="error && !loading" class="ll-banner ll-banner-error">
+      <i class="bi bi-exclamation-circle"></i> {{ error }}
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="ll-loading">
+      <div class="ll-spinner"></div>
+      <span>Loading invitations...</span>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="!loading && invitations.length === 0" class="ll-empty">
+      <i class="bi bi-envelope-x"></i>
+      <span>No invitations found. Adjust filters or send a new invitation.</span>
+      <button class="ll-btn ll-btn-add" (click)="openAddModal()">
+        <i class="bi bi-plus-circle"></i> Send Invitation
+      </button>
+    </div>
+
+    <!-- AG Grid — wrapped for horizontal scroll on mobile -->
+    <div class="ll-grid-wrapper" *ngIf="!loading && invitations.length > 0">
+      <ag-grid-angular
+        class="ag-theme-quartz"
+        [rowData]="invitations"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [gridOptions]="gridOptions"
+        (gridReady)="onGridReady($event)"
+        [rowHeight]="52"
+        [headerHeight]="44"
+        [domLayout]="'autoHeight'">
+      </ag-grid-angular>
+    </div>
+
+    <!-- Pagination -->
+    <div class="ll-pagination" *ngIf="!loading && invitations.length > 0">
+      <div class="ll-ps-wrap">
+        <label>Show:</label>
+        <select class="ll-ps-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+          <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+        </select>
+      </div>
+      <span class="ll-pag-info">
+        {{ showingFrom }} to {{ showingTo }} of {{ totalItems }}
+      </span>
+      <span class="ll-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+      <div class="ll-pag-btns">
+        <button class="ll-pgbtn" [disabled]="!hasPrevPage" (click)="goToPage(1)">«</button>
+        <button class="ll-pgbtn" [disabled]="!hasPrevPage" (click)="prevPage()">‹</button>
+        <button *ngFor="let p of pageNumbers" class="ll-pgbtn"
+          [class.active]="p === currentPage" (click)="goToPage(p)">
           {{ p }}
         </button>
-
-        <button class="page-btn" (click)="nextPage()" [disabled]="!hasNextPage" title="Next">
-          <i class="bi bi-chevron-right"></i>
-        </button>
-        <button class="page-btn" (click)="goToPage(totalPages)" [disabled]="!hasNextPage" title="Last">
-          <i class="bi bi-chevron-double-right"></i>
-        </button>
+        <button class="ll-pgbtn" [disabled]="!hasNextPage" (click)="nextPage()">›</button>
+        <button class="ll-pgbtn" [disabled]="!hasNextPage" (click)="goToPage(totalPages)">»</button>
       </div>
-
     </div>
-    <!-- ── End Pagination Bar ── -->
 
-  </div>
-</div>
+  </div><!-- /ll-card -->
 
-<!-- Add Invitation Modal -->
-<div class="modal-overlay" *ngIf="showAddModal" (click)="closeAddModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="closeAddModal()"><i class="bi bi-x-lg"></i></button>
-    <div class="modal-header">
-      <h2>Send Invitation</h2>
-      <p>Invite a new admin user to the platform</p>
+</div><!-- /ll-page -->
+
+
+<!-- ── Add Invitation Modal ──────────────────────────────────────── -->
+<div class="ll-overlay" *ngIf="showAddModal" (click)="closeAddModal()">
+  <div class="ll-modal" (click)="$event.stopPropagation()">
+    <div class="ll-modal-head">
+      <h2 class="ll-modal-title">
+        <i class="bi bi-envelope-plus"></i> Send Invitation
+      </h2>
+      <button class="ll-modal-close" (click)="closeAddModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Email *</label>
-        <input type="email" [(ngModel)]="formData.email" class="form-control" placeholder="admin@example.com" />
+    <div class="ll-modal-body ll-form-body">
+      <div class="ll-fg">
+        <label>Email <span class="ll-required">*</span></label>
+        <input type="email" [(ngModel)]="formData.email" class="ll-input" placeholder="admin@example.com" />
       </div>
-      <div class="form-group">
-        <label>Role *</label>
-        <select [(ngModel)]="formData.role" class="form-control">
+      <div class="ll-fg">
+        <label>Role <span class="ll-required">*</span></label>
+        <select [(ngModel)]="formData.role" class="ll-input">
           <option value="Admin">Admin</option>
           <option value="Manager">Manager</option>
           <option value="Employee">Employee</option>
         </select>
       </div>
-      <div class="form-group">
-        <label>Notes (Optional)</label>
-        <textarea [(ngModel)]="formData.notes" class="form-control" rows="3" placeholder="Add any notes..."></textarea>
+      <div class="ll-fg">
+        <label>Notes <span class="ll-optional">(Optional)</span></label>
+        <textarea [(ngModel)]="formData.notes" class="ll-input ll-textarea" rows="3" placeholder="Add any notes..."></textarea>
       </div>
-      <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+      <div *ngIf="error" class="ll-banner ll-banner-error">{{ error }}</div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" (click)="closeAddModal()">Cancel</button>
-      <button class="btn btn-primary" (click)="handleSendInvitation()" [disabled]="submitting">
+    <div class="ll-modal-foot">
+      <button class="ll-btn ll-btn-refresh" (click)="closeAddModal()">Cancel</button>
+      <button class="ll-btn ll-btn-add" (click)="handleSendInvitation()" [disabled]="submitting">
         {{ submitting ? 'Sending...' : 'Send Invitation' }}
       </button>
     </div>
   </div>
 </div>
 
-<!-- Edit Invitation Modal -->
-<div class="modal-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="closeEditModal()"><i class="bi bi-x-lg"></i></button>
-    <div class="modal-header">
-      <h2>Edit Invitation</h2>
-      <p>Update invitation details</p>
+<!-- ── Edit Invitation Modal ─────────────────────────────────────── -->
+<div class="ll-overlay" *ngIf="showEditModal" (click)="closeEditModal()">
+  <div class="ll-modal" (click)="$event.stopPropagation()">
+    <div class="ll-modal-head">
+      <h2 class="ll-modal-title">
+        <i class="bi bi-pencil-square"></i> Edit Invitation
+      </h2>
+      <button class="ll-modal-close" (click)="closeEditModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
-    <div class="modal-body">
-      <div class="form-group">
+    <div class="ll-modal-body ll-form-body">
+      <div class="ll-fg">
         <label>Email</label>
-        <input type="email" [(ngModel)]="editFormData.email" class="form-control" placeholder="admin@example.com" />
+        <input type="email" [(ngModel)]="editFormData.email" class="ll-input" placeholder="admin@example.com" />
       </div>
-      <div class="form-group">
+      <div class="ll-fg">
         <label>Role</label>
-        <select [(ngModel)]="editFormData.role" class="form-control">
+        <select [(ngModel)]="editFormData.role" class="ll-input">
           <option value="Admin">Admin</option>
           <option value="Manager">Manager</option>
           <option value="Employee">Employee</option>
         </select>
       </div>
-      <div class="form-group">
+      <div class="ll-fg">
         <label>Notes</label>
-        <textarea [(ngModel)]="editFormData.notes" class="form-control" rows="3" placeholder="Add any notes..."></textarea>
+        <textarea [(ngModel)]="editFormData.notes" class="ll-input ll-textarea" rows="3" placeholder="Add any notes..."></textarea>
       </div>
-      <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+      <div *ngIf="error" class="ll-banner ll-banner-error">{{ error }}</div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" (click)="closeEditModal()">Cancel</button>
-      <button class="btn btn-primary" (click)="handleEditInvitation()" [disabled]="submitting">
+    <div class="ll-modal-foot">
+      <button class="ll-btn ll-btn-refresh" (click)="closeEditModal()">Cancel</button>
+      <button class="ll-btn ll-btn-add" (click)="handleEditInvitation()" [disabled]="submitting">
         {{ submitting ? 'Updating...' : 'Update Invitation' }}
       </button>
     </div>
