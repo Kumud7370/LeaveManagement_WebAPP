@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewEncapsulation, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -23,7 +23,6 @@ import * as XLSX from 'xlsx';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// ── EXACT same pattern as Holiday — themeQuartz with columnBorder: true ──────
 const deptGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
   foregroundColor:                '#1f2937',
@@ -35,7 +34,7 @@ const deptGridTheme = themeQuartz.withParams({
   selectedRowBackgroundColor:     '#dbeafe',
   fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   fontSize:                       13,
-  columnBorder:                   true,   // ← THIS is what makes dividers visible
+  columnBorder:                   true,   
   headerColumnBorder:             true,
   headerColumnBorderHeight:       '50%',
   headerColumnResizeHandleColor:  '#9ca3af',
@@ -58,7 +57,10 @@ interface StatCard {
   templateUrl: './department-list.component.html',
   styleUrls: ['./department-list.component.scss']
 })
-export class DepartmentListComponent implements OnInit {
+export class DepartmentListComponent implements OnInit, OnDestroy {
+
+  @ViewChild(AgGridAngular, { read: ElementRef })
+  agGridElement!: ElementRef<HTMLElement>;
 
   readonly gridTheme = deptGridTheme;
 
@@ -83,6 +85,8 @@ export class DepartmentListComponent implements OnInit {
 
   private gridApi!: GridApi;
   columnDefs: ColDef[] = [];
+
+  private resizeObserver: ResizeObserver | null = null;
 
   defaultColDef: ColDef = {
     sortable: true,
@@ -119,6 +123,14 @@ export class DepartmentListComponent implements OnInit {
   ngOnInit(): void {
     this.loadDepartments();
     this.loadStats();
+  }
+
+  ngOnDestroy(): void {
+    
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
   }
 
   buildColumnDefs(): void {
@@ -246,6 +258,20 @@ export class DepartmentListComponent implements OnInit {
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
+
+    const hostEl = this.agGridElement?.nativeElement;
+    const container = (hostEl?.closest('.grid-card') as HTMLElement) ?? hostEl;
+
+    if (container && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.gridApi) {
+          requestAnimationFrame(() => {
+            this.gridApi?.sizeColumnsToFit();
+          });
+        }
+      });
+      this.resizeObserver.observe(container);
+    }
   }
 
   loadDepartments(): void {
