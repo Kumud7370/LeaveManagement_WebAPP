@@ -83,6 +83,7 @@ export interface EmployeeShiftFilterDto {
   effectiveFromEnd?: string;
   isActive?: boolean;
   onlyCurrentAssignments?: boolean;
+  searchTerm?: string;  
   pageNumber: number;
   pageSize: number;
   sortBy: string;
