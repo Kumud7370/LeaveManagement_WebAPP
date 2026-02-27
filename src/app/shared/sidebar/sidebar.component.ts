@@ -74,7 +74,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: "fas fa-calendar-check",
       expanded: false,
       children: [
-        { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
+        // { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
         { label: "Attendance List", route: "/attendance/list", icon: "fas fa-list" },
         { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
       ]
@@ -249,7 +249,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           icon: "fas fa-calendar-check",
           expanded: false,
           children: [
-            { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
+            // { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
             { label: "Attendance List", route: "/attendance/list", icon: "fas fa-list" },
             { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
           ]
