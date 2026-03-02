@@ -39,6 +39,14 @@ export class LeaveService {
     );
   }
 
+  /** Employee-facing: backend resolves the employee from JWT — no employeeId needed in filter */
+  getMyLeaves(filter: LeaveFilterDto): Observable<ApiResponse<PagedResultDto<Leave>>> {
+    return this.apiClient.post<ApiResponse<PagedResultDto<Leave>>>(
+      `${this.endpoint}/my-leaves`,
+      filter
+    );
+  }
+
   getLeavesByEmployee(employeeId: string): Observable<ApiResponse<Leave[]>> {
     return this.apiClient.get<ApiResponse<Leave[]>>(
       `${this.endpoint}/employee/${employeeId}`
