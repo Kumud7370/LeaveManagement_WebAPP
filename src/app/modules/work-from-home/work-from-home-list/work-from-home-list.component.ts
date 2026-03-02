@@ -28,6 +28,7 @@ import {
 } from '../../../core/Models/work-from-home.model';
 import { WfhRequestDetailsComponent } from '../work-from-home-details/work-from-home-details.component';
 import { WfhRequestFormComponent } from '../work-from-home-form/work-from-home-form.component';
+import { WfhActionCellRendererComponent } from '../wfh-action-cell-renderer';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -60,7 +61,14 @@ const wfhGridTheme = themeQuartz.withParams({
   templateUrl: './work-from-home-list.component.html',
   styleUrls: ['./work-from-home-list.component.scss'],
   encapsulation: ViewEncapsulation.None,
-  imports: [CommonModule, FormsModule, AgGridAngular, WfhRequestDetailsComponent, WfhRequestFormComponent]
+  imports: [
+    CommonModule,
+    FormsModule,
+    AgGridAngular,
+    WfhRequestDetailsComponent,
+    WfhRequestFormComponent,
+    WfhActionCellRendererComponent
+  ]
 })
 export class WfhRequestListComponent implements OnInit, OnDestroy {
 
@@ -68,7 +76,8 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
 
   rowData: WfhRequest[] = [];
   private gridApi!: GridApi;
-  loading = false;
+  loading = false;       // true only on first load (mounts/unmounts grid)
+  refreshing = false;    // true on subsequent refreshes (grid stays mounted)
   error: string | null = null;
   context = { componentParent: this };
 
@@ -121,36 +130,14 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
   columnDefs: ColDef[] = [
     {
       headerName: 'Actions',
-      width: 210, minWidth: 210, maxWidth: 210,
+      width: 190, minWidth: 190, maxWidth: 190,
       sortable: false, filter: false, floatingFilter: false,
       suppressFloatingFilterButton: true,
       headerClass: 'wl-action-col',
       cellClass: 'wl-action-cell wl-action-col',
       cellStyle: { display: 'flex', alignItems: 'center', padding: '0', overflow: 'visible' },
-      suppressSizeToFit: true,
-      cellRenderer: (params: any) => {
-        if (!params.data) return '';
-        const status: ApprovalStatus = params.data.status;
-        const isPending   = status === ApprovalStatus.Pending;
-        const canCancel   = params.data.canBeCancelled && !isPending;
-
-        const btn = (action: string, title: string, bg: string, color: string, icon: string) =>
-          `<button data-action="${action}" title="${title}"
-             style="width:30px;height:30px;border:none;border-radius:6px;
-                    cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
-                    background:${bg};color:${color};font-size:13px;pointer-events:all;flex-shrink:0;">
-             <i class="bi ${icon}" style="pointer-events:none;"></i>
-           </button>`;
-
-        return `<div style="display:flex;gap:5px;align-items:center;padding:0 8px;height:100%;pointer-events:all;">
-          ${btn('view',    'View',    '#dbeafe', '#1e40af', 'bi-eye')}
-          ${isPending ? btn('edit',    'Edit',    '#fef3c7', '#92400e', 'bi-pencil') : ''}
-          ${isPending ? btn('approve', 'Approve', '#d1fae5', '#065f46', 'bi-check-lg') : ''}
-          ${isPending ? btn('reject',  'Reject',  '#fee2e2', '#991b1b', 'bi-x-lg') : ''}
-          ${canCancel  ? btn('cancel',  'Cancel',  '#fef3c7', '#92400e', 'bi-slash-circle') : ''}
-          ${isPending ? btn('delete',  'Delete',  '#fee2e2', '#991b1b', 'bi-trash') : ''}
-        </div>`;
-      }
+      cellRenderer: WfhActionCellRendererComponent,   // ← proper Angular component
+      suppressSizeToFit: true
     },
     {
       headerName: 'Employee',
@@ -203,13 +190,25 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
       field: 'status',
       width: 130, minWidth: 110,
       cellRenderer: (p: any) => {
-        const map: Record<number, [string, string, string]> = {
+        // Support numeric enum values AND string status names from API
+        const numMap: Record<number, [string, string, string]> = {
           [ApprovalStatus.Pending]:   ['#fef9c3', '#92400e', 'Pending'],
           [ApprovalStatus.Approved]:  ['#dcfce7', '#166534', 'Approved'],
           [ApprovalStatus.Rejected]:  ['#fee2e2', '#991b1b', 'Rejected'],
           [ApprovalStatus.Cancelled]: ['#f1f5f9', '#475569', 'Cancelled'],
         };
-        const [bg, color, lbl] = map[p.value] ?? ['#fef9c3', '#92400e', 'Pending'];
+        const strMap: Record<string, [string, string, string]> = {
+          'pending':   ['#fef9c3', '#92400e', 'Pending'],
+          'approved':  ['#dcfce7', '#166534', 'Approved'],
+          'rejected':  ['#fee2e2', '#991b1b', 'Rejected'],
+          'cancelled': ['#f1f5f9', '#475569', 'Cancelled'],
+        };
+        // Try numeric key first, then string key, then fall back to statusName field
+        const byNum = numMap[Number(p.value)];
+        const byStr = strMap[String(p.value).toLowerCase()];
+        // Also check statusName on the row data as last resort
+        const byName = strMap[String(p.data?.statusName ?? '').toLowerCase()];
+        const [bg, color, lbl] = byNum ?? byStr ?? byName ?? ['#fef9c3', '#92400e', String(p.data?.statusName ?? p.value ?? 'Unknown')];
         return `<span style="display:inline-flex;padding:2px 12px;border-radius:9999px;
           font-size:12px;font-weight:600;background:${bg};color:${color};
           font-family:'Inter',-apple-system,sans-serif;">${lbl}</span>`;
@@ -246,7 +245,7 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
   private scheduleSizeColumnsToFit(delay = 320): void {
     clearTimeout(this.sidebarResizeTimer);
     this.sidebarResizeTimer = setTimeout(() => {
-      if (this.gridApi) this.gridApi.sizeColumnsToFit();
+      if (this.gridApi && !this.gridApi.isDestroyed()) this.gridApi.sizeColumnsToFit();
     }, delay);
   }
 
@@ -259,28 +258,19 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
       this.resizeObserver = new ResizeObserver(() => this.scheduleSizeColumnsToFit(50));
       this.resizeObserver.observe(gridEl);
     }
-
-    // Wire cell click to action buttons
-    params.api.addEventListener('cellClicked', (event: any) => {
-      const target = event.event?.target as HTMLElement;
-      if (!target) return;
-      const actionBtn = target.closest?.('[data-action]') as HTMLElement | null;
-      const action = actionBtn?.getAttribute('data-action');
-      if (!action || !event.data) return;
-      const request: WfhRequest = event.data;
-      switch (action) {
-        case 'view':    this.viewDetails(request);       break;
-        case 'edit':    this.editWfhRequest(request);    break;
-        case 'approve': this.approveWfhRequest(request); break;
-        case 'reject':  this.rejectWfhRequest(request);  break;
-        case 'cancel':  this.cancelWfhRequest(request);  break;
-        case 'delete':  this.deleteWfhRequest(request);  break;
-      }
-    });
   }
 
   loadRequests(): void {
-    this.loading = true; this.error = null;
+    // First load: show full loading state (grid not yet mounted)
+    // Subsequent loads: keep grid mounted, just show a subtle refresh indicator
+    const isFirstLoad = this.rowData.length === 0 && !this.error;
+    if (isFirstLoad) {
+      this.loading = true;
+    } else {
+      this.refreshing = true;
+    }
+    this.error = null;
+
     const f: WfhRequestFilterDto = {
       pageNumber:    this.currentPage,
       pageSize:      this.pageSize,
@@ -294,20 +284,25 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
     };
     this.wfhRequestService.getFilteredWfhRequests(f).subscribe({
       next: (r) => {
-        this.loading = false;
+        this.loading    = false;
+        this.refreshing = false;
         if (r.success) {
           this.rowData    = r.data.items;
           this.totalPages = r.data.totalPages;
           this.totalCount = r.data.totalCount;
-          if (this.gridApi) {
+          // Update grid rows in-place if grid is alive, otherwise Angular binding handles it
+          if (this.gridApi && !this.gridApi.isDestroyed()) {
             this.gridApi.setGridOption('rowData', this.rowData);
-            setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
+            setTimeout(() => {
+              if (this.gridApi && !this.gridApi.isDestroyed()) this.gridApi.sizeColumnsToFit();
+            }, 50);
           }
         } else { this.error = r.message || 'Failed to load requests'; }
         this.cdr.detectChanges();
       },
       error: (e) => {
-        this.loading = false;
+        this.loading    = false;
+        this.refreshing = false;
         this.error = e.error?.message || 'Error loading requests';
         this.cdr.detectChanges();
       }
