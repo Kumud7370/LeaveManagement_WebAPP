@@ -52,7 +52,8 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
   readonly gridTheme = empGridTheme;
 
   allRequests: WfhRequest[] = [];
-  rowData: WfhRequest[] = [];
+  filteredRequests: WfhRequest[] = [];   // after status filter, before pagination
+  rowData: WfhRequest[] = [];            // current page slice shown in grid
   loading = false;
   refreshing = false;
   error: string | null = null;
@@ -71,7 +72,26 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
   selectedStatus: ApprovalStatus | '' = '';
   ApprovalStatus = ApprovalStatus;
 
-  // Stats from loaded data
+  // ── Pagination ───────────────────────────────────────────────
+  currentPage   = 1;
+  pageSize      = 10;
+  pageSizeOptions = [10, 25, 50, 100];
+
+  get totalItems()  { return this.filteredRequests.length; }
+  get totalPages()  { return Math.max(1, Math.ceil(this.totalItems / this.pageSize)); }
+  get startIndex()  { return this.totalItems === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1; }
+  get endIndex()    { return Math.min(this.currentPage * this.pageSize, this.totalItems); }
+
+  get pageNumbers(): number[] {
+    const total = this.totalPages;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const cur = this.currentPage;
+    if (cur <= 4)      return [1, 2, 3, 4, 5, -1, total];
+    if (cur >= total - 3) return [1, -1, total - 4, total - 3, total - 2, total - 1, total];
+    return [1, -1, cur - 1, cur, cur + 1, -1, total];
+  }
+
+  // ── Stats ────────────────────────────────────────────────────
   get totalCount()    { return this.allRequests.length; }
   get pendingCount()  { return this.countByStatus('pending');   }
   get approvedCount() { return this.countByStatus('approved');  }
@@ -220,12 +240,10 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
     if (isFirst) { this.loading = true; } else { this.refreshing = true; }
     this.error = null;
 
-    // Uses /my-requests — backend reads JWT claims to return only this employee's requests
     this.wfhService.getMyWfhRequests().subscribe({
       next: (r) => {
         this.loading = false;
         this.refreshing = false;
-        // Handle both { success, data } wrapper and raw array responses
         const raw: any = r;
         const items: WfhRequest[] = Array.isArray(raw)
           ? raw
@@ -237,6 +255,7 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
           this.allRequests = items.sort((a: WfhRequest, b: WfhRequest) =>
             new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
           );
+          this.currentPage = 1;
           this.applyFilter();
         } else {
           this.error = (r as any)?.message || 'Failed to load requests';
@@ -252,26 +271,53 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ── Filter + Pagination ──────────────────────────────────────
+
   applyFilter(): void {
     if (!this.selectedStatus) {
-      this.rowData = [...this.allRequests];
+      this.filteredRequests = [...this.allRequests];
     } else {
       const num = Number(this.selectedStatus);
-      this.rowData = this.allRequests.filter(r =>
+      this.filteredRequests = this.allRequests.filter(r =>
         Number(r.status) === num ||
         String(r.statusName ?? '').toLowerCase() === ApprovalStatus[num]?.toLowerCase()
       );
     }
+    // Reset to page 1 whenever filter changes
+    this.currentPage = 1;
+    this.applyPage();
+  }
+
+  applyPage(): void {
+    const start = (this.currentPage - 1) * this.pageSize;
+    this.rowData = this.filteredRequests.slice(start, start + this.pageSize);
     if (this.gridApi && !this.gridApi.isDestroyed()) {
       this.gridApi.setGridOption('rowData', this.rowData);
       setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
     }
+    this.cdr.detectChanges();
   }
 
   onStatusFilter(status: ApprovalStatus | ''): void {
     this.selectedStatus = status;
     this.applyFilter();
   }
+
+  // ── Pagination controls ──────────────────────────────────────
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.currentPage) return;
+    this.currentPage = page;
+    this.applyPage();
+  }
+
+  onPageSizeChange(newSize: number): void {
+    this.pageSize = Number(newSize);
+    this.currentPage = 1;
+    this.applyPage();
+  }
+
+  // ── Modals ───────────────────────────────────────────────────
 
   openCreateForm(): void { this.editingRequest = null; this.showForm = true; this.showDetails = false; }
   viewDetails(req: WfhRequest): void { this.selectedRequestId = req.id; this.showDetails = true; this.showForm = false; }

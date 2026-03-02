@@ -17,15 +17,12 @@ export class DepartmentFormComponent implements OnInit {
   @Input() departmentId: string | null = null;
   @Input() isEditMode = false;
   @Output() formCancelled = new EventEmitter<void>();
-  @Output() formSubmitted = new EventEmitter<void>();
+  @Output() formSubmitted = new EventEmitter<Department>();
 
   departmentForm!: FormGroup;
   loading = false;
   submitting = false;
   error: string | null = null;
-
-  parentDepartments: Department[] = [];
-  employees: any[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -34,13 +31,10 @@ export class DepartmentFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
-    
     if (this.departmentId) {
       this.isEditMode = true;
       this.loadDepartment();
     }
-    
-    this.loadDropdownData();
   }
 
   initializeForm(): void {
@@ -56,32 +50,14 @@ export class DepartmentFormComponent implements OnInit {
         Validators.minLength(2),
         Validators.maxLength(100)
       ]],
-      description: ['', [Validators.maxLength(500)]],
-      headOfDepartment: [null],
-      parentDepartmentId: [null],
-      displayOrder: [0, [Validators.min(0)]],
-      isActive: [true]
-    });
-  }
-
-  loadDropdownData(): void {
-    this.departmentService.getActiveDepartments().subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.parentDepartments = response.data.filter(
-            dept => dept.departmentId !== this.departmentId
-          );
-        }
-      },
-      error: (err) => {
-        console.error('Failed to load parent departments', err);
-      }
+      description:  ['', [Validators.maxLength(500)]],
+      displayOrder: [0,  [Validators.min(0)]],
+      isActive:     [true]
     });
   }
 
   loadDepartment(): void {
     if (!this.departmentId) return;
-
     this.loading = true;
     this.departmentService.getDepartmentById(this.departmentId).subscribe({
       next: (response) => {
@@ -90,11 +66,9 @@ export class DepartmentFormComponent implements OnInit {
           this.departmentForm.patchValue({
             departmentCode: dept.departmentCode,
             departmentName: dept.departmentName,
-            description: dept.description,
-            headOfDepartment: dept.headOfDepartment,
-            parentDepartmentId: dept.parentDepartmentId,
-            displayOrder: dept.displayOrder,
-            isActive: dept.isActive
+            description:    dept.description,
+            displayOrder:   dept.displayOrder,
+            isActive:       dept.isActive
           });
         }
         this.loading = false;
@@ -115,88 +89,79 @@ export class DepartmentFormComponent implements OnInit {
     this.submitting = true;
     this.error = null;
 
-    const formValue = this.departmentForm.value;
-    
+    const v = this.departmentForm.value;
     const requestData = {
-      departmentCode: formValue.departmentCode,
-      departmentName: formValue.departmentName,
-      description: formValue.description || undefined,
-      headOfDepartment: formValue.headOfDepartment || undefined,
-      parentDepartmentId: formValue.parentDepartmentId || undefined,
-      displayOrder: formValue.displayOrder || 0,
-      isActive: formValue.isActive
+      departmentCode: v.departmentCode,
+      departmentName: v.departmentName,
+      description:    v.description || undefined,
+      displayOrder:   v.displayOrder || 0,
+      isActive:       v.isActive
     };
 
     if (this.isEditMode && this.departmentId) {
-      const updateRequest = {
-        departmentId: this.departmentId,
-        ...requestData
-      };
-
-      this.departmentService.updateDepartment(updateRequest).subscribe({
+      this.departmentService.updateDepartment({ departmentId: this.departmentId, ...requestData }).subscribe({
         next: (response) => {
+          this.submitting = false;
           if (response.success) {
+            this.formSubmitted.emit(response.data);
             Swal.fire({
-              title: 'Success!',
-              text: 'Department updated successfully!',
+              title: 'Department Updated!',
+              text: `"${response.data.departmentName}" has been updated successfully.`,
               icon: 'success',
-              confirmButtonColor: '#3b82f6'
-            }).then(() => {
-              this.formSubmitted.emit();
+              confirmButtonColor: '#3b82f6',
+              confirmButtonText: 'OK'
             });
           } else {
             this.error = response.message || 'Failed to update department';
-            this.submitting = false;
             Swal.fire({
               title: 'Error!',
-              text: this.error || 'Failed to update department',
+              text: this.error!,
               icon: 'error',
               confirmButtonColor: '#ef4444'
             });
           }
         },
         error: (err) => {
-          console.error('Update error:', err);
-          this.error = err.error?.message || err.message || 'An error occurred while updating department';
           this.submitting = false;
+          this.error = err.error?.message || 'An error occurred while updating department';
           Swal.fire({
             title: 'Error!',
-            text: this.error || 'An error occurred while updating department',
+            text: this.error!,
             icon: 'error',
             confirmButtonColor: '#ef4444'
           });
         }
       });
+
     } else {
       this.departmentService.createDepartment(requestData).subscribe({
         next: (response) => {
+          this.submitting = false;
           if (response.success) {
+            this.formSubmitted.emit(response.data);
             Swal.fire({
-              title: 'Success!',
-              text: 'Department created successfully!',
+              title: 'Department Created!',
+              text: `"${response.data.departmentName}" has been created successfully.`,
               icon: 'success',
-              confirmButtonColor: '#3b82f6'
-            }).then(() => {
-              this.formSubmitted.emit();
+              confirmButtonColor: '#3b82f6',
+              confirmButtonText: 'OK'
             });
           } else {
             this.error = response.message || 'Failed to create department';
-            this.submitting = false;
             Swal.fire({
               title: 'Error!',
-              text: this.error || 'Failed to create department',
+              text: this.error!,
               icon: 'error',
               confirmButtonColor: '#ef4444'
             });
           }
         },
         error: (err) => {
-          console.error('Create error:', err);
-          this.error = err.error?.message || err.message || 'An error occurred while creating department';
           this.submitting = false;
+          this.error = err.error?.message || 'An error occurred while creating department';
           Swal.fire({
             title: 'Error!',
-            text: this.error || 'An error occurred while creating department',
+            text: this.error!,
             icon: 'error',
             confirmButtonColor: '#ef4444'
           });
@@ -213,32 +178,17 @@ export class DepartmentFormComponent implements OnInit {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
       control?.markAsTouched();
-
-      if (control instanceof FormGroup) {
-        this.markFormGroupTouched(control);
-      }
+      if (control instanceof FormGroup) this.markFormGroupTouched(control);
     });
   }
 
   getErrorMessage(fieldName: string): string {
     const control = this.departmentForm.get(fieldName);
-    if (control?.hasError('required')) {
-      return 'This field is required';
-    }
-    if (control?.hasError('minlength')) {
-      const minLength = control.errors?.['minlength'].requiredLength;
-      return `Minimum length is ${minLength} characters`;
-    }
-    if (control?.hasError('maxlength')) {
-      const maxLength = control.errors?.['maxlength'].requiredLength;
-      return `Maximum length is ${maxLength} characters`;
-    }
-    if (control?.hasError('pattern')) {
-      return 'Invalid format. Use only uppercase letters, numbers, underscores, and hyphens';
-    }
-    if (control?.hasError('min')) {
-      return 'Value must be 0 or greater';
-    }
+    if (control?.hasError('required'))  return 'This field is required';
+    if (control?.hasError('minlength')) return `Minimum length is ${control.errors?.['minlength'].requiredLength} characters`;
+    if (control?.hasError('maxlength')) return `Maximum length is ${control.errors?.['maxlength'].requiredLength} characters`;
+    if (control?.hasError('pattern'))   return 'Invalid format. Use only uppercase letters, numbers, underscores, and hyphens';
+    if (control?.hasError('min'))       return 'Value must be 0 or greater';
     return '';
   }
 

@@ -34,7 +34,7 @@ const deptGridTheme = themeQuartz.withParams({
   selectedRowBackgroundColor:     '#dbeafe',
   fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   fontSize:                       13,
-  columnBorder:                   true,   
+  columnBorder:                   true,
   headerColumnBorder:             true,
   headerColumnBorderHeight:       '50%',
   headerColumnResizeHandleColor:  '#9ca3af',
@@ -85,7 +85,6 @@ export class DepartmentListComponent implements OnInit, OnDestroy {
 
   private gridApi!: GridApi;
   columnDefs: ColDef[] = [];
-
   private resizeObserver: ResizeObserver | null = null;
 
   defaultColDef: ColDef = {
@@ -126,11 +125,32 @@ export class DepartmentListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
     }
+  }
+
+  // ── Instantly push local array into grid 
+  private refreshGrid(): void {
+    if (this.gridApi) {
+      this.gridApi.setGridOption('rowData', [...this.departments]);
+      requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
+    }
+    this.cdr.detectChanges();
+  }
+
+  // ── Recalculate stat cards from local array 
+  private recalcStats(): void {
+    const total    = this.departments.length;
+    const active   = this.departments.filter(d => d.isActive).length;
+    const inactive = total - active;
+    this.statCards = [
+      { label: 'Total Departments', value: total,    colorClass: 'card-blue'  },
+      { label: 'Active',            value: active,   colorClass: 'card-green' },
+      { label: 'Inactive',          value: inactive, colorClass: 'card-red'   }
+    ];
+    this.cdr.detectChanges();
   }
 
   buildColumnDefs(): void {
@@ -145,6 +165,8 @@ export class DepartmentListComponent implements OnInit, OnDestroy {
         floatingFilter: false,
         suppressFloatingFilterButton: true,
         suppressSizeToFit: true,
+        headerClass: 'actions-header-cell',
+        cellStyle: { borderRight: '2px solid #d1d5db' },
         cellRenderer: (params: any) => {
           const el = document.createElement('div');
           el.className = 'dept-action-cell';
@@ -189,20 +211,6 @@ export class DepartmentListComponent implements OnInit, OnDestroy {
         flex: 1,
         cellRenderer: (p: any) =>
           `<span style="font-family:'Courier New',monospace;font-size:12px;font-weight:600;color:#475569;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${p.value ?? ''}</span>`
-      },
-      {
-        headerName: 'Parent Dept',
-        field: 'parentDepartmentName',
-        minWidth: 130,
-        flex: 1.5,
-        valueFormatter: (p) => p.value || '—'
-      },
-      {
-        headerName: 'Head of Dept',
-        field: 'headOfDepartmentName',
-        minWidth: 140,
-        flex: 1.5,
-        valueFormatter: (p) => p.value || '—'
       },
       {
         headerName: 'Employees',
@@ -265,9 +273,7 @@ export class DepartmentListComponent implements OnInit, OnDestroy {
     if (container && typeof ResizeObserver !== 'undefined') {
       this.resizeObserver = new ResizeObserver(() => {
         if (this.gridApi) {
-          requestAnimationFrame(() => {
-            this.gridApi?.sizeColumnsToFit();
-          });
+          requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
         }
       });
       this.resizeObserver.observe(container);
@@ -294,10 +300,8 @@ export class DepartmentListComponent implements OnInit, OnDestroy {
           this.pageSize    = res.data.pageSize;
           this.totalPages  = res.data.totalPages;
           this.totalCount  = res.data.totalCount;
-          if (this.gridApi) {
-            this.gridApi.setGridOption('rowData', this.departments);
-            setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
-          }
+          this.refreshGrid();
+          this.recalcStats();
         } else {
           this.error = res.message || 'Failed to load departments';
         }
@@ -333,15 +337,13 @@ export class DepartmentListComponent implements OnInit, OnDestroy {
     const exportData = this.departments.map(d => ({
       'Department Name': d.departmentName,
       'Code':            d.departmentCode,
-      'Parent Dept':     d.parentDepartmentName || '—',
-      'Head of Dept':    d.headOfDepartmentName || '—',
       'Employees':       d.employeeCount ?? 0,
       'Description':     d.description   || '—',
       'Status':          d.isActive ? 'Active' : 'Inactive',
       'Created At':      d.createdAt ? new Date(d.createdAt).toLocaleDateString('en-GB') : '—'
     }));
     const ws = XLSX.utils.json_to_sheet(exportData);
-    ws['!cols'] = [{ wch: 25 }, { wch: 12 }, { wch: 20 }, { wch: 20 }, { wch: 12 }, { wch: 35 }, { wch: 10 }, { wch: 18 }];
+    ws['!cols'] = [{ wch: 25 }, { wch: 12 }, { wch: 12 }, { wch: 35 }, { wch: 10 }, { wch: 18 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Departments');
     XLSX.writeFile(wb, `Departments_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -368,15 +370,36 @@ export class DepartmentListComponent implements OnInit, OnDestroy {
       confirmButtonColor: '#3b82f6', cancelButtonColor: '#6b7280',
       confirmButtonText: `Yes, ${action} it!`
     });
+
     if (result.isConfirmed) {
+      const idx = this.departments.findIndex(d => d.departmentId === dept.departmentId);
+      if (idx !== -1) {
+        this.departments[idx] = { ...this.departments[idx], isActive: !dept.isActive };
+        this.refreshGrid();
+        this.recalcStats();
+      }
+
       this.departmentService.toggleDepartmentStatus(dept.departmentId).subscribe({
         next: (res) => {
           if (res.success) {
             Swal.fire({ title: 'Success!', text: `Department ${action}d.`, icon: 'success', timer: 2000, showConfirmButton: false });
-            this.loadDepartments(); this.loadStats();
+          } else {
+            if (idx !== -1) {
+              this.departments[idx] = { ...this.departments[idx], isActive: dept.isActive };
+              this.refreshGrid();
+              this.recalcStats();
+            }
+            Swal.fire({ title: 'Error!', text: res.message || 'Failed to update status', icon: 'error' });
           }
         },
-        error: (err) => Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error' })
+        error: (err) => {
+          if (idx !== -1) {
+            this.departments[idx] = { ...this.departments[idx], isActive: dept.isActive };
+            this.refreshGrid();
+            this.recalcStats();
+          }
+          Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error' });
+        }
       });
     }
   }
@@ -392,18 +415,42 @@ export class DepartmentListComponent implements OnInit, OnDestroy {
             confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280',
             confirmButtonText: 'Yes, delete it!'
           });
+
           if (confirm.isConfirmed) {
+            const idx = this.departments.findIndex(d => d.departmentId === dept.departmentId);
+            if (idx !== -1) {
+              this.departments.splice(idx, 1);
+              this.totalCount = Math.max(0, this.totalCount - 1);
+              this.totalPages = Math.ceil(this.totalCount / this.pageSize) || 1;
+              this.refreshGrid();
+              this.recalcStats();
+            }
+
             this.departmentService.deleteDepartment(dept.departmentId).subscribe({
               next: (r) => {
                 if (r.success) {
                   Swal.fire({ title: 'Deleted!', text: 'Department deleted.', icon: 'success', timer: 2000, showConfirmButton: false });
-                  this.loadDepartments(); this.loadStats();
+                } else {
+                  if (idx !== -1) this.departments.splice(idx, 0, dept);
+                  this.totalCount++;
+                  this.totalPages = Math.ceil(this.totalCount / this.pageSize);
+                  this.refreshGrid();
+                  this.recalcStats();
+                  Swal.fire({ title: 'Error!', text: r.message || 'Failed to delete', icon: 'error' });
                 }
+              },
+              error: (err) => {
+                if (idx !== -1) this.departments.splice(idx, 0, dept);
+                this.totalCount++;
+                this.totalPages = Math.ceil(this.totalCount / this.pageSize);
+                this.refreshGrid();
+                this.recalcStats();
+                Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error' });
               }
             });
           }
         } else {
-          Swal.fire({ title: 'Cannot Delete', text: 'This department has employees or sub-departments.', icon: 'warning', confirmButtonColor: '#3b82f6' });
+          Swal.fire({ title: 'Cannot Delete', text: 'This department has employees assigned.', icon: 'warning', confirmButtonColor: '#3b82f6' });
         }
       }
     });
@@ -411,7 +458,26 @@ export class DepartmentListComponent implements OnInit, OnDestroy {
 
   createDepartment(): void { this.formMode = 'create'; this.selectedDepartmentId = null; this.showFormModal = true; }
   closeFormModal(): void   { this.showFormModal = false; this.selectedDepartmentId = null; }
-  onFormSuccess(): void    { this.closeFormModal(); this.loadDepartments(); this.loadStats(); }
+
+  onFormSuccess(savedDept?: Department): void {
+    this.closeFormModal();
+
+    if (savedDept) {
+      if (this.formMode === 'edit') {
+        const idx = this.departments.findIndex(d => d.departmentId === savedDept.departmentId);
+        if (idx !== -1) this.departments[idx] = savedDept;
+      } else {
+        this.departments.unshift(savedDept);
+        this.totalCount++;
+        this.totalPages = Math.ceil(this.totalCount / this.pageSize);
+      }
+      this.refreshGrid();
+      this.recalcStats();
+    } else {
+      this.loadDepartments();
+      this.loadStats();
+    }
+  }
 
   get pages(): number[] {
     const max = 5;
