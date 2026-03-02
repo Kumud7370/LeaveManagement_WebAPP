@@ -42,6 +42,27 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+}
+
+/* ── Refresh progress bar (replaces full loading spinner on refresh) */
+.wl-refresh-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  z-index: 10;
+  background: #dbeafe;
+  overflow: hidden;
+}
+.wl-refresh-bar-inner {
+  height: 100%;
+  width: 40%;
+  background: #3b82f6;
+  animation: wlRefreshSlide 1.2s ease-in-out infinite;
+}
+@keyframes wlRefreshSlide {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
 }
 
 /* ── Toolbar ─────────────────────────────────────────────────────── */
@@ -95,6 +116,11 @@
 .wl-btn-add           { background: #3b82f6; color: #fff; border-color: #3b82f6; font-weight: 600; }
 .wl-btn-add:hover     { background: #2563eb; }
 .wl-btn:disabled      { opacity: 0.4; cursor: not-allowed; }
+
+/* Spinning icon on refresh button when refreshing */
+.wl-btn-spinning i {
+  animation: wlSpin 0.75s linear infinite;
+}
 
 .wl-filter-badge {
   display: inline-flex; align-items: center; justify-content: center;
@@ -242,54 +268,31 @@ ag-grid-angular {
 /* ── Responsive ──────────────────────────────────────────────────── */
 @media (max-width: 1024px) { .wl-stats-row { grid-template-columns: repeat(2, 1fr); } }
 
-
 @media (max-width: 768px) {
   .wl-stats-row { grid-template-columns: 1fr 1fr; }
-
-  .wl-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    padding: 10px 12px;
-  }
+  .wl-toolbar { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 12px; }
   .wl-search { width: 100%; }
-
-  /* Row 1: Filters | Clear | Refresh  — Row 2: Export | New WFH Request */
-  .wl-toolbar-btns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
+  .wl-toolbar-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .wl-btn-filter  { grid-column: 1 / 2; justify-content: center; }
   .wl-btn-clear   { grid-column: 2 / 3; justify-content: center; }
   .wl-btn-refresh { grid-column: 1 / 2; justify-content: center; }
   .wl-btn-export  { grid-column: 2 / 3; justify-content: center; }
   .wl-btn-add     { grid-column: 1 / 3; justify-content: center; }
-
   .wl-filter-panel.open { max-height: 360px; }
   .wl-filter-inner      { grid-template-columns: 1fr; }
-
   .wl-pagination { flex-wrap: wrap; justify-content: center; gap: 10px; }
 }
 
 @media (max-width: 480px) {
   .wl-stats-row  { grid-template-columns: 1fr; }
   .wl-page-title { font-size: 22px; }
-
   .wl-toolbar { padding: 10px; }
-
-  /* Row 1: Filters | Clear   Row 2: Refresh | Export   Row 3: New WFH (full width) */
-  .wl-toolbar-btns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
+  .wl-toolbar-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .wl-btn-filter  { grid-column: 1 / 2; justify-content: center; }
   .wl-btn-clear   { grid-column: 2 / 3; justify-content: center; }
   .wl-btn-refresh { grid-column: 1 / 2; justify-content: center; }
   .wl-btn-export  { grid-column: 2 / 3; justify-content: center; }
   .wl-btn-add     { grid-column: 1 / 3; justify-content: center; }
-
   .wl-ps-wrap { display: none; }
   .wl-pagination { justify-content: center; }
 }
