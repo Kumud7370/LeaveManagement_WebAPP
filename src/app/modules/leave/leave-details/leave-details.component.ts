@@ -15,6 +15,7 @@ import Swal from 'sweetalert2';
 export class LeaveDetailsComponent implements OnInit {
   @Input() leaveId: string | null = null;
   @Output() leaveUpdated = new EventEmitter<void>();
+  @Input() isEmployee = false;
 
   leave: Leave | null = null;
   loading = false;

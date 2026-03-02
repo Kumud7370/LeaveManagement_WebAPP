@@ -11,7 +11,8 @@
     <!-- Header Band -->
     <div class="details-header" [ngClass]="getStatusClass(leave.leaveStatus)">
       <div class="header-left">
-        <div class="leave-type-pill" [style.background]="leave.leaveTypeColor + '33'" [style.color]="leave.leaveTypeColor">
+        <div class="leave-type-pill" [style.background]="leave.leaveTypeColor + '33'"
+          [style.color]="leave.leaveTypeColor">
           {{ leave.leaveTypeName }}
         </div>
         <h2>{{ leave.employeeName }}</h2>
@@ -97,7 +98,8 @@
             </div>
             <div class="detail-row">
               <span class="detail-label">Approved On</span>
-              <span class="detail-value">{{ leave.approvedDate ? (leave.approvedDate | date: 'd MMM yyyy, h:mm a') : '—' }}</span>
+              <span class="detail-value">{{ leave.approvedDate ? (leave.approvedDate | date: 'd MMM yyyy, h:mm a') : '—'
+                }}</span>
             </div>
           </ng-container>
 
@@ -108,7 +110,8 @@
             </div>
             <div class="detail-row">
               <span class="detail-label">Rejected On</span>
-              <span class="detail-value">{{ leave.rejectedDate ? (leave.rejectedDate | date: 'd MMM yyyy, h:mm a') : '—' }}</span>
+              <span class="detail-value">{{ leave.rejectedDate ? (leave.rejectedDate | date: 'd MMM yyyy, h:mm a') : '—'
+                }}</span>
             </div>
             <div class="detail-row" *ngIf="leave.rejectionReason">
               <span class="detail-label">Rejection Reason</span>
@@ -119,7 +122,8 @@
           <ng-container *ngIf="leave.leaveStatus === LeaveStatus.Cancelled">
             <div class="detail-row">
               <span class="detail-label">Cancelled On</span>
-              <span class="detail-value">{{ leave.cancelledDate ? (leave.cancelledDate | date: 'd MMM yyyy, h:mm a') : '—' }}</span>
+              <span class="detail-value">{{ leave.cancelledDate ? (leave.cancelledDate | date: 'd MMM yyyy, h:mm a') :
+                '—' }}</span>
             </div>
             <div class="detail-row" *ngIf="leave.cancellationReason">
               <span class="detail-label">Cancellation Reason</span>

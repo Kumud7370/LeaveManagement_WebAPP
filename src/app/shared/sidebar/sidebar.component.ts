@@ -316,6 +316,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
         },
 
         {
+          label: "Leave",                            // <-- ADD THIS BLOCK
+          icon: "fas fa-plane-departure",
+          expanded: false,
+          children: [
+            { label: "My Leaves", route: "/my-leaves", icon: "fas fa-list-alt" },
+          ]
+        },
+
+        {
           label: "Work From Home",
           icon: "fas fa-house-user",
           expanded: false,
