@@ -37,12 +37,8 @@
       />
     </div>
     <div class="rl-toolbar-actions">
-      <button (click)="handleClearFilters()" class="rl-btn rl-btn-clear">
-        Clear
-      </button>
-      <button (click)="loadRegularizations()" class="rl-btn rl-btn-refresh">
-        Refresh
-      </button>
+      <button (click)="handleClearFilters()" class="rl-btn rl-btn-clear">Clear</button>
+      <button (click)="loadRegularizations()" class="rl-btn rl-btn-refresh">Refresh</button>
       <button (click)="exportToExcel()" class="rl-btn rl-btn-export">
         <i class="bi bi-download"></i> Export
       </button>
@@ -56,11 +52,7 @@
   <!-- ── Active Filters ──────────────────────────────────────────── -->
   <div *ngIf="activeFilters.hasActiveFilters" class="rl-active-filters">
     <span class="rl-filter-label">Active Filters:</span>
-    <span
-      *ngFor="let filter of activeFilters.filters"
-      class="rl-filter-badge"
-      >{{ filter }}</span
-    >
+    <span *ngFor="let filter of activeFilters.filters" class="rl-filter-badge">{{ filter }}</span>
   </div>
 
   <!-- ── Grid Card ───────────────────────────────────────────────── -->
@@ -89,8 +81,7 @@
         [rowBuffer]="10"
         (gridReady)="onGridReady($event)"
         [context]="context"
-      >
-      </ag-grid-angular>
+      ></ag-grid-angular>
     </div>
 
     <!-- ── Pagination ─────────────────────────────────────────── -->
@@ -98,12 +89,7 @@
       <div class="rl-pagination-inner">
         <div class="rl-page-size">
           <label for="rlPageSize">Show:</label>
-          <select
-            id="rlPageSize"
-            [(ngModel)]="pageSize"
-            (change)="onPageSizeChanged(pageSize)"
-            class="rl-page-size-select"
-          >
+          <select id="rlPageSize" [(ngModel)]="pageSize" (change)="onPageSizeChanged(pageSize)" class="rl-page-size-select">
             <option [value]="10">10</option>
             <option [value]="20">20</option>
             <option [value]="50">50</option>
@@ -112,50 +98,40 @@
         </div>
         <span class="rl-pagination-text">
           {{ rowData.length > 0 ? (currentPage - 1) * pageSize + 1 : 0 }}
-          to {{ Math.min(currentPage * pageSize, totalItems) }} of
-          {{ totalItems }}
+          to {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }}
         </span>
-        <span class="rl-pagination-text">
-          Page {{ currentPage }} of {{ totalPages || 1 }}
-        </span>
+        <span class="rl-pagination-text">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
         <div class="rl-pagination-btns">
-          <button (click)="goToPage(1)" [disabled]="currentPage === 1" class="rl-pgbtn">«</button>
-          <button (click)="previousPage()" [disabled]="currentPage === 1" class="rl-pgbtn">‹</button>
-          <button
-            (click)="nextPage()"
-            [disabled]="currentPage === totalPages || totalPages === 0"
-            class="rl-pgbtn"
-          >›</button>
-          <button
-            (click)="goToPage(totalPages)"
-            [disabled]="currentPage === totalPages || totalPages === 0"
-            class="rl-pgbtn"
-          >»</button>
+          <button (click)="goToPage(1)"         [disabled]="currentPage === 1"                              class="rl-pgbtn">«</button>
+          <button (click)="previousPage()"       [disabled]="currentPage === 1"                              class="rl-pgbtn">‹</button>
+          <button (click)="nextPage()"           [disabled]="currentPage === totalPages || totalPages === 0" class="rl-pgbtn">›</button>
+          <button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages || totalPages === 0" class="rl-pgbtn">»</button>
         </div>
       </div>
     </div>
   </div>
-</div>
+
+</div><!-- end .rl-page-container -->
+
 
 <!-- ════════════════════════════════════════════════════════════════
-     VIEW REGULARIZATION MODAL  ✅ NEW
+     VIEW REGULARIZATION MODAL
      ════════════════════════════════════════════════════════════════ -->
-<div *ngIf="showViewModal && viewRegularizationData" class="rl-modal-overlay" (click)="closeViewModal()">
+<div *ngIf="showViewModal && viewRegularizationData"
+     class="rl-modal-overlay"
+     (click)="closeViewModal()">
   <div class="rl-modal-container rl-modal-xlarge" (click)="$event.stopPropagation()">
 
-    <!-- Header -->
     <div class="rl-modal-header">
       <h2 class="rl-modal-title">
-        <i class="bi bi-eye"></i>
-        Regularization Details
+        <i class="bi bi-eye"></i> Regularization Details
       </h2>
       <button (click)="closeViewModal()" class="rl-modal-close" type="button">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
-    <!-- Body -->
-    <div class="rl-modal-body" style="padding:0; overflow-y:auto;">
+    <div class="rl-modal-body" style="padding: 0; overflow-y: auto;">
 
       <!-- Employee Banner -->
       <div class="rl-view-banner">
@@ -180,10 +156,10 @@
           </span>
           <span class="rl-view-type-badge"
             [ngClass]="{
-              'rl-type-missed':   viewRegularizationData.regularizationType === 1,
-              'rl-type-late':     viewRegularizationData.regularizationType === 2,
-              'rl-type-early':    viewRegularizationData.regularizationType === 3,
-              'rl-type-fullday':  viewRegularizationData.regularizationType === 4
+              'rl-type-missed':  viewRegularizationData.regularizationType === 1,
+              'rl-type-late':    viewRegularizationData.regularizationType === 2,
+              'rl-type-early':   viewRegularizationData.regularizationType === 3,
+              'rl-type-fullday': viewRegularizationData.regularizationType === 4
             }">
             {{ viewRegularizationData.regularizationTypeName }}
           </span>
@@ -272,13 +248,11 @@
             <div class="rl-view-info-val">{{ formatViewDateTime(viewRegularizationData.approvedAt) }}</div>
           </div>
 
-          <!-- Reason — full width -->
           <div class="rl-view-info-item rl-view-full">
             <label>Reason for Request</label>
             <div class="rl-view-reason-box">{{ viewRegularizationData.reason }}</div>
           </div>
 
-          <!-- Rejection Reason — full width, only if present -->
           <div class="rl-view-info-item rl-view-full" *ngIf="viewRegularizationData.rejectionReason">
             <label>Rejection Reason</label>
             <div class="rl-view-rejection-box">{{ viewRegularizationData.rejectionReason }}</div>
@@ -286,14 +260,14 @@
 
         </div>
       </div>
-    </div>
+    </div><!-- end modal body -->
 
-    <!-- Footer -->
     <div class="rl-modal-footer">
       <button class="rl-btn rl-btn-secondary" (click)="closeViewModal()">Close</button>
     </div>
   </div>
 </div>
+
 
 <!-- ════════════════════════════════════════════════════════════════
      ADD REGULARIZATION MODAL
@@ -302,8 +276,7 @@
   <div class="rl-modal-container rl-modal-xlarge" (click)="$event.stopPropagation()">
     <div class="rl-modal-header">
       <h2 class="rl-modal-title">
-        <i class="bi bi-plus-circle-dotted"></i>
-        Add Regularization
+        <i class="bi bi-plus-circle-dotted"></i> Add Regularization
       </h2>
       <button (click)="closeAddModal()" class="rl-modal-close" type="button">
         <i class="bi bi-x-lg"></i>
@@ -320,6 +293,7 @@
   </div>
 </div>
 
+
 <!-- ════════════════════════════════════════════════════════════════
      EDIT REGULARIZATION MODAL
      ════════════════════════════════════════════════════════════════ -->
@@ -327,8 +301,7 @@
   <div class="rl-modal-container rl-modal-xlarge" (click)="$event.stopPropagation()">
     <div class="rl-modal-header">
       <h2 class="rl-modal-title">
-        <i class="bi bi-pencil-square"></i>
-        Edit Regularization
+        <i class="bi bi-pencil-square"></i> Edit Regularization
       </h2>
       <button (click)="closeEditModal()" class="rl-modal-close" type="button">
         <i class="bi bi-x-lg"></i>
@@ -345,6 +318,7 @@
   </div>
 </div>
 
+
 <!-- ════════════════════════════════════════════════════════════════
      REJECTION MODAL
      ════════════════════════════════════════════════════════════════ -->
@@ -352,8 +326,7 @@
   <div class="rl-modal-container" (click)="$event.stopPropagation()">
     <div class="rl-modal-header">
       <h2 class="rl-modal-title">
-        <i class="bi bi-x-circle"></i>
-        Reject Regularization Request
+        <i class="bi bi-x-circle"></i> Reject Regularization Request
       </h2>
       <button (click)="closeApprovalModal()" class="rl-modal-close" type="button">
         <i class="bi bi-x-lg"></i>
@@ -374,11 +347,7 @@
     </div>
     <div class="rl-modal-footer">
       <button class="rl-btn rl-btn-secondary" (click)="closeApprovalModal()">Cancel</button>
-      <button
-        class="rl-btn rl-btn-danger"
-        (click)="submitRejection()"
-        [disabled]="!approvalReason.trim()"
-      >
+      <button class="rl-btn rl-btn-danger" (click)="submitRejection()" [disabled]="!approvalReason.trim()">
         Reject Request
       </button>
     </div>
