@@ -1,0 +1,155 @@
+<div class="emp-wfh">
+
+  <!-- ── Header ────────────────────────────────────────────────── -->
+  <div class="emp-wfh__header">
+    <div>
+      <h1 class="emp-wfh__title">My WFH Requests</h1>
+      <p class="emp-wfh__sub">Track and manage your work-from-home requests</p>
+    </div>
+    <button class="emp-btn emp-btn--primary" (click)="openCreateForm()">
+      <i class="bi bi-plus-circle"></i> New WFH Request
+    </button>
+  </div>
+
+  <!-- ── Stats Strip ────────────────────────────────────────────── -->
+  <div class="emp-stats">
+    <div class="emp-stat emp-stat--blue"
+         [class.emp-stat--active]="selectedStatus === ''"
+         (click)="onStatusFilter('')">
+      <span class="emp-stat__num">{{ totalCount }}</span>
+      <span class="emp-stat__lbl">Total</span>
+    </div>
+    <div class="emp-stat emp-stat--yellow"
+         [class.emp-stat--active]="selectedStatus === ApprovalStatus.Pending"
+         (click)="onStatusFilter(ApprovalStatus.Pending)">
+      <span class="emp-stat__num">{{ pendingCount }}</span>
+      <span class="emp-stat__lbl">Pending</span>
+    </div>
+    <div class="emp-stat emp-stat--green"
+         [class.emp-stat--active]="selectedStatus === ApprovalStatus.Approved"
+         (click)="onStatusFilter(ApprovalStatus.Approved)">
+      <span class="emp-stat__num">{{ approvedCount }}</span>
+      <span class="emp-stat__lbl">Approved</span>
+    </div>
+    <div class="emp-stat emp-stat--red"
+         [class.emp-stat--active]="selectedStatus === ApprovalStatus.Rejected"
+         (click)="onStatusFilter(ApprovalStatus.Rejected)">
+      <span class="emp-stat__num">{{ rejectedCount }}</span>
+      <span class="emp-stat__lbl">Rejected</span>
+    </div>
+    <div class="emp-stat emp-stat--grey"
+         [class.emp-stat--active]="selectedStatus === ApprovalStatus.Cancelled"
+         (click)="onStatusFilter(ApprovalStatus.Cancelled)">
+      <span class="emp-stat__num">{{ cancelledCount }}</span>
+      <span class="emp-stat__lbl">Cancelled</span>
+    </div>
+  </div>
+
+  <!-- ── Card ──────────────────────────────────────────────────── -->
+  <div class="emp-card">
+
+    <!-- Toolbar -->
+    <div class="emp-toolbar">
+      <span class="emp-toolbar__label">
+        <i class="bi bi-funnel"></i>
+        Showing
+        <strong>{{ rowData.length }}</strong>
+        {{ selectedStatus === '' ? 'total' : '' }} request{{ rowData.length !== 1 ? 's' : '' }}
+        <ng-container *ngIf="selectedStatus !== ''">
+          — filtered by
+          <span class="emp-toolbar__filter-tag" (click)="onStatusFilter('')">
+            {{ ApprovalStatus[selectedStatus] }} &times;
+          </span>
+        </ng-container>
+      </span>
+      <button class="emp-btn emp-btn--outline emp-btn--sm" (click)="loadAll()" [class.spinning]="refreshing">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="emp-state">
+      <div class="emp-spinner"></div>
+      <span>Loading your requests...</span>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error && !loading" class="emp-state emp-state--error">
+      <i class="bi bi-exclamation-circle"></i>
+      <span>{{ error }}</span>
+      <button class="emp-btn emp-btn--outline" (click)="loadAll()">Try Again</button>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="!loading && !error && rowData.length === 0" class="emp-state emp-state--empty">
+      <div class="emp-empty-icon"><i class="bi bi-house-x"></i></div>
+      <p class="emp-empty-title">No requests found</p>
+      <p class="emp-empty-sub" *ngIf="selectedStatus === ''">You haven't submitted any WFH requests yet.</p>
+      <p class="emp-empty-sub" *ngIf="selectedStatus !== ''">
+        No requests match this filter.
+        <span class="emp-link" (click)="onStatusFilter('')">View all</span>
+      </p>
+      <button class="emp-btn emp-btn--primary" *ngIf="selectedStatus === ''" (click)="openCreateForm()">
+        <i class="bi bi-plus-circle"></i> New WFH Request
+      </button>
+    </div>
+
+    <!-- AG Grid -->
+    <ag-grid-angular
+      *ngIf="!loading && !error && rowData.length > 0"
+      style="width:100%;"
+      [theme]="gridTheme"
+      [rowData]="rowData"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      (gridReady)="onGridReady($event)"
+      [rowHeight]="52"
+      [headerHeight]="44"
+      [floatingFiltersHeight]="36"
+      [domLayout]="'autoHeight'"
+      [suppressPaginationPanel]="true">
+    </ag-grid-angular>
+
+  </div>
+</div>
+
+
+<!-- ── New WFH Modal ─────────────────────────────────────────── -->
+<div class="emp-overlay" *ngIf="showForm" (click)="closeModal()">
+  <div class="emp-modal" (click)="$event.stopPropagation()">
+    <div class="emp-modal__head">
+      <h2 class="emp-modal__title">
+        <i class="bi bi-plus-circle-dotted"></i> New WFH Request
+      </h2>
+      <button class="emp-modal__close" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="emp-modal__body">
+      <app-wfh-request-form
+        [existingRequest]="editingRequest"
+        (saved)="onRequestSaved()"
+        (cancelled)="closeModal()">
+      </app-wfh-request-form>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Details Modal ─────────────────────────────────────────── -->
+<div class="emp-overlay" *ngIf="showDetails" (click)="closeModal()">
+  <div class="emp-modal" (click)="$event.stopPropagation()">
+    <div class="emp-modal__head">
+      <h2 class="emp-modal__title">
+        <i class="bi bi-eye"></i> Request Details
+      </h2>
+      <button class="emp-modal__close" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="emp-modal__body">
+      <app-wfh-request-details
+        *ngIf="selectedRequestId"
+        [requestId]="selectedRequestId"
+        [isEmployee]="true"
+        (requestUpdated)="onRequestUpdated()">
+      </app-wfh-request-details>
+    </div>
+  </div>
+</div>

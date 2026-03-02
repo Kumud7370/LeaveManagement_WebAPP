@@ -8,7 +8,6 @@
 
   <ng-container *ngIf="!loading && request">
 
-    <!-- Header Band — uses resolvedStatus via getStatusClass() -->
     <div class="details-header" [ngClass]="getStatusClass(request.status)">
       <div class="header-left">
         <div class="wfh-pill">
@@ -126,16 +125,15 @@
 
       <!-- Action Buttons -->
       <div class="details-actions" *ngIf="isPending || request.canBeCancelled">
-        <button *ngIf="isPending" class="btn btn-approve" (click)="onApprove()">
-          <i class="bi bi-check-lg"></i> Approve
-        </button>
-        <button *ngIf="isPending" class="btn btn-reject" (click)="onReject()">
-          <i class="bi bi-x-lg"></i> Reject
-        </button>
-        <button *ngIf="request.canBeCancelled && !isPending" class="btn btn-cancel" (click)="onCancel()">
-          <i class="bi bi-slash-circle"></i> Cancel Request
-        </button>
-        <button *ngIf="isPending" class="btn btn-cancel" (click)="onCancel()">
+        <ng-container *ngIf="!isEmployee">
+          <button *ngIf="isPending" class="btn btn-approve" (click)="onApprove()">
+            <i class="bi bi-check-lg"></i> Approve
+          </button>
+          <button *ngIf="isPending" class="btn btn-reject" (click)="onReject()">
+            <i class="bi bi-x-lg"></i> Reject
+          </button>
+        </ng-container>
+        <button *ngIf="(request.canBeCancelled && !isPending) || isPending" class="btn btn-cancel" (click)="onCancel()">
           <i class="bi bi-slash-circle"></i> Cancel Request
         </button>
       </div>

@@ -267,7 +267,16 @@ export const routes: Routes = [
               .then((m) => m.WfhRequestListComponent),
             data: { breadcrumb: "WFH Requests" },
           },
+          
         ]
+      },
+
+      {
+        path: "my-wfh-requests",
+        loadComponent: () =>
+          import("./modules/work-from-home/my-wfh-requests/my-wfh-requests.component")
+            .then((m) => m.MyWfhRequestsComponent),
+        data: { breadcrumb: "My WFH Requests" },
       },
 
     ],
