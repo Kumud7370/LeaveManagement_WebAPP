@@ -15,6 +15,7 @@ import Swal from 'sweetalert2';
 export class WfhRequestDetailsComponent implements OnInit, OnChanges {
   @Input() requestId: string | null = null;
   @Output() requestUpdated = new EventEmitter<void>();
+  @Input() isEmployee = false;
 
   request: WfhRequest | null = null;
   loading = false;
