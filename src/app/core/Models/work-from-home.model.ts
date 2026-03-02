@@ -19,6 +19,7 @@ export interface WfhRequest {
   statusName: string;
   approvedBy?: string;
   approverName?: string;
+  approverFullName?: string;
   approvedDate?: Date;
   rejectionReason?: string;
   isActive: boolean;

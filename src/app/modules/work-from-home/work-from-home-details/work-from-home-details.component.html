@@ -8,7 +8,7 @@
 
   <ng-container *ngIf="!loading && request">
 
-    <!-- Header Band -->
+    <!-- Header Band — uses resolvedStatus via getStatusClass() -->
     <div class="details-header" [ngClass]="getStatusClass(request.status)">
       <div class="header-left">
         <div class="wfh-pill">
@@ -22,9 +22,7 @@
           <i class="bi" [ngClass]="getStatusIcon(request.status)"></i>
           {{ request.statusName }}
         </span>
-        <span class="active-badge" *ngIf="request.isActive">
-          ● Active Now
-        </span>
+        <span class="active-badge" *ngIf="request.isActive">● Active Now</span>
       </div>
     </div>
 
@@ -61,26 +59,25 @@
             <span class="detail-label">Applied On</span>
             <span class="detail-value">{{ request.createdAt | date: 'd MMM yyyy, h:mm a' }}</span>
           </div>
-
           <div class="detail-row">
             <span class="detail-label">Reason</span>
             <span class="detail-value reason-text">{{ request.reason }}</span>
           </div>
-
           <div class="detail-row" *ngIf="request.updatedAt">
             <span class="detail-label">Last Updated</span>
             <span class="detail-value">{{ request.updatedAt | date: 'd MMM yyyy' }}</span>
           </div>
         </div>
 
-        <!-- Right: Approval Details -->
+        <!-- Right: Approval Details — uses computed getters -->
         <div class="info-card">
           <h4 class="card-title"><i class="bi bi-person-check"></i> Approval Details</h4>
 
-          <ng-container *ngIf="request.status === ApprovalStatus.Approved">
+          <!-- APPROVED -->
+          <ng-container *ngIf="isApproved">
             <div class="detail-row">
               <span class="detail-label">Approved By</span>
-              <span class="detail-value">{{ request.approverName || '—' }}</span>
+              <span class="detail-value">{{ approverDisplayName || '—' }}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Approved On</span>
@@ -90,10 +87,11 @@
             </div>
           </ng-container>
 
-          <ng-container *ngIf="request.status === ApprovalStatus.Rejected">
+          <!-- REJECTED -->
+          <ng-container *ngIf="isRejected">
             <div class="detail-row">
               <span class="detail-label">Rejected By</span>
-              <span class="detail-value">{{ request.approverName || '—' }}</span>
+              <span class="detail-value">{{ approverDisplayName || '—' }}</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Rejected On</span>
@@ -107,34 +105,37 @@
             </div>
           </ng-container>
 
-          <ng-container *ngIf="request.status === ApprovalStatus.Cancelled">
+          <!-- CANCELLED -->
+          <ng-container *ngIf="isCancelled">
             <div class="pending-note cancelled-note">
               <i class="bi bi-slash-circle"></i>
               <span>This WFH request has been cancelled.</span>
             </div>
           </ng-container>
 
-          <ng-container *ngIf="request.status === ApprovalStatus.Pending">
+          <!-- PENDING -->
+          <ng-container *ngIf="isPending">
             <div class="pending-note">
               <i class="bi bi-hourglass-split"></i>
               <span>This WFH request is awaiting approval.</span>
             </div>
           </ng-container>
+
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="details-actions" *ngIf="request.status === ApprovalStatus.Pending || request.canBeCancelled">
-        <button *ngIf="request.status === ApprovalStatus.Pending" class="btn btn-approve" (click)="onApprove()">
+      <div class="details-actions" *ngIf="isPending || request.canBeCancelled">
+        <button *ngIf="isPending" class="btn btn-approve" (click)="onApprove()">
           <i class="bi bi-check-lg"></i> Approve
         </button>
-        <button *ngIf="request.status === ApprovalStatus.Pending" class="btn btn-reject" (click)="onReject()">
+        <button *ngIf="isPending" class="btn btn-reject" (click)="onReject()">
           <i class="bi bi-x-lg"></i> Reject
         </button>
-        <button *ngIf="request.canBeCancelled && request.status !== ApprovalStatus.Pending" class="btn btn-cancel" (click)="onCancel()">
+        <button *ngIf="request.canBeCancelled && !isPending" class="btn btn-cancel" (click)="onCancel()">
           <i class="bi bi-slash-circle"></i> Cancel Request
         </button>
-        <button *ngIf="request.status === ApprovalStatus.Pending" class="btn btn-cancel" (click)="onCancel()">
+        <button *ngIf="isPending" class="btn btn-cancel" (click)="onCancel()">
           <i class="bi bi-slash-circle"></i> Cancel Request
         </button>
       </div>
