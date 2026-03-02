@@ -62,7 +62,6 @@
   <!-- ── Grid Card ─────────────────────────────────────────────── -->
   <div class="hl-grid-card">
     <div class="hl-grid-container">
-      <!-- KEY CHANGE: [theme]="gridTheme" instead of class="ag-theme-quartz" -->
       <ag-grid-angular
         #agGrid
         style="width: 100%"
@@ -289,6 +288,7 @@
         </div>
 
         <!-- ─── Applicable Departments ──────────────────────────── -->
+        <!-- FIX: Show for Regional and Optional only (not National) -->
         <div class="hl-form-section" *ngIf="!isNationalHoliday">
           <h3 class="hl-section-title">Applicable Departments</h3>
           <small class="hl-form-hint">
@@ -308,6 +308,26 @@
           >
             <i class="bi bi-exclamation-triangle"></i> No departments available.
           </div>
+
+          <!-- 
+            ╔══════════════════════════════════════════════════════════╗
+            ║  BUG FIX: Department selection double-fire issue         ║
+            ║                                                          ║
+            ║  OLD (broken):                                           ║
+            ║    <label (click)="toggleDepartment(dept.id)">          ║
+            ║      <input (change)="toggleDepartment(dept.id)" />     ║
+            ║    </label>                                              ║
+            ║  This fired toggleDepartment TWICE per click:           ║
+            ║    1. checkbox change event fires toggleDepartment       ║
+            ║    2. label click bubbles up and fires it again          ║
+            ║  Result: department was added then immediately removed.  ║
+            ║                                                          ║
+            ║  NEW (fixed):                                            ║
+            ║    Use ONLY the checkbox (change) event.                ║
+            ║    The label's [for] attribute handles click→check sync. ║
+            ║    No (click) on the outer label at all.                 ║
+            ╚══════════════════════════════════════════════════════════╝
+          -->
           <div
             class="hl-dept-grid"
             *ngIf="!isLoadingDepartments && departments.length > 0"
@@ -316,11 +336,20 @@
               *ngFor="let dept of departments"
               class="hl-dept-card"
               [class.hl-dept-selected]="isDepartmentSelected(dept.id)"
+              [for]="'dept-cb-' + dept.id"
             >
+              <!-- 
+                KEY FIX: 
+                - Removed (click) from the outer <label> entirely.
+                - The <label [for]="..."> naturally toggles the checkbox on click.
+                - Only the checkbox's (change) event calls toggleDepartment.
+                - This ensures toggleDepartment is called EXACTLY ONCE per user action.
+              -->
               <input
                 type="checkbox"
+                [id]="'dept-cb-' + dept.id"
                 [checked]="isDepartmentSelected(dept.id)"
-                (change)="toggleDepartment(dept.id)"
+                (change)="onDepartmentChange(dept.id, $event)"
                 [disabled]="modalMode === 'view'"
                 class="hl-dept-cb"
               />
@@ -328,6 +357,7 @@
               <span class="hl-dept-code">{{ dept.departmentCode }}</span>
             </label>
           </div>
+
           <div
             class="hl-error-msg"
             style="margin-top: 8px"

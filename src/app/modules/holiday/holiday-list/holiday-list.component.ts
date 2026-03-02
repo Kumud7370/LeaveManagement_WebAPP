@@ -1,3 +1,7 @@
+// holiday-list.component.ts
+// KEY FIX: Added onDepartmentChange() method that reads the checkbox's actual
+// checked state instead of calling toggleDepartment() which could fire twice.
+
 import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
@@ -294,7 +298,6 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Clean up ResizeObserver to prevent memory leaks
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
@@ -334,6 +337,38 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     return val === HolidayType.National || val === 'National' || val === 0;
   }
 
+  // ══════════════════════════════════════════════════════════════
+  // FIX: onDepartmentChange — reads the actual checkbox checked
+  // state from the DOM event instead of blindly toggling.
+  //
+  // Root cause of the bug:
+  //   The old template had BOTH (click) on the <label> AND
+  //   (change) on the <input type="checkbox">. When the user
+  //   clicked the card:
+  //     1. The checkbox's (change) fired → toggleDepartment(id)
+  //        → department added to Set ✓
+  //     2. The label's (click) ALSO fired → toggleDepartment(id)
+  //        → department REMOVED from Set ✗
+  //   Net result: one click = two calls = item added then removed.
+  //
+  // Fix: Remove (click) from the outer <label>.  The <label [for]>
+  // attribute already handles click→checkbox sync natively.
+  // Use (change) on the checkbox only, and READ the event's
+  // checked value to set/clear — not toggle — the department.
+  // ══════════════════════════════════════════════════════════════
+  onDepartmentChange(departmentId: string, event: Event): void {
+    if (this.modalMode === 'view') return;
+
+    const checkbox = event.target as HTMLInputElement;
+    if (checkbox.checked) {
+      this.selectedDepartmentSet.add(departmentId);
+    } else {
+      this.selectedDepartmentSet.delete(departmentId);
+    }
+    this.syncDepartmentsToForm();
+  }
+
+  // Keep toggleDepartment for programmatic use (e.g. removeDepartment chips)
   toggleDepartment(departmentId: string): void {
     if (this.modalMode === 'view') return;
     if (this.selectedDepartmentSet.has(departmentId)) {
