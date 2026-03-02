@@ -1,9 +1,9 @@
 <div class="regularization-form-container" [class.modal-form]="isModal">
-  <!-- Header -->
+
+  <!-- Header (standalone page) -->
   <div class="page-header" *ngIf="!isModal">
     <button class="btn-back" (click)="onCancel()">
-      <i class="bi bi-arrow-left"></i>
-      Back
+      <i class="bi bi-arrow-left"></i> Back
     </button>
     <div class="header-content">
       <h1 class="page-title">Request Attendance Regularization</h1>
@@ -11,6 +11,7 @@
     </div>
   </div>
 
+  <!-- Header (modal) -->
   <div class="page-header" *ngIf="isModal">
     <div class="header-content">
       <h1 class="page-title">Request Attendance Regularization</h1>
@@ -18,7 +19,7 @@
     </div>
   </div>
 
-  <!-- Loading State -->
+  <!-- Loading -->
   <div *ngIf="loading" class="loading-state">
     <div class="spinner"></div>
     <p>Loading...</p>
@@ -41,20 +42,21 @@
     class="regularization-form"
   >
     <div class="form-grid">
-      <!-- Attendance ID -->
+
+      <!-- ✅ Employee ID (Manual Input) -->
       <div class="form-group">
-        <label for="attendanceId" class="required">Attendance ID</label>
+        <label for="employeeId" class="required">Employee ID</label>
         <input
-          id="attendanceId"
+          id="employeeId"
           type="text"
-          formControlName="attendanceId"
-          placeholder="Enter attendance record ID"
+          formControlName="employeeId"
+          placeholder="Enter your Employee ID"
           class="form-control"
-          [class.error]="isFieldInvalid('attendanceId')"
+          [class.error]="isFieldInvalid('employeeId')"
         />
-        <small class="hint">The ID of the attendance record to regularize</small>
-        <div *ngIf="isFieldInvalid('attendanceId')" class="error-message">
-          {{ getErrorMessage("attendanceId") }}
+        <small class="hint">Enter the Employee ID for this regularization request</small>
+        <div *ngIf="isFieldInvalid('employeeId')" class="error-message">
+          {{ getErrorMessage('employeeId') }}
         </div>
       </div>
 
@@ -69,7 +71,7 @@
           [class.error]="isFieldInvalid('attendanceDate')"
         />
         <div *ngIf="isFieldInvalid('attendanceDate')" class="error-message">
-          {{ getErrorMessage("attendanceDate") }}
+          {{ getErrorMessage('attendanceDate') }}
         </div>
       </div>
 
@@ -87,20 +89,16 @@
           </option>
         </select>
         <small class="hint type-description" *ngIf="getSelectedTypeDescription()">
-          <i class="bi bi-info-circle"></i>
-          {{ getSelectedTypeDescription() }}
+          <i class="bi bi-info-circle"></i> {{ getSelectedTypeDescription() }}
         </small>
         <div *ngIf="isFieldInvalid('regularizationType')" class="error-message">
-          {{ getErrorMessage("regularizationType") }}
+          {{ getErrorMessage('regularizationType') }}
         </div>
       </div>
 
-      <!-- Requested Check In Time -->
+      <!-- Requested Check-In Time -->
       <div class="form-group" *ngIf="showCheckInField()">
-        <label for="requestedCheckIn" 
-          [class.required]="regularizationForm.get('requestedCheckIn')?.hasError('required')">
-          Requested Check-In Time
-        </label>
+        <label for="requestedCheckIn" class="required">Requested Check-In Time</label>
         <input
           id="requestedCheckIn"
           type="datetime-local"
@@ -110,16 +108,13 @@
         />
         <small class="hint">The time you actually checked in or should have checked in</small>
         <div *ngIf="isFieldInvalid('requestedCheckIn')" class="error-message">
-          {{ getErrorMessage("requestedCheckIn") }}
+          {{ getErrorMessage('requestedCheckIn') }}
         </div>
       </div>
 
-      <!-- Requested Check Out Time -->
+      <!-- Requested Check-Out Time -->
       <div class="form-group" *ngIf="showCheckOutField()">
-        <label for="requestedCheckOut"
-          [class.required]="regularizationForm.get('requestedCheckOut')?.hasError('required')">
-          Requested Check-Out Time
-        </label>
+        <label for="requestedCheckOut" class="required">Requested Check-Out Time</label>
         <input
           id="requestedCheckOut"
           type="datetime-local"
@@ -129,7 +124,7 @@
         />
         <small class="hint">The time you actually checked out or should have checked out</small>
         <div *ngIf="isFieldInvalid('requestedCheckOut') || regularizationForm.hasError('invalidTimeRange')" class="error-message">
-          {{ getErrorMessage("requestedCheckOut") }}
+          {{ getErrorMessage('requestedCheckOut') }}
         </div>
       </div>
 
@@ -145,20 +140,21 @@
           [class.error]="isFieldInvalid('reason')"
         ></textarea>
         <div class="char-count">
-          {{ regularizationForm.get("reason")?.value?.length || 0 }} / 500
+          {{ regularizationForm.get('reason')?.value?.length || 0 }} / 500
         </div>
         <div *ngIf="isFieldInvalid('reason')" class="error-message">
-          {{ getErrorMessage("reason") }}
+          {{ getErrorMessage('reason') }}
         </div>
       </div>
 
-      <!-- Form Error Message -->
+      <!-- Full Day Warning -->
       <div class="form-group full-width" *ngIf="regularizationForm.hasError('fullDayRequired')">
         <div class="alert alert-warning">
           <i class="bi bi-exclamation-triangle"></i>
           <span>Full day regularization requires both check-in and check-out times</span>
         </div>
       </div>
+
     </div>
 
     <!-- Form Actions -->
@@ -178,8 +174,7 @@
       >
         <span *ngIf="!submitting">Submit Request</span>
         <span *ngIf="submitting" class="btn-loading">
-          <span class="spinner-small"></span>
-          Submitting...
+          <span class="spinner-small"></span> Submitting...
         </span>
       </button>
     </div>
@@ -198,7 +193,8 @@
       <li><strong>Full Day:</strong> Use to regularize both check-in and check-out for a day</li>
       <li>Provide a clear and detailed reason for your request</li>
       <li>Requests are subject to manager/admin approval</li>
-      <li>You will be notified once your request is processed</li>
+      <li>Regularization can only be requested within the last 7 days</li>
     </ul>
   </div>
+
 </div>

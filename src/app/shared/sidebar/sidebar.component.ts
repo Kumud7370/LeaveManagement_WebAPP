@@ -310,7 +310,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           icon: "fas fa-calendar-check",
           expanded: false,
           children: [
-            { label: "Request Regularization", route: "/attendance-regularization/create", icon: "fas fa-plus-circle" },
+
             { label: "My Requests", route: "/attendance-regularization/list", icon: "fas fa-list-alt" }
           ]
         },
