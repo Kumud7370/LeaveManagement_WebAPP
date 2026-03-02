@@ -320,7 +320,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
           icon: "fas fa-house-user",
           expanded: false,
           children: [
-            { label: "My WFH Requests", route: "/wfh-requests/list", icon: "fas fa-list-alt" },
+            { label: "My WFH Requests", route: "/my-wfh-requests", icon: "fas fa-list-alt" },
           ]
         },
       ]
