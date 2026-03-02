@@ -92,41 +92,6 @@
         </div>
       </div>
 
-      <!-- Parent Department -->
-      <div class="form-group">
-        <label for="parentDepartmentId">Parent Department</label>
-        <select
-          id="parentDepartmentId"
-          formControlName="parentDepartmentId"
-          class="form-control"
-        >
-          <option [ngValue]="null">None (Root Level)</option>
-          <option
-            *ngFor="let dept of parentDepartments"
-            [ngValue]="dept.departmentId"
-          >
-            {{ dept.departmentName }} ({{ dept.departmentCode }})
-          </option>
-        </select>
-        <small class="hint">Leave blank for root-level department</small>
-      </div>
-
-      <!-- Head of Department -->
-      <div class="form-group">
-        <label for="headOfDepartment">Head of Department</label>
-        <select
-          id="headOfDepartment"
-          formControlName="headOfDepartment"
-          class="form-control"
-        >
-          <option [ngValue]="null">Not Assigned</option>
-          <option *ngFor="let emp of employees" [ngValue]="emp.employeeId">
-            {{ emp.fullName }} ({{ emp.employeeCode }})
-          </option>
-        </select>
-        <small class="hint">Select the department head</small>
-      </div>
-
       <!-- Display Order -->
       <div class="form-group">
         <label for="displayOrder">Display Order</label>
@@ -217,7 +182,6 @@
       <li>
         Use descriptive names that clearly identify the department's purpose
       </li>
-      <li>Parent departments help organize your organizational structure</li>
       <li>
         Display order controls how departments appear in lists (lower = higher
         priority)

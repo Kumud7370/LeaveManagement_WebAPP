@@ -146,44 +146,6 @@
             </div>
 
             <div class="info-item">
-              <label>Parent Department</label>
-              <div class="value">
-                {{ department.parentDepartmentName || "None (Root Level)" }}
-              </div>
-            </div>
-
-            <div class="info-item" *ngIf="department.departmentHead">
-              <label>Department Head</label>
-              <div class="value head-info">
-                <img
-                  *ngIf="department.departmentHead.profileImageUrl"
-                  [src]="department.departmentHead.profileImageUrl"
-                  [alt]="department.departmentHead.fullName"
-                  class="head-avatar"
-                />
-                <div
-                  class="head-default-avatar"
-                  *ngIf="!department.departmentHead.profileImageUrl"
-                >
-                  {{ department.departmentHead.fullName.charAt(0) }}
-                </div>
-                <div class="head-details">
-                  <div class="head-name">
-                    {{ department.departmentHead.fullName }}
-                  </div>
-                  <div class="head-email">
-                    {{ department.departmentHead.email }}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="info-item" *ngIf="!department.departmentHead">
-              <label>Department Head</label>
-              <div class="value text-muted">Not assigned</div>
-            </div>
-
-            <div class="info-item">
               <label>Created</label>
               <div class="value">{{ formattedCreatedDate }}</div>
             </div>

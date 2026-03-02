@@ -1,10 +1,8 @@
 <div class="dept-page">
-  <!-- ── Page Title ────────────────────────────────────────────────────────── -->
   <div class="dept-page-header">
     <h1 class="dept-page-title">Department Management</h1>
   </div>
 
-  <!-- ── Stat Cards ─────────────────────────────────────────────────────── -->
   <div class="stats-row" *ngIf="statCards.length > 0">
     <div class="stat-card {{ card.colorClass }}" *ngFor="let card of statCards">
       <div class="stat-label">{{ card.label }}</div>
@@ -28,7 +26,6 @@
     </div>
   </div>
 
-  <!-- ── Toolbar ────────────────────────────────────────────────────────── -->
   <div class="toolbar-card">
     <input
       type="text"
@@ -52,13 +49,13 @@
     </div>
   </div>
 
-  <!-- ── Loading ────────────────────────────────────────────────────────── -->
+  <!-- ── Loading -->
   <div *ngIf="loading" class="state-box">
     <div class="spinner"></div>
     <p>Loading departments...</p>
   </div>
 
-  <!-- ── Error ──────────────────────────────────────────────────────────── -->
+  <!-- ── Error  -->
   <div *ngIf="error && !loading" class="state-box error-box">
     <i class="bi bi-exclamation-circle"></i>
     <p>{{ error }}</p>
@@ -67,7 +64,7 @@
     </button>
   </div>
 
-  <!-- ── Grid Card ─────────────────────────────────────────────────────── -->
+  <!-- ── Grid Card  -->
   <div *ngIf="!loading && !error" class="grid-card">
     <div *ngIf="departments.length === 0" class="empty-box">
       <i class="bi bi-inbox"></i>
@@ -100,7 +97,7 @@
       [rowBuffer]="10"
     ></ag-grid-angular>
 
-    <!-- ── Pagination ─────────────────────────────────────────────────── -->
+    <!-- ── Pagination  -->
     <div *ngIf="departments.length > 0" class="pagination-bar">
       <div class="pagination-inner">
         <div class="page-size-wrapper">
@@ -163,7 +160,7 @@
   </div>
 </div>
 
-<!-- ── Modal ─────────────────────────────────────────────────────────────────── -->
+<!-- ── Modal  -->
 <div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
   <div class="modal-box" (click)="$event.stopPropagation()">
     <button class="modal-close-btn" (click)="closeFormModal()">
@@ -174,7 +171,7 @@
       [departmentId]="selectedDepartmentId"
       [isEditMode]="formMode === 'edit'"
       (formCancelled)="closeFormModal()"
-      (formSubmitted)="onFormSuccess()"
+     (formSubmitted)="onFormSuccess($event)"
     ></app-department-form>
   </div>
 </div>
