@@ -1,15 +1,15 @@
-// ── Page shell 
+// ── Page shell
 .dept-page {
   padding: 0;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
-// ── Page Title 
+// ── Page Title
 .dept-page-header { margin-bottom: 20px; }
 .dept-page-title  { font-size: 28px; font-weight: 700; color: #1e40af; margin: 0; }
 
-// ── Stat Cards 
+// ── Stat Cards
 .stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -43,7 +43,7 @@
   50%       { opacity: 0.4; }
 }
 
-// ── Toolbar 
+// ── Toolbar
 .toolbar-card {
   display: flex;
   align-items: center;
@@ -67,11 +67,23 @@
     &::placeholder { color: #9ca3af; }
   }
 
-  .toolbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .toolbar-secondary-btns {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .toolbar-divider { width: 1px; height: 28px; background: #d1d5db; flex-shrink: 0; border-radius: 1px; }
 }
 
-// ── Buttons 
+// ── Buttons
 .btn {
   display: inline-flex;
   align-items: center;
@@ -94,7 +106,7 @@
   &:disabled    { opacity: 0.5; cursor: not-allowed; }
 }
 
-// ── State boxes 
+// ── State boxes
 .state-box {
   background: white; border: 1px solid #e5e7eb; border-radius: 10px;
   text-align: center; padding: 4rem 2rem;
@@ -110,7 +122,7 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-// ── Grid card 
+// ── Grid card
 .grid-card {
   background: white;
   border: 1px solid #e5e7eb;
@@ -126,7 +138,7 @@
   p  { color: #64748b; font-size: 0.9rem; margin-bottom: 1.25rem; }
 }
 
-// ── Action buttons 
+// ── Action buttons
 .dept-action-cell {
   display: flex;
   align-items: center;
@@ -151,12 +163,12 @@
   &.dept-del-btn { color: #ef4444; &:hover { background: #fef2f2; } }
 }
 
-// ── Actions column separator line 
+// ── Actions column separator line
 .actions-header-cell {
   border-right: 2px solid #d1d5db !important;
 }
 
-// ── Pagination 
+// ── Pagination
 .pagination-bar {
   border-top: 1px solid #e5e7eb;
   background: #ffffff;
@@ -196,7 +208,7 @@
   }
 }
 
-// ── Modal 
+// ── Modal
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.55); backdrop-filter: blur(3px);
@@ -226,15 +238,45 @@
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
-// ── Responsive 
+// ── Responsive
 @media (max-width: 768px) {
   .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+
   .toolbar-card {
-    flex-direction: column; align-items: stretch; gap: 8px;
-    .search-input { width: 100%; }
-    .toolbar-actions { justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
-    .toolbar-divider { display: none; }
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+
+    .search-input {
+      width: 100%;
+    }
+
+    .toolbar-actions {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+
+      .toolbar-secondary-btns {
+        display: flex;
+        gap: 6px;
+
+        .btn-clear,
+        .btn-refresh,
+        .btn-export {
+          flex: 1;
+          justify-content: center;
+        }
+      }
+
+      .toolbar-divider { display: none; }
+
+      .toolbar-primary-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   }
+
   .pagination-bar .pagination-inner { flex-wrap: wrap; justify-content: center; gap: 10px; }
   .modal-overlay { padding: 0; align-items: flex-end; }
   .modal-box { border-radius: 16px 16px 0 0; max-width: 100%; max-height: 95vh; }

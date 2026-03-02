@@ -32,13 +32,18 @@
       />
     </div>
     <div class="action-buttons">
-      <button class="btn btn-clear" (click)="clearFilters()">Clear</button>
-      <button class="btn btn-refresh" (click)="refreshData()">Refresh</button>
-      <button class="btn btn-export" (click)="exportData()">
-        <i class="bi bi-download"></i> Export
-      </button>
+      <div class="toolbar-secondary-btns">
+        <button class="btn btn-clear" (click)="clearFilters()">Clear</button>
+        <button class="btn btn-refresh" (click)="refreshData()">Refresh</button>
+        <button class="btn btn-export" (click)="exportData()">
+          <i class="bi bi-download"></i> Export
+        </button>
+      </div>
       <div class="toolbar-divider"></div>
-      <button class="btn btn-add" (click)="openCreateModal()">
+      <button
+        class="btn btn-add toolbar-primary-btn"
+        (click)="openCreateModal()"
+      >
         <i class="bi bi-plus-lg"></i> Add Designation
       </button>
     </div>
@@ -60,7 +65,7 @@
       </button>
     </div>
 
-    <!-- AG Grid — [theme] binding activates themeQuartz.withParams (columnBorder) -->
+    <!-- AG Grid -->
     <ag-grid-angular
       *ngIf="!isLoading && rowData.length > 0"
       style="width: 100%"
@@ -133,9 +138,7 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════
-     MODAL
-     ══════════════════════════════════════════════ -->
+<!-- MODAL -->
 <div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     <div class="modal-header">

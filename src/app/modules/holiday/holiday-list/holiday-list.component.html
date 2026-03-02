@@ -1,28 +1,10 @@
-<!-- holiday-list.component.html -->
-<!--
-  FIXES:
-  1. Department ID: Template now uses getDeptId(dept) via the component
-     to extract dept.departmentId (the correct field from DepartmentResponseDto).
-     Previous code used dept.id which is undefined on this DTO.
-
-  2. [checked]="deptChecked[getDeptId(dept)]" — reads from the plain Record
-     which gets a new reference on every toggle, so Angular CD re-renders
-     all checkboxes correctly. No more "all checked" visual bug.
-
-  3. (change)="onDepartmentChange(getDeptId(dept), $event)" — passes the
-     correct departmentId string to the handler.
-
-  4. No (click) on the outer <label> — only (change) on the checkbox fires,
-     exactly once per user interaction.
--->
-
 <div class="hl-page-container">
-  <!-- ── Page Title ─────────────────────────────────────────────── -->
+  <!-- ── Page Title  -->
   <div class="hl-page-header">
     <h1 class="hl-page-title">Holiday Management</h1>
   </div>
 
-  <!-- ── Stats ─────────────────────────────────────────────────── -->
+  <!-- ── Stats  -->
   <div class="hl-stats-grid">
     <div class="hl-stat-card hl-stat-total">
       <p class="hl-stat-label">Total Holidays</p>
@@ -38,7 +20,7 @@
     </div>
   </div>
 
-  <!-- ── Toolbar ───────────────────────────────────────────────── -->
+  <!-- ── Toolbar  -->
   <div class="hl-toolbar">
     <div class="hl-search-wrapper">
       <input
@@ -66,7 +48,7 @@
     </div>
   </div>
 
-  <!-- ── Active Filters ────────────────────────────────────────── -->
+  <!-- ── Active Filters  -->
   <div *ngIf="activeFilters.hasActiveFilters" class="hl-active-filters">
     <span class="hl-filter-label">Active Filters:</span>
     <span *ngFor="let f of activeFilters.filters" class="hl-filter-badge">{{
@@ -74,7 +56,7 @@
     }}</span>
   </div>
 
-  <!-- ── Grid Card ─────────────────────────────────────────────── -->
+  <!-- ── Grid Card  -->
   <div class="hl-grid-card">
     <div class="hl-grid-container">
       <ag-grid-angular
@@ -103,7 +85,7 @@
       ></ag-grid-angular>
     </div>
 
-    <!-- ── Pagination ──────────────────────────────────────────── -->
+    <!-- ── Pagination  -->
     <div class="hl-pagination">
       <div class="hl-pagination-inner">
         <div class="hl-page-size">
@@ -163,9 +145,7 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════
-     MODAL
-     ════════════════════════════════════════════════════════════════ -->
+<!-- MODAL -->
 <div
   *ngIf="isModalOpen"
   class="hl-modal-overlay"
@@ -203,7 +183,7 @@
     <!-- Body -->
     <div class="hl-modal-body">
       <form [formGroup]="holidayForm" (ngSubmit)="onSubmit()">
-        <!-- ── Basic Information ────────────────────────────────── -->
+        <!-- ── Basic Information  -->
         <div class="hl-form-section">
           <h3 class="hl-section-title">Basic Information</h3>
           <div class="hl-form-row">
@@ -300,12 +280,8 @@
           </div>
         </div>
 
-        <!-- ── Applicable Departments ────────────────────────────── -->
-        <!--
-          Only shown for Regional / Optional holidays.
-          Each label card uses getDeptId(dept) to extract the correct
-          departmentId field from the DepartmentResponseDto.
-        -->
+        <!-- ── Applicable Departments  -->
+        
         <div class="hl-form-section" *ngIf="!isNationalHoliday">
           <h3 class="hl-section-title">Applicable Departments</h3>
           <small class="hl-form-hint">
@@ -327,29 +303,6 @@
           >
             <i class="bi bi-exclamation-triangle"></i> No departments found.
           </div>
-
-          <!--
-            KEY FIXES in this grid:
-            ─────────────────────────────────────────────────────────────
-            1. [for]="'dept-cb-' + getDeptId(dept)"
-               Uses the correct departmentId, not dept.id (which is undefined
-               on DepartmentResponseDto and caused only 3 cards to render).
-
-            2. [class.hl-dept-selected]="deptChecked[getDeptId(dept)]"
-               Reads from the plain Record — new reference on every toggle
-               → Angular re-renders all cards correctly.
-
-            3. NO (click) on the outer <label>.
-               The native [for] attribute already routes clicks to the checkbox.
-               Only (change) on the input fires, exactly once per click.
-
-            4. [checked]="deptChecked[getDeptId(dept)]"
-               Plain property access on a new object reference → correct visual state.
-
-            5. (change)="onDepartmentChange(getDeptId(dept), $event)"
-               Passes the correct departmentId to the handler.
-            ─────────────────────────────────────────────────────────────
-          -->
           <div
             class="hl-dept-grid"
             *ngIf="!isLoadingDepartments && departments.length > 0"
@@ -416,7 +369,7 @@
           </div>
         </div>
 
-        <!-- ── Settings ──────────────────────────────────────────── -->
+        <!-- ── Settings  -->
         <div class="hl-form-section">
           <div class="hl-form-group">
             <label>Status</label>
@@ -433,7 +386,7 @@
           </div>
         </div>
 
-        <!-- ── Additional Details (view mode) ───────────────────── -->
+        <!-- ── Additional Details (view mode)  -->
         <div
           class="hl-form-section"
           *ngIf="modalMode === 'view' && selectedHoliday"
@@ -477,7 +430,7 @@
           </div>
         </div>
 
-        <!-- ── Footer ───────────────────────────────────────────── -->
+        <!-- ── Footer  -->
         <div class="hl-modal-footer">
           <button
             type="button"
