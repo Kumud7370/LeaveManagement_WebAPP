@@ -35,7 +35,6 @@ export class DepartmentDetailsComponent implements OnInit {
 
   loadDepartmentDetails(): void {
     if (!this.departmentId) return;
-
     this.loading = true;
     this.error = null;
 
@@ -65,45 +64,34 @@ export class DepartmentDetailsComponent implements OnInit {
     if (!this.department || !this.departmentId) return;
 
     const action = this.department.isActive ? 'deactivate' : 'activate';
-    
     const result = await Swal.fire({
       title: 'Are you sure?',
       text: `Do you want to ${action} this department?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3b82f6',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: `Yes, ${action} it!`,
-      cancelButtonText: 'Cancel'
+      icon: 'warning', showCancelButton: true,
+      confirmButtonColor: '#3b82f6', cancelButtonColor: '#6b7280',
+      confirmButtonText: `Yes, ${action} it!`
     });
 
     if (result.isConfirmed) {
+      const previousStatus = this.department.isActive;
+      this.department = { ...this.department, isActive: !previousStatus };
+
       this.departmentService.toggleDepartmentStatus(this.departmentId).subscribe({
         next: (response) => {
           if (response.success) {
             Swal.fire({
               title: 'Success!',
               text: `Department has been ${action}d successfully.`,
-              icon: 'success',
-              confirmButtonColor: '#3b82f6'
+              icon: 'success', timer: 1500, showConfirmButton: false
             });
-            this.loadDepartmentDetails();
           } else {
-            Swal.fire({
-              title: 'Error!',
-              text: response.message || 'Failed to update status',
-              icon: 'error',
-              confirmButtonColor: '#ef4444'
-            });
+            this.department = { ...this.department!, isActive: previousStatus };
+            Swal.fire({ title: 'Error!', text: response.message || 'Failed to update status', icon: 'error', confirmButtonColor: '#ef4444' });
           }
         },
         error: (err) => {
-          Swal.fire({
-            title: 'Error!',
-            text: err.error?.message || 'An error occurred',
-            icon: 'error',
-            confirmButtonColor: '#ef4444'
-          });
+          this.department = { ...this.department!, isActive: previousStatus };
+          Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error', confirmButtonColor: '#ef4444' });
         }
       });
     }
@@ -112,105 +100,59 @@ export class DepartmentDetailsComponent implements OnInit {
   async deleteDepartment(): Promise<void> {
     if (!this.departmentId || !this.department) return;
 
-    // Check if can delete
     this.departmentService.canDeleteDepartment(this.departmentId).subscribe({
       next: async (canDeleteResponse) => {
         if (canDeleteResponse.success && canDeleteResponse.data) {
           const result = await Swal.fire({
             title: 'Are you sure?',
             html: `You are about to delete <strong>"${this.department?.departmentName}"</strong>.<br>This action cannot be undone.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'Cancel'
+            icon: 'warning', showCancelButton: true,
+            confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, delete it!'
           });
 
           if (result.isConfirmed) {
+            this.router.navigate(['/departments']);
+
             this.departmentService.deleteDepartment(this.departmentId!).subscribe({
               next: (response) => {
-                if (response.success) {
-                  Swal.fire({
-                    title: 'Deleted!',
-                    text: 'Department has been deleted successfully.',
-                    icon: 'success',
-                    confirmButtonColor: '#3b82f6'
-                  }).then(() => {
-                    this.router.navigate(['/departments']);
-                  });
-                } else {
-                  Swal.fire({
-                    title: 'Error!',
-                    text: response.message || 'Failed to delete department',
-                    icon: 'error',
-                    confirmButtonColor: '#ef4444'
-                  });
+                if (!response.success) {
+                  Swal.fire({ title: 'Error!', text: response.message || 'Failed to delete department', icon: 'error', confirmButtonColor: '#ef4444' });
                 }
               },
               error: (err) => {
-                Swal.fire({
-                  title: 'Error!',
-                  text: err.error?.message || 'An error occurred',
-                  icon: 'error',
-                  confirmButtonColor: '#ef4444'
-                });
+                Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error', confirmButtonColor: '#ef4444' });
               }
             });
           }
         } else {
           Swal.fire({
             title: 'Cannot Delete',
-            text: 'This department cannot be deleted. It has employees or child departments assigned.',
-            icon: 'warning',
-            confirmButtonColor: '#3b82f6'
+            text: 'This department cannot be deleted. It has employees assigned.',
+            icon: 'warning', confirmButtonColor: '#3b82f6'
           });
         }
       },
       error: (err) => {
-        Swal.fire({
-          title: 'Error!',
-          text: err.error?.message || 'An error occurred',
-          icon: 'error',
-          confirmButtonColor: '#ef4444'
-        });
+        Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error', confirmButtonColor: '#ef4444' });
       }
     });
   }
 
-  goBack(): void {
-    this.router.navigate(['/departments']);
-  }
-
-  setActiveTab(tab: 'overview' | 'employees' | 'children' | 'audit'): void {
-    this.activeTab = tab;
-  }
-
-  viewChildDepartment(childId: string): void {
-    this.router.navigate(['/departments', childId]);
-  }
-
-  viewEmployee(employeeId: string): void {
-    this.router.navigate(['/employees', employeeId]);
-  }
+  goBack(): void { this.router.navigate(['/departments']); }
+  setActiveTab(tab: 'overview' | 'employees' | 'children' | 'audit'): void { this.activeTab = tab; }
+  viewChildDepartment(childId: string): void { this.router.navigate(['/departments', childId]); }
+  viewEmployee(employeeId: string): void { this.router.navigate(['/employees', employeeId]); }
 
   get formattedCreatedDate(): string {
-    return this.department?.createdAt 
-      ? new Date(this.department.createdAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
+    return this.department?.createdAt
+      ? new Date(this.department.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       : '';
   }
 
   get formattedUpdatedDate(): string {
-    return this.department?.updatedAt 
-      ? new Date(this.department.updatedAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
+    return this.department?.updatedAt
+      ? new Date(this.department.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       : '';
   }
 }

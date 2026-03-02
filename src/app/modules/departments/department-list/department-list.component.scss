@@ -1,15 +1,15 @@
-// ── Page shell ────────────────────────────────────────────────────────────────
+// ── Page shell 
 .dept-page {
   padding: 0;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
-// ── Page Title ────────────────────────────────────────────────────────────────
+// ── Page Title 
 .dept-page-header { margin-bottom: 20px; }
 .dept-page-title  { font-size: 28px; font-weight: 700; color: #1e40af; margin: 0; }
 
-// ── Stat Cards ────────────────────────────────────────────────────────────────
+// ── Stat Cards 
 .stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -43,7 +43,7 @@
   50%       { opacity: 0.4; }
 }
 
-// ── Toolbar ───────────────────────────────────────────────────────────────────
+// ── Toolbar 
 .toolbar-card {
   display: flex;
   align-items: center;
@@ -71,7 +71,7 @@
   .toolbar-divider { width: 1px; height: 28px; background: #d1d5db; flex-shrink: 0; border-radius: 1px; }
 }
 
-// ── Buttons ───────────────────────────────────────────────────────────────────
+// ── Buttons 
 .btn {
   display: inline-flex;
   align-items: center;
@@ -94,7 +94,7 @@
   &:disabled    { opacity: 0.5; cursor: not-allowed; }
 }
 
-// ── State boxes ───────────────────────────────────────────────────────────────
+// ── State boxes 
 .state-box {
   background: white; border: 1px solid #e5e7eb; border-radius: 10px;
   text-align: center; padding: 4rem 2rem;
@@ -110,7 +110,7 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-// ── Grid card ─────────────────────────────────────────────────────────────────
+// ── Grid card 
 .grid-card {
   background: white;
   border: 1px solid #e5e7eb;
@@ -126,7 +126,7 @@
   p  { color: #64748b; font-size: 0.9rem; margin-bottom: 1.25rem; }
 }
 
-// ── Action buttons (scoped globally since ag-grid renders outside Angular) ────
+// ── Action buttons 
 .dept-action-cell {
   display: flex;
   align-items: center;
@@ -151,7 +151,12 @@
   &.dept-del-btn { color: #ef4444; &:hover { background: #fef2f2; } }
 }
 
-// ── Pagination ────────────────────────────────────────────────────────────────
+// ── Actions column separator line 
+.actions-header-cell {
+  border-right: 2px solid #d1d5db !important;
+}
+
+// ── Pagination 
 .pagination-bar {
   border-top: 1px solid #e5e7eb;
   background: #ffffff;
@@ -191,7 +196,7 @@
   }
 }
 
-// ── Modal ─────────────────────────────────────────────────────────────────────
+// ── Modal 
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.55); backdrop-filter: blur(3px);
@@ -221,7 +226,7 @@
 @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
-// ── Responsive ────────────────────────────────────────────────────────────────
+// ── Responsive 
 @media (max-width: 768px) {
   .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
   .toolbar-card {
