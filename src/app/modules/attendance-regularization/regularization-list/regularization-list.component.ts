@@ -107,13 +107,18 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
   sortDirection: 'asc' | 'desc' = 'desc';
 
   // ─── UI States ────────────
-  showAddModal = false;
+  showAddModal      = false;
+  showEditModal     = false;
+  showViewModal     = false;   // ✅ NEW
   showApprovalModal = false;
-  selectedRegularization: RegularizationResponseDto | null = null;
+
+  selectedRegularization:  RegularizationResponseDto | null = null;
+  editRegularizationData:  RegularizationResponseDto | null = null;
+  viewRegularizationData:  RegularizationResponseDto | null = null; // ✅ NEW
   approvalReason = '';
 
   // ─── Enums ───────────────
-  RegularizationType = RegularizationType;
+  RegularizationType   = RegularizationType;
   RegularizationStatus = RegularizationStatus;
 
   // ─── Stats ───────────────
@@ -209,11 +214,11 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
         const type = params.data?.regularizationType;
         let cls = '';
         switch (type) {
-          case RegularizationType.MissedPunch:           cls = 'reg-type-missed';   break;
-          case RegularizationType.LateEntry:             cls = 'reg-type-late';     break;
-          case RegularizationType.EarlyExit:             cls = 'reg-type-early';    break;
-          case RegularizationType.FullDayRegularization: cls = 'reg-type-fullday';  break;
-          default:                                       cls = 'reg-type-missed';   break;
+          case RegularizationType.MissedPunch:           cls = 'reg-type-missed';  break;
+          case RegularizationType.LateEntry:             cls = 'reg-type-late';    break;
+          case RegularizationType.EarlyExit:             cls = 'reg-type-early';   break;
+          case RegularizationType.FullDayRegularization: cls = 'reg-type-fullday'; break;
+          default:                                       cls = 'reg-type-missed';  break;
         }
         const val = params.value || '';
         const search = params.context?.componentParent?.searchTerm || '';
@@ -358,27 +363,26 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     this.isLoadingData = true;
 
     const filter: RegularizationFilterDto = {
-      employeeId: this.employeeIdFilter || undefined,
-      startDate: this.startDateFilter || undefined,
-      endDate: this.endDateFilter || undefined,
+      employeeId:         this.employeeIdFilter || undefined,
+      startDate:          this.startDateFilter  || undefined,
+      endDate:            this.endDateFilter     || undefined,
       regularizationType: this.regularizationTypeFilter ?? undefined,
-      status: this.statusFilter ?? undefined,
-      sortBy: this.sortBy,
-      sortDescending: this.sortDirection === 'desc',
-      pageNumber: this.currentPage,
-      pageSize: this.pageSize
+      status:             this.statusFilter      ?? undefined,
+      sortBy:             this.sortBy,
+      sortDescending:     this.sortDirection === 'desc',
+      pageNumber:         this.currentPage,
+      pageSize:           this.pageSize
     };
 
     this.regularizationService.getFiltered(filter).subscribe({
       next: (response) => {
         this.isLoadingData = false;
         if (response.success) {
-          this.rowData    = response.data.items;
-          this.totalItems = response.data.totalCount;
-          this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+          this.rowData     = response.data.items;
+          this.totalItems  = response.data.totalCount;
+          this.totalPages  = Math.ceil(this.totalItems / this.pageSize);
           this.currentPage = response.data.pageNumber;
 
-          // Compute stats
           this.computeStats(this.rowData);
 
           if (this.gridApi) {
@@ -417,18 +421,18 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
 
   clearSearch(): void {
     clearTimeout(this.searchDebounceTimer);
-    this.searchTerm  = '';
+    this.searchTerm       = '';
     this.employeeIdFilter = '';
-    this.currentPage = 1;
+    this.currentPage      = 1;
     this.loadRegularizations();
     this.updateActiveFilters();
   }
 
   handleClearFilters(): void {
     clearTimeout(this.searchDebounceTimer);
-    this.searchTerm  = '';
+    this.searchTerm       = '';
     this.employeeIdFilter = '';
-    this.currentPage = 1;
+    this.currentPage      = 1;
     clearAllFilters(this.gridApi);
     this.loadRegularizations();
     this.updateActiveFilters();
@@ -459,36 +463,42 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     this.loadRegularizations();
   }
 
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1);
-  }
+  nextPage(): void     { if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1); }
+  previousPage(): void { if (this.currentPage > 1) this.goToPage(this.currentPage - 1); }
 
-  previousPage(): void {
-    if (this.currentPage > 1) this.goToPage(this.currentPage - 1);
-  }
-
-  // ─── Modal ────────────────
-  openAddModal(): void {
-    this.showAddModal = true;
-  }
-
-  closeAddModal(): void {
-    this.showAddModal = false;
-  }
+  // ─── Add Modal ────────────
+  openAddModal(): void  { this.editRegularizationData = null; this.showAddModal = true; }
+  closeAddModal(): void { this.showAddModal = false; this.editRegularizationData = null; }
 
   onFormSubmitted(): void {
-    this.showAddModal = false;
+    this.showAddModal            = false;
+    this.showEditModal           = false;
+    this.editRegularizationData  = null;
     this.loadRegularizations();
   }
 
+  // ─── Edit Modal ───────────
+  openEditModal(regularization: RegularizationResponseDto): void {
+    this.editRegularizationData = regularization;
+    this.showEditModal          = true;
+  }
+  closeEditModal(): void { this.showEditModal = false; this.editRegularizationData = null; }
+
+  // ─── View Modal ───────────  ✅ NEW
+  openViewModal(regularization: RegularizationResponseDto): void {
+    this.viewRegularizationData = regularization;
+    this.showViewModal          = true;
+  }
+  closeViewModal(): void { this.showViewModal = false; this.viewRegularizationData = null; }
+
   // ─── Action Handlers ──────
+  // ✅ Changed: opens view popup instead of navigating to route
   viewDetails(regularization: RegularizationResponseDto): void {
-    this.router.navigate(['/attendance-regularization/details', regularization.id]);
+    this.openViewModal(regularization);
   }
 
   editDepartment(regularization: RegularizationResponseDto): void {
-    // Navigate to edit or open edit modal as needed
-    this.router.navigate(['/attendance-regularization/edit', regularization.id]);
+    this.openEditModal(regularization);
   }
 
   toggleStatus(regularization: RegularizationResponseDto): void {
@@ -506,7 +516,7 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
   // ─── Approve / Reject ─────
   openApprovalModal(regularization: RegularizationResponseDto, approve: boolean): void {
     this.selectedRegularization = regularization;
-    this.approvalReason = '';
+    this.approvalReason         = '';
     if (approve) {
       this.approveRegularization(regularization);
     } else {
@@ -566,9 +576,9 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
   }
 
   closeApprovalModal(): void {
-    this.showApprovalModal = false;
+    this.showApprovalModal      = false;
     this.selectedRegularization = null;
-    this.approvalReason = '';
+    this.approvalReason         = '';
   }
 
   async cancelRegularization(regularization: RegularizationResponseDto): Promise<void> {
@@ -608,20 +618,20 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     }
 
     const exportData = this.rowData.map(reg => ({
-      'Employee Code': reg.employeeCode,
-      'Employee Name': reg.employeeName,
-      'Date': reg.attendanceDate ? new Date(reg.attendanceDate).toLocaleDateString() : '—',
-      'Type': reg.regularizationTypeName,
-      'Requested Check-In': reg.requestedCheckIn ? new Date(reg.requestedCheckIn).toLocaleTimeString() : '—',
+      'Employee Code':    reg.employeeCode,
+      'Employee Name':    reg.employeeName,
+      'Date':             reg.attendanceDate  ? new Date(reg.attendanceDate).toLocaleDateString()  : '—',
+      'Type':             reg.regularizationTypeName,
+      'Requested Check-In':  reg.requestedCheckIn  ? new Date(reg.requestedCheckIn).toLocaleTimeString()  : '—',
       'Requested Check-Out': reg.requestedCheckOut ? new Date(reg.requestedCheckOut).toLocaleTimeString() : '—',
-      'Original Check-In': reg.originalCheckIn ? new Date(reg.originalCheckIn).toLocaleTimeString() : '—',
-      'Original Check-Out': reg.originalCheckOut ? new Date(reg.originalCheckOut).toLocaleTimeString() : '—',
-      'Reason': reg.reason,
-      'Status': reg.statusName,
-      'Approved By': reg.approvedByName || '—',
-      'Approved At': reg.approvedAt ? new Date(reg.approvedAt).toLocaleString() : '—',
+      'Original Check-In':   reg.originalCheckIn   ? new Date(reg.originalCheckIn).toLocaleTimeString()   : '—',
+      'Original Check-Out':  reg.originalCheckOut  ? new Date(reg.originalCheckOut).toLocaleTimeString()  : '—',
+      'Reason':           reg.reason,
+      'Status':           reg.statusName,
+      'Approved By':      reg.approvedByName || '—',
+      'Approved At':      reg.approvedAt ? new Date(reg.approvedAt).toLocaleString() : '—',
       'Rejection Reason': reg.rejectionReason || '—',
-      'Requested At': new Date(reg.requestedAt).toLocaleString()
+      'Requested At':     new Date(reg.requestedAt).toLocaleString()
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -637,20 +647,38 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
   getTypeOptions(): { value: RegularizationType | null; label: string }[] {
     return [
       { value: null, label: 'All Types' },
-      { value: RegularizationType.MissedPunch, label: 'Missed Punch' },
-      { value: RegularizationType.LateEntry, label: 'Late Entry' },
-      { value: RegularizationType.EarlyExit, label: 'Early Exit' },
+      { value: RegularizationType.MissedPunch,           label: 'Missed Punch' },
+      { value: RegularizationType.LateEntry,             label: 'Late Entry' },
+      { value: RegularizationType.EarlyExit,             label: 'Early Exit' },
       { value: RegularizationType.FullDayRegularization, label: 'Full Day Regularization' }
     ];
   }
 
   getStatusOptions(): { value: RegularizationStatus | null; label: string }[] {
     return [
-      { value: null, label: 'All Statuses' },
-      { value: RegularizationStatus.Pending, label: 'Pending' },
-      { value: RegularizationStatus.Approved, label: 'Approved' },
-      { value: RegularizationStatus.Rejected, label: 'Rejected' },
+      { value: null,                        label: 'All Statuses' },
+      { value: RegularizationStatus.Pending,   label: 'Pending' },
+      { value: RegularizationStatus.Approved,  label: 'Approved' },
+      { value: RegularizationStatus.Rejected,  label: 'Rejected' },
       { value: RegularizationStatus.Cancelled, label: 'Cancelled' }
     ];
+  }
+
+  // ─── View modal date helpers ─── ✅ NEW
+  formatViewTime(date: any): string {
+    if (!date) return '—';
+    return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  formatViewDate(date: any): string {
+    if (!date) return '—';
+    return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  formatViewDateTime(date: any): string {
+    if (!date) return '—';
+    return new Date(date).toLocaleString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
   }
 }
