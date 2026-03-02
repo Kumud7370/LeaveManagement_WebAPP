@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { NgApexchartsModule } from "ng-apexcharts"
 import { ApiClientService } from "src/app/core/services/api/apiClient"
+import { UpcomingHolidaysWidgetComponent } from '../holiday/upcoming-holidays-widget/upcoming-holidays-widget.component';
 import Swal from 'sweetalert2'
 import moment from "moment"
 import type {
@@ -76,7 +77,7 @@ interface WardData {
     templateUrl: "./dashboard.component.html",
     styleUrls: ["./dashboard.component.scss"],
     standalone: true,
-    imports: [CommonModule, NgApexchartsModule, FormsModule],
+    imports: [CommonModule, NgApexchartsModule, FormsModule, UpcomingHolidaysWidgetComponent],
 })
 export class DashboardComponent implements OnInit {
     isLoading = true
