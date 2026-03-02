@@ -5,7 +5,8 @@ import { Router } from '@angular/router';
 import { AttendanceRegularizationService } from '../../../core/services/api/attendance-regularization.api';
 import {
   RegularizationRequestDto,
-  RegularizationType
+  RegularizationType,
+  RegularizationResponseDto
 } from '../../../core/Models/attendance-regularization.model';
 import Swal from 'sweetalert2';
 
@@ -18,6 +19,7 @@ import Swal from 'sweetalert2';
 })
 export class RegularizationFormComponent implements OnInit {
   @Input() isModal = false;
+  @Input() editData: RegularizationResponseDto | null = null;
   @Output() formCancelled = new EventEmitter<void>();
   @Output() formSubmitted = new EventEmitter<void>();
 
@@ -28,6 +30,13 @@ export class RegularizationFormComponent implements OnInit {
 
   RegularizationType = RegularizationType;
 
+  // ✅ Arrow function so [compareWith] binding works correctly in template
+  compareTypeValues = (a: any, b: any): boolean => Number(a) === Number(b);
+
+  get isEditMode(): boolean {
+    return !!this.editData;
+  }
+
   constructor(
     private fb: FormBuilder,
     private regularizationService: AttendanceRegularizationService,
@@ -36,34 +45,64 @@ export class RegularizationFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.initializeForm();
+    if (this.editData) {
+      this.patchFormWithEditData(this.editData);
+    }
   }
 
   initializeForm(): void {
     this.regularizationForm = this.fb.group({
-      employeeId: ['', Validators.required],   // ✅ Manual employee ID input
+      employeeId: ['', Validators.required],
+      // ✅ Store as actual Number enum value, never string
       regularizationType: [RegularizationType.MissedPunch, Validators.required],
       attendanceDate: ['', Validators.required],
       requestedCheckIn: [''],
       requestedCheckOut: [''],
       reason: ['', [Validators.required, Validators.maxLength(500)]]
-    }, { validators: this.regularizationValidator });
+    }, { validators: this.regularizationValidator.bind(this) });
 
     this.regularizationForm.get('regularizationType')?.valueChanges.subscribe(type => {
-      this.updateFieldValidators(+type);
+      this.updateFieldValidators(Number(type));
     });
 
     this.updateFieldValidators(RegularizationType.MissedPunch);
   }
 
+  private patchFormWithEditData(data: RegularizationResponseDto): void {
+    const toDateInput = (val: any): string => {
+      if (!val) return '';
+      return new Date(val).toISOString().slice(0, 10);
+    };
+
+    const toDateTimeLocal = (val: any): string => {
+      if (!val) return '';
+      const d = new Date(val);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    };
+
+    // ✅ Force to Number so select [ngValue] comparison works
+    const regType: RegularizationType = Number(data.regularizationType) as RegularizationType;
+
+    this.regularizationForm.patchValue({
+      employeeId:           data.employeeId || '',
+      regularizationType:   regType,
+      attendanceDate:       toDateInput(data.attendanceDate),
+      requestedCheckIn:     toDateTimeLocal(data.requestedCheckIn),
+      requestedCheckOut:    toDateTimeLocal(data.requestedCheckOut),
+      reason:               data.reason || ''
+    });
+
+    this.updateFieldValidators(regType);
+  }
+
   regularizationValidator(form: FormGroup) {
-    const type = +form.get('regularizationType')?.value;
-    const checkIn = form.get('requestedCheckIn')?.value;
+    const type = Number(form.get('regularizationType')?.value);
+    const checkIn  = form.get('requestedCheckIn')?.value;
     const checkOut = form.get('requestedCheckOut')?.value;
 
     if (type === RegularizationType.FullDayRegularization) {
-      if (!checkIn || !checkOut) {
-        return { fullDayRequired: true };
-      }
+      if (!checkIn || !checkOut) return { fullDayRequired: true };
     }
 
     if (checkIn && checkOut && new Date(checkOut) <= new Date(checkIn)) {
@@ -74,27 +113,67 @@ export class RegularizationFormComponent implements OnInit {
   }
 
   updateFieldValidators(type: number): void {
-    const checkInControl = this.regularizationForm.get('requestedCheckIn');
-    const checkOutControl = this.regularizationForm.get('requestedCheckOut');
+    const ci = this.regularizationForm.get('requestedCheckIn');
+    const co = this.regularizationForm.get('requestedCheckOut');
 
-    checkInControl?.clearValidators();
-    checkOutControl?.clearValidators();
+    ci?.clearValidators();
+    co?.clearValidators();
 
     switch (type) {
       case RegularizationType.LateEntry:
-        checkInControl?.setValidators([Validators.required]);
-        break;
+        ci?.setValidators([Validators.required]); break;
       case RegularizationType.EarlyExit:
-        checkOutControl?.setValidators([Validators.required]);
-        break;
+        co?.setValidators([Validators.required]); break;
       case RegularizationType.FullDayRegularization:
-        checkInControl?.setValidators([Validators.required]);
-        checkOutControl?.setValidators([Validators.required]);
-        break;
+        ci?.setValidators([Validators.required]);
+        co?.setValidators([Validators.required]); break;
     }
 
-    checkInControl?.updateValueAndValidity();
-    checkOutControl?.updateValueAndValidity();
+    ci?.updateValueAndValidity();
+    co?.updateValueAndValidity();
+  }
+
+  showCheckInField(): boolean {
+    if (this.isEditMode) return true;
+    const type = Number(this.regularizationForm.get('regularizationType')?.value);
+    return [
+      RegularizationType.MissedPunch,
+      RegularizationType.LateEntry,
+      RegularizationType.FullDayRegularization
+    ].includes(type);
+  }
+
+  showCheckOutField(): boolean {
+    if (this.isEditMode) return true;
+    const type = Number(this.regularizationForm.get('regularizationType')?.value);
+    return [
+      RegularizationType.MissedPunch,
+      RegularizationType.EarlyExit,
+      RegularizationType.FullDayRegularization
+    ].includes(type);
+  }
+
+  isCheckInRequired(): boolean {
+    const type = Number(this.regularizationForm.get('regularizationType')?.value);
+    return [RegularizationType.LateEntry, RegularizationType.FullDayRegularization].includes(type);
+  }
+
+  isCheckOutRequired(): boolean {
+    const type = Number(this.regularizationForm.get('regularizationType')?.value);
+    return [RegularizationType.EarlyExit, RegularizationType.FullDayRegularization].includes(type);
+  }
+
+  formatDisplayTime(date: any): string {
+    if (!date) return '—';
+    return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  formatDisplayDateTime(date: any): string {
+    if (!date) return '—';
+    return new Date(date).toLocaleString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
   }
 
   onSubmit(): void {
@@ -106,19 +185,17 @@ export class RegularizationFormComponent implements OnInit {
     this.submitting = true;
     this.error = null;
 
-    const formValue = this.regularizationForm.value;
+    const fv = this.regularizationForm.value;
 
+    // ✅ THE FIX: explicitly build the payload with regularizationType as a plain integer
+    // Using parseInt ensures JSON.stringify sends 1/2/3/4, never "1"/"2"/"3"/"4"
     const requestData: RegularizationRequestDto = {
-      employeeId: formValue.employeeId.trim(),
-      regularizationType: +formValue.regularizationType,
-      attendanceDate: new Date(formValue.attendanceDate),
-      requestedCheckIn: formValue.requestedCheckIn
-        ? new Date(formValue.requestedCheckIn)
-        : undefined,
-      requestedCheckOut: formValue.requestedCheckOut
-        ? new Date(formValue.requestedCheckOut)
-        : undefined,
-      reason: formValue.reason
+      employeeId:           String(fv.employeeId).trim(),
+      regularizationType:   parseInt(fv.regularizationType, 10) as RegularizationType,
+      attendanceDate:       new Date(fv.attendanceDate),
+      requestedCheckIn:     fv.requestedCheckIn  ? new Date(fv.requestedCheckIn)  : undefined,
+      requestedCheckOut:    fv.requestedCheckOut ? new Date(fv.requestedCheckOut) : undefined,
+      reason:               fv.reason
     };
 
     this.regularizationService.requestRegularization(requestData).subscribe({
@@ -127,7 +204,9 @@ export class RegularizationFormComponent implements OnInit {
         if (response.success) {
           Swal.fire({
             title: 'Success!',
-            text: 'Regularization request submitted successfully!',
+            text: this.isEditMode
+              ? 'Regularization request updated successfully!'
+              : 'Regularization request submitted successfully!',
             icon: 'success',
             confirmButtonColor: '#3b82f6'
           }).then(() => {
@@ -194,33 +273,15 @@ export class RegularizationFormComponent implements OnInit {
 
   getTypeOptions(): { value: RegularizationType; label: string; description: string }[] {
     return [
-      { value: RegularizationType.MissedPunch, label: 'Missed Punch', description: 'Request for missed check-in or check-out' },
-      { value: RegularizationType.LateEntry, label: 'Late Entry', description: 'Request to regularize late check-in' },
-      { value: RegularizationType.EarlyExit, label: 'Early Exit', description: 'Request to regularize early check-out' },
+      { value: RegularizationType.MissedPunch,           label: 'Missed Punch',            description: 'Request for missed check-in or check-out' },
+      { value: RegularizationType.LateEntry,             label: 'Late Entry',              description: 'Request to regularize late check-in' },
+      { value: RegularizationType.EarlyExit,             label: 'Early Exit',              description: 'Request to regularize early check-out' },
       { value: RegularizationType.FullDayRegularization, label: 'Full Day Regularization', description: 'Request to regularize entire day attendance' }
     ];
   }
 
   getSelectedTypeDescription(): string {
-    const type = +this.regularizationForm.get('regularizationType')?.value;
+    const type = Number(this.regularizationForm.get('regularizationType')?.value);
     return this.getTypeOptions().find(o => o.value === type)?.description || '';
-  }
-
-  showCheckInField(): boolean {
-    const type = +this.regularizationForm.get('regularizationType')?.value;
-    return [
-      RegularizationType.MissedPunch,
-      RegularizationType.LateEntry,
-      RegularizationType.FullDayRegularization
-    ].includes(type);
-  }
-
-  showCheckOutField(): boolean {
-    const type = +this.regularizationForm.get('regularizationType')?.value;
-    return [
-      RegularizationType.MissedPunch,
-      RegularizationType.EarlyExit,
-      RegularizationType.FullDayRegularization
-    ].includes(type);
   }
 }

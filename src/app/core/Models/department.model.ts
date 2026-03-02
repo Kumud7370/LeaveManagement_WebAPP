@@ -3,10 +3,6 @@ export interface Department {
   departmentCode: string;
   departmentName: string;
   description?: string;
-  headOfDepartment?: string;
-  headOfDepartmentName?: string;
-  parentDepartmentId?: string;
-  parentDepartmentName?: string;
   isActive: boolean;
   displayOrder: number;
   employeeCount: number;
@@ -20,7 +16,6 @@ export interface DepartmentDetail extends Department {
   level: number;
   childDepartments?: Department[];
   employees?: EmployeeSummary[];
-  departmentHead?: EmployeeSummary;
   auditInfo?: AuditInfo;
 }
 
@@ -55,8 +50,6 @@ export interface CreateDepartmentRequest {
   departmentCode: string;
   departmentName: string;
   description?: string;
-  headOfDepartment?: string;
-  parentDepartmentId?: string;
   displayOrder?: number;
   isActive?: boolean;
 }
@@ -66,8 +59,6 @@ export interface UpdateDepartmentRequest {
   departmentCode: string;
   departmentName: string;
   description?: string;
-  headOfDepartment?: string;
-  parentDepartmentId?: string;
   displayOrder?: number;
   isActive?: boolean;
 }
@@ -76,9 +67,6 @@ export interface DepartmentFilterRequest {
   searchTerm?: string;
   includeDeleted?: boolean;
   isActive?: boolean;
-  parentDepartmentId?: string;
-  rootLevelOnly?: boolean;
-  headOfDepartment?: string;
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   pageNumber?: number;

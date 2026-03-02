@@ -174,9 +174,9 @@ export class HolidayListComponent implements OnInit, OnDestroy {
       cellRenderer: (p: any) => {
         const depts: any[] = p.value || [];
         return depts.length === 0
-          ? '<span style="color:#9ca3af;font-size:11px;">All Departments</span>'
-          : `<span style="color:#4338ca;font-size:11px;font-weight:600;">${depts.length} Department(s)</span>`;
-      }
+      ? '<span style="color:#4338ca;font-size:11px;font-weight:600;">All Departments</span>'
+      : `<span style="color:#4338ca;font-size:11px;font-weight:600;">${depts.length} Department(s)</span>`;
+  }
     },
     {
       headerName: 'Days Until', field: 'daysUntilHoliday', width: 130, minWidth: 100,

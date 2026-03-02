@@ -138,6 +138,164 @@
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════
+     VIEW REGULARIZATION MODAL  ✅ NEW
+     ════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showViewModal && viewRegularizationData" class="rl-modal-overlay" (click)="closeViewModal()">
+  <div class="rl-modal-container rl-modal-xlarge" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="rl-modal-header">
+      <h2 class="rl-modal-title">
+        <i class="bi bi-eye"></i>
+        Regularization Details
+      </h2>
+      <button (click)="closeViewModal()" class="rl-modal-close" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="rl-modal-body" style="padding:0; overflow-y:auto;">
+
+      <!-- Employee Banner -->
+      <div class="rl-view-banner">
+        <div class="rl-view-banner-left">
+          <div class="rl-view-avatar">
+            {{ viewRegularizationData.employeeName?.charAt(0)?.toUpperCase() }}
+          </div>
+          <div>
+            <div class="rl-view-emp-name">{{ viewRegularizationData.employeeName }}</div>
+            <div class="rl-view-emp-code">{{ viewRegularizationData.employeeCode }}</div>
+          </div>
+        </div>
+        <div class="rl-view-banner-right">
+          <span class="rl-view-status-badge"
+            [ngClass]="{
+              'rl-status-pending':   viewRegularizationData.status === 1,
+              'rl-status-approved':  viewRegularizationData.status === 2,
+              'rl-status-rejected':  viewRegularizationData.status === 3,
+              'rl-status-cancelled': viewRegularizationData.status === 4
+            }">
+            {{ viewRegularizationData.statusName }}
+          </span>
+          <span class="rl-view-type-badge"
+            [ngClass]="{
+              'rl-type-missed':   viewRegularizationData.regularizationType === 1,
+              'rl-type-late':     viewRegularizationData.regularizationType === 2,
+              'rl-type-early':    viewRegularizationData.regularizationType === 3,
+              'rl-type-fullday':  viewRegularizationData.regularizationType === 4
+            }">
+            {{ viewRegularizationData.regularizationTypeName }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Time Cards -->
+      <div class="rl-view-time-grid">
+        <div class="rl-view-time-card">
+          <div class="rl-view-time-header">
+            <i class="bi bi-clock-history"></i>
+            <span>Original Times</span>
+          </div>
+          <div class="rl-view-time-row">
+            <div class="rl-view-time-item">
+              <label>CHECK-IN</label>
+              <div class="rl-view-time-val">{{ formatViewTime(viewRegularizationData.originalCheckIn) }}</div>
+            </div>
+            <div class="rl-view-time-item">
+              <label>CHECK-OUT</label>
+              <div class="rl-view-time-val">{{ formatViewTime(viewRegularizationData.originalCheckOut) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rl-view-time-card rl-view-time-card-highlight">
+          <div class="rl-view-time-header">
+            <i class="bi bi-arrow-repeat"></i>
+            <span>Requested Times</span>
+          </div>
+          <div class="rl-view-time-row">
+            <div class="rl-view-time-item">
+              <label>CHECK-IN</label>
+              <div class="rl-view-time-val">{{ formatViewTime(viewRegularizationData.requestedCheckIn) }}</div>
+            </div>
+            <div class="rl-view-time-item">
+              <label>CHECK-OUT</label>
+              <div class="rl-view-time-val">{{ formatViewTime(viewRegularizationData.requestedCheckOut) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details Grid -->
+      <div class="rl-view-details">
+        <div class="rl-view-details-title">Regularization Details</div>
+        <div class="rl-view-info-grid">
+
+          <div class="rl-view-info-item">
+            <label>Attendance Date</label>
+            <div class="rl-view-info-val">{{ formatViewDate(viewRegularizationData.attendanceDate) }}</div>
+          </div>
+
+          <div class="rl-view-info-item">
+            <label>Employee Code</label>
+            <div class="rl-view-info-val rl-view-mono">{{ viewRegularizationData.employeeCode }}</div>
+          </div>
+
+          <div class="rl-view-info-item">
+            <label>Employee Name</label>
+            <div class="rl-view-info-val">{{ viewRegularizationData.employeeName }}</div>
+          </div>
+
+          <div class="rl-view-info-item">
+            <label>Regularization Type</label>
+            <div class="rl-view-info-val">{{ viewRegularizationData.regularizationTypeName }}</div>
+          </div>
+
+          <div class="rl-view-info-item">
+            <label>Status</label>
+            <div class="rl-view-info-val">{{ viewRegularizationData.statusName }}</div>
+          </div>
+
+          <div class="rl-view-info-item">
+            <label>Requested At</label>
+            <div class="rl-view-info-val">{{ formatViewDateTime(viewRegularizationData.requestedAt) }}</div>
+          </div>
+
+          <div class="rl-view-info-item" *ngIf="viewRegularizationData.approvedByName">
+            <label>Approved / Rejected By</label>
+            <div class="rl-view-info-val">{{ viewRegularizationData.approvedByName }}</div>
+          </div>
+
+          <div class="rl-view-info-item" *ngIf="viewRegularizationData.approvedAt">
+            <label>Approved / Rejected At</label>
+            <div class="rl-view-info-val">{{ formatViewDateTime(viewRegularizationData.approvedAt) }}</div>
+          </div>
+
+          <!-- Reason — full width -->
+          <div class="rl-view-info-item rl-view-full">
+            <label>Reason for Request</label>
+            <div class="rl-view-reason-box">{{ viewRegularizationData.reason }}</div>
+          </div>
+
+          <!-- Rejection Reason — full width, only if present -->
+          <div class="rl-view-info-item rl-view-full" *ngIf="viewRegularizationData.rejectionReason">
+            <label>Rejection Reason</label>
+            <div class="rl-view-rejection-box">{{ viewRegularizationData.rejectionReason }}</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="rl-modal-footer">
+      <button class="rl-btn rl-btn-secondary" (click)="closeViewModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
      ADD REGULARIZATION MODAL
      ════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showAddModal" class="rl-modal-overlay" (click)="closeAddModal()">
@@ -154,8 +312,34 @@
     <div class="rl-modal-body">
       <app-regularization-form
         [isModal]="true"
+        [editData]="null"
         (formSubmitted)="onFormSubmitted()"
         (formCancelled)="closeAddModal()"
+      ></app-regularization-form>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     EDIT REGULARIZATION MODAL
+     ════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showEditModal" class="rl-modal-overlay" (click)="closeEditModal()">
+  <div class="rl-modal-container rl-modal-xlarge" (click)="$event.stopPropagation()">
+    <div class="rl-modal-header">
+      <h2 class="rl-modal-title">
+        <i class="bi bi-pencil-square"></i>
+        Edit Regularization
+      </h2>
+      <button (click)="closeEditModal()" class="rl-modal-close" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="rl-modal-body">
+      <app-regularization-form
+        [isModal]="true"
+        [editData]="editRegularizationData"
+        (formSubmitted)="onFormSubmitted()"
+        (formCancelled)="closeEditModal()"
       ></app-regularization-form>
     </div>
   </div>
