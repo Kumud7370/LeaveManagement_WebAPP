@@ -1,24 +1,3 @@
-// holiday-list.component.ts
-//
-// ROOT CAUSE OF "ONLY 3 DEPARTMENTS" BUG — NOW FIXED:
-//
-// The Department model from your backend returns:
-//   { departmentId: "guid-string", departmentName: "...", departmentCode: "..." }
-//
-// But previous code was doing:
-//   d.id          ← WRONG — this field does not exist on DepartmentResponseDto
-//   d.departmentName ← correct
-//
-// Because d.id was undefined, the deptChecked map was built with
-// keys like "undefined", and the *ngFor rendered nothing for those entries.
-// The 3 departments that DID show were coincidentally the ones where
-// the API response happened to include a fallback id field.
-//
-// FIX: Use getDeptId(dept) helper that reads departmentId (Guid string)
-// with a fallback chain covering every possible field name the API might use.
-// This is applied consistently everywhere: buildDeptChecked, onDepartmentChange,
-// removeDepartment, getDepartmentName, and the template [id] / [checked] bindings.
-
 import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
@@ -79,30 +58,27 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   @ViewChild('agGrid', { read: ElementRef }) agGridElement!: ElementRef<HTMLElement>;
   readonly gridTheme = holidayGridTheme;
 
-  // ─── Grid ─────────────────────────────────────────────────────────
+  // ─── Grid 
   rowData:    any[]  = [];
   gridApi!:   GridApi;
   searchTerm: string = '';
 
-  // ─── Modal ────────────────────────────────────────────────────────
+  // ─── Modal 
   isModalOpen     = false;
   modalMode: 'add' | 'edit' | 'view' = 'add';
   selectedHoliday: any = null;
 
-  // ─── Form ─────────────────────────────────────────────────────────
+  // ─── Form 
   holidayForm!:        FormGroup;
   isSubmitting        = false;
   formSubmitAttempted = false;
 
-  // ─── Departments ──────────────────────────────────────────────────
+  // ─── Departments 
   departments:          any[]                   = [];
   isLoadingDepartments  = false;
-
-  // Plain Record<string, boolean> — spreading on each change gives Angular
-  // a new object reference so all [checked] bindings re-evaluate correctly.
   deptChecked: Record<string, boolean> = {};
 
-  // ─── Pagination ───────────────────────────────────────────────────
+  // ─── Pagination 
   currentPage  = 1;
   pageSize     = 20;
   totalItems   = 0;
@@ -123,7 +99,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   context = { componentParent: this };
   activeFilters = { hasActiveFilters: false, filters: [] as string[], count: 0 };
 
-  // ─── Column defs ──────────────────────────────────────────────────
+  // ─── Column defs 
   defaultColDef: ColDef = {
     sortable: true, filter: true, floatingFilter: true,
     resizable: true, minWidth: 80,
@@ -220,28 +196,17 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     this.resizeObserver?.disconnect();
     if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
   }
-
-  // ─── KEY HELPER: extract the correct ID from a department object ──
-  //
-  // Your backend DepartmentResponseDto has:
-  //   departmentId: Guid  (this is what gets serialised as "departmentId")
-  //
-  // Previous code used d.id which is UNDEFINED on DepartmentResponseDto —
-  // that's why the department grid showed garbage / only 3 items.
-  //
-  // This helper tries every possible field name so it works regardless
-  // of which backend serialisation convention is active.
   getDeptId(dept: any): string {
     return String(
-      dept.departmentId   ??   // DepartmentResponseDto.DepartmentId  ← PRIMARY
-      dept.DepartmentId   ??   // PascalCase variant
-      dept.id             ??   // BaseEntity.Id (MongoDB ObjectId string) — fallback
-      dept.Id             ??   // PascalCase fallback
+      dept.departmentId   ??   
+      dept.DepartmentId   ??   
+      dept.id             ??   
+      dept.Id             ??  
       ''
     );
   }
 
-  // ─── Form ─────────────────────────────────────────────────────────
+  // ─── Form 
 
   initializeForm(): void {
     this.holidayForm = this.fb.group({
@@ -260,24 +225,16 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Department selection ─────────────────────────────────────────
-
-  /**
-   * Rebuild deptChecked from scratch using the correct departmentId field.
-   * Creates a new object reference so Angular re-renders all checkboxes.
-   */
   private buildDeptChecked(selectedIds: string[]): void {
     const next: Record<string, boolean> = {};
-    // All departments start unchecked
     this.departments.forEach(d => {
       const id = this.getDeptId(d);
       if (id) next[id] = false;
     });
-    // Mark selected ones
     selectedIds.forEach(id => {
       if (id && next.hasOwnProperty(id)) next[id] = true;
     });
-    this.deptChecked = next;   // new reference → Angular re-renders
+    this.deptChecked = next;   
     this.syncDepartmentsToForm();
   }
 
@@ -330,7 +287,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     return dept?.departmentName ?? dept?.DepartmentName ?? id;
   }
 
-  // ─── Data loading ─────────────────────────────────────────────────
+  // ─── Data loading 
 
   loadStats(): void {
     const filter: HolidayFilterDto = {
@@ -359,8 +316,6 @@ export class HolidayListComponent implements OnInit, OnDestroy {
       next: (response: any) => {
         this.isLoadingDepartments = false;
 
-        // Unwrap ApiResponse<Department[]>
-        // Backend returns: { success: true, data: [...], message: "..." }
         let list: any[] = [];
         if (Array.isArray(response)) {
           list = response;
@@ -378,7 +333,6 @@ export class HolidayListComponent implements OnInit, OnDestroy {
 
         this.departments = list;
 
-        // Initialise all checkboxes to false using the CORRECT id field
         const cleared: Record<string, boolean> = {};
         list.forEach((d: any) => {
           const id = this.getDeptId(d);
@@ -430,7 +384,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Grid events ──────────────────────────────────────────────────
+  // ─── Grid events 
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
@@ -457,7 +411,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     return String(text).replace(new RegExp(`(${esc})`, 'gi'), '<mark class="search-highlight">$1</mark>');
   }
 
-  // ─── Pagination ───────────────────────────────────────────────────
+  // ─── Pagination 
 
   onPageSizeChanged(n: number): void { this.pageSize = n; this.currentPage = 1; this.loadHolidays(); }
   goToPage(page: number | string): void {
@@ -468,7 +422,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   nextPage():     void { if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1); }
   previousPage(): void { if (this.currentPage > 1) this.goToPage(this.currentPage - 1); }
 
-  // ─── Search ───────────────────────────────────────────────────────
+  // ─── Search 
 
   onSearchChange(): void {
     clearTimeout(this.searchDebounceTimer);
@@ -491,7 +445,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     this.activeFilters = { hasActiveFilters: filters.length > 0, filters, count: filters.length };
   }
 
-  // ─── Modal ────────────────────────────────────────────────────────
+  // ─── Modal 
 
   private resetForm(): void {
     this.formSubmitAttempted = false;
@@ -572,7 +526,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     m[event.action]?.();
   }
 
-  // ─── Submit ───────────────────────────────────────────────────────
+  // ─── Submit 
 
   onSubmit(): void {
     this.formSubmitAttempted = true;
@@ -641,7 +595,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Toggle / Delete ──────────────────────────────────────────────
+  // ─── Toggle / Delete 
 
   onToggleStatus(holiday: any): void {
     const newStatus = !holiday.isActive;
@@ -707,7 +661,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     Swal.fire({ icon: 'success', title: 'Exported!', text: 'Holiday data exported as CSV.', timer: 2000, showConfirmButton: false });
   }
 
-  // ─── Date helpers ─────────────────────────────────────────────────
+  // ─── Date helpers 
 
   formatDateForInput(date: any): string {
     const d = new Date(date);

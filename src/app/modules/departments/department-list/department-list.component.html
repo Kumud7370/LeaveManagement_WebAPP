@@ -35,15 +35,20 @@
       (input)="onSearch()"
     />
     <div class="toolbar-actions">
-      <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
-      <button class="btn btn-refresh" (click)="loadDepartments()">
-        Refresh
-      </button>
-      <button class="btn btn-export" (click)="exportDepartments()">
-        <i class="bi bi-download"></i> Export
-      </button>
+      <div class="toolbar-secondary-btns">
+        <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
+        <button class="btn btn-refresh" (click)="loadDepartments()">
+          Refresh
+        </button>
+        <button class="btn btn-export" (click)="exportDepartments()">
+          <i class="bi bi-download"></i> Export
+        </button>
+      </div>
       <div class="toolbar-divider"></div>
-      <button class="btn btn-primary" (click)="createDepartment()">
+      <button
+        class="btn btn-primary toolbar-primary-btn"
+        (click)="createDepartment()"
+      >
         <i class="bi bi-plus-lg"></i> Add Department
       </button>
     </div>
@@ -171,7 +176,7 @@
       [departmentId]="selectedDepartmentId"
       [isEditMode]="formMode === 'edit'"
       (formCancelled)="closeFormModal()"
-     (formSubmitted)="onFormSuccess($event)"
+      (formSubmitted)="onFormSuccess($event)"
     ></app-department-form>
   </div>
 </div>

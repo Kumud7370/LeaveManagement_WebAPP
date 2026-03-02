@@ -1,5 +1,3 @@
-// holiday-form.component.ts
-
 import { Component, OnInit, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -65,7 +63,7 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ─── Form Setup ───────────────────────────────────────────────────────────
+  // ─── Form Setup 
 
   private initializeForm(): void {
     this.holidayForm = this.fb.group({
@@ -121,7 +119,7 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ─── Department Helpers ───────────────────────────────────────────────────
+  // ─── Department Helpers 
 
   toggleDepartment(departmentId: string): void {
     if (this.mode === 'view') return;
@@ -150,7 +148,7 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
     return this.departments.find(d => d.id === id)?.departmentName || id;
   }
 
-  // ─── Submit ───────────────────────────────────────────────────────────────
+  // ─── Submit 
 
   onSubmit(): void {
     this.formSubmitAttempted = true;
@@ -244,7 +242,7 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ─── Close / Backdrop ─────────────────────────────────────────────────────
+  // ─── Close / Backdrop 
 
   onClose(): void {
     this.close.emit();
@@ -254,7 +252,7 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
     if (event.target === event.currentTarget) this.onClose();
   }
 
-  // ─── Template Helpers ─────────────────────────────────────────────────────
+  // ─── Template Helpers 
 
   get isNationalHoliday(): boolean {
     return this.holidayForm.get('holidayType')?.value === HolidayType.National;
@@ -295,7 +293,7 @@ export class HolidayFormComponent implements OnInit, OnDestroy {
     return labels[fieldName] ?? fieldName;
   }
 
-  // ─── Date Helpers ─────────────────────────────────────────────────────────
+  // ─── Date Helpers 
 
   formatDateForInput(date: any): string {
     const d = new Date(date);

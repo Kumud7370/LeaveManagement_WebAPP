@@ -1,7 +1,5 @@
-<!-- upcoming-holidays-widget.component.html -->
-
 <div class="uhw-card">
-  <!-- ── Header ──────────────────────────────────────────────────── -->
+  <!-- ── Header  -->
   <div class="uhw-header">
     <div class="uhw-header-left">
       <div class="uhw-header-icon">
@@ -24,7 +22,7 @@
     </button>
   </div>
 
-  <!-- ── Loading State ───────────────────────────────────────────── -->
+  <!-- ── Loading State  -->
   <div *ngIf="isLoading" class="uhw-loading">
     <div class="uhw-skeleton" *ngFor="let i of [1, 2, 3]">
       <div class="uhw-skel-date"></div>
@@ -36,14 +34,14 @@
     </div>
   </div>
 
-  <!-- ── Error State ─────────────────────────────────────────────── -->
+  <!-- ── Error State  -->
   <div *ngIf="!isLoading && hasError" class="uhw-error">
     <i class="bi bi-exclamation-circle-fill"></i>
     <p>Failed to load holidays</p>
     <button class="uhw-retry-btn" (click)="loadHolidays()">Retry</button>
   </div>
 
-  <!-- ── Holiday List ────────────────────────────────────────────── -->
+  <!-- ── Holiday List  -->
   <ul
     *ngIf="!isLoading && !hasError && holidays.length > 0"
     class="uhw-list"
@@ -134,7 +132,7 @@
     </li>
   </ul>
 
-  <!-- ── Footer: count only, NO "View all" button ───────────────── -->
+  <!-- ── Footer: count only, NO "View all" button  -->
   <div
     *ngIf="!isLoading && !hasError && holidays.length > 0"
     class="uhw-footer"
