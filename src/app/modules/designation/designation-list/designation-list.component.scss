@@ -1,18 +1,9 @@
-// NOTE: No ag-grid CSS imports needed — themeQuartz.withParams() in the .ts
-//       handles all grid styling including column borders.
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Container  — zero padding so parent layout controls spacing
-// ─────────────────────────────────────────────────────────────────────────────
 .designation-list-container {
   padding: 0;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Page Title  — identical to holiday .hl-page-title
-// ─────────────────────────────────────────────────────────────────────────────
 .page-header { margin-bottom: 20px; }
 
 .page-title {
@@ -22,9 +13,6 @@
   margin: 0;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Stat Cards  — identical to holiday .hl-stat-card
-// ─────────────────────────────────────────────────────────────────────────────
 .stat-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -58,9 +46,6 @@
   &--red   { background: #fef2f2; border-color: #fecaca; .stat-value { color: #dc2626; } }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Toolbar  — identical to holiday .hl-toolbar
-// ─────────────────────────────────────────────────────────────────────────────
 .search-action-section {
   display: flex;
   align-items: center;
@@ -129,9 +114,6 @@
                   &:hover { background: #f9fafb; border-color: #9ca3af; } }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Grid Card  — identical to holiday .hl-grid-card
-// ─────────────────────────────────────────────────────────────────────────────
 .grid-wrapper {
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -163,9 +145,6 @@
   font-size: 0.9rem;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Pagination  — identical to holiday .hl-pagination
-// ─────────────────────────────────────────────────────────────────────────────
 .pagination-bar {
   display: flex;
   align-items: center;
@@ -233,9 +212,6 @@
   &:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Modal
-// ─────────────────────────────────────────────────────────────────────────────
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -409,9 +385,6 @@
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Responsive
-// ─────────────────────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
   .page-title  { font-size: 22px; }
   .stat-cards  { grid-template-columns: 1fr 1fr; gap: 12px; }

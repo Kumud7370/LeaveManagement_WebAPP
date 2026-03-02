@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -25,7 +25,6 @@ import {
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// ── Same themeQuartz pattern as Holiday — columnBorder: true is the KEY ──────
 const designationGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
   foregroundColor:                '#1f2937',
@@ -37,7 +36,7 @@ const designationGridTheme = themeQuartz.withParams({
   selectedRowBackgroundColor:     '#dbeafe',
   fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   fontSize:                       13,
-  columnBorder:                   true,   // ← THIS draws the column dividers
+  columnBorder:                   true,   
   headerColumnBorder:             true,
   headerColumnBorderHeight:       '50%',
   headerColumnResizeHandleColor:  '#9ca3af',
@@ -59,14 +58,15 @@ const designationGridTheme = themeQuartz.withParams({
   styleUrls: ['./designation-list.component.scss'],
 })
 export class DesignationListComponent implements OnInit, OnDestroy {
-
-  // ── Theme ─────────────────────────────────────────────────────────────────
+  @ViewChild(AgGridAngular, { read: ElementRef })
+  agGridElement!: ElementRef<HTMLElement>;
   readonly gridTheme = designationGridTheme;
 
-  // ── Grid ──────────────────────────────────────────────────────────────────
   rowData: DesignationResponseDto[] = [];
   columnDefs: ColDef[] = [];
   private gridApi: GridApi | undefined;
+
+  private resizeObserver: ResizeObserver | null = null;
 
   defaultColDef: ColDef = {
     sortable: true,
@@ -77,21 +77,17 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     suppressFloatingFilterButton: false,
   };
 
-  // ── Stat Counts ───────────────────────────────────────────────────────────
   activeCount   = 0;
   inactiveCount = 0;
 
-  // ── Filter / Pagination ───────────────────────────────────────────────────
   searchTerm  = '';
   currentPage = 1;
   pageSize    = 10;
   totalCount  = 0;
   totalPages  = 0;
 
-  // ── Loading ───────────────────────────────────────────────────────────────
   isLoading = false;
 
-  // ── Modal ─────────────────────────────────────────────────────────────────
   isModalOpen            = false;
   isEditMode             = false;
   isLoadingForm          = false;
@@ -113,10 +109,14 @@ export class DesignationListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+  
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
     this.gridApi = undefined;
   }
 
-  // ── Form ──────────────────────────────────────────────────────────────────
   initializeForm(): void {
     this.designationForm = this.fb.group({
       designationCode: ['', [Validators.required, Validators.maxLength(50), Validators.pattern(/^[A-Z0-9\-_]+$/)]],
@@ -127,12 +127,11 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Grid Setup ────────────────────────────────────────────────────────────
   initializeGrid(): void {
     this.columnDefs = [
       {
         headerName: 'Actions',
-        width: 110,           // narrower — only 3 buttons now (no view)
+        width: 110,
         minWidth: 110,
         maxWidth: 110,
         sortable: false,
@@ -140,6 +139,7 @@ export class DesignationListComponent implements OnInit, OnDestroy {
         floatingFilter: false,
         suppressFloatingFilterButton: true,
         pinned: 'left',
+        suppressSizeToFit: true,
         suppressKeyboardEvent: () => true,
         cellRenderer: (params: ICellRendererParams) => {
           const isActive   = params.data?.isActive;
@@ -256,7 +256,7 @@ export class DesignationListComponent implements OnInit, OnDestroy {
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
-    // Wire up action button clicks via cell click
+
     this.gridApi.addEventListener('cellClicked', (event: any) => {
       const target = event.event?.target as HTMLElement;
       if (!target) return;
@@ -270,10 +270,25 @@ export class DesignationListComponent implements OnInit, OnDestroy {
         case 'delete': this.deleteDesignation(designation); break;
       }
     });
+
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
+
+    const hostEl = this.agGridElement?.nativeElement;
+    const container = (hostEl?.closest('.grid-wrapper') as HTMLElement) ?? hostEl;
+
+    if (container && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.gridApi) {
+         
+          requestAnimationFrame(() => {
+            this.gridApi?.sizeColumnsToFit();
+          });
+        }
+      });
+      this.resizeObserver.observe(container);
+    }
   }
 
-  // ── Data Loading ──────────────────────────────────────────────────────────
   loadDesignations(): void {
     this.isLoading = true;
 
@@ -336,7 +351,6 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Search ────────────────────────────────────────────────────────────────
   onSearchChange(): void {
     this.currentPage = 1;
     applyQuickFilter(this.gridApi, this.searchTerm);
@@ -360,7 +374,6 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     exportToCsv(this.gridApi, 'designations');
   }
 
-  // ── Modal ─────────────────────────────────────────────────────────────────
   openCreateModal(): void {
     this.isModalOpen           = true;
     this.isEditMode            = false;
@@ -504,7 +517,6 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach((key) => {
       const control = formGroup.get(key);
@@ -538,7 +550,6 @@ export class DesignationListComponent implements OnInit, OnDestroy {
     return labels[fieldName] || fieldName;
   }
 
-  // ── Pagination ────────────────────────────────────────────────────────────
   onPageChange(page: number): void {
     if (page < 1 || page > this.totalPages) return;
     this.currentPage = page;

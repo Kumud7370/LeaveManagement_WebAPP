@@ -34,17 +34,6 @@
     </div>
     <div class="es-toolbar-actions">
 
-      <!-- Status filter -->
-      <select class="es-filter-select" [(ngModel)]="filterStatus" (change)="onStatusChange()">
-        <option *ngFor="let o of statusOptions" [ngValue]="o.value">{{ o.label }}</option>
-      </select>
-
-      <!-- Current only toggle -->
-      <label class="es-toggle-lbl">
-        <input type="checkbox" [(ngModel)]="filterOnlyCurrent" (change)="onCurrentToggle()" />
-        Current only
-      </label>
-
       <div class="es-toolbar-divider"></div>
 
       <button (click)="handleClearFilters()" class="es-btn es-btn-clear">
