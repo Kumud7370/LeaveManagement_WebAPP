@@ -40,7 +40,7 @@
           <span class="wl-filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
         </button>
         <button class="wl-btn wl-btn-clear" (click)="clearFilters()">Clear</button>
-        <button class="wl-btn wl-btn-refresh" (click)="loadRequests()">
+        <button class="wl-btn wl-btn-refresh" (click)="loadRequests()" [class.wl-btn-spinning]="refreshing">
           <i class="bi bi-arrow-clockwise"></i> Refresh
         </button>
         <button class="wl-btn wl-btn-export" (click)="exportData()">
@@ -80,7 +80,7 @@
       </div>
     </div>
 
-    <!-- Loading -->
+    <!-- Initial Loading (first load only — grid not yet mounted) -->
     <div *ngIf="loading" class="wl-loading">
       <div class="wl-spinner"></div>
       <span>Loading WFH requests...</span>
@@ -102,7 +102,12 @@
       </button>
     </div>
 
-    <!-- AG Grid -->
+    <!-- Refresh overlay bar (shown during refresh without unmounting grid) -->
+    <div class="wl-refresh-bar" *ngIf="refreshing">
+      <div class="wl-refresh-bar-inner"></div>
+    </div>
+
+    <!-- AG Grid — stays mounted after first load; rowData binding handles updates -->
     <ag-grid-angular
       *ngIf="!loading && !error && rowData.length > 0"
       style="width: 100%;"
