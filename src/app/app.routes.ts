@@ -254,6 +254,15 @@ export const routes: Routes = [
       },
 
       {
+        path: "my-leaves",
+        loadComponent: () =>
+          import("./modules/leave/my-leaves/my-leaves.component")
+            .then((m) => m.MyLeavesComponent),
+        data: { breadcrumb: "My Leaves" },
+      },
+
+
+      {
         path: "wfh-requests",
         children: [
           {
@@ -267,7 +276,7 @@ export const routes: Routes = [
               .then((m) => m.WfhRequestListComponent),
             data: { breadcrumb: "WFH Requests" },
           },
-          
+
         ]
       },
 

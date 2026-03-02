@@ -53,8 +53,8 @@
       <span class="emp-toolbar__label">
         <i class="bi bi-funnel"></i>
         Showing
-        <strong>{{ rowData.length }}</strong>
-        {{ selectedStatus === '' ? 'total' : '' }} request{{ rowData.length !== 1 ? 's' : '' }}
+        <strong>{{ totalItems }}</strong>
+        {{ selectedStatus === '' ? 'total' : '' }} request{{ totalItems !== 1 ? 's' : '' }}
         <ng-container *ngIf="selectedStatus !== ''">
           — filtered by
           <span class="emp-toolbar__filter-tag" (click)="onStatusFilter('')">
@@ -81,7 +81,7 @@
     </div>
 
     <!-- Empty -->
-    <div *ngIf="!loading && !error && rowData.length === 0" class="emp-state emp-state--empty">
+    <div *ngIf="!loading && !error && totalItems === 0" class="emp-state emp-state--empty">
       <div class="emp-empty-icon"><i class="bi bi-house-x"></i></div>
       <p class="emp-empty-title">No requests found</p>
       <p class="emp-empty-sub" *ngIf="selectedStatus === ''">You haven't submitted any WFH requests yet.</p>
@@ -96,7 +96,7 @@
 
     <!-- AG Grid -->
     <ag-grid-angular
-      *ngIf="!loading && !error && rowData.length > 0"
+      *ngIf="!loading && !error && totalItems > 0"
       style="width:100%;"
       [theme]="gridTheme"
       [rowData]="rowData"
@@ -109,6 +109,63 @@
       [domLayout]="'autoHeight'"
       [suppressPaginationPanel]="true">
     </ag-grid-angular>
+
+    <!-- ── Pagination Bar ──────────────────────────────────────── -->
+    <div class="emp-pagination" *ngIf="!loading && !error && totalItems > 0">
+
+      <!-- Page size selector -->
+      <div class="emp-pagination__size">
+        <span>Show:</span>
+        <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)" class="emp-pagination__select">
+          <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+
+      <!-- Range info -->
+      <span class="emp-pagination__info">
+        {{ startIndex }} to {{ endIndex }} of {{ totalItems }}
+      </span>
+
+      <!-- Page info -->
+      <span class="emp-pagination__pages">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+
+      <!-- Controls -->
+      <div class="emp-pagination__controls">
+        <!-- First -->
+        <button class="emp-page-btn" [disabled]="currentPage === 1" (click)="goToPage(1)" title="First">
+          «
+        </button>
+        <!-- Prev -->
+        <button class="emp-page-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)" title="Previous">
+          ‹
+        </button>
+
+        <!-- Page numbers -->
+        <ng-container *ngFor="let p of pageNumbers">
+          <span *ngIf="p === -1" class="emp-page-ellipsis">…</span>
+          <button
+            *ngIf="p !== -1"
+            class="emp-page-btn"
+            [class.emp-page-btn--active]="p === currentPage"
+            (click)="goToPage(p)">
+            {{ p }}
+          </button>
+        </ng-container>
+
+        <!-- Next -->
+        <button class="emp-page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)" title="Next">
+          ›
+        </button>
+        <!-- Last -->
+        <button class="emp-page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)" title="Last">
+          »
+        </button>
+      </div>
+
+    </div>
+    <!-- ── /Pagination Bar ─────────────────────────────────────── -->
 
   </div>
 </div>
