@@ -21,6 +21,7 @@ import {
   InvitationStats
 } from '../../../core/Models/admin-invitation.model';
 import { PaginationManager, PagedResultDto } from '../../../core/Models/pagination.model';
+import { InvitationActionCellRendererComponent } from '../invitation-action-cell-renderer.component';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 
@@ -52,13 +53,15 @@ const invitationGridTheme = themeQuartz.withParams({
 @Component({
   selector: 'app-invitation-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, AgGridAngular],
+  imports: [CommonModule, FormsModule, AgGridAngular, InvitationActionCellRendererComponent],
   templateUrl: './invitation-list.component.html',
   styleUrls: ['./invitation-list.component.scss']
 })
 export class InvitationListComponent implements OnInit, OnDestroy {
 
   readonly gridTheme = invitationGridTheme;
+
+  context = { componentParent: this };
 
   // Raw full list from API (never mutated)
   private allInvitations: InvitationResponseDto[] = [];
@@ -91,7 +94,6 @@ export class InvitationListComponent implements OnInit, OnDestroy {
   toggleStatusDropdown(): void {
     this.statusDropdownOpen = !this.statusDropdownOpen;
     if (this.statusDropdownOpen) {
-      // Position the fixed menu under the trigger button
       setTimeout(() => {
         const trigger = document.querySelector('.ll-custom-select-trigger') as HTMLElement;
         const menu    = document.querySelector('.ll-custom-select-menu')    as HTMLElement;
@@ -147,21 +149,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
     rowSelection: 'single',
     suppressRowClickSelection: true,
     suppressCellFocus: true,
-    // ✅ Allow horizontal scrolling — do NOT suppress it
     suppressHorizontalScroll: false,
-    onCellClicked: (event: any) => {
-      const target = event.event?.target as HTMLElement;
-      if (!target) return;
-      const actionBtn = target.closest?.('[data-action]') as HTMLElement | null;
-      const action = actionBtn?.getAttribute('data-action');
-      if (!action || !event.data) return;
-      const invitation: InvitationResponseDto = event.data;
-      switch (action) {
-        case 'edit':   this.editInvitation(invitation);   break;
-        case 'revoke': this.revokeInvitation(invitation); break;
-        case 'delete': this.deleteInvitation(invitation); break;
-      }
-    }
   };
 
   constructor(
@@ -354,27 +342,13 @@ export class InvitationListComponent implements OnInit, OnDestroy {
     this.columnDefs = [
       {
         headerName: 'Actions',
-        width: 130, minWidth: 130, maxWidth: 130,
+        width: 110, minWidth: 110, maxWidth: 110,
         sortable: false, filter: false,
         suppressSizeToFit: true,
+        headerClass: 'll-action-col',
+        cellClass: 'll-action-cell ll-action-col',
         cellStyle: { display: 'flex', alignItems: 'center', padding: '0', overflow: 'visible' },
-        cellRenderer: (params: ICellRendererParams) => {
-          if (!params.data) return '';
-          const isValid = params.data.status === 'Pending' && new Date(params.data.expiresAt) > new Date();
-
-          const btn = (action: string, icon: string, bg: string, color: string, title: string) =>
-            `<button data-action="${action}" title="${title}"
-              style="width:30px;height:28px;border:none;border-radius:5px;cursor:pointer;
-                     display:inline-flex;align-items:center;justify-content:center;
-                     background:${bg};color:${color};font-size:13px;pointer-events:all;">
-              <i class="bi ${icon}" style="pointer-events:none;"></i></button>`;
-
-          return `<div style="display:flex;gap:5px;align-items:center;padding:0 8px;height:100%;pointer-events:all;">
-            ${isValid ? btn('edit', 'bi-pencil', '#fef3c7', '#92400e', 'Edit') : ''}
-            ${isValid ? btn('revoke', 'bi-x-circle', '#fee2e2', '#991b1b', 'Revoke') : ''}
-            ${btn('delete', 'bi-trash', '#f1f5f9', '#475569', 'Delete')}
-          </div>`;
-        }
+        cellRenderer: InvitationActionCellRendererComponent,
       },
       {
         headerName: 'Recipient',

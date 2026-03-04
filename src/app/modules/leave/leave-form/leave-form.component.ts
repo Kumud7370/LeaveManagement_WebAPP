@@ -10,7 +10,7 @@ import { Leave, CreateLeaveDto, UpdateLeaveDto } from '../../../core/Models/leav
 import { LeaveType } from '../../../core/Models/leave-type.model';
 
 interface EmployeeResponseDto { id: string; employeeCode: string; firstName: string; lastName: string; }
-interface EmployeeSummary    { id: string; employeeCode: string; fullName: string; }
+interface EmployeeSummary { id: string; employeeCode: string; fullName: string; }
 
 @Component({
   selector: 'app-leave-form',
@@ -18,54 +18,56 @@ interface EmployeeSummary    { id: string; employeeCode: string; fullName: strin
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './leave-form.component.html',
   styleUrls: ['./leave-form.component.scss'],
-  encapsulation: ViewEncapsulation.None   // allows shared hl- styles to apply
+  encapsulation: ViewEncapsulation.None
 })
 export class LeaveFormComponent implements OnInit {
-  @Input() isModal     = false;
-  @Input() isEditMode  = false;
+  @Input() isModal = false;
+  @Input() isEditMode = false;
   @Input() leaveId: string | null = null;
   @Output() formSubmitted = new EventEmitter<void>();
   @Output() formCancelled = new EventEmitter<void>();
+  @Input() restrictToEmployeeId: string | null = null;
 
   leaveForm!: FormGroup;
-  leaveTypes: LeaveType[]       = [];
-  employees: EmployeeSummary[]  = [];
+  leaveTypes: LeaveType[] = [];
+  employees: EmployeeSummary[] = [];
   selectedLeaveType: LeaveType | null = null;
 
-  remainingDays:  number | null = null;
-  balanceLoading  = false;
+  remainingDays: number | null = null;
+  balanceLoading = false;
   balanceNotFound = false;
-  computedDays    = 0;
-  submitting      = false;
-  loadingLeave    = false;
+  computedDays = 0;
+  submitting = false;
+  loadingLeave = false;
   formError: string | null = null;
   currentYear = new Date().getFullYear();
 
   constructor(
-    private fb:              FormBuilder,
-    private leaveService:    LeaveService,
+    private fb: FormBuilder,
+    private leaveService: LeaveService,
     private leaveTypeService: LeaveTypeService,
     private employeeService: EmployeeService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.buildForm();
     this.loadLeaveTypes();
-    this.loadEmployees();
-    if (this.isEditMode && this.leaveId) this.loadLeave(this.leaveId);
+    this.loadEmployees(); this.loadEmployees().then(() => {
+      if (this.isEditMode && this.leaveId) this.loadLeave(this.leaveId);
+    });
   }
 
   buildForm(): void {
     this.leaveForm = this.fb.group(
       {
-        employeeId:       ['', Validators.required],
-        leaveTypeId:      ['', Validators.required],
-        startDate:        ['', Validators.required],
-        endDate:          ['', Validators.required],
-        totalDays:        [1, [Validators.required, Validators.min(0.5)]],
-        reason:           ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
+        employeeId: [{ value: '', disabled: this.isEditMode }, Validators.required],
+        leaveTypeId: ['', Validators.required],
+        startDate: ['', Validators.required],
+        endDate: ['', Validators.required],
+        totalDays: [1, [Validators.required, Validators.min(0.5)]],
+        reason: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
         isEmergencyLeave: [false],
-        attachmentUrl:    ['']
+        attachmentUrl: ['']
       },
       { validators: this.dateRangeValidator }
     );
@@ -84,16 +86,42 @@ export class LeaveFormComponent implements OnInit {
     });
   }
 
-  loadEmployees(): void {
+loadEmployees(): Promise<void> {
+  return new Promise((resolve) => {
     this.employeeService.getActiveEmployees().subscribe({
       next: (employees: EmployeeResponseDto[]) => {
-        this.employees = employees.map(e => ({
-          id: e.id, employeeCode: e.employeeCode, fullName: `${e.firstName} ${e.lastName}`
+        const all = employees.map(e => ({
+          id: e.id,
+          employeeCode: (e as any).employeeCode,
+          fullName: `${e.firstName} ${e.lastName}`,
+          userId: (e as any).userId  
         }));
+
+        if (this.restrictToEmployeeId) {
+          const rid = this.restrictToEmployeeId.trim().toLowerCase();
+
+          this.employees = all.filter(e =>
+            e.id?.trim().toLowerCase() === rid ||
+            e.userId?.trim().toLowerCase() === rid 
+          );
+
+          if (this.employees.length === 1 && !this.isEditMode) {
+            setTimeout(() => {
+              this.leaveForm.patchValue({ employeeId: this.employees[0].id });
+              this.onLeaveTypeChange();
+            }, 0);
+          } else if (this.employees.length === 0) {
+            this.employees = all;
+          }
+        } else {
+          this.employees = all;
+        }
+        resolve();
       },
-      error: () => { this.employees = []; }
+      error: () => { this.employees = []; resolve(); }
     });
-  }
+  });
+}
 
   loadLeave(id: string): void {
     this.loadingLeave = true;
@@ -118,7 +146,7 @@ export class LeaveFormComponent implements OnInit {
 
   onLeaveTypeChange(): void {
     const typeId = this.leaveForm.get('leaveTypeId')?.value as string;
-    const empId  = this.leaveForm.get('employeeId')?.value  as string;
+    const empId = this.leaveForm.get('employeeId')?.value as string;
     this.selectedLeaveType = this.leaveTypes.find(lt => lt.id === typeId) ?? null;
     this.remainingDays = null; this.balanceNotFound = false;
 
@@ -128,7 +156,7 @@ export class LeaveFormComponent implements OnInit {
         next: (r) => {
           this.balanceLoading = false;
           if (r.success) { this.remainingDays = r.data; this.balanceNotFound = false; }
-          else            { this.remainingDays = null;   this.balanceNotFound = true;  }
+          else { this.remainingDays = null; this.balanceNotFound = true; }
         },
         error: () => { this.balanceLoading = false; this.remainingDays = null; this.balanceNotFound = true; }
       });
@@ -137,7 +165,7 @@ export class LeaveFormComponent implements OnInit {
 
   onDateChange(): void {
     const s = this.leaveForm.get('startDate')?.value as string;
-    const e = this.leaveForm.get('endDate')?.value   as string;
+    const e = this.leaveForm.get('endDate')?.value as string;
     if (s && e && new Date(e) >= new Date(s)) {
       const diff = Math.ceil((new Date(e).getTime() - new Date(s).getTime()) / 86_400_000) + 1;
       this.computedDays = diff;
@@ -167,9 +195,9 @@ export class LeaveFormComponent implements OnInit {
     if (this.isEditMode && this.leaveId) {
       const dto: UpdateLeaveDto = {
         startDate: this.toISODateTime(v.startDate as string),
-        endDate:   this.toISODateTime(v.endDate   as string),
+        endDate: this.toISODateTime(v.endDate as string),
         totalDays: Number(v.totalDays),
-        reason:    (v.reason as string).trim(),
+        reason: (v.reason as string).trim(),
         isEmergencyLeave: v.isEmergencyLeave as boolean,
         attachmentUrl: (v.attachmentUrl as string) || undefined
       };
@@ -179,12 +207,12 @@ export class LeaveFormComponent implements OnInit {
       });
     } else {
       const dto: CreateLeaveDto = {
-        employeeId:  v.employeeId  as string,
+        employeeId: v.employeeId as string,
         leaveTypeId: v.leaveTypeId as string,
         startDate: this.toISODateTime(v.startDate as string),
-        endDate:   this.toISODateTime(v.endDate   as string),
+        endDate: this.toISODateTime(v.endDate as string),
         totalDays: Number(v.totalDays),
-        reason:    (v.reason as string).trim(),
+        reason: (v.reason as string).trim(),
         isEmergencyLeave: v.isEmergencyLeave as boolean,
         attachmentUrl: (v.attachmentUrl as string) || undefined
       };
@@ -209,10 +237,10 @@ export class LeaveFormComponent implements OnInit {
         return 'End date must be on or after start date.';
       return '';
     }
-    if (c.errors['required'])  return 'This field is required.';
+    if (c.errors['required']) return 'This field is required.';
     if (c.errors['minlength']) return `Minimum ${c.errors['minlength'].requiredLength} characters.`;
     if (c.errors['maxlength']) return `Maximum ${c.errors['maxlength'].requiredLength} characters.`;
-    if (c.errors['min'])       return `Minimum value is ${c.errors['min'].min}.`;
+    if (c.errors['min']) return `Minimum value is ${c.errors['min'].min}.`;
     return '';
   }
 
@@ -234,7 +262,7 @@ export class LeaveFormComponent implements OnInit {
       if (msgs.length) return msgs.join(' | ');
     }
     if (body.message) return body.message;
-    if (body.title)   return body.title;
+    if (body.title) return body.title;
     return 'An error occurred. Please try again.';
   }
 }
