@@ -1,10 +1,6 @@
 import {
-  Component,
-  OnInit,
-  OnDestroy,
-  Input,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef
+  Component, OnInit, OnDestroy, Input,
+  ChangeDetectionStrategy, ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil, interval, startWith, forkJoin } from 'rxjs';
@@ -22,7 +18,7 @@ import { Holiday } from '../../../core/Models/holiday.model';
 })
 export class UpcomingHolidaysWidgetComponent implements OnInit, OnDestroy {
 
-  @Input() count: number = 5;
+  @Input() count: number = 6;
   @Input() refreshIntervalMs: number = 5 * 60 * 1000;
 
   holidays: Holiday[] = [];
@@ -31,7 +27,6 @@ export class UpcomingHolidaysWidgetComponent implements OnInit, OnDestroy {
   lastLoaded: Date | null = null;
 
   private deptMap = new Map<string, string>();
-
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -55,13 +50,7 @@ export class UpcomingHolidaysWidgetComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ─── Public trigger for refresh button 
-
-  loadHolidays(): void {
-    this.loadAll();
-  }
-
-  // ─── Load holidays + departments together 
+  loadHolidays(): void { this.loadAll(); }
 
   private loadAll(): void {
     this.isLoading = true;
@@ -79,26 +68,16 @@ export class UpcomingHolidaysWidgetComponent implements OnInit, OnDestroy {
           this.lastLoaded = new Date();
 
           this.deptMap.clear();
-
-          const deptList: any[] =
-            departments?.data ?? departments ?? [];
-
+          const deptList: any[] = departments?.data ?? departments ?? [];
           (Array.isArray(deptList) ? deptList : []).forEach((d: any) => {
-           
-            const id: string =
-              String(d.id ?? d.departmentId ?? d.DepartmentId ?? '');
-            const name: string =
-              d.departmentName ?? d.DepartmentName ?? d.name ?? d.Name ?? '';
-
-            if (id && name) {
-              this.deptMap.set(id, name);
-            }
+            const id = String(d.id ?? d.departmentId ?? d.DepartmentId ?? '');
+            const name = d.departmentName ?? d.DepartmentName ?? d.name ?? d.Name ?? '';
+            if (id && name) this.deptMap.set(id, name);
           });
 
           if (holidays?.success) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-
             this.holidays = (holidays.data ?? []).filter((h: Holiday) => {
               const hDate = new Date(h.holidayDate);
               hDate.setHours(0, 0, 0, 0);
@@ -120,28 +99,16 @@ export class UpcomingHolidaysWidgetComponent implements OnInit, OnDestroy {
 
   getDepartmentLabels(holiday: Holiday): string[] {
     const ids: any[] = holiday.applicableDepartments ?? [];
-
-    if (ids.length === 0) {
-      return [];
-    }
-
-    return ids
-      .map(id => {
-        const key = String(id);
-        if (this.deptMap.has(key)) {
-          return this.deptMap.get(key)!;
-        }
-        return key;
-      })
-      .filter(Boolean);
+    if (!ids.length) return [];
+    return ids.map(id => {
+      const key = String(id);
+      return this.deptMap.get(key) ?? key;
+    }).filter(Boolean);
   }
 
-  /** True when we should show the "All Departments" pill */
   isAllDepartments(holiday: Holiday): boolean {
     return (holiday.applicableDepartments ?? []).length === 0;
   }
-
-  // ─── Other template helpers 
 
   getDateParts(dateStr: string | Date): { month: string; day: string } {
     const d = new Date(dateStr);
@@ -155,8 +122,7 @@ export class UpcomingHolidaysWidgetComponent implements OnInit, OnDestroy {
     if (isToday) return 'Today!';
     if (days === 1) return 'Tomorrow';
     if (days <= 7) return `In ${days} days`;
-    if (days <= 30)
-      return `In ${Math.ceil(days / 7)} week${Math.ceil(days / 7) > 1 ? 's' : ''}`;
+    if (days <= 30) return `In ${Math.ceil(days / 7)} week${Math.ceil(days / 7) > 1 ? 's' : ''}`;
     return `In ${days} days`;
   }
 
@@ -178,17 +144,9 @@ export class UpcomingHolidaysWidgetComponent implements OnInit, OnDestroy {
 
   get lastUpdatedLabel(): string {
     if (!this.lastLoaded) return '';
-    return this.lastLoaded.toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return this.lastLoaded.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   }
 
-  trackById(_: number, h: Holiday): string {
-    return h.id;
-  }
-
-  trackByName(_: number, name: string): string {
-    return name;
-  }
+  trackById(_: number, h: Holiday): string { return h.id; }
+  trackByName(_: number, name: string): string { return name; }
 }

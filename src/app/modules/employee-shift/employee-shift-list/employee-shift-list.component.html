@@ -122,7 +122,7 @@
   </div>
 </div>
 
-<!-- ════════ Reject Dialog ════════ -->
+<!--  Reject Dialog  -->
 <div class="es-modal-overlay" *ngIf="showRejectDialog" (click)="showRejectDialog = false">
   <div class="es-reject-box" (click)="$event.stopPropagation()">
     <div class="es-reject-title">
@@ -147,7 +147,7 @@
   </div>
 </div>
 
-<!-- ════════ Form Modal ════════ -->
+<!--  Form Modal  -->
 <app-employee-shift-form
   *ngIf="showModal"
   [mode]="modalMode"
