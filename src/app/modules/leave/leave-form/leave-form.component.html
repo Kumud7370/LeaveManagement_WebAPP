@@ -24,7 +24,9 @@
 
         <!-- Normal dropdown for admin (no restriction) -->
         <select *ngIf="!restrictToEmployeeId || employees.length !== 1" id="lfEmployeeId" formControlName="employeeId"
-          class="hl-form-control" [class.hl-invalid]="isInvalid('employeeId')" (change)="onLeaveTypeChange()">
+          class="hl-form-control" [class.hl-invalid]="isInvalid('employeeId')"
+          [style.pointer-events]="isEditMode ? 'none' : 'auto'" [style.background]="isEditMode ? '#f8fafc' : '#ffffff'"
+          [style.color]="isEditMode ? '#6b7280' : '#1f2937'" (change)="onLeaveTypeChange()">
           <option value="">Select employee...</option>
           <option *ngFor="let emp of employees" [value]="emp.id">
             {{ emp.employeeCode }} — {{ emp.fullName }}

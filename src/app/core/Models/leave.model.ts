@@ -56,6 +56,7 @@ export interface UpdateLeaveDto {
   reason?: string;
   isEmergencyLeave?: boolean;
   attachmentUrl?: string;
+  leaveTypeId?:     string;
 }
 
 export interface LeaveFilterDto {
