@@ -60,7 +60,7 @@ export class LeaveFormComponent implements OnInit {
   buildForm(): void {
     this.leaveForm = this.fb.group(
       {
-        employeeId: [{ value: '', disabled: this.isEditMode }, Validators.required],
+        employeeId: ['', Validators.required],
         leaveTypeId: ['', Validators.required],
         startDate: ['', Validators.required],
         endDate: ['', Validators.required],
@@ -144,24 +144,27 @@ loadEmployees(): Promise<void> {
     });
   }
 
-  onLeaveTypeChange(): void {
-    const typeId = this.leaveForm.get('leaveTypeId')?.value as string;
-    const empId = this.leaveForm.get('employeeId')?.value as string;
-    this.selectedLeaveType = this.leaveTypes.find(lt => lt.id === typeId) ?? null;
-    this.remainingDays = null; this.balanceNotFound = false;
+ onLeaveTypeChange(): void {
+  // Use getRawValue() so disabled employeeId is still readable
+  const raw    = this.leaveForm.getRawValue();
+  const typeId = raw.leaveTypeId as string;
+  const empId  = raw.employeeId  as string;
 
-    if (typeId && empId) {
-      this.balanceLoading = true;
-      this.leaveService.getRemainingLeaveDays(empId, typeId, this.currentYear).subscribe({
-        next: (r) => {
-          this.balanceLoading = false;
-          if (r.success) { this.remainingDays = r.data; this.balanceNotFound = false; }
-          else { this.remainingDays = null; this.balanceNotFound = true; }
-        },
-        error: () => { this.balanceLoading = false; this.remainingDays = null; this.balanceNotFound = true; }
-      });
-    }
+  this.selectedLeaveType = this.leaveTypes.find(lt => lt.id === typeId) ?? null;
+  this.remainingDays = null; this.balanceNotFound = false;
+
+  if (typeId && empId) {
+    this.balanceLoading = true;
+    this.leaveService.getRemainingLeaveDays(empId, typeId, this.currentYear).subscribe({
+      next: (r) => {
+        this.balanceLoading = false;
+        if (r.success) { this.remainingDays = r.data; this.balanceNotFound = false; }
+        else            { this.remainingDays = null;   this.balanceNotFound = true;  }
+      },
+      error: () => { this.balanceLoading = false; this.remainingDays = null; this.balanceNotFound = true; }
+    });
   }
+}
 
   onDateChange(): void {
     const s = this.leaveForm.get('startDate')?.value as string;
@@ -199,7 +202,8 @@ loadEmployees(): Promise<void> {
         totalDays: Number(v.totalDays),
         reason: (v.reason as string).trim(),
         isEmergencyLeave: v.isEmergencyLeave as boolean,
-        attachmentUrl: (v.attachmentUrl as string) || undefined
+        attachmentUrl: (v.attachmentUrl as string) || undefined,
+        leaveTypeId:      v.leaveTypeId as string,
       };
       this.leaveService.updateLeave(this.leaveId, dto).subscribe({
         next: (r) => { this.submitting = false; if (r.success) this.formSubmitted.emit(); else this.formError = r.message || 'Failed to update leave.'; },
