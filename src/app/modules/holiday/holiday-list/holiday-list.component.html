@@ -239,7 +239,9 @@
                 class="hl-form-control"
                 [attr.disabled]="modalMode === 'view' ? true : null"
               >
-                <option value="">-- Select Type --</option>
+                <option [value]="null" disabled selected>
+                  -- Select Type --
+                </option>
                 <option *ngFor="let t of holidayTypes" [value]="t.value">
                   {{ t.label }}
                 </option>
@@ -281,7 +283,6 @@
         </div>
 
         <!-- ── Applicable Departments  -->
-        
         <div class="hl-form-section" *ngIf="!isNationalHoliday">
           <h3 class="hl-section-title">Applicable Departments</h3>
           <small class="hl-form-hint">
@@ -371,17 +372,38 @@
 
         <!-- ── Settings  -->
         <div class="hl-form-section">
-          <div class="hl-form-group">
-            <label>Status</label>
-            <div class="hl-check-row">
-              <input
-                type="checkbox"
-                id="hlIsActive"
-                formControlName="isActive"
-                class="hl-toggle"
-                [attr.disabled]="modalMode === 'view' ? true : null"
-              />
-              <label class="hl-check-label" for="hlIsActive">Active</label>
+          <h3 class="hl-section-title">Settings</h3>
+          <div class="hl-form-row">
+            <!-- FIX: isActive field -->
+            <div class="hl-form-group">
+              <label>Status</label>
+              <div class="hl-check-row">
+                <input
+                  type="checkbox"
+                  id="hlIsActive"
+                  formControlName="isActive"
+                  class="hl-toggle"
+                  [attr.disabled]="modalMode === 'view' ? true : null"
+                />
+                <label class="hl-check-label" for="hlIsActive">Active</label>
+              </div>
+            </div>
+
+            <!-- FIX: isOptional checkbox was completely missing from the modal — added here -->
+            <div class="hl-form-group">
+              <label>Optional Holiday</label>
+              <div class="hl-check-row">
+                <input
+                  type="checkbox"
+                  id="hlIsOptional"
+                  formControlName="isOptional"
+                  class="hl-toggle"
+                  [attr.disabled]="modalMode === 'view' ? true : null"
+                />
+                <label class="hl-check-label" for="hlIsOptional"
+                  >This is an optional holiday</label
+                >
+              </div>
             </div>
           </div>
         </div>

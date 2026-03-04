@@ -1,13 +1,11 @@
-<!-- employee-list.component.html -->
-
 <div class="el-page-container">
 
-  <!-- ── Page Title ──────────────────────────────────────────────── -->
+  <!-- ── Page Title  -->
   <div class="el-page-header">
     <h1 class="el-page-title">Employee Management</h1>
   </div>
 
-  <!-- ── Stats Cards ──────────────────────────────────────────────── -->
+  <!-- ── Stats Cards  -->
   <div class="el-stats-grid">
     <div class="el-stat-card el-stat-total">
       <p class="el-stat-label">Total Employees</p>
@@ -27,7 +25,7 @@
     </div>
   </div>
 
-  <!-- ── Toolbar Row ──────────────────────────────────────────────── -->
+  <!-- ── Toolbar Row  -->
   <div class="el-toolbar">
 
     <!-- Search Input -->
@@ -59,22 +57,16 @@
     </div>
   </div>
 
-  <!-- ── Active Filters ───────────────────────────────────────────── -->
+  <!-- ── Active Filters  -->
   <div *ngIf="activeFilters.hasActiveFilters" class="el-active-filters">
     <span class="el-filter-label">Active Filters:</span>
     <span *ngFor="let f of activeFilters.filters" class="el-filter-badge">{{ f }}</span>
   </div>
 
-  <!-- ── Grid Card ────────────────────────────────────────────────── -->
+  <!-- ── Grid Card  -->
   <div class="el-grid-card">
     <div class="el-grid-container">
 
-      <!--
-        KEY CHANGES vs old version:
-          • [theme]="gridTheme"   instead of  class="ag-theme-quartz"
-          • [domLayout]="'autoHeight'"  instead of  style="height:520px"
-          • no fixed inline height style
-      -->
       <ag-grid-angular
         #agGrid
         style="width: 100%"
@@ -104,7 +96,7 @@
 
     </div>
 
-    <!-- ── Pagination (inside card, at bottom) ─────────────────── -->
+    <!-- ── Pagination (inside card, at bottom)  -->
     <div class="el-pagination">
       <div class="el-pagination-inner">
 
@@ -145,14 +137,9 @@
 
       </div>
     </div>
-  </div><!-- /el-grid-card -->
+  </div>
 
-</div><!-- /el-page-container -->
-
-
-<!-- ════════════════════════════════════════════════════════════════
-     EMPLOYEE FORM MODAL
-     ════════════════════════════════════════════════════════════════ -->
+</div>
 <div *ngIf="showFormModal" class="el-modal-overlay" (click)="onOverlayClick($event, 'form')">
   <div class="el-modal-container el-modal-xlarge" (click)="$event.stopPropagation()">
     <button class="el-modal-close" (click)="closeFormModal()" type="button">
@@ -168,9 +155,6 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════
-     EMPLOYEE DETAILS MODAL
-     ════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showDetailsModal" class="el-modal-overlay" (click)="onOverlayClick($event, 'details')">
   <div class="el-modal-container el-modal-xlarge" (click)="$event.stopPropagation()">
     <button class="el-modal-close" (click)="closeDetailsModal()" type="button">

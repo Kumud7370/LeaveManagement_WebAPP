@@ -78,10 +78,10 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   isLoadingDepartments  = false;
   deptChecked: Record<string, boolean> = {};
 
-  // ─── Pagination 
+  //  Pagination 
   currentPage  = 1;
   pageSize     = 20;
-  totalItems   = 0;
+  totalItems   = 0; 
   totalPages   = 0;
   private isLoadingData       = false;
   private searchDebounceTimer: any = null;
@@ -150,9 +150,9 @@ export class HolidayListComponent implements OnInit, OnDestroy {
       cellRenderer: (p: any) => {
         const depts: any[] = p.value || [];
         return depts.length === 0
-      ? '<span style="color:#4338ca;font-size:11px;font-weight:600;">All Departments</span>'
-      : `<span style="color:#4338ca;font-size:11px;font-weight:600;">${depts.length} Department(s)</span>`;
-  }
+          ? '<span style="color:#4338ca;font-size:11px;font-weight:600;">All Departments</span>'
+          : `<span style="color:#4338ca;font-size:11px;font-weight:600;">${depts.length} Department(s)</span>`;
+      }
     },
     {
       headerName: 'Days Until', field: 'daysUntilHoliday', width: 130, minWidth: 100,
@@ -196,12 +196,13 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     this.resizeObserver?.disconnect();
     if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
   }
+
   getDeptId(dept: any): string {
     return String(
-      dept.departmentId   ??   
-      dept.DepartmentId   ??   
-      dept.id             ??   
-      dept.Id             ??  
+      dept.departmentId ??
+      dept.DepartmentId ??
+      dept.id           ??
+      dept.Id           ??
       ''
     );
   }
@@ -212,8 +213,9 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     this.holidayForm = this.fb.group({
       holidayName:           ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
       holidayDate:           ['', Validators.required],
-      holidayType:           ['', Validators.required],
+      holidayType:           [null, Validators.required],
       isActive:              [true],
+      isOptional:            [false],
       description:           ['', [Validators.maxLength(500)]],
       applicableDepartments: [[]]
     });
@@ -234,11 +236,10 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     selectedIds.forEach(id => {
       if (id && next.hasOwnProperty(id)) next[id] = true;
     });
-    this.deptChecked = next;   
+    this.deptChecked = next;
     this.syncDepartmentsToForm();
   }
 
-  /** Called by (change) on each checkbox input — reads actual checked state. */
   onDepartmentChange(deptId: string, event: Event): void {
     if (this.modalMode === 'view') return;
     const checked = (event.target as HTMLInputElement).checked;
@@ -246,7 +247,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     this.syncDepartmentsToForm();
   }
 
-  /** Remove via chip × button. */
+  /*Remove via chip × button. */
   removeDepartment(deptId: string): void {
     this.deptChecked = { ...this.deptChecked, [deptId]: false };
     this.syncDepartmentsToForm();
@@ -281,13 +282,12 @@ export class HolidayListComponent implements OnInit, OnDestroy {
     return v === HolidayType.National || v === 'National';
   }
 
-  /** Lookup department name by its departmentId. */
   getDepartmentName(id: string): string {
     const dept = this.departments.find(d => this.getDeptId(d) === id);
     return dept?.departmentName ?? dept?.DepartmentName ?? id;
   }
 
-  // ─── Data loading 
+  // ─── Data loading
 
   loadStats(): void {
     const filter: HolidayFilterDto = {
@@ -450,8 +450,8 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   private resetForm(): void {
     this.formSubmitAttempted = false;
     this.holidayForm.reset({
-      holidayName: '', holidayDate: '', holidayType: '',
-      isActive: true, description: '', applicableDepartments: []
+      holidayName: '', holidayDate: '', holidayType: null,
+      isActive: true, isOptional: false, description: '', applicableDepartments: []
     });
     this.holidayForm.markAsPristine();
     this.holidayForm.markAsUntouched();
@@ -469,15 +469,29 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   openEditModal(holiday: any): void {
     this.modalMode = 'edit'; this.selectedHoliday = holiday;
     this.resetForm();
+
     this.holidayForm.patchValue({
       holidayName: holiday.holidayName,
       holidayDate: this.formatDateForInput(holiday.holidayDate),
       holidayType: holiday.holidayType,
       isActive:    holiday.isActive,
+      isOptional:  holiday.isOptional ?? false,
       description: holiday.description ?? '',
       applicableDepartments: holiday.applicableDepartments ?? []
     });
-    this.buildDeptChecked(holiday.applicableDepartments ?? []);
+
+    if (this.departments.length > 0) {
+      this.buildDeptChecked(holiday.applicableDepartments ?? []);
+    } else {
+      const waitForDepts = setInterval(() => {
+        if (this.departments.length > 0 || !this.isLoadingDepartments) {
+          clearInterval(waitForDepts);
+          this.buildDeptChecked(holiday.applicableDepartments ?? []);
+          this.cdr.markForCheck();
+        }
+      }, 100);
+    }
+
     this.holidayForm.enable();
     this.isModalOpen = true;
     this.cdr.markForCheck();
@@ -491,10 +505,23 @@ export class HolidayListComponent implements OnInit, OnDestroy {
       holidayDate: this.formatDateForInput(holiday.holidayDate),
       holidayType: holiday.holidayType,
       isActive:    holiday.isActive,
+      isOptional:  holiday.isOptional ?? false,
       description: holiday.description ?? '',
       applicableDepartments: holiday.applicableDepartments ?? []
     });
-    this.buildDeptChecked(holiday.applicableDepartments ?? []);
+
+    if (this.departments.length > 0) {
+      this.buildDeptChecked(holiday.applicableDepartments ?? []);
+    } else {
+      const waitForDepts = setInterval(() => {
+        if (this.departments.length > 0 || !this.isLoadingDepartments) {
+          clearInterval(waitForDepts);
+          this.buildDeptChecked(holiday.applicableDepartments ?? []);
+          this.cdr.markForCheck();
+        }
+      }, 100);
+    }
+
     this.holidayForm.disable();
     this.isModalOpen = true;
     this.cdr.markForCheck();
@@ -550,7 +577,7 @@ export class HolidayListComponent implements OnInit, OnDestroy {
       holidayDate: this.toUtcIso(fv.holidayDate),
       description: fv.description || undefined,
       holidayType: fv.holidayType,
-      isOptional:  false,
+      isOptional:  fv.isOptional ?? false,
       isActive:    fv.isActive,
       applicableDepartments: this.selectedDepartments
     };
@@ -572,20 +599,23 @@ export class HolidayListComponent implements OnInit, OnDestroy {
   private handleUpdate(): void {
     const fv = this.holidayForm.value;
     const dto: UpdateHolidayDto = {
-      holidayName:           fv.holidayName,
-      holidayDate:           fv.holidayDate ? this.toUtcIso(fv.holidayDate) : undefined,
-      description:           fv.description ?? undefined,
-      holidayType:           fv.holidayType,
-      isOptional:            this.selectedHoliday?.isOptional,
-      isActive:              fv.isActive,
+      holidayName:           fv.holidayName   || undefined,
+      holidayDate:           fv.holidayDate   ? this.toUtcIso(fv.holidayDate) : undefined,
+      description:           fv.description   ?? undefined,
+      holidayType:           fv.holidayType   || undefined,
+      isOptional:            fv.isOptional    ?? false,
+      isActive:              fv.isActive      ?? true,
       applicableDepartments: this.selectedDepartments
     };
+
     this.holidayService.updateHoliday(this.selectedHoliday.id, dto).subscribe({
       next: (res: any) => {
         this.isSubmitting = false;
         if (res.success) {
           this.closeModal(); this.loadHolidays(); this.loadStats();
           Swal.fire({ icon: 'success', title: 'Updated!', text: 'Holiday updated successfully.', timer: 2000, showConfirmButton: false });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Update Failed', text: res.message || 'Could not update the holiday.' });
         }
       },
       error: (err: any) => {

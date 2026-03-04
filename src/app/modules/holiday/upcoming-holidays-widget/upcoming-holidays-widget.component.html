@@ -1,5 +1,5 @@
 <div class="uhw-card">
-  <!-- ── Header  -->
+  <!-- ── Header -->
   <div class="uhw-header">
     <div class="uhw-header-left">
       <div class="uhw-header-icon">
@@ -22,9 +22,9 @@
     </button>
   </div>
 
-  <!-- ── Loading State  -->
+  <!-- ── Loading -->
   <div *ngIf="isLoading" class="uhw-loading">
-    <div class="uhw-skeleton" *ngFor="let i of [1, 2, 3]">
+    <div class="uhw-skeleton" *ngFor="let i of [1, 2, 3, 4]">
       <div class="uhw-skel-date"></div>
       <div class="uhw-skel-body">
         <div class="uhw-skel-line uhw-skel-title"></div>
@@ -34,97 +34,92 @@
     </div>
   </div>
 
-  <!-- ── Error State  -->
+  <!-- ── Error -->
   <div *ngIf="!isLoading && hasError" class="uhw-error">
     <i class="bi bi-exclamation-circle-fill"></i>
     <p>Failed to load holidays</p>
-    <button class="uhw-retry-btn" (click)="loadHolidays()">Retry</button>
+    <button class="uhw-retry-btn" (click)="loadHolidays()">
+      <i class="bi bi-arrow-clockwise"></i> Retry
+    </button>
   </div>
 
-  <!-- ── Holiday List  -->
+  <!-- ── Holiday Cards Grid -->
   <ul
     *ngIf="!isLoading && !hasError && holidays.length > 0"
     class="uhw-list"
     role="list"
   >
-    <li
-      *ngFor="let holiday of holidays; trackBy: trackById; let last = last"
-      class="uhw-item"
-      [class.uhw-item-last]="last"
-    >
-      <!-- Date Chip -->
-      <div
-        class="uhw-date-chip"
-        [ngClass]="getUrgencyClass(holiday.daysUntilHoliday, holiday.isToday)"
-      >
-        <span class="uhw-date-month">{{
-          getDateParts(holiday.holidayDate).month
-        }}</span>
-        <span class="uhw-date-day">{{
-          getDateParts(holiday.holidayDate).day
-        }}</span>
-      </div>
+    <li *ngFor="let holiday of holidays; trackBy: trackById" class="uhw-item">
+      <!-- Colored top accent stripe -->
+      <div class="uhw-card-accent"></div>
 
-      <!-- Content -->
-      <div class="uhw-item-content">
-        <!-- Row 1: name + type badge + optional tag -->
-        <div class="uhw-item-top">
-          <span class="uhw-item-name">{{ holiday.holidayName }}</span>
-          <span
-            class="uhw-type-badge"
-            [ngClass]="getTypeBadgeClass(holiday.holidayTypeName)"
-          >
-            {{ holiday.holidayTypeName }}
-          </span>
-          <span *ngIf="holiday.isOptional" class="uhw-optional-tag">
-            <i class="bi bi-person-check"></i> Optional
-          </span>
-        </div>
-
-        <!-- Row 2: countdown -->
-        <div class="uhw-item-bottom">
-          <span
-            class="uhw-countdown"
+      <div class="uhw-item-body">
+        <!-- Date chip + Name + Badges -->
+        <div class="uhw-item-head">
+          <div
+            class="uhw-date-chip"
             [ngClass]="
               getUrgencyClass(holiday.daysUntilHoliday, holiday.isToday)
             "
           >
-            <i
-              class="bi"
-              [ngClass]="holiday.isToday ? 'bi-star-fill' : 'bi-clock'"
-            ></i>
-            {{ getDaysLabel(holiday.daysUntilHoliday, holiday.isToday) }}
-          </span>
+            <span class="uhw-date-month">{{
+              getDateParts(holiday.holidayDate).month
+            }}</span>
+            <span class="uhw-date-day">{{
+              getDateParts(holiday.holidayDate).day
+            }}</span>
+          </div>
+
+          <div class="uhw-item-title-group">
+            <span class="uhw-item-name">{{ holiday.holidayName }}</span>
+            <div class="uhw-item-badges">
+              <span
+                class="uhw-type-badge"
+                [ngClass]="getTypeBadgeClass(holiday.holidayTypeName)"
+                >{{ holiday.holidayTypeName }}</span
+              >
+              <span *ngIf="holiday.isOptional" class="uhw-optional-tag">
+                <i class="bi bi-person-check"></i> Optional
+              </span>
+            </div>
+          </div>
         </div>
 
-        <!-- Row 3: Department pills -->
+        <!-- Divider -->
+        <div class="uhw-item-divider"></div>
+
+        <!-- Countdown -->
+        <span
+          class="uhw-countdown"
+          [ngClass]="getUrgencyClass(holiday.daysUntilHoliday, holiday.isToday)"
+        >
+          <i
+            class="bi"
+            [ngClass]="holiday.isToday ? 'bi-star-fill' : 'bi-clock'"
+          ></i>
+          {{ getDaysLabel(holiday.daysUntilHoliday, holiday.isToday) }}
+        </span>
         <div class="uhw-dept-row">
           <i class="bi bi-building uhw-dept-icon"></i>
-
-          <!-- All Departments pill -->
           <span
             *ngIf="isAllDepartments(holiday)"
             class="uhw-dept-pill uhw-dept-all"
           >
             All Departments
           </span>
-
-          <!-- Individual department name pills -->
           <ng-container *ngIf="!isAllDepartments(holiday)">
-            <ng-container
+            <span
               *ngFor="
                 let label of getDepartmentLabels(holiday);
                 trackBy: trackByName
               "
+              class="uhw-dept-pill"
+              >{{ label }}</span
             >
-              <span *ngIf="label && label.trim() !== ''" class="uhw-dept-pill">
-                {{ label }}
-              </span>
-            </ng-container>
           </ng-container>
         </div>
 
-        <!-- Description if present -->
+        <!-- Description -->
         <p *ngIf="holiday.description" class="uhw-description">
           {{ holiday.description }}
         </p>
@@ -132,7 +127,7 @@
     </li>
   </ul>
 
-  <!-- ── Footer: count only, NO "View all" button  -->
+  <!-- ── Footer -->
   <div
     *ngIf="!isLoading && !hasError && holidays.length > 0"
     class="uhw-footer"
