@@ -1,6 +1,3 @@
-/* attendance-summary.component.scss
-   All classes prefixed with .as- to avoid conflicts */
-
 .as-page-container {
   padding: 0;
   margin: 0;
@@ -10,11 +7,11 @@
   gap: 16px;
 }
 
-/* ── Page Header ─────────────────────────────────────────────── */
+/* ── Page Header  */
 .as-page-header  { margin-bottom: 4px; }
 .as-page-title   { font-size: 26px; font-weight: 700; color: #1e40af; margin: 0; }
 
-/* ── Filter Card ─────────────────────────────────────────────── */
+/* ── Filter Card  */
 .as-filter-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -63,10 +60,10 @@
   align-items: flex-end;
   gap: 8px;
   flex-wrap: wrap;
-  padding-bottom: 1px; /* align with inputs */
+  padding-bottom: 1px; 
 }
 
-/* ── Buttons ─────────────────────────────────────────────────── */
+/* ── Buttons  */
 .as-btn {
   display: inline-flex;
   align-items: center;
@@ -99,7 +96,7 @@
   &:hover { background: #dbeafe; }
 }
 
-/* ── Error Banner ────────────────────────────────────────────── */
+/* ── Error Banner  */
 .as-error-banner {
   display: flex;
   align-items: center;
@@ -114,7 +111,7 @@
   i { color: #ef4444; font-size: 15px; }
 }
 
-/* ── Employee Banner ─────────────────────────────────────────── */
+/* ── Employee Banner  */
 .as-emp-banner {
   display: flex;
   align-items: center;
@@ -144,7 +141,7 @@
   i { margin-right: 5px; }
 }
 
-/* ── KPI Grid ────────────────────────────────────────────────── */
+/* ── KPI Grid  */
 .as-kpi-grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -204,7 +201,7 @@
 .as-kpi-leave    { border-color: #93c5fd; .as-kpi-icon { background: #dbeafe; color: #1d4ed8; } .as-kpi-value { color: #1d4ed8; } }
 .as-kpi-late     { border-color: #fde68a; .as-kpi-icon { background: #fef3c7; color: #b45309; } .as-kpi-value { color: #b45309; } }
 
-/* ── Loading state ───────────────────────────────────────────── */
+/* ── Loading state  */
 .as-loading-state {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; padding: 28px; gap: 10px;
@@ -217,10 +214,10 @@
   p { color: #6b7280; font-size: 13px; margin: 0; }
 }
 
-/* ── Grid Section ────────────────────────────────────────────── */
+/* ── Grid Section  */
 .as-grid-section { display: flex; flex-direction: column; gap: 10px; }
 
-/* ── Grid Toolbar ────────────────────────────────────────────── */
+/* ── Grid Toolbar  */
 .as-toolbar {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
@@ -234,7 +231,7 @@
 }
 .as-toolbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
-/* ── Active Filters ──────────────────────────────────────────── */
+/* ── Active Filters  */
 .as-active-filters {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
 }
@@ -245,7 +242,7 @@
   font-size: 11px; font-weight: 500;
 }
 
-/* ── Grid Card ───────────────────────────────────────────────── */
+/* ── Grid Card  */
 .as-grid-card {
   background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px;
   overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.07);
@@ -257,7 +254,7 @@
   background: #fef08a; color: inherit; padding: 0; border-radius: 2px;
 }
 
-/* ── Pagination ──────────────────────────────────────────────── */
+/* ── Pagination  */
 .as-pagination {
   border-top: 1px solid #e5e7eb;
   background: #ffffff;
@@ -291,14 +288,14 @@
   &:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
-/* ── Empty state ─────────────────────────────────────────────── */
+/* ── Empty state  */
 .as-empty-state {
   text-align: center; padding: 48px 24px;
   i { font-size: 48px; color: #d1d5db; display: block; margin-bottom: 12px; }
   p { color: #6b7280; font-size: 14px; margin: 0; }
 }
 
-/* ── Responsive ──────────────────────────────────────────────── */
+/* ── Responsive  */
 @media (max-width: 768px) {
   .as-page-title  { font-size: 20px; }
   .as-filter-row  { flex-direction: column; align-items: stretch; gap: 10px; }

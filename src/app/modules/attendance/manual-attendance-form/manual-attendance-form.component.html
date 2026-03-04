@@ -1,7 +1,5 @@
-<!-- manual-attendance-form.component.html -->
 <div class="manual-form-container">
   <form (ngSubmit)="onSubmit()">
-
     <!-- Employee ID -->
     <div class="form-group">
       <label>Employee ID <span class="required">*</span></label>
@@ -15,7 +13,9 @@
         [class.readonly-input]="isEditMode"
         (input)="errors['employeeId'] = ''"
       />
-      <span class="error-msg" *ngIf="errors['employeeId']">{{ errors['employeeId'] }}</span>
+      <span class="error-msg" *ngIf="errors['employeeId']">{{
+        errors["employeeId"]
+      }}</span>
     </div>
 
     <!-- Date & Status Row -->
@@ -30,7 +30,9 @@
           [max]="todayStr"
           (change)="errors['attendanceDate'] = ''"
         />
-        <span class="error-msg" *ngIf="errors['attendanceDate']">{{ errors['attendanceDate'] }}</span>
+        <span class="error-msg" *ngIf="errors['attendanceDate']">{{
+          errors["attendanceDate"]
+        }}</span>
       </div>
 
       <div class="form-group">
@@ -42,7 +44,9 @@
           <option [value]="AttendanceStatus.Leave">Leave</option>
           <option [value]="AttendanceStatus.Holiday">Holiday</option>
           <option [value]="AttendanceStatus.WeekOff">Week Off</option>
-          <option [value]="AttendanceStatus.WorkFromHome">Work From Home</option>
+          <option [value]="AttendanceStatus.WorkFromHome">
+            Work From Home
+          </option>
           <option [value]="AttendanceStatus.OnDuty">On Duty</option>
         </select>
       </div>
@@ -70,7 +74,9 @@
           [class.is-error]="errors['checkOutTime']"
           (change)="errors['checkOutTime'] = ''"
         />
-        <span class="error-msg" *ngIf="errors['checkOutTime']">{{ errors['checkOutTime'] }}</span>
+        <span class="error-msg" *ngIf="errors['checkOutTime']">{{
+          errors["checkOutTime"]
+        }}</span>
       </div>
     </div>
 
@@ -89,20 +95,27 @@
 
     <!-- Actions -->
     <div class="form-actions">
-      <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="submitting">
+      <button
+        type="button"
+        class="btn btn-cancel"
+        (click)="onCancel()"
+        [disabled]="submitting"
+      >
         Cancel
       </button>
       <button type="submit" class="btn btn-submit" [disabled]="submitting">
         <span *ngIf="!submitting">
-          <i class="fas" [ngClass]="isEditMode ? 'fa-edit' : 'fa-check-circle'"></i>
-          {{ isEditMode ? 'Update' : 'Save Attendance' }}
+          <i
+            class="bi"
+            [ngClass]="isEditMode ? 'bi-pencil-fill' : 'bi-check-circle-fill'"
+          ></i>
+          {{ isEditMode ? "Update" : "Save Attendance" }}
         </span>
         <span *ngIf="submitting" class="loading-state">
           <div class="btn-spinner"></div>
-          {{ isEditMode ? 'Updating...' : 'Saving...' }}
+          {{ isEditMode ? "Updating..." : "Saving..." }}
         </span>
       </button>
     </div>
-
   </form>
 </div>

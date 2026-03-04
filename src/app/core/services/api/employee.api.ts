@@ -17,7 +17,6 @@ import {
 export class EmployeeService {
   constructor(private apiClient: ApiClientService) {}
 
-  // Create new employee
   createEmployee(dto: CreateEmployeeDto): Observable<EmployeeResponseDto> {
     return this.apiClient.post<ApiResponseDto<EmployeeResponseDto>>('Employee', dto).pipe(
       map(response => {
@@ -31,7 +30,6 @@ export class EmployeeService {
     );
   }
 
-  // Get employee by ID
   getEmployeeById(id: string): Observable<EmployeeResponseDto> {
     return this.apiClient.get<ApiResponseDto<EmployeeResponseDto>>(`Employee/${id}`).pipe(
       map(response => {
@@ -56,7 +54,6 @@ export class EmployeeService {
     );
   }
 
-  // Get employee by email
   getEmployeeByEmail(email: string): Observable<EmployeeResponseDto> {
     return this.apiClient.get<ApiResponseDto<EmployeeResponseDto>>(`Employee/email/${email}`).pipe(
       map(response => response.data),
@@ -67,7 +64,6 @@ export class EmployeeService {
     );
   }
 
-  // Get filtered employees with pagination
   getFilteredEmployees(filter: EmployeeFilterDto): Observable<PagedResultDto<EmployeeResponseDto>> {
     console.log('Sending filter request:', filter);
     

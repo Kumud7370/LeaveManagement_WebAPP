@@ -1,39 +1,36 @@
-<!-- attendance-list.component.html -->
-
 <div class="att-page-container">
-
   <!-- ── Page Title ── -->
   <div class="att-page-header">
     <h1 class="att-page-title">
-      <i class="fas fa-calendar-check"></i> Attendance Management
+      <i class="bi bi-calendar-check-fill"></i> Attendance Management
     </h1>
   </div>
 
   <!-- ── Stats Cards ── -->
   <div class="att-stats-grid">
     <div class="att-stat-card att-stat-present">
-      <div class="att-stat-icon"><i class="fas fa-user-check"></i></div>
+      <div class="att-stat-icon"><i class="bi bi-person-check-fill"></i></div>
       <div class="att-stat-body">
         <p class="att-stat-label">Present</p>
         <p class="att-stat-value">{{ stats.present }}</p>
       </div>
     </div>
     <div class="att-stat-card att-stat-absent">
-      <div class="att-stat-icon"><i class="fas fa-user-times"></i></div>
+      <div class="att-stat-icon"><i class="bi bi-person-x-fill"></i></div>
       <div class="att-stat-body">
         <p class="att-stat-label">Absent</p>
         <p class="att-stat-value">{{ stats.absent }}</p>
       </div>
     </div>
     <div class="att-stat-card att-stat-halfday">
-      <div class="att-stat-icon"><i class="fas fa-adjust"></i></div>
+      <div class="att-stat-icon"><i class="bi bi-circle-half"></i></div>
       <div class="att-stat-body">
         <p class="att-stat-label">Half Day</p>
         <p class="att-stat-value">{{ stats.halfDay }}</p>
       </div>
     </div>
     <div class="att-stat-card att-stat-leave">
-      <div class="att-stat-icon"><i class="fas fa-plane-departure"></i></div>
+      <div class="att-stat-icon"><i class="bi bi-airplane-fill"></i></div>
       <div class="att-stat-body">
         <p class="att-stat-label">On Leave</p>
         <p class="att-stat-value">{{ stats.leave }}</p>
@@ -60,11 +57,11 @@
         Refresh
       </button>
       <button (click)="exportData()" class="att-btn att-btn-export">
-        <i class="fas fa-download"></i> Export
+        <i class="bi bi-download"></i> Export
       </button>
       <div class="att-toolbar-divider"></div>
       <button (click)="openCreateForm()" class="att-btn att-btn-primary">
-        <i class="fas fa-plus"></i> Mark Attendance
+        <i class="bi bi-plus-lg"></i> Mark Attendance
       </button>
     </div>
   </div>
@@ -75,7 +72,8 @@
     <span
       *ngFor="let filter of activeFilters.filters"
       class="att-filter-badge"
-    >{{ filter }}</span>
+      >{{ filter }}</span
+    >
   </div>
 
   <!-- ── Grid Card ── -->
@@ -136,19 +134,40 @@
           Page {{ currentPage }} of {{ totalPages || 1 }}
         </span>
         <div class="att-pagination-btns">
-          <button (click)="goToPage(1)" [disabled]="currentPage === 1" class="att-pgbtn">«</button>
-          <button (click)="previousPage()" [disabled]="currentPage === 1" class="att-pgbtn">‹</button>
-          <button (click)="nextPage()" [disabled]="currentPage === totalPages || totalPages === 0" class="att-pgbtn">›</button>
-          <button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages || totalPages === 0" class="att-pgbtn">»</button>
+          <button
+            (click)="goToPage(1)"
+            [disabled]="currentPage === 1"
+            class="att-pgbtn"
+          >
+            «
+          </button>
+          <button
+            (click)="previousPage()"
+            [disabled]="currentPage === 1"
+            class="att-pgbtn"
+          >
+            ‹
+          </button>
+          <button
+            (click)="nextPage()"
+            [disabled]="currentPage === totalPages || totalPages === 0"
+            class="att-pgbtn"
+          >
+            ›
+          </button>
+          <button
+            (click)="goToPage(totalPages)"
+            [disabled]="currentPage === totalPages || totalPages === 0"
+            class="att-pgbtn"
+          >
+            »
+          </button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════
-     DETAILS SIDEBAR MODAL
-     ════════════════════════════════════════════ -->
 <div
   *ngIf="showDetails"
   class="att-modal-overlay"
@@ -160,10 +179,10 @@
   >
     <div class="att-modal-header">
       <h2 class="att-modal-title">
-        <i class="fas fa-eye"></i> Attendance Details
+        <i class="bi bi-eye-fill"></i> Attendance Details
       </h2>
       <button (click)="onSidebarClose()" class="att-modal-close" type="button">
-        <i class="fas fa-times"></i>
+        <i class="bi bi-x-lg"></i>
       </button>
     </div>
     <div class="att-modal-body">
@@ -175,25 +194,22 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════════
-     MARK / EDIT ATTENDANCE MODAL
-     ════════════════════════════════════════════ -->
 <div
   *ngIf="showForm"
   class="att-modal-overlay"
   (click)="onOverlayClick($event)"
 >
-  <div
-    class="att-modal-container"
-    (click)="$event.stopPropagation()"
-  >
+  <div class="att-modal-container" (click)="$event.stopPropagation()">
     <div class="att-modal-header">
       <h2 class="att-modal-title">
-        <i class="fas" [ngClass]="editingRecord ? 'fa-pencil-alt' : 'fa-plus-circle'"></i>
-        {{ editingRecord ? 'Edit Attendance' : 'Mark Manual Attendance' }}
+        <i
+          class="bi"
+          [ngClass]="editingRecord ? 'bi-pencil-fill' : 'bi-plus-circle-fill'"
+        ></i>
+        {{ editingRecord ? "Edit Attendance" : "Mark Manual Attendance" }}
       </h2>
       <button (click)="onSidebarClose()" class="att-modal-close" type="button">
-        <i class="fas fa-times"></i>
+        <i class="bi bi-x-lg"></i>
       </button>
     </div>
     <div class="att-modal-body">
