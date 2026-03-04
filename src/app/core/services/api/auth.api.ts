@@ -48,6 +48,7 @@ export class AuthService {
         try {
             // Clear all auth-related storage
             sessionStorage.removeItem("UserId")
+            sessionStorage.removeItem("EmployeeId") 
             sessionStorage.removeItem("SiteName")
             sessionStorage.removeItem("RoleName")
             sessionStorage.removeItem("token")

@@ -71,11 +71,7 @@ export class LoginComponent implements OnInit {
     this.router.navigate(['/forgot-password']);
   }
 
-  // Navigate to register page
-  // navigateToRegister(): void {
-  //   this.router.navigate(['/register']);
-  // }
-
+ 
   onLogin(): void {
     if (this.loginForm.valid) {
       this.isLoading = true;
@@ -89,7 +85,8 @@ export class LoginComponent implements OnInit {
 
       this.apiClient.loginUser(credentials).subscribe({
         next: (response: any) => {
-          console.log('Login successful:', response);
+          // console.log('Login successful:', response);
+          console.log('Full login response:', JSON.stringify(response));
           
           if (response.accessToken) {
             this.router.navigate(['/dashboard']);
