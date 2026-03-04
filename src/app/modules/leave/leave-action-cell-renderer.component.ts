@@ -25,18 +25,14 @@ import { ICellRendererParams } from 'ag-grid-community';
       </button>
 
       <!-- Approve (only if Pending) -->
-      <button
-        *ngIf="isPending"
-        class="la-btn la-btn-approve"
+      <button *ngIf="isPending && !isEmployee" class="la-btn la-btn-approve"
         title="Approve"
         (click)="onApprove()">
         <i class="bi bi-check-lg"></i>
       </button>
 
       <!-- Reject (only if Pending) -->
-      <button
-        *ngIf="isPending"
-        class="la-btn la-btn-reject"
+     <button *ngIf="isPending && !isEmployee" class="la-btn la-btn-reject"
         title="Reject"
         (click)="onReject()">
         <i class="bi bi-x-lg"></i>
@@ -52,7 +48,7 @@ import { ICellRendererParams } from 'ag-grid-community';
       </button>
 
       <!-- Delete -->
-      <button class="la-btn la-btn-delete" title="Delete" (click)="onDelete()">
+      <button *ngIf="!isEmployee" class="la-btn la-btn-delete" title="Delete" (click)="onDelete()">
         <i class="bi bi-trash3"></i>
       </button>
 
@@ -128,6 +124,10 @@ export class LeaveActionCellRendererComponent implements ICellRendererAngularCom
       || s.toLowerCase() === 'pending'
       || s.toLowerCase() === 'approved';
   }
+
+  get isEmployee(): boolean {
+  return !!this.params?.context?.isEmployee;
+}
 
   agInit(params: ICellRendererParams): void { this.params = params; }
   refresh(params: ICellRendererParams): boolean { this.params = params; return true; }

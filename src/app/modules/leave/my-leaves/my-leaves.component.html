@@ -227,7 +227,8 @@
       <app-leave-form
         [isModal]="true"
         [leaveId]="selectedLeaveId"
-        [isEditMode]="false"
+        [isEditMode]="formMode === 'edit'"
+        [restrictToEmployeeId]="employeeId"
         (formCancelled)="closeFormModal()"
         (formSubmitted)="onFormSuccess()">
       </app-leave-form>
