@@ -1,9 +1,3 @@
-// =============================================
-// manual-attendance-form.component.ts
-// Create or edit a manual attendance record.
-// Used by Admin & Manager roles.
-// =============================================
-
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
