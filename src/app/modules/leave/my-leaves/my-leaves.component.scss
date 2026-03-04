@@ -368,6 +368,11 @@ ag-grid-angular { display: block; width: 100%; overflow: hidden; }
   width: 30px; height: 30px; border-radius: 6px; border: none;
   cursor: pointer; transition: all 0.15s; background: transparent;
 
+  &.ml-cell-btn-edit {
+    color: #3b82f6;
+    &:hover { background: #eff6ff; }
+  }
+
   &.ml-cell-btn-view {
     color: #3b82f6;
     &:hover { background: #eff6ff; }

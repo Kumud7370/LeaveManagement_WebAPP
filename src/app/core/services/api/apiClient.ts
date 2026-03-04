@@ -56,6 +56,7 @@ export class ApiClientService {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('UserId');
+    sessionStorage.removeItem('EmployeeId');
     sessionStorage.removeItem('SiteName');
     sessionStorage.removeItem('RoleName');
     sessionStorage.removeItem('username');
@@ -162,6 +163,12 @@ export class ApiClientService {
             if (actualData.user.roles && actualData.user.roles.length > 0) {
               sessionStorage.setItem('RoleName', actualData.user.roles[0]);
             }
+            if (actualData.user.employeeId) {
+            sessionStorage.setItem('EmployeeId', actualData.user.employeeId);
+          }
+          if (actualData.employeeId) {
+          sessionStorage.setItem('EmployeeId', actualData.employeeId);
+        }
           }
         }
 
