@@ -1,11 +1,11 @@
 <div class="rl-page-container">
 
-  <!-- ── Page Title ─────────────────────────────────────────────── -->
+  <!-- ── Page Title ────────────────────────────────────────────────── -->
   <div class="rl-page-header">
     <h1 class="rl-page-title">Attendance Regularization</h1>
   </div>
 
-  <!-- ── Stats Cards ────────────────────────────────────────────── -->
+  <!-- ── Stats Cards ───────────────────────────────────────────────── -->
   <div class="rl-stats-grid">
     <div class="rl-stat-card rl-stat-total">
       <p class="rl-stat-label">Total Requests</p>
@@ -25,7 +25,7 @@
     </div>
   </div>
 
-  <!-- ── Toolbar ─────────────────────────────────────────────────── -->
+  <!-- ── Toolbar ───────────────────────────────────────────────────── -->
   <div class="rl-toolbar">
     <div class="rl-search-wrapper">
       <input
@@ -49,13 +49,13 @@
     </div>
   </div>
 
-  <!-- ── Active Filters ──────────────────────────────────────────── -->
+  <!-- ── Active Filters ────────────────────────────────────────────── -->
   <div *ngIf="activeFilters.hasActiveFilters" class="rl-active-filters">
     <span class="rl-filter-label">Active Filters:</span>
     <span *ngFor="let filter of activeFilters.filters" class="rl-filter-badge">{{ filter }}</span>
   </div>
 
-  <!-- ── Grid Card ───────────────────────────────────────────────── -->
+  <!-- ── Grid ──────────────────────────────────────────────────────── -->
   <div class="rl-grid-card">
     <div class="rl-grid-container">
       <ag-grid-angular
@@ -84,7 +84,7 @@
       ></ag-grid-angular>
     </div>
 
-    <!-- ── Pagination ─────────────────────────────────────────── -->
+    <!-- ── Pagination ─────────────────────────────────────────────── -->
     <div class="rl-pagination">
       <div class="rl-pagination-inner">
         <div class="rl-page-size">
@@ -111,12 +111,13 @@
     </div>
   </div>
 
-</div><!-- end .rl-page-container -->
+</div><!-- /.rl-page-container -->
 
 
-<!-- ════════════════════════════════════════════════════════════════
-     VIEW REGULARIZATION MODAL
-     ════════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════════════
+     VIEW MODAL
+     Approve + Reject buttons shown only when status = Pending (1)
+     ═══════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showViewModal && viewRegularizationData"
      class="rl-modal-overlay"
      (click)="closeViewModal()">
@@ -131,7 +132,7 @@
       </button>
     </div>
 
-    <div class="rl-modal-body" style="padding: 0; overflow-y: auto;">
+    <div class="rl-modal-body" style="padding:0;overflow-y:auto;">
 
       <!-- Employee Banner -->
       <div class="rl-view-banner">
@@ -166,12 +167,11 @@
         </div>
       </div>
 
-      <!-- Time Cards -->
+      <!-- Time Comparison Cards -->
       <div class="rl-view-time-grid">
         <div class="rl-view-time-card">
           <div class="rl-view-time-header">
-            <i class="bi bi-clock-history"></i>
-            <span>Original Times</span>
+            <i class="bi bi-clock-history"></i><span>Original Times</span>
           </div>
           <div class="rl-view-time-row">
             <div class="rl-view-time-item">
@@ -184,11 +184,9 @@
             </div>
           </div>
         </div>
-
         <div class="rl-view-time-card rl-view-time-card-highlight">
           <div class="rl-view-time-header">
-            <i class="bi bi-arrow-repeat"></i>
-            <span>Requested Times</span>
+            <i class="bi bi-arrow-repeat"></i><span>Requested Times</span>
           </div>
           <div class="rl-view-time-row">
             <div class="rl-view-time-item">
@@ -212,47 +210,38 @@
             <label>Attendance Date</label>
             <div class="rl-view-info-val">{{ formatViewDate(viewRegularizationData.attendanceDate) }}</div>
           </div>
-
           <div class="rl-view-info-item">
             <label>Employee Code</label>
             <div class="rl-view-info-val rl-view-mono">{{ viewRegularizationData.employeeCode }}</div>
           </div>
-
           <div class="rl-view-info-item">
             <label>Employee Name</label>
             <div class="rl-view-info-val">{{ viewRegularizationData.employeeName }}</div>
           </div>
-
           <div class="rl-view-info-item">
             <label>Regularization Type</label>
             <div class="rl-view-info-val">{{ viewRegularizationData.regularizationTypeName }}</div>
           </div>
-
           <div class="rl-view-info-item">
             <label>Status</label>
             <div class="rl-view-info-val">{{ viewRegularizationData.statusName }}</div>
           </div>
-
           <div class="rl-view-info-item">
             <label>Requested At</label>
             <div class="rl-view-info-val">{{ formatViewDateTime(viewRegularizationData.requestedAt) }}</div>
           </div>
-
           <div class="rl-view-info-item" *ngIf="viewRegularizationData.approvedByName">
             <label>Approved / Rejected By</label>
             <div class="rl-view-info-val">{{ viewRegularizationData.approvedByName }}</div>
           </div>
-
           <div class="rl-view-info-item" *ngIf="viewRegularizationData.approvedAt">
             <label>Approved / Rejected At</label>
             <div class="rl-view-info-val">{{ formatViewDateTime(viewRegularizationData.approvedAt) }}</div>
           </div>
-
           <div class="rl-view-info-item rl-view-full">
             <label>Reason for Request</label>
             <div class="rl-view-reason-box">{{ viewRegularizationData.reason }}</div>
           </div>
-
           <div class="rl-view-info-item rl-view-full" *ngIf="viewRegularizationData.rejectionReason">
             <label>Rejection Reason</label>
             <div class="rl-view-rejection-box">{{ viewRegularizationData.rejectionReason }}</div>
@@ -260,27 +249,37 @@
 
         </div>
       </div>
-    </div><!-- end modal body -->
+    </div><!-- /.rl-modal-body -->
 
+    <!-- Footer: Close always; Approve + Reject only when Pending -->
     <div class="rl-modal-footer">
       <button class="rl-btn rl-btn-secondary" (click)="closeViewModal()">Close</button>
+      <ng-container *ngIf="viewRegularizationData.status === 1">
+        <button
+          class="rl-btn rl-btn-reject-modal"
+          (click)="closeViewModal(); openApprovalModal(viewRegularizationData, false)">
+          <i class="bi bi-x-circle"></i> Reject
+        </button>
+        <button
+          class="rl-btn rl-btn-approve-modal"
+          (click)="closeViewModal(); approveRegularization(viewRegularizationData)">
+          <i class="bi bi-check-circle"></i> Approve
+        </button>
+      </ng-container>
     </div>
+
   </div>
 </div>
 
 
-<!-- ════════════════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════════════════════
      ADD REGULARIZATION MODAL
-     ════════════════════════════════════════════════════════════════ -->
+     ═══════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showAddModal" class="rl-modal-overlay" (click)="closeAddModal()">
   <div class="rl-modal-container rl-modal-xlarge" (click)="$event.stopPropagation()">
     <div class="rl-modal-header">
-      <h2 class="rl-modal-title">
-        <i class="bi bi-plus-circle-dotted"></i> Add Regularization
-      </h2>
-      <button (click)="closeAddModal()" class="rl-modal-close" type="button">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <h2 class="rl-modal-title"><i class="bi bi-plus-circle-dotted"></i> Add Regularization</h2>
+      <button (click)="closeAddModal()" class="rl-modal-close" type="button"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="rl-modal-body">
       <app-regularization-form
@@ -294,18 +293,14 @@
 </div>
 
 
-<!-- ════════════════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════════════════════════════
      EDIT REGULARIZATION MODAL
-     ════════════════════════════════════════════════════════════════ -->
+     ═══════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showEditModal" class="rl-modal-overlay" (click)="closeEditModal()">
   <div class="rl-modal-container rl-modal-xlarge" (click)="$event.stopPropagation()">
     <div class="rl-modal-header">
-      <h2 class="rl-modal-title">
-        <i class="bi bi-pencil-square"></i> Edit Regularization
-      </h2>
-      <button (click)="closeEditModal()" class="rl-modal-close" type="button">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <h2 class="rl-modal-title"><i class="bi bi-pencil-square"></i> Edit Regularization</h2>
+      <button (click)="closeEditModal()" class="rl-modal-close" type="button"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="rl-modal-body">
       <app-regularization-form
@@ -319,36 +314,56 @@
 </div>
 
 
-<!-- ════════════════════════════════════════════════════════════════
-     REJECTION MODAL
-     ════════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════════════
+     REJECTION REASON MODAL
+     ═══════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showApprovalModal" class="rl-modal-overlay" (click)="closeApprovalModal()">
   <div class="rl-modal-container" (click)="$event.stopPropagation()">
     <div class="rl-modal-header">
-      <h2 class="rl-modal-title">
-        <i class="bi bi-x-circle"></i> Reject Regularization Request
+      <h2 class="rl-modal-title" style="color:#ef4444;">
+        <i class="bi bi-x-circle" style="color:#ef4444;"></i> Reject Regularization Request
       </h2>
-      <button (click)="closeApprovalModal()" class="rl-modal-close" type="button">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <button (click)="closeApprovalModal()" class="rl-modal-close" type="button"><i class="bi bi-x-lg"></i></button>
     </div>
+
+    <!-- Employee info strip -->
+    <div *ngIf="selectedRegularization" class="rl-rejection-info-strip">
+      <div class="rl-rejection-emp-avatar">
+        {{ selectedRegularization.employeeName?.charAt(0)?.toUpperCase() }}
+      </div>
+      <div>
+        <div style="font-weight:600;font-size:14px;color:#1f2937;">
+          {{ selectedRegularization.employeeName }}
+        </div>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px;">
+          <span class="rl-view-mono">{{ selectedRegularization.employeeCode }}</span>
+          &nbsp;·&nbsp;{{ formatViewDate(selectedRegularization.attendanceDate) }}
+        </div>
+      </div>
+    </div>
+
     <div class="rl-modal-body">
       <div class="rl-form-group">
-        <label for="rejectionReason">Rejection Reason *</label>
+        <label for="rejectionReason">Rejection Reason <span style="color:#ef4444;">*</span></label>
         <textarea
           id="rejectionReason"
           [(ngModel)]="approvalReason"
-          placeholder="Enter reason for rejection..."
+          placeholder="Enter the reason for rejecting this request..."
           rows="5"
           class="rl-form-control"
+          maxlength="500"
         ></textarea>
         <div class="rl-char-count">{{ approvalReason.length }} / 500</div>
       </div>
     </div>
+
     <div class="rl-modal-footer">
       <button class="rl-btn rl-btn-secondary" (click)="closeApprovalModal()">Cancel</button>
-      <button class="rl-btn rl-btn-danger" (click)="submitRejection()" [disabled]="!approvalReason.trim()">
-        Reject Request
+      <button
+        class="rl-btn rl-btn-danger"
+        (click)="submitRejection()"
+        [disabled]="!approvalReason.trim()">
+        <i class="bi bi-x-circle"></i> Reject Request
       </button>
     </div>
   </div>
