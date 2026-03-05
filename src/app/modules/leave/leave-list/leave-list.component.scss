@@ -1,6 +1,7 @@
 @import 'ag-grid-community/styles/ag-grid.css';
 @import 'ag-grid-community/styles/ag-theme-quartz.css';
 
+
 :host {
   display: block;
   min-height: 100%;
@@ -8,30 +9,30 @@
 }
 
 .ll-page-title {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
   color: #1e40af;
-  margin: 0 0 18px 0;
+  margin: 0 0 20px 0;
 }
 
 /* ── Stats ───────────────────────────────────────────────────────── */
 .ll-stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 18px;
+  gap: 16px;
+  margin-bottom: 20px;
 }
-.ll-stat         { padding: 16px 20px; border-radius: 8px; border: 1px solid transparent; }
+.ll-stat         { padding: 20px 24px; border-radius: 10px; border: 1px solid transparent; }
 .ll-stat-blue    { background: #eff6ff; border-color: #bfdbfe; }
 .ll-stat-green   { background: #f0fdf4; border-color: #bbf7d0; }
 .ll-stat-yellow  { background: #fffbeb; border-color: #fde68a; }
 .ll-stat-red     { background: #fef2f2; border-color: #fecaca; }
-.ll-stat-label   { font-size: 12px; color: #6b7280; margin: 0 0 6px; }
-.ll-stat-value   { font-size: 30px; font-weight: 700; margin: 0; line-height: 1; }
-.ll-stat-blue    .ll-stat-value { color: #1d4ed8; }
-.ll-stat-green   .ll-stat-value { color: #15803d; }
-.ll-stat-yellow  .ll-stat-value { color: #b45309; }
-.ll-stat-red     .ll-stat-value { color: #dc2626; }
+.ll-stat-label   { font-size: 13px; color: #6b7280; margin: 0 0 6px; font-weight: 400; }
+.ll-stat-value   { font-size: 28px; font-weight: 700; margin: 0; line-height: 1; }
+.ll-stat-blue   .ll-stat-value { color: #1d4ed8; }
+.ll-stat-green  .ll-stat-value { color: #15803d; }
+.ll-stat-yellow .ll-stat-value { color: #b45309; }
+.ll-stat-red    .ll-stat-value { color: #dc2626; }
 
 .ll-stat-loading { position: relative; overflow: hidden; }
 .ll-stat-loading::after {
@@ -42,65 +43,56 @@
 @keyframes llShimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 .ll-skeleton { display: inline-block; width: 44px; height: 30px; background: rgba(0,0,0,0.08); border-radius: 5px; }
 
-/* ── ONE white card ──────────────────────────────────────────────── */
-.ll-card {
-  background: #ffffff;
-  border: 1px solid #dde3ed;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* ── Toolbar ─────────────────────────────────────────────────────── */
+/* ── Toolbar (outside card, matches Holiday) ─────────────────────── */
 .ll-toolbar {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
-  background: #ffffff;
-  border-bottom: 1px solid #dde3ed;
-  border-radius: 8px 8px 0 0;
-  flex-shrink: 0;
+  margin-bottom: 12px;
 }
 .ll-search {
   flex: 1;
-  height: 38px;
-  padding: 0 14px;
-  border: 1px solid #d1d9e6;
+  padding: 9px 14px;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;
   color: #374151;
   background: #ffffff;
   outline: none;
   font-family: inherit;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .ll-search:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
 .ll-search::placeholder { color: #9ca3af; }
-.ll-toolbar-btns { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+.ll-toolbar-btns {
+  display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+}
+.ll-toolbar-divider {
+  width: 1px; height: 28px; background: #d1d5db; flex-shrink: 0; border-radius: 1px;
+}
 
-/* ── Buttons ─────────────────────────────────────────────────────── */
+/* ── Buttons (matches Holiday .hl-btn palette) ───────────────────── */
 .ll-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  height: 38px; padding: 0 16px;
-  border-radius: 6px; font-size: 13px; font-weight: 500;
+  padding: 9px 18px;
+  border-radius: 6px; font-size: 14px; font-weight: 500;
   cursor: pointer; border: 1px solid transparent;
   transition: all 0.15s; white-space: nowrap;
   font-family: inherit; line-height: 1;
 }
-.ll-btn-filter        { background: #fff; color: #374151; border-color: #d1d9e6; }
-.ll-btn-filter:hover  { background: #f9fafb; }
+.ll-btn-filter        { background: #fff; color: #374151; border-color: #d1d5db; }
+.ll-btn-filter:hover  { background: #f9fafb; border-color: #9ca3af; }
 .ll-btn-clear         { background: #fff; color: #dc2626; border-color: #fca5a5; }
-.ll-btn-clear:hover   { background: #fef2f2; }
-.ll-btn-refresh       { background: #fff; color: #374151; border-color: #d1d9e6; }
-.ll-btn-refresh:hover { background: #f9fafb; }
-.ll-btn-export        { background: #10b981; color: #fff; border-color: #10b981; font-weight: 600; }
-.ll-btn-export:hover  { background: #059669; }
+.ll-btn-clear:hover   { background: #fef2f2; border-color: #dc2626; }
+.ll-btn-refresh       { background: #fff; color: #374151; border-color: #d1d5db; }
+.ll-btn-refresh:hover { background: #f9fafb; border-color: #9ca3af; }
+/* Export: blue-tinted like Holiday */
+.ll-btn-export        { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; font-weight: 600; }
+.ll-btn-export:hover  { background: #dbeafe; border-color: #3b82f6; color: #1e40af; }
+/* Add / primary: solid blue like Holiday */
 .ll-btn-add           { background: #3b82f6; color: #fff; border-color: #3b82f6; font-weight: 600; }
-.ll-btn-add:hover     { background: #2563eb; }
-.ll-btn:disabled      { opacity: 0.4; cursor: not-allowed; }
+.ll-btn-add:hover     { background: #2563eb; border-color: #2563eb; }
+.ll-btn:disabled      { opacity: 0.5; cursor: not-allowed; }
 
 .ll-filter-badge {
   display: inline-flex; align-items: center; justify-content: center;
@@ -109,12 +101,11 @@
 }
 
 /* ── Filter panel ────────────────────────────────────────────────── */
-.ll-filter-panel { max-height: 0; overflow: hidden; transition: max-height 0.28s ease; flex-shrink: 0; }
-.ll-filter-panel.open { max-height: 160px; }
+.ll-filter-panel { max-height: 0; overflow: hidden; transition: max-height 0.28s ease; }
+.ll-filter-panel.open { max-height: 200px; }
 .ll-filter-inner {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px; padding: 12px 16px;
-  background: #f8fafc; border-bottom: 1px solid #dde3ed;
+  gap: 12px; padding: 12px 0 4px 0;
 }
 .ll-fg label { display: block; font-size: 11px; font-weight: 600; color: #6b7280; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
 .ll-fg select, .ll-fg-input {
@@ -126,6 +117,17 @@
 .ll-fg-check { display: flex; flex-direction: column; }
 .ll-check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #374151; cursor: pointer; margin-top: auto; height: 32px; }
 
+/* ── Grid card (matches Holiday .hl-grid-card) ───────────────────── */
+.ll-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+}
+
 /* ── Loading / Error / Empty ─────────────────────────────────────── */
 .ll-loading, .ll-error, .ll-empty {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -135,28 +137,50 @@
 @keyframes llSpin { to { transform: rotate(360deg); } }
 
 /* ── AG Grid ─────────────────────────────────────────────────────── */
-ag-grid-angular { display: block; width: 100%; overflow: hidden; }
+ag-grid-angular { display: block; width: 100%; }
 ::ng-deep .ll-card ag-grid-angular .ag-root-wrapper { border: none !important; border-radius: 0 !important; overflow: hidden !important; }
-::ng-deep .ll-card ag-grid-angular .ag-root { overflow: hidden !important; }
-::ng-deep .ll-card ag-grid-angular .ag-body-viewport { overflow-x: hidden !important; overflow-y: hidden !important; }
-::ng-deep .ll-card ag-grid-angular .ag-center-cols-viewport { overflow-x: hidden !important; overflow-y: hidden !important; }
-::ng-deep .ll-card ag-grid-angular .ag-header-viewport { overflow: hidden !important; }
-::ng-deep .ll-card ag-grid-angular .ag-header-container, ::ng-deep .ll-card ag-grid-angular .ag-center-cols-container { min-width: unset !important; }
+::ng-deep .ll-card ag-grid-angular .ag-body-viewport { overflow-y: hidden !important; }
+::ng-deep .ll-card ag-grid-angular .ag-center-cols-viewport { overflow-y: hidden !important; }
 ::ng-deep ag-grid-angular .ag-header-row.ag-header-row-column { background-color: #ffffff !important; }
 ::ng-deep ag-grid-angular .ag-header-row.ag-header-row-floating-filter { background-color: #f8fafc !important; border-top: 1px solid #e5e7eb !important; }
 ::ng-deep ag-grid-angular .ag-floating-filter { background-color: #f8fafc !important; }
-::ng-deep .ag-header-cell.ll-action-col, ::ng-deep .ag-floating-filter.ll-action-col { border-right: 1px solid #d1d5db !important; }
-::ng-deep .ag-cell.ll-action-col { border-right: 1px solid #d1d5db !important; }
+::ng-deep .ag-header-cell.ll-action-col, ::ng-deep .ag-floating-filter.ll-action-col { border-right: 1px solid #e5e7eb !important; }
+::ng-deep .ag-cell.ll-action-col { border-right: 1px solid #e5e7eb !important; }
 .ll-action-cell { display: flex !important; align-items: center !important; padding: 0 !important; overflow: visible !important; }
 
-/* ── Pagination ──────────────────────────────────────────────────── */
+/* ── Action buttons (matches Holiday .hl-grid-container style) ───── */
+::ng-deep .ll-card .action-buttons {
+  display: flex !important; align-items: center !important; justify-content: flex-start !important;
+  gap: 4px !important; height: 100%; padding: 0 4px;
+}
+::ng-deep .ll-card .btn-icon {
+  width: 28px !important; height: 28px !important; border: none !important; background: transparent !important;
+  cursor: pointer; display: flex !important; align-items: center !important; justify-content: center !important;
+  font-size: 15px !important; transition: background 0.15s !important; padding: 0 !important;
+  border-radius: 4px !important; flex-shrink: 0 !important; min-width: unset !important; line-height: 1 !important;
+}
+::ng-deep .ll-card .btn-view         { color: #10b981 !important; }
+::ng-deep .ll-card .btn-view:hover   { background: #ecfdf5 !important; }
+::ng-deep .ll-card .btn-edit         { color: #3b82f6 !important; }
+::ng-deep .ll-card .btn-edit:hover   { background: #eff6ff !important; }
+::ng-deep .ll-card .btn-approve      { color: #16a34a !important; }
+::ng-deep .ll-card .btn-approve:hover { background: #dcfce7 !important; }
+::ng-deep .ll-card .btn-reject       { color: #dc2626 !important; }
+::ng-deep .ll-card .btn-reject:hover { background: #fee2e2 !important; }
+::ng-deep .ll-card .btn-cancel       { color: #d97706 !important; }
+::ng-deep .ll-card .btn-cancel:hover { background: #fef3c7 !important; }
+::ng-deep .ll-card .btn-delete       { color: #ef4444 !important; }
+::ng-deep .ll-card .btn-delete:hover { background: #fef2f2 !important; }
+
+/* ── Pagination (matches Holiday .hl-pagination) ─────────────────── */
 .ll-pagination {
-  border-top: 1px solid #dde3ed; background: #ffffff; padding: 10px 16px;
-  display: flex; align-items: center; justify-content: flex-end; gap: 16px;
-  border-radius: 0 0 8px 8px; flex-shrink: 0;
+  border-top: 1px solid #e5e7eb; background: #ffffff; padding: 10px 16px;
+}
+.ll-pagination-inner {
+  display: flex; align-items: center; justify-content: flex-end; gap: 16px; flex-wrap: nowrap;
 }
 .ll-ps-wrap { display: flex; align-items: center; gap: 8px; }
-.ll-ps-wrap label { font-size: 13px; color: #6b7280; margin: 0; white-space: nowrap; }
+.ll-ps-wrap label { font-size: 13px; color: #6b7280; margin: 0; white-space: nowrap; font-weight: 400; }
 .ll-ps-select {
   height: 30px; padding: 4px 24px 4px 8px; border: 1px solid #d1d5db; border-radius: 4px;
   font-size: 13px; color: #374151; background-color: #fff;
@@ -177,63 +201,73 @@ ag-grid-angular { display: block; width: 100%; overflow: hidden; }
 .ll-pgbtn.active { background: #3b82f6 !important; color: #fff !important; border-color: #3b82f6 !important; }
 
 /* ── Modals ──────────────────────────────────────────────────────── */
-.ll-overlay { position: fixed !important; inset: 0 !important; background: rgba(0, 0, 0, 0.5) !important; backdrop-filter: blur(3px); display: flex !important; align-items: center; justify-content: center; z-index: 9999 !important; padding: 20px; }
-.ll-modal { background: #fff; border-radius: 12px; box-shadow: 0 20px 48px rgba(0, 0, 0, 0.18); width: 95vw; max-width: 760px; max-height: 92vh; display: flex; flex-direction: column; z-index: 10000 !important; }
-.ll-modal-xl { max-width: 900px !important; }
-.ll-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; }
-.ll-modal-title { font-size: 17px; font-weight: 700; color: #1f2937; margin: 0; display: flex; align-items: center; gap: 9px; }
+.ll-overlay {
+  position: fixed !important; inset: 0 !important;
+  background: rgba(0, 0, 0, 0.55) !important; backdrop-filter: blur(3px);
+  display: flex !important; align-items: center; justify-content: center;
+  z-index: 9999 !important; padding: 20px; animation: llFadeIn 0.2s ease;
+}
+@keyframes llFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes llSlideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+.ll-modal {
+  background: #fff; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+  position: relative; z-index: 10000 !important; animation: llSlideUp 0.25s ease;
+}
+.ll-modal-xl {
+  max-width: 900px !important; width: 95vw; max-height: 92vh !important;
+  display: flex; flex-direction: column; overflow-y: unset;
+}
+.ll-modal-xl .ll-modal-head { flex-shrink: 0; }
+.ll-modal-xl .ll-modal-body { flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; }
+
+.ll-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px; border-bottom: 1px solid #e5e7eb;
+}
+.ll-modal-title { font-size: 18px; font-weight: 700; color: #1f2937; margin: 0; display: flex; align-items: center; gap: 10px; }
 .ll-modal-title i { color: #3b82f6; }
-.ll-modal-close { background: none; border: none; color: #9ca3af; cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; font-size: 18px; }
-.ll-modal-close:hover { background: #f3f4f6; color: #374151; }
+.ll-modal-close {
+  background: none; border: none; color: #6b7280; cursor: pointer;
+  padding: 6px; border-radius: 6px; display: flex; align-items: center;
+  font-size: 18px; transition: all 0.15s;
+}
+.ll-modal-close:hover { background: #f3f4f6; color: #1f2937; }
 .ll-modal-body { flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; padding: 0; }
 
 /* ── Responsive ──────────────────────────────────────────────────── */
 @media (max-width: 1024px) { .ll-stats-row { grid-template-columns: repeat(2, 1fr); } }
 
 @media (max-width: 768px) {
+  .ll-page-title { font-size: 22px; }
   .ll-stats-row { grid-template-columns: 1fr 1fr; }
-
-  .ll-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    padding: 10px 12px;
-  }
-
-  /* Row 1: Filters | Clear   Row 2: Refresh | Export   Row 3: Apply Leave full width */
-  .ll-toolbar-btns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
-  .ll-btn-filter  { grid-column: 1 / 2; justify-content: center; }
-  .ll-btn-clear   { grid-column: 2 / 3; justify-content: center; }
-  .ll-btn-refresh { grid-column: 1 / 2; justify-content: center; }
-  .ll-btn-export  { grid-column: 2 / 3; justify-content: center; }
-  .ll-btn-add     { grid-column: 1 / 3; justify-content: center; }
-
-  .ll-filter-panel.open { max-height: 360px; }
-  .ll-filter-inner      { grid-template-columns: 1fr; }
-
-  .ll-pagination { flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .ll-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .ll-search { width: 100%; box-sizing: border-box; }
+  .ll-toolbar-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .ll-toolbar-divider { display: none; }
+  .ll-btn { justify-content: center; }
+  .ll-btn-clear   { grid-column: 1 / 2; }
+  .ll-btn-refresh { grid-column: 2 / 3; }
+  .ll-btn-export  { grid-column: 1 / 3; }
+  .ll-btn-add     { grid-column: 1 / 3; }
+  .ll-filter-panel.open { max-height: 400px; }
+  .ll-filter-inner { grid-template-columns: 1fr; }
+  .ll-pagination-inner { flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .ll-overlay { padding: 0; align-items: flex-end; }
+  .ll-modal { border-radius: 16px 16px 0 0; max-width: 100% !important; width: 100% !important; max-height: 95vh !important; }
+  .ll-modal-xl { max-width: 100% !important; width: 100% !important; max-height: 95vh !important; border-radius: 16px 16px 0 0; }
+  .ll-modal-head { padding: 16px; }
 }
 
 @media (max-width: 480px) {
-  .ll-stats-row  { grid-template-columns: 1fr; }
-  .ll-page-title { font-size: 22px; }
-
-  .ll-toolbar { padding: 10px; }
-  .ll-toolbar-btns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
-  .ll-btn-filter  { grid-column: 1 / 2; justify-content: center; }
-  .ll-btn-clear   { grid-column: 2 / 3; justify-content: center; }
-  .ll-btn-refresh { grid-column: 1 / 2; justify-content: center; }
-  .ll-btn-export  { grid-column: 2 / 3; justify-content: center; }
-  .ll-btn-add     { grid-column: 1 / 3; justify-content: center; }
-
+  .ll-stats-row { grid-template-columns: 1fr; }
+  .ll-toolbar-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .ll-btn { justify-content: center; }
+  .ll-btn-clear   { grid-column: 1 / 2; }
+  .ll-btn-refresh { grid-column: 2 / 3; }
+  .ll-btn-export  { grid-column: 1 / 3; }
+  .ll-btn-add     { grid-column: 1 / 3; }
   .ll-ps-wrap { display: none; }
-  .ll-pagination { justify-content: center; }
+  .ll-pagination-inner { justify-content: center; }
 }
