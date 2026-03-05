@@ -12,7 +12,9 @@ import {
   BulkInitializeBalanceDto,
   BulkInitializeResult,
   LeaveBalanceFilterDto,
-  EmployeeLeaveBalanceSummaryDto
+  EmployeeLeaveBalanceSummaryDto,
+  CollectiveLeaveBalanceDto,
+  CollectiveAssignmentResultDto
 } from '../../Models/leave-balance.model';
 
 @Injectable({ providedIn: 'root' })
@@ -103,4 +105,14 @@ export class LeaveBalanceService {
   recalculateBalance(id: string): Observable<ApiResponse<boolean>> {
     return this.apiClient.patch<ApiResponse<boolean>>(`${this.endpoint}/${id}/recalculate`, {});
   }
+
+  assignCollectiveLeaveBalance(
+    dto: CollectiveLeaveBalanceDto
+  ): Observable<ApiResponse<CollectiveAssignmentResultDto>> {
+    return this.apiClient.post<ApiResponse<CollectiveAssignmentResultDto>>(
+      `${this.endpoint}/assign/collective`, dto
+    );
+  }
+
+  
 }

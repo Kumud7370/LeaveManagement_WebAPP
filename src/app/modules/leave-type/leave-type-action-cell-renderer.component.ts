@@ -10,12 +10,10 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="action-buttons">
 
-      <!-- Edit: green pencil-square -->
       <button class="btn-icon btn-edit" (click)="onEdit()" title="Edit">
-        <i class="bi bi-pencil-square"></i>
+        <i class="bi bi-pencil"></i>
       </button>
 
-      <!-- Active/Inactive: outlined pill toggle — matches Image 2 exactly -->
       <button
         class="pill-toggle"
         [class.pill-on]="params?.data?.isActive"
@@ -24,81 +22,43 @@ import { CommonModule } from '@angular/common';
         <span class="pill-thumb"></span>
       </button>
 
-      <!-- Delete: red trash -->
       <button class="btn-icon btn-delete" (click)="onDelete()" title="Delete">
-        <i class="bi bi-trash3"></i>
+        <i class="bi bi-trash"></i>
       </button>
 
     </div>
   `,
   styles: [`
     .action-buttons {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 6px;
-      height: 100%;
-      padding: 0 8px;
+      display: flex; align-items: center; justify-content: flex-start;
+      gap: 4px; height: 100%; padding: 0 4px;
     }
-
-    /* ── Icon buttons ─────────────────────────── */
     .btn-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-      padding: 0;
-      background: transparent;
-      transition: background 0.15s;
-    }
-    .btn-edit         { color: #16a34a; }
-    .btn-edit:hover   { background: #dcfce7; }
-    .btn-delete       { color: #dc2626; }
-    .btn-delete:hover { background: #fee2e2; }
-
-    /* ── Outlined pill toggle — Image 2 style ─── */
-    .pill-toggle {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      width: 30px;
-      height: 16px;
-      border-radius: 9999px;
-      border: 1.5px solid #d1d5db;   /* gray border when inactive */
-      background: #ffffff;            /* white fill */
-      cursor: pointer;
-      padding: 0;
-      transition: border-color 0.2s ease;
+      width: 28px; height: 28px; border: none; background: transparent;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 15px; transition: background 0.15s; padding: 0; border-radius: 4px;
       flex-shrink: 0;
-      box-sizing: border-box;
     }
+    .btn-edit         { color: #3b82f6; }
+    .btn-edit:hover   { background: #eff6ff; }
+    .btn-delete       { color: #ef4444; }
+    .btn-delete:hover { background: #fef2f2; }
 
-    /* Active state: green border */
-    .pill-toggle.pill-on {
-      border-color: #22c55e;
+    .pill-toggle {
+      position: relative; display: inline-flex; align-items: center;
+      width: 32px; height: 18px; border-radius: 9999px;
+      border: 1.5px solid #d1d5db; background: #ffffff;
+      cursor: pointer; padding: 0; transition: border-color 0.2s ease;
+      flex-shrink: 0; box-sizing: border-box;
     }
-
-    /* The dot/thumb */
+    .pill-toggle.pill-on { border-color: #22c55e; }
     .pill-thumb {
-      position: absolute;
-      left: 2px;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #d1d5db;            /* gray dot when inactive */
+      position: absolute; left: 2px;
+      width: 11px; height: 11px; border-radius: 50%;
+      background: #d1d5db;
       transition: transform 0.2s ease, background 0.2s ease;
     }
-
-    /* Active: green dot slides right */
-    .pill-toggle.pill-on .pill-thumb {
-      background: #22c55e;
-      transform: translateX(13px);
-    }
+    .pill-toggle.pill-on .pill-thumb { background: #22c55e; transform: translateX(13px); }
   `]
 })
 export class LeaveTypeActionCellRendererComponent implements ICellRendererAngularComp {
