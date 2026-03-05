@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -29,22 +29,22 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 const invitationGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
-  foregroundColor:                '#374151',
+  foregroundColor:                '#1f2937',
   borderColor:                    '#e5e7eb',
-  headerBackgroundColor:          '#ffffff',
+  headerBackgroundColor:          '#f9fafb',
   headerTextColor:                '#374151',
   oddRowBackgroundColor:          '#ffffff',
   rowHoverColor:                  '#f8faff',
   selectedRowBackgroundColor:     '#dbeafe',
-  fontFamily:                     '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   fontSize:                       13,
   columnBorder:                   true,
   headerColumnBorder:             true,
   headerColumnBorderHeight:       '50%',
-  headerColumnResizeHandleColor:  '#d1d5db',
+  headerColumnResizeHandleColor:  '#9ca3af',
   headerColumnResizeHandleHeight: '50%',
   headerColumnResizeHandleWidth:  2,
-  cellHorizontalPaddingScale:     0.75,
+  cellHorizontalPaddingScale:     0.8,
   headerFontWeight:               500,
   headerFontSize:                 13,
   rowBorder:                      true,
@@ -59,8 +59,9 @@ const invitationGridTheme = themeQuartz.withParams({
 })
 export class InvitationListComponent implements OnInit, OnDestroy {
 
-  readonly gridTheme = invitationGridTheme;
+  @ViewChild('agGrid', { read: ElementRef }) agGridElement!: ElementRef<HTMLElement>;
 
+  readonly gridTheme = invitationGridTheme;
   context = { componentParent: this };
 
   // Raw full list from API (never mutated)
@@ -81,40 +82,6 @@ export class InvitationListComponent implements OnInit, OnDestroy {
 
   // Filters
   searchTerm = '';
-  statusFilter: 'all' | 'pending' | 'accepted' | 'expired' = 'all';
-  statusDropdownOpen = false;
-
-  get statusLabel(): string {
-    const map: Record<string, string> = {
-      all: 'All Statuses', pending: 'Pending', accepted: 'Accepted', expired: 'Expired'
-    };
-    return map[this.statusFilter] ?? 'All Statuses';
-  }
-
-  toggleStatusDropdown(): void {
-    this.statusDropdownOpen = !this.statusDropdownOpen;
-    if (this.statusDropdownOpen) {
-      setTimeout(() => {
-        const trigger = document.querySelector('.ll-custom-select-trigger') as HTMLElement;
-        const menu    = document.querySelector('.ll-custom-select-menu')    as HTMLElement;
-        if (trigger && menu) {
-          const rect = trigger.getBoundingClientRect();
-          menu.style.top   = rect.bottom + 4 + 'px';
-          menu.style.left  = rect.left + 'px';
-          menu.style.width = rect.width + 'px';
-        }
-      }, 0);
-    }
-  }
-
-  selectStatus(value: 'all' | 'pending' | 'accepted' | 'expired'): void {
-    this.statusFilter = value;
-    this.statusDropdownOpen = false;
-    this.onSearch();
-  }
-
-  @HostListener('document:click')
-  onDocumentClick(): void { this.statusDropdownOpen = false; }
 
   // Modal States
   showAddModal  = false;
@@ -130,27 +97,20 @@ export class InvitationListComponent implements OnInit, OnDestroy {
   // Stats
   stats: InvitationStats = { total: 0, pending: 0, accepted: 0, expired: 0 };
 
-  private resizeObserver!: ResizeObserver;
+  private resizeObserver: ResizeObserver | null = null;
   private sidebarResizeTimer: any = null;
 
   defaultColDef: ColDef = {
     sortable: true,
     filter: true,
+    floatingFilter: true,
     resizable: true,
     minWidth: 80,
-    cellStyle: { display: 'flex', alignItems: 'center' }
+    suppressSizeToFit: false,
+    suppressAutoSize: false,
   };
 
   columnDefs: ColDef[] = [];
-
-  gridOptions: GridOptions = {
-    pagination: false,
-    domLayout: 'autoHeight',
-    rowSelection: 'single',
-    suppressRowClickSelection: true,
-    suppressCellFocus: true,
-    suppressHorizontalScroll: false,
-  };
 
   constructor(
     private invitationService: AdminInvitationService,
@@ -163,7 +123,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.resizeObserver) this.resizeObserver.disconnect();
+    this.resizeObserver?.disconnect();
     clearTimeout(this.sidebarResizeTimer);
   }
 
@@ -181,10 +141,13 @@ export class InvitationListComponent implements OnInit, OnDestroy {
     this.gridApi = params.api;
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
 
-    const gridEl = document.querySelector('app-invitation-list ag-grid-angular') as HTMLElement;
-    if (gridEl && typeof ResizeObserver !== 'undefined') {
-      this.resizeObserver = new ResizeObserver(() => this.scheduleSizeColumnsToFit(50));
-      this.resizeObserver.observe(gridEl);
+    const hostEl    = this.agGridElement?.nativeElement;
+    const container = (hostEl?.closest('.il-grid-container') as HTMLElement) ?? hostEl;
+    if (container && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.gridApi) requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
+      });
+      this.resizeObserver.observe(container);
     }
   }
 
@@ -272,20 +235,6 @@ export class InvitationListComponent implements OnInit, OnDestroy {
   private applyPagination(): void {
     let filtered = [...this.allInvitations];
 
-    if (this.statusFilter !== 'all') {
-      filtered = filtered.filter(inv => {
-        const isExpired =
-          inv.status === 'Expired' ||
-          inv.status === 'Revoked' ||
-          (inv.status === 'Pending' && new Date(inv.expiresAt) <= new Date());
-
-        if (this.statusFilter === 'pending')  return inv.status === 'Pending' && !isExpired;
-        if (this.statusFilter === 'accepted') return inv.status === 'Accepted';
-        if (this.statusFilter === 'expired')  return isExpired;
-        return true;
-      });
-    }
-
     if (this.searchTerm.trim()) {
       const q = this.searchTerm.toLowerCase();
       filtered = filtered.filter(inv =>
@@ -330,8 +279,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
   }
 
   clearSearch(): void {
-    this.searchTerm   = '';
-    this.statusFilter = 'all';
+    this.searchTerm = '';
     this.paginationManager.goToPage(1);
     this.applyPagination();
   }
@@ -343,10 +291,10 @@ export class InvitationListComponent implements OnInit, OnDestroy {
       {
         headerName: 'Actions',
         width: 110, minWidth: 110, maxWidth: 110,
-        sortable: false, filter: false,
+        sortable: false, filter: false, floatingFilter: false,
+        suppressFloatingFilterButton: true,
         suppressSizeToFit: true,
-        headerClass: 'll-action-col',
-        cellClass: 'll-action-cell ll-action-col',
+        cellClass: 'actions-cell',
         cellStyle: { display: 'flex', alignItems: 'center', padding: '0', overflow: 'visible' },
         cellRenderer: InvitationActionCellRendererComponent,
       },
@@ -354,16 +302,14 @@ export class InvitationListComponent implements OnInit, OnDestroy {
         headerName: 'Recipient',
         field: 'email',
         minWidth: 220,
-        cellStyle: { display: 'flex', alignItems: 'center' },
         cellRenderer: (p: ICellRendererParams) => p.value
-          ? `<span style="font-weight:600;font-size:13px;color:#111827;font-family:'Inter',-apple-system,sans-serif;">${p.value}</span>`
+          ? `<span style="font-weight:600;font-size:13px;color:#111827;">${p.value}</span>`
           : '—'
       },
       {
         headerName: 'Role',
         field: 'invitedRole',
-        width: 120, minWidth: 100,
-        cellStyle: { display: 'flex', alignItems: 'center' },
+        width: 130, minWidth: 100,
         cellRenderer: (p: ICellRendererParams) => {
           if (!p.value) return '';
           const roleColors: Record<string, [string, string]> = {
@@ -375,14 +321,13 @@ export class InvitationListComponent implements OnInit, OnDestroy {
           const [bg, color] = roleColors[p.value] ?? ['#f3f4f6', '#6b7280'];
           return `<span style="display:inline-flex;align-items:center;padding:3px 10px;
             background:${bg};color:${color};border-radius:5px;
-            font-size:12px;font-weight:600;font-family:'Inter',-apple-system,sans-serif;">${p.value}</span>`;
+            font-size:12px;font-weight:600;">${p.value}</span>`;
         }
       },
       {
         headerName: 'Status',
         field: 'status',
-        width: 120, minWidth: 110,
-        cellStyle: { display: 'flex', alignItems: 'center' },
+        width: 130, minWidth: 110,
         cellRenderer: (p: ICellRendererParams) => {
           const status    = p.data?.status;
           const expiresAt = p.data?.expiresAt;
@@ -397,8 +342,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
             bg = '#fef9c3'; color = '#92400e'; lbl = 'Pending'; icon = 'bi-clock-history';
           }
           return `<span style="display:inline-flex;align-items:center;gap:5px;padding:2px 12px;
-            border-radius:9999px;font-size:12px;font-weight:600;background:${bg};color:${color};
-            font-family:'Inter',-apple-system,sans-serif;">
+            border-radius:9999px;font-size:12px;font-weight:600;background:${bg};color:${color};">
             <i class="bi ${icon}" style="font-size:11px;"></i>${lbl}</span>`;
         }
       },
@@ -406,24 +350,21 @@ export class InvitationListComponent implements OnInit, OnDestroy {
         headerName: 'Invited By',
         field: 'invitedByName',
         width: 170, minWidth: 130,
-        cellStyle: { display: 'flex', alignItems: 'center' },
         cellRenderer: (p: ICellRendererParams) => p.value
-          ? `<span style="font-size:13px;color:#374151;font-family:'Inter',-apple-system,sans-serif;">${p.value}</span>`
+          ? `<span style="font-size:13px;color:#374151;">${p.value}</span>`
           : `<span style="color:#d1d5db;font-size:13px;">—</span>`
       },
       {
         headerName: 'Created',
         field: 'createdAt',
-        width: 135, minWidth: 120,
-        cellStyle: { display: 'flex', alignItems: 'center' },
+        width: 145, minWidth: 120,
         valueFormatter: (p: any) => p.value
           ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
       },
       {
         headerName: 'Expires',
         field: 'expiresAt',
-        width: 135, minWidth: 120,
-        cellStyle: { display: 'flex', alignItems: 'center' },
+        width: 145, minWidth: 120,
         valueFormatter: (p: any) => p.value
           ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
       }
@@ -437,7 +378,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
     this.showAddModal = true;
     this.error = null;
   }
-  closeAddModal(): void  { this.showAddModal  = false; }
+  closeAddModal(): void  { this.showAddModal  = false; this.error = null; }
 
   openEditModal(invitation: InvitationResponseDto): void {
     this.editFormData = {
@@ -447,7 +388,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
     this.showEditModal = true;
     this.error = null;
   }
-  closeEditModal(): void { this.showEditModal = false; }
+  closeEditModal(): void { this.showEditModal = false; this.error = null; }
 
   // ─── CRUD ────────────────────────────────────────────────────────────────
 

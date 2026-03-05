@@ -1,14 +1,3 @@
-/* employee-list.component.scss */
-/* ViewEncapsulation.None — styles reach the DOM directly */
-
-/* NOTE: No need to @import ag-grid CSS or define .ag-theme-quartz overrides.
-   The themeQuartz.withParams() API in the .ts file handles all grid theming.
-   Only custom cell-renderer classes and page-layout styles are needed here. */
-
-/* ─────────────────────────────────────────────────────────────
-   PAGE CONTAINER
-   ───────────────────────────────────────────────────────────── */
-
 .el-page-container {
   padding: 0;
   margin: 0;
@@ -26,10 +15,6 @@
   color: #1e40af;
   margin: 0;
 }
-
-/* ─────────────────────────────────────────────────────────────
-   STATS CARDS
-   ───────────────────────────────────────────────────────────── */
 
 .el-stats-grid {
   display: grid;
@@ -70,9 +55,6 @@
   line-height: 1;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   TOOLBAR
-   ───────────────────────────────────────────────────────────── */
 
 .el-toolbar {
   display: flex;
@@ -123,10 +105,6 @@
   border-radius: 1px;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   BUTTONS
-   ───────────────────────────────────────────────────────────── */
-
 .el-btn {
   display: inline-flex;
   align-items: center;
@@ -163,9 +141,6 @@
 .el-btn-secondary { background: #ffffff; color: #374151; border-color: #d1d5db; font-weight: 600; }
 .el-btn-secondary:hover { background: #f9fafb; }
 
-/* ─────────────────────────────────────────────────────────────
-   ACTIVE FILTERS
-   ───────────────────────────────────────────────────────────── */
 
 .el-active-filters {
   display: flex;
@@ -188,10 +163,6 @@
   font-weight: 500;
 }
 
-/* ─────────────────────────────────────────────────────────────
-   GRID CARD
-   ───────────────────────────────────────────────────────────── */
-
 .el-grid-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -212,10 +183,6 @@
   justify-content: flex-start !important;
   padding: 0 8px !important;
 }
-
-/* ─────────────────────────────────────────────────────────────
-   EMPLOYEE CELL RENDERER STYLES
-   ───────────────────────────────────────────────────────────── */
 
 .emp-name-cell {
   display: flex;
@@ -332,9 +299,6 @@
 .el-grid-container .btn-delete { color: #ef4444 !important; }
 .el-grid-container .btn-delete:hover { background: #fef2f2 !important; }
 
-/* ─────────────────────────────────────────────────────────────
-   PAGINATION
-   ───────────────────────────────────────────────────────────── */
 
 .el-pagination {
   border-top: 1px solid #e5e7eb;
@@ -412,10 +376,6 @@
 .el-pgbtn:hover:not(:disabled) { background: #f3f4f6; border-color: #9ca3af; }
 .el-pgbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ─────────────────────────────────────────────────────────────
-   MODALS
-   ───────────────────────────────────────────────────────────── */
-
 .el-modal-overlay {
   position: fixed !important;
   top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
@@ -477,9 +437,6 @@
 }
 .el-modal-close i { font-size: 1rem; }
 
-/* ─────────────────────────────────────────────────────────────
-   RESPONSIVE
-   ───────────────────────────────────────────────────────────── */
 
 @media (max-width: 1024px) {
   .el-stats-grid { grid-template-columns: repeat(2, 1fr); }

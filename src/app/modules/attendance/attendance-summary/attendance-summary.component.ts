@@ -1,9 +1,3 @@
-// =============================================
-// attendance-summary.component.ts
-// Summary view: KPI cards + stats + AG Grid
-// showing individual attendance records
-// =============================================
-
 import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
@@ -77,7 +71,7 @@ export class AttendanceSummaryComponent implements OnInit {
 
   readonly gridTheme = summaryGridTheme;
 
-  // ── Role / identity ────────────────────────────────────────────
+  // ── Role / identity 
   get isAdmin(): boolean {
     const role = (sessionStorage.getItem('RoleName') || '').toLowerCase();
     return role === 'admin' || role === 'superadmin' || role === 'manager';
@@ -86,17 +80,17 @@ export class AttendanceSummaryComponent implements OnInit {
     return sessionStorage.getItem('EmployeeId') || '';
   }
 
-  // ── Summary KPI ────────────────────────────────────────────────
+  // ── Summary KPI 
   summary: AttendanceSummaryDto | null = null;
   summaryLoading = false;
   errorMsg       = '';
 
-  // ── Grid state ─────────────────────────────────────────────────
-  allRecords: AttendanceResponseDto[] = [];  // full unfiltered list
-  rowData: AttendanceResponseDto[]    = [];  // current page slice shown in grid
+  // ── Grid state 
+  allRecords: AttendanceResponseDto[] = []; 
+  rowData: AttendanceResponseDto[]    = [];  
   gridApi!: GridApi;
 
-  // ── Filters ────────────────────────────────────────────────────
+  // ── Filters 
   startDate        = '';
   endDate          = '';
   lookupEmployeeId = '';
@@ -104,7 +98,7 @@ export class AttendanceSummaryComponent implements OnInit {
   private searchDebounceTimer: any  = null;
   private isLoadingData             = false;
 
-  // ── Pagination ─────────────────────────────────────────────────
+  // ── Pagination 
   currentPage = 1;
   pageSize    = 20;
   totalItems  = 0;
@@ -119,7 +113,7 @@ export class AttendanceSummaryComponent implements OnInit {
 
   context = { componentParent: this };
 
-  // ── Column definitions ─────────────────────────────────────────
+  // ── Column definitions 
   defaultColDef: ColDef = {
     sortable:       true,
     filter:         true,
@@ -273,13 +267,12 @@ export class AttendanceSummaryComponent implements OnInit {
     }
   }
 
-  // ── Load both summary KPIs and grid records ────────────────────
   loadAll(): void {
     this.loadSummary();
     this.loadRecords();
   }
 
-  // ── KPI Summary ────────────────────────────────────────────────
+  // ── KPI Summary 
   loadSummary(): void {
     const eid = this.resolveEid();
     if (!eid || !this.startDate || !this.endDate) return;
@@ -307,7 +300,7 @@ export class AttendanceSummaryComponent implements OnInit {
     });
   }
 
-  // ── Grid records ───────────────────────────────────────────────
+  // ── Grid records 
   loadRecords(): void {
     if (this.isLoadingData) return;
     const eid = this.resolveEid();
@@ -362,7 +355,7 @@ export class AttendanceSummaryComponent implements OnInit {
       : this.employeeId;
   }
 
-  // ── Grid events ────────────────────────────────────────────────
+  // ── Grid events 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     this.gridApi.addEventListener('filterChanged', (_e: FilterChangedEvent) => {
@@ -371,7 +364,7 @@ export class AttendanceSummaryComponent implements OnInit {
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
   }
 
-  // ── Search ─────────────────────────────────────────────────────
+  // ── Search 
   onSearchChange(): void {
     clearTimeout(this.searchDebounceTimer);
     this.searchDebounceTimer = setTimeout(() => {
@@ -406,7 +399,7 @@ export class AttendanceSummaryComponent implements OnInit {
     return String(text).replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="search-highlight">$1</mark>');
   }
 
-  // ── Pagination ─────────────────────────────────────────────────
+  // ── Pagination 
   onPageSizeChanged(size: number): void {
     this.pageSize    = size;
     this.currentPage = 1;
@@ -423,7 +416,7 @@ export class AttendanceSummaryComponent implements OnInit {
   nextPage(): void     { if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1); }
   previousPage(): void { if (this.currentPage > 1) this.goToPage(this.currentPage - 1); }
 
-  // ── Quick date setters ─────────────────────────────────────────
+  // ── Quick date setters 
   setCurrentMonth(): void {
     const today = new Date();
     const first = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -449,12 +442,12 @@ export class AttendanceSummaryComponent implements OnInit {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  // ── Export ─────────────────────────────────────────────────────
+  // ── Export 
   exportData(): void {
     exportToCsv(this.gridApi, `attendance_${this.resolveEid()}`);
   }
 
-  // ── SVG gauge arc ──────────────────────────────────────────────
+  // ── SVG gauge arc 
   getAttendanceArc(): string {
     const pct   = Math.min(Math.max((this.summary?.attendancePercentage ?? 0) / 100, 0), 1);
     const angle = pct * Math.PI;

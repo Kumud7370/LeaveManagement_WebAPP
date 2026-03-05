@@ -1,5 +1,3 @@
-// employee-list.component.ts
-
 import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
@@ -24,7 +22,7 @@ import {
   AllCommunityModule,
   SortChangedEvent,
   FilterChangedEvent,
-  themeQuartz          // ← ADD THIS (same as holiday)
+  themeQuartz          
 } from 'ag-grid-community';
 import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -54,7 +52,6 @@ import {
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// ── Same pattern as Holiday — themeQuartz.withParams() ───────────────────────
 const employeeGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
   foregroundColor:                '#1f2937',
@@ -98,21 +95,18 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  // ── Expose theme to template ─────────────────────────────────────────────
+  // ── Expose theme to template 
   readonly gridTheme = employeeGridTheme;
 
-  // ─── Grid state ──────────────────────────────────────────────────────────
   rowData: EmployeeResponseDto[] = [];
   gridApi!: GridApi;
   searchTerm: string = '';
 
-  // ─── Modal State ─────────────────────────────────────────────────────────
+  // ─── Modal State 
   showFormModal    = false;
   showDetailsModal = false;
   formMode: 'create' | 'edit' = 'create';
   selectedEmployeeId: string | null = null;
-
-  // ─── Filters ─────────────────────────────────────────────────────────────
   filter: EmployeeFilterDto = {
     searchTerm:      '',
     departmentId:    '',
@@ -129,7 +123,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     sortDescending:  false
   };
 
-  // ─── Pagination ───────────────────────────────────────────────────────────
+  // ─── Pagination 
   currentPage: number = 1;
   pageSize:    number = 20;
   totalItems:  number = 0;
@@ -138,7 +132,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   private searchDebounceTimer: any = null;
   Math = Math;
 
-  // ─── Enums ────────────────────────────────────────────────────────────────
+  // ─── Enums 
   EmployeeStatus = EmployeeStatus;
   EmploymentType = EmploymentType;
   Gender         = Gender;
@@ -147,10 +141,10 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   employmentTypeKeys: number[];
   genderKeys:         number[];
 
-  // ─── Stats ────────────────────────────────────────────────────────────────
+  // ─── Stats 
   stats = { total: 0, active: 0, inactive: 0, onLeave: 0 };
 
-  // ─── Active Filters ───────────────────────────────────────────────────────
+  // ─── Active Filters 
   activeFilters = {
     hasActiveFilters: false,
     filters: [] as string[],
@@ -159,7 +153,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
 
   context = { componentParent: this };
 
-  // ─── Grid config ──────────────────────────────────────────────────────────
+  // ─── Grid config 
   defaultColDef: ColDef = {
     sortable:           true,
     filter:             true,
@@ -334,14 +328,14 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ─── Helper: numeric enum value → string name for backend ────────────────
+  // ─── Helper: numeric enum value → string name for backend 
   private enumToString<T extends object>(enumObj: T, value: any): string {
     const numVal = Number(value);
     const name   = enumObj[numVal as keyof T] as string;
     return name || String(value);
   }
 
-  // ─── Stats ────────────────────────────────────────────────────────────────
+  // ─── Stats 
   loadStats(): void {
     const statsFilter: EmployeeFilterDto = {
       searchTerm:     '',
@@ -375,7 +369,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ─── Data Loading ─────────────────────────────────────────────────────────
+  // ─── Data Loading 
   loadEmployees(): void {
     if (this.isLoadingData) return;
     this.isLoadingData = true;
@@ -410,7 +404,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ─── Grid ─────────────────────────────────────────────────────────────────
+  // ─── Grid 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     this.gridApi.addEventListener('sortChanged',   this.onSortChanged.bind(this));
@@ -436,7 +430,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     return String(text).replace(regex, '<mark class="search-highlight">$1</mark>');
   }
 
-  // ─── Pagination ───────────────────────────────────────────────────────────
+  // ─── Pagination 
   onPageSizeChanged(newPageSize: number): void {
     this.pageSize    = newPageSize;
     this.currentPage = 1;
@@ -458,7 +452,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     if (this.currentPage > 1) this.goToPage(this.currentPage - 1);
   }
 
-  // ─── Search & Filters ─────────────────────────────────────────────────────
+  // ─── Search & Filters 
   onSearchChange(): void {
     clearTimeout(this.searchDebounceTimer);
     this.searchDebounceTimer = setTimeout(() => {
@@ -519,7 +513,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     return enumType[key] || '';
   }
 
-  // ─── Modal ────────────────────────────────────────────────────────────────
+  // ─── Modal 
   addNewEmployee(): void {
     this.formMode           = 'create';
     this.selectedEmployeeId = null;
@@ -565,7 +559,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── ActionCellRenderer bridge ────────────────────────────────────────────
+  // ─── ActionCellRenderer bridge 
   viewDetails(employee: EmployeeResponseDto): void {
     this.selectedEmployeeId = employee.id;
     this.showDetailsModal   = true;
@@ -713,7 +707,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ─── Grid action dispatcher ───────────────────────────────────────────────
+  // ─── Grid action dispatcher 
   onGridAction(event: { action: string; data: any }): void {
     switch (event.action) {
       case 'edit':   this.editDepartment(event.data);   break;
@@ -723,7 +717,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── Export ───────────────────────────────────────────────────────────────
+  // ─── Export 
   exportData(): void {
     exportToCsv(this.gridApi, 'employees');
     Swal.fire({
@@ -733,7 +727,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Date helpers ─────────────────────────────────────────────────────────
+  // ─── Date helpers 
   formatDate(date: Date | undefined): string {
     if (!date) return 'N/A';
     return new Date(date).toLocaleDateString('en-US', {

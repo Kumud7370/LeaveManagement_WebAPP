@@ -30,7 +30,8 @@ import {
   RegularizationStatus
 } from '../../../core/Models/attendance-regularization.model';
 import Swal from 'sweetalert2';
-import { ActionCellRendererComponent } from '../../../shared/action-cell-renderer.component';
+
+import { RegularizationActionCellRendererComponent } from '../regularization-action-cell-renderer.component';
 import * as XLSX from 'xlsx';
 import { RegularizationFormComponent } from '../regularization-form/regularization-form.component';
 import {
@@ -72,7 +73,8 @@ const regularizationGridTheme = themeQuartz.withParams({
     CommonModule,
     FormsModule,
     AgGridAngular,
-    RegularizationFormComponent
+    RegularizationFormComponent,
+    RegularizationActionCellRendererComponent
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
@@ -83,212 +85,231 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
 
   readonly gridTheme = regularizationGridTheme;
 
-  // ─── Grid state ───────────
+  // ─── Grid state ───────────────────────────────────────────────────
   rowData: RegularizationResponseDto[] = [];
   gridApi!: GridApi;
   searchTerm = '';
 
-  // ─── Pagination ─────────
+  // ─── Pagination ───────────────────────────────────────────────────
   currentPage = 1;
-  pageSize = 20;
-  totalItems = 0;
-  totalPages = 0;
-  private isLoadingData = false;
+  pageSize    = 20;
+  totalItems  = 0;
+  totalPages  = 0;
+  private isLoadingData        = false;
   private searchDebounceTimer: any = null;
   Math = Math;
 
-  // ─── Filters ─────────────
-  employeeIdFilter = '';
+  // ─── Filters ──────────────────────────────────────────────────────
+  employeeIdFilter            = '';
   regularizationTypeFilter: RegularizationType | null = null;
-  statusFilter: RegularizationStatus | null = null;
+  statusFilter: RegularizationStatus | null           = null;
   startDateFilter: Date | null = null;
-  endDateFilter: Date | null = null;
-  sortBy = 'RequestedAt';
+  endDateFilter:   Date | null = null;
+  sortBy         = 'RequestedAt';
   sortDirection: 'asc' | 'desc' = 'desc';
 
-  // ─── UI States ────────────
+  // ─── Modal visibility ─────────────────────────────────────────────
   showAddModal      = false;
   showEditModal     = false;
-  showViewModal     = false;   // ✅ NEW
+  showViewModal     = false;
   showApprovalModal = false;
 
-  selectedRegularization:  RegularizationResponseDto | null = null;
-  editRegularizationData:  RegularizationResponseDto | null = null;
-  viewRegularizationData:  RegularizationResponseDto | null = null; // ✅ NEW
+  // ─── Modal data ───────────────────────────────────────────────────
+  selectedRegularization: RegularizationResponseDto | null = null;
+  editRegularizationData: RegularizationResponseDto | null = null;
+  viewRegularizationData: RegularizationResponseDto | null = null;
   approvalReason = '';
 
-  // ─── Enums ───────────────
+  // ─── Enums exposed to template ────────────────────────────────────
   RegularizationType   = RegularizationType;
   RegularizationStatus = RegularizationStatus;
 
-  // ─── Stats ───────────────
+  // ─── Stats cards ──────────────────────────────────────────────────
   stats = { total: 0, pending: 0, approved: 0, rejected: 0 };
 
-  // ─── ResizeObserver ───────
+  // ─── ResizeObserver ───────────────────────────────────────────────
   private resizeObserver: ResizeObserver | null = null;
 
-  // ─── Active Filters ───────
+  // ─── Active filters summary ───────────────────────────────────────
   activeFilters = {
     hasActiveFilters: false,
     filters: [] as string[],
     count: 0
   };
 
-  context = { componentParent: this };
+  // ─────────────────────────────────────────────────────────────────
+  // Role detection
+  // Reads 'RoleName' from sessionStorage — e.g. "SuperAdmin", "Employee"
+  // ─────────────────────────────────────────────────────────────────
+  private get rawRole(): string {
+    return (sessionStorage.getItem('RoleName') ?? '').trim();
+  }
 
-  // ─── Grid Config ──────────
+  private get normalisedRole(): string {
+    return this.rawRole.toLowerCase().replace(/\s+/g, '');
+  }
+
+  get isAdminOrManager(): boolean {
+    return (
+      this.normalisedRole === 'admin'      ||
+      this.normalisedRole === 'superadmin' ||
+      this.normalisedRole === 'manager'
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // AG Grid context — getter so it always reflects current session
+  // ─────────────────────────────────────────────────────────────────
+  get context() {
+    return {
+      componentParent: this,
+      userRole: this.rawRole   // e.g. "SuperAdmin" | "Employee"
+    };
+  }
+
+  // ─── Actions column width based on role ──────────────────────────
+  // Admin/SuperAdmin: View+Edit+Approve+Reject+Cancel+Delete = 6 → 210px
+  // Employee:         View+Cancel+Delete = 3                   → 120px
+  private get actionsColWidth(): number {
+    return this.isAdminOrManager ? 210 : 120;
+  }
+
+  // ─── Default column definition ────────────────────────────────────
   defaultColDef: ColDef = {
-    sortable: true,
-    filter: true,
-    floatingFilter: true,
-    resizable: true,
-    minWidth: 80,
+    sortable:          true,
+    filter:            true,
+    floatingFilter:    true,
+    resizable:         true,
+    minWidth:          80,
     suppressSizeToFit: false,
-    suppressAutoSize: false
+    suppressAutoSize:  false
   };
 
-  columnDefs: ColDef[] = [
-    {
-      headerName: 'Actions',
-      field: 'actions',
-      width: 155,
-      minWidth: 155,
-      maxWidth: 155,
-      sortable: false,
-      filter: false,
-      floatingFilter: false,
-      suppressFloatingFilterButton: true,
-      cellClass: 'actions-cell',
-      cellRenderer: ActionCellRendererComponent,
-      suppressSizeToFit: true,
-      pinned: 'left'
-    },
-    {
-      headerName: 'Employee Code',
-      field: 'employeeCode',
-      width: 150,
-      minWidth: 120,
-      cellStyle: {
-        fontFamily: 'Monaco, Courier New, monospace',
-        fontWeight: '600',
-        color: '#334155'
+  // ─── Column definitions ───────────────────────────────────────────
+  get columnDefs(): ColDef[] {
+    return [
+      {
+        headerName: 'Actions',
+        field:      'actions',
+        width:    this.actionsColWidth,
+        minWidth: this.actionsColWidth,
+        maxWidth: this.actionsColWidth,
+        sortable:      false,
+        filter:        false,
+        floatingFilter: false,
+        suppressFloatingFilterButton: true,
+        cellClass:   'actions-cell',
+        cellRenderer: RegularizationActionCellRendererComponent,
+        suppressSizeToFit: true,
+        pinned: 'left'
       },
-      cellRenderer: (params: any) => {
-        const val = params.value || '';
-        const search = params.context?.componentParent?.searchTerm || '';
-        const highlighted = params.context?.componentParent?.highlightText(val, search) || val;
-        return `<span style="font-family:Monaco,monospace;font-weight:600;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${highlighted}</span>`;
-      }
-    },
-    {
-      headerName: 'Employee Name',
-      field: 'employeeName',
-      width: 200,
-      minWidth: 160,
-      cellRenderer: (params: any) => {
-        const val = params.value || '';
-        const search = params.context?.componentParent?.searchTerm || '';
-        const highlighted = params.context?.componentParent?.highlightText(val, search) || val;
-        return `<span style="font-weight:600;color:#1f2937;">${highlighted}</span>`;
-      }
-    },
-    {
-      headerName: 'Date',
-      field: 'attendanceDate',
-      width: 140,
-      minWidth: 120,
-      valueFormatter: (params: any) => {
-        if (!params.value) return '—';
-        return new Date(params.value).toLocaleDateString('en-GB', {
-          day: '2-digit', month: 'short', year: 'numeric'
-        });
-      },
-      cellStyle: { color: '#374151' }
-    },
-    {
-      headerName: 'Type',
-      field: 'regularizationTypeName',
-      width: 190,
-      minWidth: 150,
-      cellRenderer: (params: any) => {
-        const type = params.data?.regularizationType;
-        let cls = '';
-        switch (type) {
-          case RegularizationType.MissedPunch:           cls = 'reg-type-missed';  break;
-          case RegularizationType.LateEntry:             cls = 'reg-type-late';    break;
-          case RegularizationType.EarlyExit:             cls = 'reg-type-early';   break;
-          case RegularizationType.FullDayRegularization: cls = 'reg-type-fullday'; break;
-          default:                                       cls = 'reg-type-missed';  break;
+      {
+        headerName: 'Employee Code',
+        field:      'employeeCode',
+        width: 150, minWidth: 120,
+        cellRenderer: (params: any) => {
+          const val         = params.value || '';
+          const search      = params.context?.componentParent?.searchTerm || '';
+          const highlighted = params.context?.componentParent?.highlightText(val, search) || val;
+          return `<span style="font-family:Monaco,monospace;font-weight:600;background:#f1f5f9;padding:2px 8px;border-radius:4px;">${highlighted}</span>`;
         }
-        const val = params.value || '';
-        const search = params.context?.componentParent?.searchTerm || '';
-        const highlighted = params.context?.componentParent?.highlightText(val, search) || val;
-        return `<span class="reg-type-badge ${cls}">${highlighted}</span>`;
-      }
-    },
-    {
-      headerName: 'Check-In',
-      field: 'requestedCheckIn',
-      width: 130,
-      minWidth: 110,
-      valueFormatter: (params: any) => {
-        if (!params.value) return '—';
-        return new Date(params.value).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
       },
-      cellStyle: { color: '#374151' }
-    },
-    {
-      headerName: 'Check-Out',
-      field: 'requestedCheckOut',
-      width: 130,
-      minWidth: 110,
-      valueFormatter: (params: any) => {
-        if (!params.value) return '—';
-        return new Date(params.value).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      },
-      cellStyle: { color: '#374151' }
-    },
-    {
-      headerName: 'Status',
-      field: 'statusName',
-      width: 130,
-      minWidth: 110,
-      cellRenderer: (params: any) => {
-        const status = params.data?.status;
-        let style = '';
-        switch (status) {
-          case RegularizationStatus.Pending:
-            style = 'background:#fef3c7;color:#92400e;'; break;
-          case RegularizationStatus.Approved:
-            style = 'background:#dcfce7;color:#166534;'; break;
-          case RegularizationStatus.Rejected:
-            style = 'background:#fee2e2;color:#991b1b;'; break;
-          case RegularizationStatus.Cancelled:
-            style = 'background:#f1f5f9;color:#475569;'; break;
-          default:
-            style = 'background:#f1f5f9;color:#475569;'; break;
+      {
+        headerName: 'Employee Name',
+        field:      'employeeName',
+        width: 200, minWidth: 160,
+        cellRenderer: (params: any) => {
+          const val         = params.value || '';
+          const search      = params.context?.componentParent?.searchTerm || '';
+          const highlighted = params.context?.componentParent?.highlightText(val, search) || val;
+          return `<span style="font-weight:600;color:#1f2937;">${highlighted}</span>`;
         }
-        const val = params.value || '';
-        return `<span class="badge-status" style="${style}">${val}</span>`;
+      },
+      {
+        headerName: 'Date',
+        field:      'attendanceDate',
+        width: 140, minWidth: 120,
+        valueFormatter: (params: any) => {
+          if (!params.value) return '—';
+          return new Date(params.value).toLocaleDateString('en-GB', {
+            day: '2-digit', month: 'short', year: 'numeric'
+          });
+        },
+        cellStyle: { color: '#374151' }
+      },
+      {
+        headerName: 'Type',
+        field:      'regularizationTypeName',
+        width: 190, minWidth: 150,
+        cellRenderer: (params: any) => {
+          const type = params.data?.regularizationType;
+          let cls = '';
+          switch (type) {
+            case RegularizationType.MissedPunch:           cls = 'reg-type-missed';  break;
+            case RegularizationType.LateEntry:             cls = 'reg-type-late';    break;
+            case RegularizationType.EarlyExit:             cls = 'reg-type-early';   break;
+            case RegularizationType.FullDayRegularization: cls = 'reg-type-fullday'; break;
+            default:                                        cls = 'reg-type-missed';  break;
+          }
+          const val         = params.value || '';
+          const search      = params.context?.componentParent?.searchTerm || '';
+          const highlighted = params.context?.componentParent?.highlightText(val, search) || val;
+          return `<span class="reg-type-badge ${cls}">${highlighted}</span>`;
+        }
+      },
+      {
+        headerName: 'Check-In',
+        field:      'requestedCheckIn',
+        width: 130, minWidth: 110,
+        valueFormatter: (params: any) => {
+          if (!params.value) return '—';
+          return new Date(params.value).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        },
+        cellStyle: { color: '#374151' }
+      },
+      {
+        headerName: 'Check-Out',
+        field:      'requestedCheckOut',
+        width: 130, minWidth: 110,
+        valueFormatter: (params: any) => {
+          if (!params.value) return '—';
+          return new Date(params.value).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        },
+        cellStyle: { color: '#374151' }
+      },
+      {
+        headerName: 'Status',
+        field:      'statusName',
+        width: 130, minWidth: 110,
+        cellRenderer: (params: any) => {
+          const status = params.data?.status;
+          let style = '';
+          switch (status) {
+            case RegularizationStatus.Pending:   style = 'background:#fef3c7;color:#92400e;'; break;
+            case RegularizationStatus.Approved:  style = 'background:#dcfce7;color:#166534;'; break;
+            case RegularizationStatus.Rejected:  style = 'background:#fee2e2;color:#991b1b;'; break;
+            case RegularizationStatus.Cancelled: style = 'background:#f1f5f9;color:#475569;'; break;
+            default:                              style = 'background:#f1f5f9;color:#475569;'; break;
+          }
+          return `<span class="badge-status" style="${style}">${params.value || ''}</span>`;
+        }
+      },
+      {
+        headerName: 'Approved By',
+        field:      'approvedByName',
+        width: 160, minWidth: 130,
+        valueFormatter: (params: any) => params.value || '—',
+        cellStyle: { color: '#6b7280' }
+      },
+      {
+        headerName: 'Requested At',
+        field:      'requestedAt',
+        width: 180, minWidth: 150,
+        valueFormatter: dateTimeFormatter,
+        cellStyle: { color: '#6b7280', fontSize: '12px' }
       }
-    },
-    {
-      headerName: 'Approved By',
-      field: 'approvedByName',
-      width: 160,
-      minWidth: 130,
-      valueFormatter: (params: any) => params.value || '—',
-      cellStyle: { color: '#6b7280' }
-    },
-    {
-      headerName: 'Requested At',
-      field: 'requestedAt',
-      width: 180,
-      minWidth: 150,
-      valueFormatter: dateTimeFormatter,
-      cellStyle: { color: '#6b7280', fontSize: '12px' }
-    }
-  ];
+    ];
+  }
 
   constructor(
     private regularizationService: AttendanceRegularizationService,
@@ -296,66 +317,49 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
+  // ─── Lifecycle ────────────────────────────────────────────────────
   ngOnInit(): void {
     this.setDefaultDateFilters();
     this.loadRegularizations();
   }
 
   ngOnDestroy(): void {
-    if (this.resizeObserver) {
-      this.resizeObserver.disconnect();
-      this.resizeObserver = null;
-    }
-    if (this.searchDebounceTimer) {
-      clearTimeout(this.searchDebounceTimer);
-    }
+    if (this.resizeObserver) { this.resizeObserver.disconnect(); this.resizeObserver = null; }
+    if (this.searchDebounceTimer) { clearTimeout(this.searchDebounceTimer); }
   }
 
-  // ─── Grid Ready ───────────
+  // ─── Grid ready ───────────────────────────────────────────────────
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     this.gridApi.addEventListener('sortChanged',   this.onSortChanged.bind(this));
     this.gridApi.addEventListener('filterChanged', this.onFilterChanged.bind(this));
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
 
-    const hostEl = this.agGridElement?.nativeElement;
+    const hostEl    = this.agGridElement?.nativeElement;
     const container = (hostEl?.closest('.rl-grid-container') as HTMLElement) ?? hostEl;
-
     if (container && typeof ResizeObserver !== 'undefined') {
       this.resizeObserver = new ResizeObserver(() => {
-        if (this.gridApi) {
-          requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
-        }
+        if (this.gridApi) requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
       });
       this.resizeObserver.observe(container);
     }
   }
 
-  onSortChanged(_event: SortChangedEvent): void {
-    this.currentPage = 1;
-    this.loadRegularizations();
-  }
+  onSortChanged(_e: SortChangedEvent):    void { this.currentPage = 1; this.loadRegularizations(); }
+  onFilterChanged(_e: FilterChangedEvent): void { this.currentPage = 1; this.loadRegularizations(); this.updateActiveFilters(); }
 
-  onFilterChanged(_event: FilterChangedEvent): void {
-    this.currentPage = 1;
-    this.loadRegularizations();
-    this.updateActiveFilters();
-  }
-
-  // ─── Highlight ────────────
+  // ─── Search highlight ─────────────────────────────────────────────
   highlightText(text: string, term: string): string {
-    if (!term || !term.trim() || !text) return String(text);
+    if (!term?.trim() || !text) return String(text);
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex   = new RegExp(`(${escaped})`, 'gi');
-    return String(text).replace(regex, '<mark class="search-highlight">$1</mark>');
+    return String(text).replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="search-highlight">$1</mark>');
   }
 
-  // ─── Data Loading ─────────
+  // ─── Data loading ─────────────────────────────────────────────────
   setDefaultDateFilters(): void {
     const today = new Date();
-    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    this.startDateFilter = firstDayOfMonth;
-    this.endDateFilter = today;
+    this.startDateFilter = new Date(today.getFullYear(), today.getMonth(), 1);
+    this.endDateFilter   = today;
   }
 
   loadRegularizations(): void {
@@ -382,9 +386,7 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
           this.totalItems  = response.data.totalCount;
           this.totalPages  = Math.ceil(this.totalItems / this.pageSize);
           this.currentPage = response.data.pageNumber;
-
           this.computeStats(this.rowData);
-
           if (this.gridApi) {
             this.gridApi.setGridOption('rowData', this.rowData);
             refreshGrid(this.gridApi);
@@ -409,7 +411,7 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     this.stats.rejected = items.filter(r => r.status === RegularizationStatus.Rejected).length;
   }
 
-  // ─── Search ───────────────
+  // ─── Search ───────────────────────────────────────────────────────
   onSearchChange(): void {
     clearTimeout(this.searchDebounceTimer);
     this.searchDebounceTimer = setTimeout(() => {
@@ -421,133 +423,111 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
 
   clearSearch(): void {
     clearTimeout(this.searchDebounceTimer);
-    this.searchTerm       = '';
-    this.employeeIdFilter = '';
-    this.currentPage      = 1;
+    this.searchTerm = this.employeeIdFilter = '';
+    this.currentPage = 1;
     this.loadRegularizations();
     this.updateActiveFilters();
   }
 
   handleClearFilters(): void {
     clearTimeout(this.searchDebounceTimer);
-    this.searchTerm       = '';
-    this.employeeIdFilter = '';
-    this.currentPage      = 1;
+    this.searchTerm = this.employeeIdFilter = '';
+    this.currentPage = 1;
     clearAllFilters(this.gridApi);
     this.loadRegularizations();
     this.updateActiveFilters();
   }
 
   updateActiveFilters(): void {
-    const columnFilterCount = this.gridApi
-      ? Object.keys(this.gridApi.getFilterModel()).length
-      : 0;
-    const additionalFilters = columnFilterCount > 0
-      ? { 'Column filters': `${columnFilterCount} active` }
-      : undefined;
-    const filters = getActiveFiltersSummary(this.searchTerm, undefined, additionalFilters);
+    const colCount = this.gridApi ? Object.keys(this.gridApi.getFilterModel()).length : 0;
+    const extra    = colCount > 0 ? { 'Column filters': `${colCount} active` } : undefined;
+    const filters  = getActiveFiltersSummary(this.searchTerm, undefined, extra);
     this.activeFilters = { hasActiveFilters: filters.length > 0, filters, count: filters.length };
   }
 
-  // ─── Pagination ───────────
-  onPageSizeChanged(newPageSize: number): void {
-    this.pageSize    = newPageSize;
+  // ─── Pagination ───────────────────────────────────────────────────
+  onPageSizeChanged(newSize: number): void {
+    this.pageSize = newSize;
     this.currentPage = 1;
     this.loadRegularizations();
   }
-
   goToPage(page: number | string): void {
-    const pageNum = typeof page === 'string' ? parseInt(page, 10) : page;
-    if (isNaN(pageNum) || pageNum < 1 || pageNum > this.totalPages || pageNum === this.currentPage) return;
-    this.currentPage = pageNum;
+    const p = typeof page === 'string' ? parseInt(page, 10) : page;
+    if (isNaN(p) || p < 1 || p > this.totalPages || p === this.currentPage) return;
+    this.currentPage = p;
     this.loadRegularizations();
   }
-
-  nextPage(): void     { if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1); }
+  nextPage():     void { if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1); }
   previousPage(): void { if (this.currentPage > 1) this.goToPage(this.currentPage - 1); }
 
-  // ─── Add Modal ────────────
-  openAddModal(): void  { this.editRegularizationData = null; this.showAddModal = true; }
+  // ─── Add modal ────────────────────────────────────────────────────
+  openAddModal():  void { this.editRegularizationData = null; this.showAddModal = true; }
   closeAddModal(): void { this.showAddModal = false; this.editRegularizationData = null; }
-
   onFormSubmitted(): void {
-    this.showAddModal            = false;
-    this.showEditModal           = false;
-    this.editRegularizationData  = null;
+    this.showAddModal = this.showEditModal = false;
+    this.editRegularizationData = null;
     this.loadRegularizations();
   }
 
-  // ─── Edit Modal ───────────
-  openEditModal(regularization: RegularizationResponseDto): void {
-    this.editRegularizationData = regularization;
-    this.showEditModal          = true;
-  }
+  // ─── Edit modal ───────────────────────────────────────────────────
+  openEditModal(reg: RegularizationResponseDto):  void { this.editRegularizationData = reg; this.showEditModal = true; }
   closeEditModal(): void { this.showEditModal = false; this.editRegularizationData = null; }
 
-  // ─── View Modal ───────────  ✅ NEW
-  openViewModal(regularization: RegularizationResponseDto): void {
-    this.viewRegularizationData = regularization;
-    this.showViewModal          = true;
-  }
+  // ─── View modal ───────────────────────────────────────────────────
+  openViewModal(reg: RegularizationResponseDto):  void { this.viewRegularizationData = reg; this.showViewModal = true; }
   closeViewModal(): void { this.showViewModal = false; this.viewRegularizationData = null; }
 
-  // ─── Action Handlers ──────
-  // ✅ Changed: opens view popup instead of navigating to route
-  viewDetails(regularization: RegularizationResponseDto): void {
-    this.openViewModal(regularization);
+  // ─── Cell renderer callbacks ──────────────────────────────────────
+
+  viewDetails(reg: RegularizationResponseDto): void {
+    this.openViewModal(reg);
   }
 
-  editDepartment(regularization: RegularizationResponseDto): void {
-    this.openEditModal(regularization);
+  editDepartment(reg: RegularizationResponseDto): void {
+    this.openEditModal(reg);
   }
 
-  toggleStatus(regularization: RegularizationResponseDto): void {
-    if (regularization.status === RegularizationStatus.Pending) {
-      this.approveRegularization(regularization);
-    } else {
-      Swal.fire({ icon: 'info', title: 'Info', text: 'Only pending requests can be approved/rejected.' });
-    }
+  /** Called by renderer onCancel() — runs the cancel API (status → Cancelled) */
+  deleteDepartment(reg: RegularizationResponseDto): void {
+    this.cancelRegularization(reg);
   }
 
-  deleteDepartment(regularization: RegularizationResponseDto): void {
-    this.cancelRegularization(regularization);
-  }
-
-  // ─── Approve / Reject ─────
-  openApprovalModal(regularization: RegularizationResponseDto, approve: boolean): void {
-    this.selectedRegularization = regularization;
+  // ─── Approve / Reject ─────────────────────────────────────────────
+  openApprovalModal(reg: RegularizationResponseDto, approve: boolean): void {
+    this.selectedRegularization = reg;
     this.approvalReason         = '';
     if (approve) {
-      this.approveRegularization(regularization);
+      this.approveRegularization(reg);
     } else {
       this.showApprovalModal = true;
     }
   }
 
-  async approveRegularization(regularization: RegularizationResponseDto): Promise<void> {
+  async approveRegularization(reg: RegularizationResponseDto): Promise<void> {
     const result = await Swal.fire({
       title: 'Approve Request?',
-      text: `Approve regularization for ${regularization.employeeName}?`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3b82f6',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, approve!',
-      cancelButtonText: 'Cancel'
+      html:  `Approve regularization for <strong>${reg.employeeName}</strong>?`,
+      icon:  'question',
+      showCancelButton:   true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor:  '#6b7280',
+      confirmButtonText:  'Yes, Approve!',
+      cancelButtonText:   'Cancel'
     });
 
     if (result.isConfirmed) {
-      this.regularizationService.approveRegularization(regularization.id, { isApproved: true }).subscribe({
-        next: (response) => {
-          if (response.success) {
-            Swal.fire({ title: 'Approved!', text: 'Request approved successfully.', icon: 'success', confirmButtonColor: '#3b82f6', timer: 2000, showConfirmButton: false });
+      this.regularizationService.approveRegularization(reg.id, { isApproved: true }).subscribe({
+        next: (res) => {
+          if (res.success) {
+            Swal.fire({ title: 'Approved!', text: 'Request approved successfully.', icon: 'success',
+              confirmButtonColor: '#3b82f6', timer: 2000, showConfirmButton: false });
             this.loadRegularizations();
           } else {
-            Swal.fire({ title: 'Error!', text: response.message || 'Failed to approve', icon: 'error', confirmButtonColor: '#ef4444' });
+            Swal.fire({ title: 'Error!', text: res.message || 'Failed to approve.', icon: 'error', confirmButtonColor: '#ef4444' });
           }
         },
         error: (err) => {
-          Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error', confirmButtonColor: '#ef4444' });
+          Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred.', icon: 'error', confirmButtonColor: '#ef4444' });
         }
       });
     }
@@ -555,22 +535,22 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
 
   submitRejection(): void {
     if (!this.selectedRegularization || !this.approvalReason.trim()) return;
-
     this.regularizationService.approveRegularization(this.selectedRegularization.id, {
       isApproved: false,
       rejectionReason: this.approvalReason
     }).subscribe({
-      next: (response) => {
-        if (response.success) {
-          Swal.fire({ title: 'Rejected!', text: 'Request has been rejected.', icon: 'success', confirmButtonColor: '#3b82f6', timer: 2000, showConfirmButton: false });
+      next: (res) => {
+        if (res.success) {
+          Swal.fire({ title: 'Rejected!', text: 'Request has been rejected.', icon: 'success',
+            confirmButtonColor: '#3b82f6', timer: 2000, showConfirmButton: false });
           this.closeApprovalModal();
           this.loadRegularizations();
         } else {
-          Swal.fire({ title: 'Error!', text: response.message || 'Failed to reject', icon: 'error', confirmButtonColor: '#ef4444' });
+          Swal.fire({ title: 'Error!', text: res.message || 'Failed to reject.', icon: 'error', confirmButtonColor: '#ef4444' });
         }
       },
       error: (err) => {
-        Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error', confirmButtonColor: '#ef4444' });
+        Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred.', icon: 'error', confirmButtonColor: '#ef4444' });
       }
     });
   }
@@ -581,100 +561,131 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     this.approvalReason         = '';
   }
 
-  async cancelRegularization(regularization: RegularizationResponseDto): Promise<void> {
+  // ─── Cancel flow ──────────────────────────────────────────────────
+  async cancelRegularization(reg: RegularizationResponseDto): Promise<void> {
     const result = await Swal.fire({
       title: 'Cancel Request?',
-      text: 'Cancel this regularization request?',
-      icon: 'warning',
-      showCancelButton: true,
+      text:  'Cancel this regularization request?',
+      icon:  'warning',
+      showCancelButton:   true,
       confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, cancel it!',
-      cancelButtonText: 'No'
+      cancelButtonColor:  '#6b7280',
+      confirmButtonText:  'Yes, cancel it!',
+      cancelButtonText:   'No'
     });
 
     if (result.isConfirmed) {
-      this.regularizationService.cancelRegularization(regularization.id).subscribe({
-        next: (response) => {
-          if (response.success) {
-            Swal.fire({ title: 'Cancelled!', text: 'Request cancelled.', icon: 'success', confirmButtonColor: '#3b82f6', timer: 2000, showConfirmButton: false });
+      this.regularizationService.cancelRegularization(reg.id).subscribe({
+        next: (res) => {
+          if (res.success) {
+            Swal.fire({ title: 'Cancelled!', text: 'Request cancelled.', icon: 'success',
+              confirmButtonColor: '#3b82f6', timer: 2000, showConfirmButton: false });
             this.loadRegularizations();
           } else {
-            Swal.fire({ title: 'Error!', text: response.message || 'Failed to cancel', icon: 'error', confirmButtonColor: '#ef4444' });
+            Swal.fire({ title: 'Error!', text: res.message || 'Failed to cancel.', icon: 'error', confirmButtonColor: '#ef4444' });
           }
         },
         error: (err) => {
-          Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred', icon: 'error', confirmButtonColor: '#ef4444' });
+          Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred.', icon: 'error', confirmButtonColor: '#ef4444' });
         }
       });
     }
   }
 
-  // ─── Export ───────────────
+  // ─── Delete flow ──────────────────────────────────────────────────
+  /**
+   * Called by renderer onDelete().
+   * Calls DELETE /api/AttendanceRegularization/{id} on the backend.
+   * Backend soft-deletes the record (IsDeleted = true).
+   * Works for ALL statuses — Pending, Approved, Rejected, Cancelled.
+   */
+  async deleteRegularization(reg: RegularizationResponseDto): Promise<void> {
+    const result = await Swal.fire({
+      title: 'Delete Request?',
+      html:  `Permanently delete the regularization request for <strong>${reg.employeeName}</strong>?<br>
+              <small style="color:#6b7280;">This action cannot be undone.</small>`,
+      icon:  'warning',
+      showCancelButton:   true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor:  '#6b7280',
+      confirmButtonText:  'Yes, delete it!',
+      cancelButtonText:   'No'
+    });
+
+    if (!result.isConfirmed) return;
+
+    this.regularizationService.deleteRegularization(reg.id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          Swal.fire({
+            title: 'Deleted!',
+            text:  'Regularization request deleted successfully.',
+            icon:  'success',
+            confirmButtonColor: '#3b82f6',
+            timer: 2000,
+            showConfirmButton: false
+          });
+          this.loadRegularizations();
+        } else {
+          Swal.fire({
+            title: 'Error!',
+            text:  res.message || 'Failed to delete the request.',
+            icon:  'error',
+            confirmButtonColor: '#ef4444'
+          });
+        }
+      },
+      error: (err) => {
+        Swal.fire({
+          title: 'Error!',
+          text:  err.error?.message || 'An error occurred while deleting.',
+          icon:  'error',
+          confirmButtonColor: '#ef4444'
+        });
+      }
+    });
+  }
+
+  // ─── Export ───────────────────────────────────────────────────────
   exportToExcel(): void {
-    if (this.rowData.length === 0) {
+    if (!this.rowData.length) {
       Swal.fire({ title: 'No Data', text: 'No requests to export.', icon: 'info', confirmButtonColor: '#3b82f6' });
       return;
     }
-
     const exportData = this.rowData.map(reg => ({
-      'Employee Code':    reg.employeeCode,
-      'Employee Name':    reg.employeeName,
-      'Date':             reg.attendanceDate  ? new Date(reg.attendanceDate).toLocaleDateString()  : '—',
-      'Type':             reg.regularizationTypeName,
+      'Employee Code':       reg.employeeCode,
+      'Employee Name':       reg.employeeName,
+      'Date':                reg.attendanceDate  ? new Date(reg.attendanceDate).toLocaleDateString()  : '—',
+      'Type':                reg.regularizationTypeName,
       'Requested Check-In':  reg.requestedCheckIn  ? new Date(reg.requestedCheckIn).toLocaleTimeString()  : '—',
       'Requested Check-Out': reg.requestedCheckOut ? new Date(reg.requestedCheckOut).toLocaleTimeString() : '—',
       'Original Check-In':   reg.originalCheckIn   ? new Date(reg.originalCheckIn).toLocaleTimeString()   : '—',
       'Original Check-Out':  reg.originalCheckOut  ? new Date(reg.originalCheckOut).toLocaleTimeString()  : '—',
-      'Reason':           reg.reason,
-      'Status':           reg.statusName,
-      'Approved By':      reg.approvedByName || '—',
-      'Approved At':      reg.approvedAt ? new Date(reg.approvedAt).toLocaleString() : '—',
-      'Rejection Reason': reg.rejectionReason || '—',
-      'Requested At':     new Date(reg.requestedAt).toLocaleString()
+      'Reason':              reg.reason,
+      'Status':              reg.statusName,
+      'Approved By':         reg.approvedByName    || '—',
+      'Approved At':         reg.approvedAt ? new Date(reg.approvedAt).toLocaleString() : '—',
+      'Rejection Reason':    reg.rejectionReason   || '—',
+      'Requested At':        new Date(reg.requestedAt).toLocaleString()
     }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook  = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Regularizations');
+    const ws       = XLSX.utils.json_to_sheet(exportData);
+    const wb       = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Regularizations');
     const fileName = `Regularizations_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
-
-    Swal.fire({ title: 'Exported!', text: `File "${fileName}" downloaded.`, icon: 'success', confirmButtonColor: '#3b82f6', timer: 3000, showConfirmButton: false });
+    XLSX.writeFile(wb, fileName);
+    Swal.fire({ title: 'Exported!', text: `"${fileName}" downloaded.`, icon: 'success',
+      confirmButtonColor: '#3b82f6', timer: 3000, showConfirmButton: false });
   }
 
-  // ─── Helpers ──────────────
-  getTypeOptions(): { value: RegularizationType | null; label: string }[] {
-    return [
-      { value: null, label: 'All Types' },
-      { value: RegularizationType.MissedPunch,           label: 'Missed Punch' },
-      { value: RegularizationType.LateEntry,             label: 'Late Entry' },
-      { value: RegularizationType.EarlyExit,             label: 'Early Exit' },
-      { value: RegularizationType.FullDayRegularization, label: 'Full Day Regularization' }
-    ];
-  }
-
-  getStatusOptions(): { value: RegularizationStatus | null; label: string }[] {
-    return [
-      { value: null,                        label: 'All Statuses' },
-      { value: RegularizationStatus.Pending,   label: 'Pending' },
-      { value: RegularizationStatus.Approved,  label: 'Approved' },
-      { value: RegularizationStatus.Rejected,  label: 'Rejected' },
-      { value: RegularizationStatus.Cancelled, label: 'Cancelled' }
-    ];
-  }
-
-  // ─── View modal date helpers ─── ✅ NEW
+  // ─── View-modal helpers ───────────────────────────────────────────
   formatViewTime(date: any): string {
     if (!date) return '—';
     return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   }
-
   formatViewDate(date: any): string {
     if (!date) return '—';
     return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   }
-
   formatViewDateTime(date: any): string {
     if (!date) return '—';
     return new Date(date).toLocaleString('en-US', {

@@ -46,7 +46,6 @@ export class AuthService {
         if (!this.isBrowser) return
 
         try {
-            // Clear all auth-related storage
             sessionStorage.removeItem("UserId")
             sessionStorage.removeItem("EmployeeId") 
             sessionStorage.removeItem("SiteName")
@@ -60,7 +59,6 @@ export class AuthService {
             localStorage.removeItem("accessToken")
             localStorage.removeItem("refreshToken")
         } catch (_) {
-            // ignore storage errors
         }
 
         const queryParams: any = {}

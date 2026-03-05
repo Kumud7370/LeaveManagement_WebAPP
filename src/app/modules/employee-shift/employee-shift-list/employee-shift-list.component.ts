@@ -87,22 +87,22 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
 
   readonly gridTheme = shiftGridTheme;
 
-  // ─── Grid state ───────────
+  //  Grid state 
   rowData: EmployeeShift[] = [];
   gridApi!: GridApi;
   searchTerm: string = '';
 
-  // ─── Modal state ───────────
+  //  Modal state 
   showModal: boolean = false;
   modalMode: 'create' | 'edit' | 'view' = 'create';
   selectedShift: EmployeeShift | null = null;
 
-  // ─── Reject dialog ─────────
+  //  Reject dialog 
   showRejectDialog: boolean = false;
   rejectTarget: EmployeeShift | null = null;
   rejectReason: string = '';
 
-  // ─── Pagination ─────────
+  //  Pagination 
   currentPage: number = 1;
   pageSize: number = 20;
   totalItems: number = 0;
@@ -113,7 +113,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
 
   ShiftChangeStatus = ShiftChangeStatus;
 
-  // ─── Stats ─────────────
+  //  Stats 
   stats: Record<string, number> = {};
   statsLoaded: boolean = false;
 
@@ -125,7 +125,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
 
   context = { componentParent: this };
 
-  // ─── Grid config ──────────────
+  //  Grid config 
   defaultColDef: ColDef = {
     sortable: true,
     filter: true,
@@ -273,7 +273,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ─── Grid ────────────
+  //  Grid 
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
@@ -300,7 +300,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
     return String(text).replace(regex, '<mark class="search-highlight">$1</mark>');
   }
 
-  // ─── Data Loading ──────
+  //  Data Loading 
 
   loadStats(): void {
     this.svc.getStatisticsByStatus()
@@ -355,7 +355,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ─── Pagination ─────────
+  //  Pagination 
 
   onPageSizeChanged(newPageSize: number): void {
     this.pageSize    = newPageSize;
@@ -373,7 +373,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
   nextPage(): void     { if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1); }
   previousPage(): void { if (this.currentPage > 1) this.goToPage(this.currentPage - 1); }
 
-  // ─── Search ──────────
+  //  Search 
 
   onSearchChange(): void {
     clearTimeout(this.searchDebounceTimer);
@@ -412,7 +412,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
     this.activeFilters = { hasActiveFilters: filters.length > 0, filters, count: filters.length };
   }
 
-  // ─── Modal ────────────
+  //  Modal 
 
   openCreateModal(): void {
     this.modalMode    = 'create';
@@ -442,7 +442,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
   onModalClose(): void   { this.showModal = false; this.selectedShift = null; }
   onModalSuccess(): void { this.showModal = false; this.selectedShift = null; this.loadShifts(); this.loadStats(); }
 
-  // ─── Toggle (Approve) ──────
+  //  Toggle (Approve)
   toggleStatus(shift: EmployeeShift): void {
     if (!this.isPending(shift)) {
       Swal.fire({ icon: 'info', title: 'Not Applicable', text: `Assignment is already ${shift.statusName}. Only Pending can be approved.`, confirmButtonColor: '#3b82f6' });
@@ -550,13 +550,13 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ─── Export ───────────
+  // ─── Export 
   exportData(): void {
     exportToCsv(this.gridApi, 'employee_shifts');
     Swal.fire({ icon: 'success', title: 'Exported!', text: 'Shift data exported as CSV.', timer: 2000, showConfirmButton: false });
   }
 
-  // ─── Helpers ──────────
+  // ─── Helpers 
   private resolveStatus(status: any): ShiftChangeStatus {
     if (typeof status === 'string') {
       const map: Record<string, ShiftChangeStatus> = {

@@ -1,7 +1,3 @@
-// ============================================================
-// FILE: src/app/modules/employee-shift/employee-shift-form/employee-shift-form.component.ts
-// ============================================================
-
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
@@ -99,7 +95,6 @@ export class EmployeeShiftFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: r => { if (r.success) this.activeShifts = r.data; } });
 
-    // getActiveEmployees must exist on ApiClientService — see note below
     this.api.getActiveEmployees()
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (r: any) => { if (r.success) this.employees = r.data; } });
@@ -230,7 +225,6 @@ export class EmployeeShiftFormComponent implements OnInit, OnDestroy {
       (this.form.get('effectiveTo')?.dirty || this.form.get('effectiveTo')?.touched));
   }
 
-  // Normalize: backend may send "Approved" (string) or 2 (number)
   resolveStatus(status: any): ShiftChangeStatus {
     if (typeof status === 'string') {
       const map: Record<string, ShiftChangeStatus> = {
