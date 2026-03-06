@@ -64,10 +64,8 @@ export class InvitationListComponent implements OnInit, OnDestroy {
   readonly gridTheme = invitationGridTheme;
   context = { componentParent: this };
 
-  // Raw full list from API (never mutated)
   private allInvitations: InvitationResponseDto[] = [];
 
-  // Current page slice shown in the grid
   invitations: InvitationResponseDto[] = [];
 
   gridApi!: GridApi;
@@ -151,7 +149,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── Pagination Getters ──────────────────────────────────────────────────
+  // ─── Pagination Getters 
 
   get currentPage(): number  { return this.paginationManager.pageNumber; }
   get pageSize(): number     { return this.paginationManager.pageSize; }
@@ -180,7 +178,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
     return range;
   }
 
-  // ─── Pagination Actions ──────────────────────────────────────────────────
+  // ─── Pagination Actions 
 
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages) return;
@@ -207,7 +205,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── Data Loading ────────────────────────────────────────────────────────
+  // ─── Data Loading 
 
   loadInvitations(): void {
     this.loading = true;
@@ -284,7 +282,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
     this.applyPagination();
   }
 
-  // ─── Column Definitions ──────────────────────────────────────────────────
+  // ─── Column Definitions 
 
   initializeColumnDefs(): void {
     this.columnDefs = [
@@ -371,7 +369,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
     ];
   }
 
-  // ─── Modals ──────────────────────────────────────────────────────────────
+  // ─── Modals 
 
   openAddModal(): void {
     this.formData = { email: '', role: 'Admin', notes: undefined };
@@ -390,7 +388,7 @@ export class InvitationListComponent implements OnInit, OnDestroy {
   }
   closeEditModal(): void { this.showEditModal = false; this.error = null; }
 
-  // ─── CRUD ────────────────────────────────────────────────────────────────
+  // ─── CRUD 
 
   handleSendInvitation(): void {
     if (!this.formData.email || !this.formData.role) {
