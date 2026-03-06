@@ -114,3 +114,19 @@ export interface PagedResultDto<T> {
   pageSize: number;
   totalPages: number;
 }
+export interface CollectiveLeaveBalanceDto {
+  leaveTypeId:     string;          
+  employeeIds:     string[];         
+  year:            number;
+  totalAllocated?: number;          
+  carriedForward?: number;           
+  skipExisting:    boolean;          
+}
+
+export interface CollectiveAssignmentResultDto {
+  succeeded:          number;
+  skipped:            number;
+  failed:             number;
+  failedEmployeeIds:  string[];
+  skippedEmployeeIds: string[];
+}

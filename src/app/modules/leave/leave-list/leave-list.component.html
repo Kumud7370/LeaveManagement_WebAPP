@@ -32,77 +32,70 @@
   </div>
   <ng-template #sk><span class="ll-skeleton"></span></ng-template>
 
-  <!-- ── ONE white card (toolbar + filter + grid + pagination all inside) ── -->
+  <!-- ── Toolbar (outside card, matches Holiday) ───────────────────── -->
+  <div class="ll-toolbar">
+    <input type="text" class="ll-search" placeholder="Search leaves..." [(ngModel)]="searchTerm" (input)="onSearch()" />
+
+    <div class="ll-toolbar-btns">
+
+      <button class="ll-btn ll-btn-clear" (click)="clearFilters()">Clear</button>
+      <button class="ll-btn ll-btn-refresh" (click)="loadLeaves()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+      <button class="ll-btn ll-btn-export" (click)="exportToExcel()">
+        <i class="bi bi-download"></i> Export
+      </button>
+      <div class="ll-toolbar-divider"></div>
+      <button class="ll-btn ll-btn-add" (click)="createLeave()">
+        <i class="bi bi-plus-lg"></i> Apply Leave
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Filter Panel (outside card, below toolbar) ────────────────── -->
+  <div class="ll-filter-panel" [class.open]="showFilters">
+    <div class="ll-filter-inner">
+      <div class="ll-fg">
+        <label>Leave Type</label>
+        <select [(ngModel)]="filters.leaveTypeId" (change)="onFilterChange()">
+          <option [ngValue]="undefined">All Types</option>
+          <option *ngFor="let t of leaveTypes" [value]="t.id">{{ t.name }}</option>
+        </select>
+      </div>
+      <div class="ll-fg">
+        <label>Status</label>
+        <select [(ngModel)]="filters.leaveStatus" (change)="onFilterChange()">
+          <option [ngValue]="null">All Statuses</option>
+          <option [ngValue]="0">Pending</option>
+          <option [ngValue]="1">Approved</option>
+          <option [ngValue]="2">Rejected</option>
+          <option [ngValue]="3">Cancelled</option>
+        </select>
+      </div>
+      <div class="ll-fg">
+        <label>Start Date From</label>
+        <input type="date" [(ngModel)]="filters.startDateFrom" (change)="onFilterChange()" class="ll-fg-input" />
+      </div>
+      <div class="ll-fg">
+        <label>Start Date To</label>
+        <input type="date" [(ngModel)]="filters.startDateTo" (change)="onFilterChange()" class="ll-fg-input" />
+      </div>
+      <div class="ll-fg">
+        <label>Applied From</label>
+        <input type="date" [(ngModel)]="filters.appliedDateFrom" (change)="onFilterChange()" class="ll-fg-input" />
+      </div>
+      <div class="ll-fg ll-fg-check">
+        <label>Emergency</label>
+        <label class="ll-check-row">
+          <input type="checkbox" [(ngModel)]="filters.isEmergencyLeave" (change)="onFilterChange()" />
+          <span>Emergency Only</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Grid Card ─────────────────────────────────────────────────── -->
   <div class="ll-card">
-
-    <!-- Toolbar -->
-    <div class="ll-toolbar">
-      <input
-        type="text"
-        class="ll-search"
-        placeholder="Search leaves..."
-        [(ngModel)]="searchTerm"
-        (input)="onSearch()" />
-
-      <div class="ll-toolbar-btns">
-        <button class="ll-btn ll-btn-filter" (click)="showFilters = !showFilters">
-          <i class="bi bi-funnel"></i> Filters
-          <span class="ll-filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
-        </button>
-        <button class="ll-btn ll-btn-clear" (click)="clearFilters()">Clear</button>
-        <button class="ll-btn ll-btn-refresh" (click)="loadLeaves()">
-          <i class="bi bi-arrow-clockwise"></i> Refresh
-        </button>
-        <button class="ll-btn ll-btn-export" (click)="exportToExcel()">
-          <i class="bi bi-download"></i> Export
-        </button>
-        <button class="ll-btn ll-btn-add" (click)="createLeave()">
-          <i class="bi bi-plus-circle"></i> Apply Leave
-        </button>
-      </div>
-    </div>
-
-    <!-- Filter Panel -->
-    <div class="ll-filter-panel" [class.open]="showFilters">
-      <div class="ll-filter-inner">
-        <div class="ll-fg">
-          <label>Leave Type</label>
-          <select [(ngModel)]="filters.leaveTypeId" (change)="onFilterChange()">
-            <option [ngValue]="undefined">All Types</option>
-            <option *ngFor="let t of leaveTypes" [value]="t.id">{{ t.name }}</option>
-          </select>
-        </div>
-        <div class="ll-fg">
-          <label>Status</label>
-          <select [(ngModel)]="filters.leaveStatus" (change)="onFilterChange()">
-            <option [ngValue]="null">All Statuses</option>
-            <option [ngValue]="0">Pending</option>
-            <option [ngValue]="1">Approved</option>
-            <option [ngValue]="2">Rejected</option>
-            <option [ngValue]="3">Cancelled</option>
-          </select>
-        </div>
-        <div class="ll-fg">
-          <label>Start Date From</label>
-          <input type="date" [(ngModel)]="filters.startDateFrom" (change)="onFilterChange()" class="ll-fg-input" />
-        </div>
-        <div class="ll-fg">
-          <label>Start Date To</label>
-          <input type="date" [(ngModel)]="filters.startDateTo" (change)="onFilterChange()" class="ll-fg-input" />
-        </div>
-        <div class="ll-fg">
-          <label>Applied From</label>
-          <input type="date" [(ngModel)]="filters.appliedDateFrom" (change)="onFilterChange()" class="ll-fg-input" />
-        </div>
-        <div class="ll-fg ll-fg-check">
-          <label>Emergency</label>
-          <label class="ll-check-row">
-            <input type="checkbox" [(ngModel)]="filters.isEmergencyLeave" (change)="onFilterChange()" />
-            <span>Emergency Only</span>
-          </label>
-        </div>
-      </div>
-    </div>
 
     <!-- Loading -->
     <div *ngIf="loading" class="ll-loading">
@@ -127,45 +120,39 @@
     </div>
 
     <!-- AG Grid -->
-    <ag-grid-angular
-      *ngIf="!loading && !error && leaves.length > 0"
-      style="width: 100%;"
-      [theme]="gridTheme"
-      [rowData]="leaves"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      (gridReady)="onGridReady($event)"
-      [rowHeight]="52"
-      [headerHeight]="44"
-      [floatingFiltersHeight]="36"
-      [domLayout]="'autoHeight'"
-      [context]="context"
+    <ag-grid-angular *ngIf="!loading && !error && leaves.length > 0" style="width: 100%;" [theme]="gridTheme"
+      [rowData]="leaves" [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" (gridReady)="onGridReady($event)"
+      [rowHeight]="52" [headerHeight]="44" [floatingFiltersHeight]="36" [domLayout]="'autoHeight'" [context]="context"
       [suppressPaginationPanel]="true">
     </ag-grid-angular>
 
     <!-- Pagination -->
     <div class="ll-pagination" *ngIf="!loading && leaves.length > 0">
-      <div class="ll-ps-wrap">
-        <label>Show:</label>
-        <select class="ll-ps-select" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
-          <option [value]="10">10</option>
-          <option [value]="25">25</option>
-          <option [value]="50">50</option>
-        </select>
-      </div>
-      <span class="ll-pag-info">
-        {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
-      </span>
-      <span class="ll-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
-      <div class="ll-pag-btns">
-        <button class="ll-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">«</button>
-        <button class="ll-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">‹</button>
-        <button *ngFor="let page of pages" class="ll-pgbtn"
-          [class.active]="page === currentPage" (click)="onPageChange(page)">
-          {{ page }}
-        </button>
-        <button class="ll-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">›</button>
-        <button class="ll-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">»</button>
+      <div class="ll-pagination-inner">
+        <div class="ll-ps-wrap">
+          <label>Show:</label>
+          <select class="ll-ps-select" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+          </select>
+        </div>
+        <span class="ll-pag-info">
+          {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount
+          }}
+        </span>
+        <span class="ll-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <div class="ll-pag-btns">
+          <button class="ll-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">«</button>
+          <button class="ll-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">‹</button>
+          <button *ngFor="let page of pages" class="ll-pgbtn" [class.active]="page === currentPage"
+            (click)="onPageChange(page)">
+            {{ page }}
+          </button>
+          <button class="ll-pgbtn" [disabled]="currentPage === totalPages"
+            (click)="onPageChange(currentPage + 1)">›</button>
+          <button class="ll-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">»</button>
+        </div>
       </div>
     </div>
 
@@ -187,12 +174,8 @@
       </button>
     </div>
     <div class="ll-modal-body">
-      <app-leave-form
-        [isModal]="true"
-        [leaveId]="selectedLeaveId"
-        [isEditMode]="formMode === 'edit'"
-        (formCancelled)="closeFormModal()"
-        (formSubmitted)="onFormSuccess()">
+      <app-leave-form [isModal]="true" [leaveId]="selectedLeaveId" [isEditMode]="formMode === 'edit'"
+        (formCancelled)="closeFormModal()" (formSubmitted)="onFormSuccess()">
       </app-leave-form>
     </div>
   </div>

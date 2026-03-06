@@ -8,36 +8,38 @@ import {
 } from 'ag-grid-community';
 import Swal from 'sweetalert2';
 import { LeaveBalanceService } from '../../../core/services/api/leave-balance.api';
-import { LeaveTypeService }    from '../../../core/services/api/leave-type.api';
+import { LeaveTypeService } from '../../../core/services/api/leave-type.api';
 import { LeaveBalance, LeaveBalanceFilterDto, AdjustLeaveBalanceDto } from '../../../core/Models/leave-balance.model';
-import { LeaveType }           from '../../../core/Models/leave-type.model';
+import { LeaveType } from '../../../core/Models/leave-type.model';
 import { LeaveBalanceActionCellRendererComponent } from '../leave-balance-action-cell-renderer.component';
 import { LeaveBalanceFormComponent } from '../leave-balance-form/leave-balance-form.component';
+import { CollectiveLeaveBalanceFormComponent } from '../collective-leave-balance/collective-leave-balance-form.component';
+
 import * as XLSX from 'xlsx';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const balanceGridTheme = themeQuartz.withParams({
-  backgroundColor:                '#ffffff',
-  foregroundColor:                '#374151',
-  borderColor:                    '#e5e7eb',
-  headerBackgroundColor:          '#ffffff',
-  headerTextColor:                '#374151',
-  oddRowBackgroundColor:          '#ffffff',
-  rowHoverColor:                  '#f8faff',
-  selectedRowBackgroundColor:     '#dbeafe',
-  fontFamily:                     '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-  fontSize:                       13,
-  columnBorder:                   true,
-  headerColumnBorder:             true,
-  headerColumnBorderHeight:       '50%',
-  headerColumnResizeHandleColor:  '#d1d5db',
+  backgroundColor: '#ffffff',
+  foregroundColor: '#374151',
+  borderColor: '#e5e7eb',
+  headerBackgroundColor: '#ffffff',
+  headerTextColor: '#374151',
+  oddRowBackgroundColor: '#ffffff',
+  rowHoverColor: '#f8faff',
+  selectedRowBackgroundColor: '#dbeafe',
+  fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontSize: 13,
+  columnBorder: true,
+  headerColumnBorder: true,
+  headerColumnBorderHeight: '50%',
+  headerColumnResizeHandleColor: '#d1d5db',
   headerColumnResizeHandleHeight: '50%',
-  headerColumnResizeHandleWidth:  2,
-  cellHorizontalPaddingScale:     0.75,
-  headerFontWeight:               500,
-  headerFontSize:                 13,
-  rowBorder:                      true,
+  headerColumnResizeHandleWidth: 2,
+  cellHorizontalPaddingScale: 0.75,
+  headerFontWeight: 500,
+  headerFontSize: 13,
+  rowBorder: true,
 });
 
 @Component({
@@ -45,36 +47,38 @@ const balanceGridTheme = themeQuartz.withParams({
   standalone: true,
   templateUrl: './leave-balance-list.component.html',
   styleUrls: ['./leave-balance-list.component.scss'],
-  imports: [CommonModule, FormsModule, AgGridAngular, LeaveBalanceFormComponent]
+  imports: [CommonModule, FormsModule, AgGridAngular, LeaveBalanceFormComponent, CollectiveLeaveBalanceFormComponent]
 })
 export class LeaveBalanceListComponent implements OnInit, OnDestroy {
 
   readonly gridTheme = balanceGridTheme;
 
-  balances:   LeaveBalance[] = [];
-  leaveTypes: LeaveType[]    = [];
-  gridApi!:   GridApi;
+  balances: LeaveBalance[] = [];
+  leaveTypes: LeaveType[] = [];
+  gridApi!: GridApi;
   context = { componentParent: this };
 
   loading = false;
   error: string | null = null;
 
-  showFormModal      = false;
+  showFormModal = false;
   formMode: 'create' | 'edit' = 'create';
   selectedBalanceId: string | null = null;
 
-  currentPage  = 1;
-  pageSize     = 10;
-  totalPages   = 0;
-  totalCount   = 0;
-  Math         = Math;
-  showFilters  = false;
+  showCollectiveModal = false;
+
+  currentPage = 1;
+  pageSize = 10;
+  totalPages = 0;
+  totalCount = 0;
+  Math = Math;
+  showFilters = false;
   selectedYear = new Date().getFullYear();
   yearOptions: number[] = [];
 
-  totalEmployees  = 0;
-  totalAvailable  = 0;
-  avgUtilization  = 0;
+  totalEmployees = 0;
+  totalAvailable = 0;
+  avgUtilization = 0;
   lowBalanceCount = 0;
 
   filters: LeaveBalanceFilterDto = {
@@ -181,7 +185,7 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
       width: 160, minWidth: 140,
       cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
-        const pct   = Math.round(p.value ?? 0);
+        const pct = Math.round(p.value ?? 0);
         const color = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#10b981';
         return `<div style="display:flex;align-items:center;gap:8px;width:100%;">
           <div style="flex:1;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;">
@@ -253,15 +257,15 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
     this.loading = true; this.error = null;
     const filter: LeaveBalanceFilterDto = {
       ...this.filters,
-      year:       this.selectedYear || undefined,
+      year: this.selectedYear || undefined,
       pageNumber: this.currentPage,
-      pageSize:   this.pageSize
+      pageSize: this.pageSize
     };
     this.leaveBalanceService.getFilteredLeaveBalances(filter).subscribe({
       next: (r) => {
         this.loading = false;
         if (r.success) {
-          this.balances   = r.data.items;
+          this.balances = r.data.items;
           this.totalPages = r.data.totalPages;
           this.totalCount = r.data.totalCount;
           this.computeStats();
@@ -276,27 +280,27 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
       },
       error: (e) => {
         this.loading = false;
-        this.error   = e.error?.message || 'Error loading balances';
+        this.error = e.error?.message || 'Error loading balances';
         this.cdr.detectChanges();
       }
     });
   }
 
   private computeStats(): void {
-    this.totalEmployees  = new Set(this.balances.map(b => b.employeeId)).size;
-    this.totalAvailable  = this.balances.reduce((s, b) => s + (b.available            ?? 0), 0);
+    this.totalEmployees = new Set(this.balances.map(b => b.employeeId)).size;
+    this.totalAvailable = this.balances.reduce((s, b) => s + (b.available ?? 0), 0);
     this.lowBalanceCount = this.balances.filter(b => b.isLowBalance).length;
-    const totalUtil      = this.balances.reduce((s, b) => s + (b.utilizationPercentage ?? 0), 0);
-    this.avgUtilization  = this.balances.length ? Math.round(totalUtil / this.balances.length) : 0;
+    const totalUtil = this.balances.reduce((s, b) => s + (b.utilizationPercentage ?? 0), 0);
+    this.avgUtilization = this.balances.length ? Math.round(totalUtil / this.balances.length) : 0;
   }
 
-  onYearChange():   void { this.currentPage = 1; this.loadBalances(); }
+  onYearChange(): void { this.currentPage = 1; this.loadBalances(); }
   onFilterChange(): void { this.currentPage = 1; this.loadBalances(); }
 
   clearFilters(): void {
-    this.filters      = { pageNumber: 1, pageSize: 10, sortBy: 'year', sortDescending: true };
+    this.filters = { pageNumber: 1, pageSize: 10, sortBy: 'year', sortDescending: true };
     this.selectedYear = new Date().getFullYear();
-    this.currentPage  = 1;
+    this.currentPage = 1;
     this.loadBalances();
   }
 
@@ -321,16 +325,19 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
 
   get pages(): number[] {
     const max = 5;
-    let s     = Math.max(1, this.currentPage - Math.floor(max / 2));
-    const e   = Math.min(this.totalPages, s + max - 1);
+    let s = Math.max(1, this.currentPage - Math.floor(max / 2));
+    const e = Math.min(this.totalPages, s + max - 1);
     if (e - s < max - 1) s = Math.max(1, e - max + 1);
     return Array.from({ length: e - s + 1 }, (_, i) => s + i);
   }
 
-  createBalance():  void { this.formMode = 'create'; this.selectedBalanceId = null; this.showFormModal = true; }
+  createBalance(): void { this.formMode = 'create'; this.selectedBalanceId = null; this.showFormModal = true; }
   editBalance(b: LeaveBalance): void { this.formMode = 'edit'; this.selectedBalanceId = b.id; this.showFormModal = true; }
   closeFormModal(): void { this.showFormModal = false; this.selectedBalanceId = null; }
-  onFormSuccess():  void { this.closeFormModal(); this.loadBalances(); }
+  onFormSuccess(): void { this.closeFormModal(); this.loadBalances(); }
+  openCollectiveModal(): void { this.showCollectiveModal = true; }
+  closeCollectiveModal(): void { this.showCollectiveModal = false; }
+  onCollectiveSuccess(): void { this.closeCollectiveModal(); this.loadBalances(); }
 
   async adjustBalance(balance: LeaveBalance): Promise<void> {
     const { value } = await Swal.fire({
@@ -348,7 +355,7 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
         const amount = parseFloat((document.getElementById('sw-amount') as HTMLInputElement).value);
         const reason = (document.getElementById('sw-reason') as HTMLTextAreaElement).value.trim();
         if (isNaN(amount) || amount === 0) { Swal.showValidationMessage('Enter a non-zero amount'); return false; }
-        if (!reason)                       { Swal.showValidationMessage('Reason is required');       return false; }
+        if (!reason) { Swal.showValidationMessage('Reason is required'); return false; }
         return { amount, reason };
       }
     });
@@ -356,7 +363,7 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
     const dto: AdjustLeaveBalanceDto = {
       adjustmentAmount: value.amount,
       adjustmentReason: value.reason,
-      adjustmentType:   'Manual'
+      adjustmentType: 'Manual'
     };
     this.leaveBalanceService.adjustLeaveBalance(balance.id, dto).subscribe({
       next: (r) => {
@@ -432,17 +439,17 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
     if (!this.balances.length) { Swal.fire('No Data', 'Nothing to export.', 'info'); return; }
     Swal.fire({ title: 'Exporting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     const data = this.balances.map(b => ({
-      'Employee Code':   b.employeeCode || '',
-      'Employee Name':   b.employeeName || '',
-      'Leave Type':      b.leaveTypeName || '',
-      'Year':            b.year,
+      'Employee Code': b.employeeCode || '',
+      'Employee Name': b.employeeName || '',
+      'Leave Type': b.leaveTypeName || '',
+      'Year': b.year,
       'Total Allocated': b.totalAllocated,
       'Carried Forward': b.carriedForward,
-      'Consumed':        b.consumed,
-      'Available':       b.available,
-      'Utilization %':   Math.round(b.utilizationPercentage),
-      'Low Balance':     b.isLowBalance ? 'Yes' : 'No',
-      'Last Updated':    new Date(b.lastUpdated).toLocaleDateString()
+      'Consumed': b.consumed,
+      'Available': b.available,
+      'Utilization %': Math.round(b.utilizationPercentage),
+      'Low Balance': b.isLowBalance ? 'Yes' : 'No',
+      'Last Updated': new Date(b.lastUpdated).toLocaleDateString()
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     ws['!cols'] = [12, 22, 16, 8, 14, 14, 12, 12, 14, 12, 14].map(w => ({ wch: w }));

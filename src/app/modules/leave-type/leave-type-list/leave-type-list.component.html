@@ -23,72 +23,32 @@
   </div>
   <ng-template #sk><span class="lt-skeleton"></span></ng-template>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       ONE white card — toolbar on top, grid below, same border
-       Exactly like reference Image 2
-       ═══════════════════════════════════════════════════════════ -->
+  <!-- ── Toolbar (outside card, matches Holiday) ───────────────────── -->
+  <div class="lt-toolbar">
+    <input
+      type="text"
+      class="lt-search"
+      placeholder="Search by name or code..."
+      [(ngModel)]="searchTerm"
+      (input)="onSearch()" />
+
+    <div class="lt-toolbar-btns">
+      <button class="lt-btn lt-btn-clear" (click)="clearFilters()">Clear</button>
+      <button class="lt-btn lt-btn-refresh" (click)="loadLeaveTypes()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+      <button class="lt-btn lt-btn-export" (click)="exportToExcel()">
+        <i class="bi bi-download"></i> Export
+      </button>
+      <div class="lt-toolbar-divider"></div>
+      <button class="lt-btn lt-btn-add" (click)="createLeaveType()">
+        <i class="bi bi-plus-lg"></i> Add Leave Type
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Grid Card ─────────────────────────────────────────────────── -->
   <div class="lt-card">
-
-    <!-- Toolbar row: inside card, white bg, border-bottom separates from grid -->
-    <div class="lt-toolbar">
-      <input
-        type="text"
-        class="lt-search"
-        placeholder="Search by name or code..."
-        [(ngModel)]="searchTerm"
-        (input)="onSearch()" />
-
-      <div class="lt-toolbar-btns">
-        <button class="lt-btn lt-btn-filter" (click)="showFilters = !showFilters">
-          <i class="bi bi-funnel"></i> Filters
-          <span class="lt-filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
-        </button>
-        <button class="lt-btn lt-btn-clear" (click)="clearFilters()">Clear</button>
-        <button class="lt-btn lt-btn-refresh" (click)="loadLeaveTypes()">Refresh</button>
-        <button class="lt-btn lt-btn-export" (click)="exportToExcel()">
-          <i class="bi bi-download"></i> Export
-        </button>
-        <button class="lt-btn lt-btn-add" (click)="createLeaveType()">Add Leave Type</button>
-      </div>
-    </div>
-
-    <!-- Filter panel slides open inside card -->
-    <div class="lt-filter-panel" [class.open]="showFilters">
-      <div class="lt-filter-inner">
-        <div class="lt-fg">
-          <label>Status</label>
-          <select [(ngModel)]="filters.isActive" (change)="onFilterChange()">
-            <option [ngValue]="null">All</option>
-            <option [ngValue]="true">Active</option>
-            <option [ngValue]="false">Inactive</option>
-          </select>
-        </div>
-        <div class="lt-fg">
-          <label>Requires Approval</label>
-          <select [(ngModel)]="filters.requiresApproval" (change)="onFilterChange()">
-            <option [ngValue]="null">All</option>
-            <option [ngValue]="true">Yes</option>
-            <option [ngValue]="false">No</option>
-          </select>
-        </div>
-        <div class="lt-fg">
-          <label>Requires Document</label>
-          <select [(ngModel)]="filters.requiresDocument" (change)="onFilterChange()">
-            <option [ngValue]="null">All</option>
-            <option [ngValue]="true">Yes</option>
-            <option [ngValue]="false">No</option>
-          </select>
-        </div>
-        <div class="lt-fg">
-          <label>Carry Forward</label>
-          <select [(ngModel)]="filters.isCarryForward" (change)="onFilterChange()">
-            <option [ngValue]="null">All</option>
-            <option [ngValue]="true">Yes</option>
-            <option [ngValue]="false">No</option>
-          </select>
-        </div>
-      </div>
-    </div>
 
     <!-- Grid -->
     <div *ngIf="loading" class="lt-loading">
@@ -105,9 +65,10 @@
     <div *ngIf="!loading && !error && leaveTypes.length === 0" class="lt-empty">
       <i class="bi bi-calendar2-x"></i>
       <span>No leave types found.</span>
-      <button class="lt-btn lt-btn-add" (click)="createLeaveType()"><i class="bi bi-plus-circle"></i>Add Leave Type</button>
+      <button class="lt-btn lt-btn-add" (click)="createLeaveType()">
+        <i class="bi bi-plus-circle"></i> Add Leave Type
+      </button>
     </div>
-
 
     <ag-grid-angular
       *ngIf="!loading && !error && leaveTypes.length > 0"
@@ -127,19 +88,21 @@
 
     <!-- Pagination inside card -->
     <div class="lt-pagination" *ngIf="!loading && leaveTypes.length > 0">
-      <div class="lt-ps-wrap">
-        <label>Show:</label>
-        <select class="lt-ps-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
-          <option *ngFor="let o of pageSizeOptions" [value]="o">{{ o }}</option>
-        </select>
-      </div>
-      <span class="lt-pag-info">{{ showingFrom }} to {{ showingTo }} of {{ totalCount }}</span>
-      <span class="lt-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
-      <div class="lt-pag-btns">
-        <button class="lt-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(1)">«</button>
-        <button class="lt-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(currentPage - 1)">‹</button>
-        <button class="lt-pgbtn" [disabled]="!hasNextPage" (click)="onPageChange(currentPage + 1)">›</button>
-        <button class="lt-pgbtn" [disabled]="!hasNextPage" (click)="onPageChange(totalPages)">»</button>
+      <div class="lt-pagination-inner">
+        <div class="lt-ps-wrap">
+          <label>Show:</label>
+          <select class="lt-ps-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
+            <option *ngFor="let o of pageSizeOptions" [value]="o">{{ o }}</option>
+          </select>
+        </div>
+        <span class="lt-pag-info">{{ showingFrom }} to {{ showingTo }} of {{ totalCount }}</span>
+        <span class="lt-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <div class="lt-pag-btns">
+          <button class="lt-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(1)">«</button>
+          <button class="lt-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(currentPage - 1)">‹</button>
+          <button class="lt-pgbtn" [disabled]="!hasNextPage" (click)="onPageChange(currentPage + 1)">›</button>
+          <button class="lt-pgbtn" [disabled]="!hasNextPage" (click)="onPageChange(totalPages)">»</button>
+        </div>
       </div>
     </div>
 

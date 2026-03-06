@@ -10,32 +10,38 @@ import { LeaveBalance } from '../../core/Models/leave-balance.model';
   imports: [CommonModule],
   template: `
     <div class="action-buttons">
-      <button class="btn-action edit"   (click)="onEdit()"      title="Edit Balance">
+      <button class="btn-icon btn-edit"   (click)="onEdit()"        title="Edit Balance">
         <i class="bi bi-pencil"></i>
       </button>
-      <button class="btn-action adjust" (click)="onAdjust()"    title="Adjust Days">
+      <button class="btn-icon btn-adjust" (click)="onAdjust()"      title="Adjust Days">
         <i class="bi bi-sliders"></i>
       </button>
-      <button class="btn-action recalc" (click)="onRecalculate()" title="Recalculate">
+      <button class="btn-icon btn-recalc" (click)="onRecalculate()" title="Recalculate">
         <i class="bi bi-arrow-repeat"></i>
       </button>
-      <button class="btn-action delete" (click)="onDelete()"    title="Delete">
+      <button class="btn-icon btn-delete" (click)="onDelete()"      title="Delete">
         <i class="bi bi-trash"></i>
       </button>
     </div>
   `,
   styles: [`
-    .action-buttons { display: flex; align-items: center; justify-content: center; gap: 0.35rem; height: 100%; }
-    .btn-action {
-      width: 2rem; height: 2rem; border: none; border-radius: 0.375rem;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all .18s; font-size: 0.8rem;
+    .action-buttons {
+      display: flex; align-items: center; justify-content: flex-start;
+      gap: 4px; height: 100%; padding: 0 4px;
     }
-    .btn-action.edit    { background: #eff6ff; color: #3b82f6; }
-    .btn-action.adjust  { background: #f0fdf4; color: #16a34a; }
-    .btn-action.recalc  { background: #f0f9ff; color: #0284c7; }
-    .btn-action.delete  { background: #fef2f2; color: #ef4444; }
-    .btn-action:hover   { filter: brightness(0.92); transform: scale(1.08); }
+    .btn-icon {
+      width: 28px; height: 28px; border: none; background: transparent;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 15px; transition: background 0.15s; padding: 0; border-radius: 4px;
+    }
+    .btn-edit   { color: #3b82f6; }
+    .btn-edit:hover   { background: #eff6ff; }
+    .btn-adjust { color: #10b981; }
+    .btn-adjust:hover { background: #ecfdf5; }
+    .btn-recalc { color: #0284c7; }
+    .btn-recalc:hover { background: #e0f2fe; }
+    .btn-delete { color: #ef4444; }
+    .btn-delete:hover { background: #fef2f2; }
   `]
 })
 export class LeaveBalanceActionCellRendererComponent implements ICellRendererAngularComp {
@@ -43,12 +49,12 @@ export class LeaveBalanceActionCellRendererComponent implements ICellRendererAng
   balance!: LeaveBalance;
 
   agInit(params: ICellRendererParams): void {
-    this.params = params;
+    this.params  = params;
     this.balance = params.data as LeaveBalance;
   }
 
   refresh(params: ICellRendererParams): boolean {
-    this.params = params;
+    this.params  = params;
     this.balance = params.data as LeaveBalance;
     return true;
   }
