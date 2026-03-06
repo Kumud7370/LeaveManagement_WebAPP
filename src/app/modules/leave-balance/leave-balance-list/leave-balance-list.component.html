@@ -31,51 +31,47 @@
   </div>
   <ng-template #sk><span class="lb-skeleton"></span></ng-template>
 
-  <!-- ── Toolbar (outside card, matches Holiday) ───────────────────── -->
-  <div class="lb-toolbar">
-
-    <select class="lb-year-select" [(ngModel)]="selectedYear" (change)="onYearChange()">
-      <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
-    </select>
-
-    <div class="lb-toolbar-btns">
-      <button class="lb-btn lb-btn-clear" (click)="clearFilters()">Clear</button>
-      <button class="lb-btn lb-btn-refresh" (click)="loadBalances()">
-        <i class="bi bi-arrow-clockwise"></i> Refresh
-      </button>
-      <button class="lb-btn lb-btn-export" (click)="exportToExcel()">
-        <i class="bi bi-download"></i> Export
-      </button>
-      <button class="lb-btn lb-btn-init" (click)="initializeEmployee()">
-        <i class="bi bi-person-plus"></i> Init Employee
-      </button>
-      <button class="lb-btn lb-btn-collective" (click)="openCollectiveModal()">
-        <i class="bi bi-people-fill"></i> Collective Balance
-      </button>
-      <div class="lb-toolbar-divider"></div>
-      <button class="lb-btn lb-btn-add" (click)="createBalance()">
-        <i class="bi bi-plus-lg"></i> Add Balance
-      </button>
-    </div>
+<!-- ── Toolbar ───────────────────────────────────────────────────── -->
+<div class="lb-toolbar">
+  <select class="lb-year-select" [(ngModel)]="selectedYear" (change)="onYearChange()">
+    <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
+  </select>
+  <div class="lb-toolbar-btns">
+    <button class="lb-btn lb-btn-clear" (click)="clearFilters()">Clear</button>
+    <button class="lb-btn lb-btn-refresh" (click)="loadBalances()">
+      <i class="bi bi-arrow-clockwise"></i> Refresh
+    </button>
+    <div class="lb-toolbar-divider"></div>
+    <button class="lb-btn lb-btn-export" (click)="exportToExcel()">
+      <i class="bi bi-download"></i> Export
+    </button>
+    <button class="lb-btn lb-btn-init" (click)="initializeEmployee()">
+      <i class="bi bi-person-plus"></i> Init Employee
+    </button>
+    <button class="lb-btn lb-btn-collective" (click)="openCollectiveModal()">
+      <i class="bi bi-people-fill"></i> Collective Balance
+    </button>
+    <div class="lb-toolbar-divider"></div>
+    <button class="lb-btn lb-btn-add" (click)="createBalance()">
+      <i class="bi bi-plus-lg"></i> Add Balance
+    </button>
   </div>
+</div>
 
   <!-- ── Grid Card ─────────────────────────────────────────────────── -->
   <div class="lb-card">
 
-    <!-- Loading -->
     <div *ngIf="loading" class="lb-loading">
       <div class="lb-spinner"></div>
       <span>Loading leave balances...</span>
     </div>
 
-    <!-- Error -->
     <div *ngIf="error && !loading" class="lb-error">
       <i class="bi bi-exclamation-circle"></i>
       <span>{{ error }}</span>
       <button class="lb-btn lb-btn-refresh" (click)="loadBalances()">Try Again</button>
     </div>
 
-    <!-- Empty -->
     <div *ngIf="!loading && !error && balances.length === 0" class="lb-empty">
       <i class="bi bi-bar-chart-line"></i>
       <span>No leave balances found for {{ selectedYear }}. Adjust filters or initialize an employee.</span>
@@ -84,7 +80,6 @@
       </button>
     </div>
 
-    <!-- AG Grid -->
     <ag-grid-angular
       *ngIf="!loading && !error && balances.length > 0"
       style="width: 100%;"
@@ -101,7 +96,6 @@
       [suppressPaginationPanel]="true">
     </ag-grid-angular>
 
-    <!-- Pagination -->
     <div class="lb-pagination" *ngIf="!loading && balances.length > 0">
       <div class="lb-pagination-inner">
         <div class="lb-ps-wrap">
@@ -121,9 +115,7 @@
           <button class="lb-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">«</button>
           <button class="lb-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">‹</button>
           <button *ngFor="let p of pages" class="lb-pgbtn"
-            [class.active]="p === currentPage" (click)="onPageChange(p)">
-            {{ p }}
-          </button>
+            [class.active]="p === currentPage" (click)="onPageChange(p)">{{ p }}</button>
           <button class="lb-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">›</button>
           <button class="lb-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">»</button>
         </div>
@@ -177,5 +169,115 @@
         (formSubmitted)="onCollectiveSuccess()">
       </app-collective-leave-balance-form>
     </div>
+  </div>
+</div>
+
+
+<!-- ── Adjust Balance Modal ───────────────────────────────────────── -->
+<div class="lb-overlay" *ngIf="showAdjustModal" (click)="closeAdjustModal()">
+  <div class="ab-modal" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="ab-header">
+      <div class="ab-header-icon-wrap">
+        <i class="bi bi-sliders2"></i>
+      </div>
+      <h2 class="ab-title">Adjust Balance</h2>
+      <button class="ab-close" (click)="closeAdjustModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="ab-body">
+
+      <!-- Employee info section -->
+      <div class="ab-section" *ngIf="adjustingBalance">
+        <div class="ab-section-title">
+          <span class="ab-section-bar"></span>
+          Employee & Leave Type
+        </div>
+        <div class="ab-info-row">
+          <div class="ab-info-field">
+            <label class="ab-info-label">Employee</label>
+            <div class="ab-info-value">{{ adjustingBalance.employeeName }}</div>
+          </div>
+          <div class="ab-info-field">
+            <label class="ab-info-label">Leave Type</label>
+            <div class="ab-info-value">{{ adjustingBalance.leaveTypeName }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adjustment Details section -->
+      <div class="ab-section">
+        <div class="ab-section-title">
+          <span class="ab-section-bar"></span>
+          Adjustment Details
+        </div>
+
+        <!-- Info banner -->
+        <div class="ab-info-banner">
+          <i class="bi bi-info-circle-fill"></i>
+          <span>Enter a <strong>positive number</strong> to add days, or a <strong>negative number</strong> to deduct days.</span>
+        </div>
+
+        <!-- Adjustment Days -->
+        <div class="ab-field">
+          <label class="ab-label">
+            Adjustment Days <span class="ab-required">*</span>
+          </label>
+          <div class="ab-input-suffix-wrap">
+            <input
+              type="number"
+              class="ab-input"
+              [(ngModel)]="adjustDays"
+              placeholder="e.g. 5"
+              [class.ab-input-positive]="adjustDays > 0"
+              [class.ab-input-negative]="adjustDays < 0"
+              (ngModelChange)="adjustValidationError = null"
+            />
+            <span class="ab-input-suffix">days</span>
+          </div>
+        </div>
+
+        <!-- Reason -->
+        <div class="ab-field">
+          <label class="ab-label">
+            Reason for Adjustment <span class="ab-required">*</span>
+          </label>
+          <textarea
+            class="ab-textarea"
+            [(ngModel)]="adjustReason"
+            placeholder="Briefly explain why this balance is being adjusted..."
+            rows="3"
+            maxlength="500"
+            (ngModelChange)="adjustValidationError = null">
+          </textarea>
+          <div class="ab-char-count">{{ adjustReason?.length || 0 }} / 500</div>
+        </div>
+
+        <!-- Validation error -->
+        <div class="ab-validation-error" *ngIf="adjustValidationError">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          {{ adjustValidationError }}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="ab-footer">
+      <button class="ab-btn-cancel" (click)="closeAdjustModal()" type="button">
+        Cancel
+      </button>
+      <button class="ab-btn-apply" (click)="submitAdjustBalance()" type="button" [disabled]="adjustLoading">
+        <span *ngIf="!adjustLoading"><i class="bi bi-check-circle"></i> Apply Adjustment</span>
+        <span *ngIf="adjustLoading" class="ab-btn-loading">
+          <span class="ab-spinner-sm"></span> Applying...
+        </span>
+      </button>
+    </div>
+
   </div>
 </div>

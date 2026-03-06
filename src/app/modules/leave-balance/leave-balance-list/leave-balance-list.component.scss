@@ -39,12 +39,13 @@
 @keyframes lbShimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
 .lb-skeleton { display: inline-block; width: 44px; height: 30px; background: rgba(0,0,0,0.08); border-radius: 5px; }
 
-/* ── Toolbar (outside card, matches Holiday) ─────────────────────── */
+/* ── Toolbar ─────────────────────────────────────────────────────── */
 .lb-toolbar {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 12px;
+  justify-content: space-between;
 }
 
 .lb-year-select {
@@ -62,10 +63,10 @@
 }
 .lb-year-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 
-.lb-toolbar-btns { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+.lb-toolbar-btns { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap;margin-left: auto; }
 .lb-toolbar-divider { width: 1px; height: 28px; background: #d1d5db; flex-shrink: 0; border-radius: 1px; }
 
-/* ── Buttons (matches Holiday palette) ───────────────────────────── */
+/* ── Buttons ─────────────────────────────────────────────────────── */
 .lb-btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 9px 18px;
@@ -78,21 +79,17 @@
 .lb-btn-clear:hover   { background: #fef2f2; border-color: #dc2626; }
 .lb-btn-refresh       { background: #fff; color: #374151; border-color: #d1d5db; }
 .lb-btn-refresh:hover { background: #f9fafb; border-color: #9ca3af; }
-/* Export: blue-tinted like Holiday */
 .lb-btn-export        { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; font-weight: 600; }
 .lb-btn-export:hover  { background: #dbeafe; border-color: #3b82f6; color: #1e40af; }
-/* Init Employee: teal */
 .lb-btn-init          { background: #f0fdfa; color: #0f766e; border-color: #99f6e4; font-weight: 600; }
 .lb-btn-init:hover    { background: #ccfbf1; border-color: #14b8a6; }
-/* Collective: purple */
 .lb-btn-collective    { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; font-weight: 600; }
 .lb-btn-collective:hover { background: #ede9fe; border-color: #7c3aed; }
-/* Add: solid blue primary */
 .lb-btn-add           { background: #3b82f6; color: #fff; border-color: #3b82f6; font-weight: 600; }
 .lb-btn-add:hover     { background: #2563eb; border-color: #2563eb; }
 .lb-btn:disabled      { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Grid Card (matches Holiday .hl-grid-card) ───────────────────── */
+/* ── Grid Card ───────────────────────────────────────────────────── */
 .lb-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -120,34 +117,14 @@ ag-grid-angular { display: block; width: 100%; }
 ::ng-deep .lb-card ag-grid-angular .ag-root-wrapper { border: none !important; border-radius: 0 !important; overflow: hidden !important; }
 ::ng-deep .lb-card ag-grid-angular .ag-body-viewport { overflow-y: hidden !important; }
 ::ng-deep .lb-card ag-grid-angular .ag-center-cols-viewport { overflow-y: hidden !important; }
-::ng-deep ag-grid-angular .ag-header-row.ag-header-row-column { background-color: #ffffff !important; }
+::ng-deep ag-grid-angular .ag-header-row.ag-header-row-column { background-color: #f9fafb !important; }
 ::ng-deep ag-grid-angular .ag-header-row.ag-header-row-floating-filter { background-color: #f8fafc !important; border-top: 1px solid #e5e7eb !important; }
 ::ng-deep ag-grid-angular .ag-floating-filter { background-color: #f8fafc !important; }
 ::ng-deep .ag-header-cell.lb-action-col, ::ng-deep .ag-floating-filter.lb-action-col { border-right: 1px solid #e5e7eb !important; }
 ::ng-deep .ag-cell.lb-action-col { border-right: 1px solid #e5e7eb !important; }
 .lb-action-cell { display: flex !important; align-items: center !important; padding: 0 !important; overflow: visible !important; }
 
-/* ── Action buttons (matches Holiday .hl-grid-container) ─────────── */
-::ng-deep .lb-card .action-buttons {
-  display: flex !important; align-items: center !important; justify-content: flex-start !important;
-  gap: 4px !important; height: 100%; padding: 0 4px;
-}
-::ng-deep .lb-card .btn-icon {
-  width: 28px !important; height: 28px !important; border: none !important; background: transparent !important;
-  cursor: pointer; display: flex !important; align-items: center !important; justify-content: center !important;
-  font-size: 15px !important; transition: background 0.15s !important; padding: 0 !important;
-  border-radius: 4px !important; flex-shrink: 0 !important;
-}
-::ng-deep .lb-card .btn-edit         { color: #3b82f6 !important; }
-::ng-deep .lb-card .btn-edit:hover   { background: #eff6ff !important; }
-::ng-deep .lb-card .btn-adjust       { color: #10b981 !important; }
-::ng-deep .lb-card .btn-adjust:hover { background: #ecfdf5 !important; }
-::ng-deep .lb-card .btn-recalc       { color: #0284c7 !important; }
-::ng-deep .lb-card .btn-recalc:hover { background: #e0f2fe !important; }
-::ng-deep .lb-card .btn-delete       { color: #ef4444 !important; }
-::ng-deep .lb-card .btn-delete:hover { background: #fef2f2 !important; }
-
-/* ── Pagination (matches Holiday) ────────────────────────────────── */
+/* ── Pagination ──────────────────────────────────────────────────── */
 .lb-pagination { border-top: 1px solid #e5e7eb; background: #ffffff; padding: 10px 16px; }
 .lb-pagination-inner { display: flex; align-items: center; justify-content: flex-end; gap: 16px; flex-wrap: nowrap; }
 .lb-ps-wrap { display: flex; align-items: center; gap: 8px; }
@@ -171,7 +148,7 @@ ag-grid-angular { display: block; width: 100%; }
 .lb-pgbtn:disabled { opacity: 0.4; cursor: not-allowed; }
 .lb-pgbtn.active { background: #3b82f6 !important; color: #fff !important; border-color: #3b82f6 !important; }
 
-/* ── Modals ──────────────────────────────────────────────────────── */
+/* ── Modals (shared overlay) ─────────────────────────────────────── */
 .lb-overlay {
   position: fixed !important; inset: 0 !important;
   background: rgba(0, 0, 0, 0.55) !important; backdrop-filter: blur(3px);
@@ -217,15 +194,11 @@ ag-grid-angular { display: block; width: 100%; }
   .lb-year-select { width: 100%; }
   .lb-toolbar-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .lb-toolbar-divider { display: none; }
-  /* Row 1: Clear | Refresh */
   .lb-btn-clear       { grid-column: 1 / 2; justify-content: center; }
   .lb-btn-refresh     { grid-column: 2 / 3; justify-content: center; }
-  /* Row 2: Export | Init */
   .lb-btn-export      { grid-column: 1 / 2; justify-content: center; }
   .lb-btn-init        { grid-column: 2 / 3; justify-content: center; }
-  /* Row 3: Collective full width */
   .lb-btn-collective  { grid-column: 1 / 3; justify-content: center; }
-  /* Row 4: Add Balance full width */
   .lb-btn-add         { grid-column: 1 / 3; justify-content: center; }
   .lb-pagination-inner { flex-wrap: wrap; justify-content: center; gap: 10px; }
   .lb-overlay { padding: 0; align-items: flex-end; }
@@ -245,4 +218,310 @@ ag-grid-angular { display: block; width: 100%; }
   .lb-btn-add        { grid-column: 1 / 3; justify-content: center; }
   .lb-ps-wrap { display: none; }
   .lb-pagination-inner { justify-content: center; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════
+   ADJUST BALANCE MODAL  — matches Add Leave Balance style
+   ════════════════════════════════════════════════════════════════════ */
+
+.ab-modal {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 10000 !important;
+  animation: lbSlideUp 0.25s ease;
+}
+
+/* Header — white, matches Add Leave Balance */
+.ab-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.ab-header-icon-wrap {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3b82f6;
+  flex-shrink: 0;
+  i { font-size: 14px; }
+}
+
+.ab-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  flex: 1;
+}
+
+.ab-close {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  &:hover { background: #f3f4f6; color: #374151; }
+  i { font-size: 16px; }
+}
+
+/* Body */
+.ab-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  max-height: calc(90vh - 140px);
+}
+
+/* Section with blue left bar — matches Add Leave Balance */
+.ab-section { display: flex; flex-direction: column; gap: 14px; }
+
+.ab-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.ab-section-bar {
+  display: inline-block;
+  width: 3px;
+  height: 18px;
+  background: #3b82f6;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Read-only employee/leave type info row */
+.ab-info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.ab-info-field { display: flex; flex-direction: column; gap: 5px; }
+
+.ab-info-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ab-info-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+/* Info banner */
+.ab-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 13px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+  font-size: 13px;
+  color: #1e40af;
+  line-height: 1.5;
+  i { font-size: 13px; color: #3b82f6; flex-shrink: 0; margin-top: 1px; }
+  strong { font-weight: 700; }
+}
+
+/* Fields */
+.ab-field { display: flex; flex-direction: column; gap: 6px; }
+
+.ab-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.ab-required { color: #ef4444; margin-left: 2px; }
+
+/* Input with "days" suffix — matches "e.g. 12  days" style */
+.ab-input-suffix-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ab-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 52px 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #1f2937;
+  background: #fff;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  outline: none;
+  &:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+  &::placeholder { color: #9ca3af; font-size: 13px; }
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+}
+
+.ab-input-suffix {
+  position: absolute;
+  right: 12px;
+  font-size: 13px;
+  color: #6b7280;
+  pointer-events: none;
+  font-weight: 400;
+}
+
+.ab-input-positive {
+  border-color: #10b981 !important;
+  &:focus { box-shadow: 0 0 0 3px rgba(16,185,129,0.1) !important; }
+}
+
+.ab-input-negative {
+  border-color: #ef4444 !important;
+  &:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.1) !important; }
+}
+
+/* Textarea */
+.ab-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+  background: #fff;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 88px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  line-height: 1.6;
+  outline: none;
+  &:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+  &::placeholder { color: #9ca3af; }
+}
+
+.ab-char-count {
+  text-align: right;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* Validation error */
+.ab-validation-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  font-size: 13px;
+  color: #b91c1c;
+  i { color: #ef4444; flex-shrink: 0; }
+}
+
+/* Footer — matches Add Leave Balance */
+.ab-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.ab-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  transition: all 0.15s;
+  font-family: inherit;
+  &:hover { background: #f9fafb; border-color: #9ca3af; }
+}
+
+.ab-btn-apply {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #3b82f6;
+  background: #3b82f6;
+  color: #fff;
+  transition: all 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+  min-width: 155px;
+  &:hover:not(:disabled) { background: #2563eb; border-color: #2563eb; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+.ab-btn-loading { display: flex; align-items: center; gap: 8px; }
+
+.ab-spinner-sm {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: lbSpin 0.7s linear infinite;
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+  .ab-modal  { border-radius: 16px 16px 0 0; max-width: 100%; }
+  .ab-body   { padding: 16px; }
+  .ab-header { padding: 16px; }
+  .ab-footer { padding: 12px 16px; }
+  .ab-info-row { grid-template-columns: 1fr; }
+  .ab-btn-apply { flex: 1; min-width: unset; }
 }

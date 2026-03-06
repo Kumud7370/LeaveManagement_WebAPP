@@ -19,11 +19,11 @@ import { ApprovalStatus } from '../../core/Models/work-from-home.model';
         <i class="bi bi-pencil"></i>
       </button>
 
-      <button *ngIf="isPending" class="btn-icon btn-approve" title="Approve" (click)="onApprove()">
+      <button *ngIf="isPending && !isEmployee" class="btn-icon btn-approve" title="Approve" (click)="onApprove()">
         <i class="bi bi-check-lg"></i>
       </button>
 
-      <button *ngIf="isPending" class="btn-icon btn-reject" title="Reject" (click)="onReject()">
+      <button *ngIf="isPending && !isEmployee" class="btn-icon btn-reject" title="Reject" (click)="onReject()">
         <i class="bi bi-x-lg"></i>
       </button>
 
@@ -31,8 +31,8 @@ import { ApprovalStatus } from '../../core/Models/work-from-home.model';
         <i class="bi bi-slash-circle"></i>
       </button>
 
-      <button *ngIf="isPending" class="btn-icon btn-delete" title="Delete" (click)="onDelete()">
-        <i class="bi bi-trash3"></i>
+      <button *ngIf="!isEmployee" class="btn-icon btn-delete" title="Delete" (click)="onDelete()">
+        <i class="bi bi-trash"></i>
       </button>
 
     </div>
@@ -46,20 +46,20 @@ import { ApprovalStatus } from '../../core/Models/work-from-home.model';
       width: 28px; height: 28px; border: none; background: transparent;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       font-size: 15px; transition: background 0.15s; padding: 0; border-radius: 4px;
-      flex-shrink: 0;
+      flex-shrink: 0; line-height: 1;
     }
-    .btn-view    { color: #10b981; }
-    .btn-view:hover    { background: #ecfdf5; }
-    .btn-edit    { color: #3b82f6; }
-    .btn-edit:hover    { background: #eff6ff; }
-    .btn-approve { color: #16a34a; }
-    .btn-approve:hover { background: #dcfce7; }
-    .btn-reject  { color: #dc2626; }
-    .btn-reject:hover  { background: #fee2e2; }
-    .btn-cancel  { color: #d97706; }
-    .btn-cancel:hover  { background: #fef3c7; }
-    .btn-delete  { color: #ef4444; }
-    .btn-delete:hover  { background: #fef2f2; }
+    .btn-view         { color: #10b981; }
+    .btn-view:hover   { background: #ecfdf5; }
+    .btn-edit         { color: #3b82f6; }
+    .btn-edit:hover   { background: #eff6ff; }
+    .btn-approve      { color: #16a34a; }
+    .btn-approve:hover{ background: #dcfce7; }
+    .btn-reject       { color: #dc2626; }
+    .btn-reject:hover { background: #fee2e2; }
+    .btn-cancel       { color: #d97706; }
+    .btn-cancel:hover { background: #fef3c7; }
+    .btn-delete       { color: #ef4444; }
+    .btn-delete:hover { background: #fef2f2; }
   `]
 })
 export class WfhActionCellRendererComponent implements ICellRendererAngularComp {
@@ -74,11 +74,21 @@ export class WfhActionCellRendererComponent implements ICellRendererAngularComp 
   }
 
   get isCancellable(): boolean {
-    return !!this.params?.data?.canBeCancelled;
+    const s    = this.params?.data?.status;
+    const name = String(this.params?.data?.statusName ?? '').toLowerCase();
+    return Number(s) === ApprovalStatus.Pending
+      || Number(s) === ApprovalStatus.Approved
+      || name === 'pending'
+      || name === 'approved'
+      || !!this.params?.data?.canBeCancelled;
   }
 
-  agInit(params: ICellRendererParams):        void { this.params = params; }
-  refresh(params: ICellRendererParams): boolean    { this.params = params; return true; }
+  get isEmployee(): boolean {
+    return !!this.params?.context?.isEmployee;
+  }
+
+  agInit(params: ICellRendererParams): void { this.params = params; }
+  refresh(params: ICellRendererParams): boolean { this.params = params; return true; }
 
   private get parent(): any { return this.params?.context?.componentParent; }
 
