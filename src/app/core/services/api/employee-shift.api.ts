@@ -22,6 +22,8 @@ export class EmployeeShiftService {
 
   constructor(private api: ApiClientService) {}
 
+  // ── Admin-side ──────────────────────────────────────────────────────────────
+
   createEmployeeShift(dto: CreateEmployeeShiftDto): Observable<ApiResponse<EmployeeShift>> {
     return this.api.post<ApiResponse<EmployeeShift>>(this.BASE, dto).pipe(
       catchError(e => { console.error('Create employee shift:', e); return throwError(() => e); })
@@ -104,6 +106,30 @@ export class EmployeeShiftService {
   validateShiftAssignment(payload: ValidateShiftAssignmentRequestDto): Observable<ApiResponse<boolean>> {
     return this.api.post<ApiResponse<boolean>>(`${this.BASE}/validate`, payload).pipe(
       catchError(e => { console.error('Validate shift:', e); return throwError(() => e); })
+    );
+  }
+
+  // ── Employee self-service ───────────────────────────────────────────────────
+
+  /** Get all shift assignments for the currently logged-in employee. */
+  getMyShifts(): Observable<ApiResponse<EmployeeShift[]>> {
+    return this.api.get<ApiResponse<EmployeeShift[]>>(`${this.BASE}/my-shifts`).pipe(
+      catchError(e => { console.error('Get my shifts:', e); return throwError(() => e); })
+    );
+  }
+
+  /** Employee confirms the shift assigned to them by admin. */
+  employeeApproveShift(id: string): Observable<ApiResponse<boolean>> {
+    return this.api.patch<ApiResponse<boolean>>(`${this.BASE}/${id}/employee-approve`, {}).pipe(
+      catchError(e => { console.error('Employee approve shift:', e); return throwError(() => e); })
+    );
+  }
+
+  /** Employee rejects the shift assigned to them by admin (reason required). */
+  employeeRejectShift(id: string, reason: string): Observable<ApiResponse<boolean>> {
+    const body: RejectShiftChangeRequestDto = { rejectionReason: reason };
+    return this.api.patch<ApiResponse<boolean>>(`${this.BASE}/${id}/employee-reject`, body).pipe(
+      catchError(e => { console.error('Employee reject shift:', e); return throwError(() => e); })
     );
   }
 }

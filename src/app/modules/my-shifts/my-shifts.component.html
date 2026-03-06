@@ -1,0 +1,366 @@
+<div class="ms-page-container">
+
+  <!-- ── Page Header ── -->
+  <div class="ms-page-header">
+    <h1 class="ms-page-title">
+      <i class="bi bi-calendar2-week-fill"></i> My Shift Assignments
+    </h1>
+    <p class="ms-page-sub">View and respond to shifts assigned to you by your admin.</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       STEP 1 — Employee ID entry (shown when isIdSet is false)
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="ms-id-card" *ngIf="!isIdSet">
+    <div class="ms-id-icon">👤</div>
+    <div class="ms-id-title">Enter Your Employee ID</div>
+    <div class="ms-id-sub">
+      Type your Employee ID (e.g. <b>EMP001</b>) to view your shift assignments.
+    </div>
+
+    <div class="ms-id-form">
+      <input
+        type="text"
+        class="ms-id-input"
+        placeholder="e.g. EMP001"
+        [(ngModel)]="employeeIdInput"
+        (keyup.enter)="setEmployeeId()"
+        autofocus
+      />
+      <button class="ms-btn ms-btn-primary" (click)="setEmployeeId()">
+        <i class="bi bi-search"></i> Load My Shifts
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       STEP 2 — Shifts view (shown after ID is set)
+  ══════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="isIdSet">
+
+    <!-- Employee ID banner -->
+    <div class="ms-emp-banner">
+      <div class="ms-emp-info">
+        <div class="ms-emp-avatar">{{ (employeeName || employeeId).charAt(0).toUpperCase() }}</div>
+        <div>
+          <div class="ms-emp-name">{{ employeeName || 'Employee' }}</div>
+          <div class="ms-emp-id">ID: {{ employeeId }}</div>
+        </div>
+      </div>
+      <button class="ms-btn ms-btn-outline-sm" (click)="changeEmployeeId()">
+        <i class="bi bi-pencil"></i> Change
+      </button>
+    </div>
+
+    <!-- ── Tabs ── -->
+    <div class="ms-tabs">
+      <button class="ms-tab" [class.active]="activeTab === 'all'" (click)="setTab('all')">
+        All <span class="ms-tab-badge">{{ shifts.length }}</span>
+      </button>
+      <button class="ms-tab" [class.active]="activeTab === 'pending'" (click)="setTab('pending')">
+        ⏳ Pending <span class="ms-tab-badge pending">{{ pendingCount }}</span>
+      </button>
+      <button class="ms-tab" [class.active]="activeTab === 'approved'" (click)="setTab('approved')">
+        ✅ Approved <span class="ms-tab-badge approved">{{ approvedCount }}</span>
+      </button>
+      <button class="ms-tab" [class.active]="activeTab === 'rejected'" (click)="setTab('rejected')">
+        ❌ Rejected <span class="ms-tab-badge rejected">{{ rejectedCount }}</span>
+      </button>
+    </div>
+
+    <!-- ── Toolbar ── -->
+    <div class="ms-toolbar">
+      <div class="ms-search-wrapper">
+        <i class="bi bi-search ms-search-icon"></i>
+        <input
+          type="text"
+          class="ms-search-input"
+          placeholder="Search by shift name, timing, reason..."
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+        />
+        <button *ngIf="searchTerm" class="ms-search-clear" (click)="searchTerm = ''; onSearchChange()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      <button class="ms-btn ms-btn-refresh" (click)="loadShifts()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+
+    <!-- ── Loading ── -->
+    <div class="ms-loading" *ngIf="isLoading">
+      <div class="ms-spinner"></div>
+      <span>Loading shifts...</span>
+    </div>
+
+    <!-- ── Empty ── -->
+    <div class="ms-empty" *ngIf="!isLoading && filteredShifts.length === 0">
+      <div class="ms-empty-icon">
+        <img src="https://cdn-icons-png.flaticon.com/512/6598/6598519.png"
+             alt="No shifts" width="80" style="opacity:.5"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+        <span style="display:none;font-size:48px">📅</span>
+      </div>
+      <div class="ms-empty-title">No shift assignments found</div>
+      <div class="ms-empty-sub" *ngIf="activeTab === 'all'">
+        You have no shift assignments yet. Your admin will assign shifts to you.
+      </div>
+      <div class="ms-empty-sub" *ngIf="activeTab !== 'all'">
+        No {{ activeTab }} shift assignments found.
+      </div>
+    </div>
+
+    <!-- ── Cards ── -->
+    <div class="ms-cards-grid" *ngIf="!isLoading && filteredShifts.length > 0">
+      <div
+        class="ms-shift-card"
+        *ngFor="let shift of filteredShifts"
+        [class.card-pending]="isPending(shift)"
+        [class.card-approved]="isApproved(shift)"
+        [class.card-rejected]="isRejected(shift)"
+      >
+
+        <!-- Card Header -->
+        <div class="ms-card-header">
+          <div class="ms-card-left">
+            <div class="ms-shift-dot" [style.background]="shift.shiftColor || '#3b82f6'"></div>
+            <div>
+              <div class="ms-shift-name">{{ shift.shiftName || '—' }}</div>
+              <div class="ms-shift-timing">
+                <i class="bi bi-clock"></i> {{ shift.shiftTimingDisplay || '—' }}
+              </div>
+            </div>
+          </div>
+          <span
+            class="ms-status-badge"
+            [ngStyle]="{ background: getStatusStyle(shift.status).bg, color: getStatusStyle(shift.status).color }"
+          >
+            {{ getStatusLabel(shift.status) }}
+          </span>
+        </div>
+
+        <!-- Pending alert banner -->
+        <div class="ms-pending-banner" *ngIf="isPending(shift)">
+          <i class="bi bi-bell-fill"></i>
+          Admin has assigned this shift — please Confirm or Decline.
+        </div>
+
+        <!-- Card Body -->
+        <div class="ms-card-body">
+          <div class="ms-card-row">
+            <div class="ms-info-item">
+              <span class="ms-info-label">📅 Effective From</span>
+              <span class="ms-info-val">{{ fmt(shift.effectiveFrom) }}</span>
+            </div>
+            <div class="ms-info-item">
+              <span class="ms-info-label">📅 Effective To</span>
+              <span class="ms-info-val" [class.ongoing]="!shift.effectiveTo">
+                {{ shift.effectiveTo ? fmt(shift.effectiveTo) : 'Ongoing' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="ms-card-row">
+            <div class="ms-info-item">
+              <span class="ms-info-label">⏱ Duration</span>
+              <span class="ms-info-val" [class.ongoing]="shift.durationInDays === -1 || !shift.durationInDays">
+                {{ (shift.durationInDays === -1 || !shift.durationInDays) ? 'Ongoing' : shift.durationInDays + ' days' }}
+              </span>
+            </div>
+            <div class="ms-info-item">
+              <span class="ms-info-label">⚡ Currently Active</span>
+              <span class="ms-info-val" [style.color]="shift.isCurrentlyActive ? '#10b981' : '#94a3b8'">
+                {{ shift.isCurrentlyActive ? '✔ Yes' : '— No' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="ms-card-row" *ngIf="shift.changeReason">
+            <div class="ms-info-item full">
+              <span class="ms-info-label">💬 Reason from Admin</span>
+              <span class="ms-info-val italic">{{ shift.changeReason }}</span>
+            </div>
+          </div>
+
+          <!-- Rejection info -->
+          <div class="ms-rejection-info" *ngIf="isRejected(shift)">
+            <div class="ms-info-label red">❌ Decline reason:</div>
+            <div class="ms-info-val italic">{{ shift.rejectionReason || '—' }}</div>
+            <div class="ms-info-sub">{{ fmt(shift.rejectedDate) }}</div>
+          </div>
+
+          <!-- Approval info -->
+          <div class="ms-approval-info" *ngIf="isApproved(shift)">
+            ✅ Confirmed on {{ fmt(shift.approvedDate) }}
+          </div>
+        </div>
+
+        <!-- Card Footer / Actions -->
+        <div class="ms-card-footer">
+          <button class="ms-btn ms-btn-view" (click)="viewDetail(shift)">
+            <i class="bi bi-eye"></i> View Details
+          </button>
+          <ng-container *ngIf="isPending(shift)">
+            <button class="ms-btn ms-btn-approve" (click)="confirmShift(shift)">
+              <i class="bi bi-check-lg"></i> Confirm
+            </button>
+            <button class="ms-btn ms-btn-reject" (click)="openRejectDialog(shift)">
+              <i class="bi bi-x-lg"></i> Decline
+            </button>
+          </ng-container>
+        </div>
+
+      </div>
+    </div>
+
+  </ng-container>
+</div>
+
+<!-- ══ Reject Dialog ═══════════════════════════════════════════════════════ -->
+<div class="ms-overlay" *ngIf="showRejectDialog" (click)="cancelReject()">
+  <div class="ms-reject-box" (click)="$event.stopPropagation()">
+    <div class="ms-reject-header">
+      <span class="ms-reject-icon">❌</span>
+      <div>
+        <div class="ms-reject-title">Decline Shift Assignment</div>
+        <div class="ms-reject-sub">
+          Declining <b>{{ rejectTarget?.shiftName }}</b>
+          ({{ rejectTarget?.shiftTimingDisplay }})
+        </div>
+      </div>
+    </div>
+
+    <div class="ms-reject-info-row">
+      <div class="ms-reject-info-item">
+        <span class="ms-reject-info-label">Effective From</span>
+        <span class="ms-reject-info-val">{{ fmt(rejectTarget?.effectiveFrom) }}</span>
+      </div>
+      <div class="ms-reject-info-item">
+        <span class="ms-reject-info-label">Effective To</span>
+        <span class="ms-reject-info-val">
+          {{ rejectTarget?.effectiveTo ? fmt(rejectTarget?.effectiveTo) : 'Ongoing' }}
+        </span>
+      </div>
+    </div>
+
+    <label class="ms-reject-label">
+      Reason for Declining <span style="color:#ef4444">*</span>
+    </label>
+    <textarea
+      class="ms-reject-area"
+      rows="3"
+      placeholder="Please provide a reason (e.g. schedule conflict, health reasons...)"
+      [(ngModel)]="rejectReason"
+    ></textarea>
+    <div class="ms-reject-hint" *ngIf="rejectReason.trim().length > 0 && rejectReason.trim().length < 5">
+      Please enter at least 5 characters.
+    </div>
+
+    <div class="ms-reject-footer">
+      <button class="ms-btn ms-btn-secondary" (click)="cancelReject()">Cancel</button>
+      <button
+        class="ms-btn ms-btn-reject"
+        [disabled]="rejectReason.trim().length < 5"
+        (click)="confirmReject()"
+      >
+        <i class="bi bi-x-lg"></i> Confirm Decline
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Detail Modal ════════════════════════════════════════════════════════ -->
+<div class="ms-overlay" *ngIf="showDetailModal && selectedShift" (click)="closeDetail()">
+  <div class="ms-detail-box" (click)="$event.stopPropagation()">
+
+    <div class="ms-detail-header">
+      <div class="ms-detail-header-left">
+        <div class="ms-detail-icon" [style.background]="selectedShift.shiftColor || '#3b82f6'">
+          <i class="bi bi-calendar-week"></i>
+        </div>
+        <div>
+          <div class="ms-detail-title">{{ selectedShift.shiftName }}</div>
+          <div class="ms-detail-sub">
+            <span
+              class="ms-status-badge"
+              [ngStyle]="{ background: getStatusStyle(selectedShift.status).bg, color: getStatusStyle(selectedShift.status).color }"
+            >{{ getStatusLabel(selectedShift.status) }}</span>
+            <span class="ms-detail-timing">&nbsp;· {{ selectedShift.shiftTimingDisplay }}</span>
+          </div>
+        </div>
+      </div>
+      <button class="ms-close-btn" (click)="closeDetail()">×</button>
+    </div>
+
+    <div class="ms-detail-body">
+      <div class="ms-detail-grid">
+
+        <div class="ms-detail-card">
+          <div class="ms-detail-label">📅 Effective From</div>
+          <div class="ms-detail-val">{{ fmt(selectedShift.effectiveFrom) }}</div>
+        </div>
+
+        <div class="ms-detail-card">
+          <div class="ms-detail-label">📅 Effective To</div>
+          <div class="ms-detail-val" [class.ongoing]="!selectedShift.effectiveTo">
+            {{ selectedShift.effectiveTo ? fmt(selectedShift.effectiveTo) : 'Ongoing' }}
+          </div>
+        </div>
+
+        <div class="ms-detail-card">
+          <div class="ms-detail-label">⏱ Duration</div>
+          <div class="ms-detail-val" [class.ongoing]="selectedShift.durationInDays === -1">
+            {{ (selectedShift.durationInDays === -1 || !selectedShift.durationInDays) ? 'Ongoing' : selectedShift.durationInDays + ' days' }}
+          </div>
+        </div>
+
+        <div class="ms-detail-card">
+          <div class="ms-detail-label">⚡ Currently Active</div>
+          <div class="ms-detail-val" [style.color]="selectedShift.isCurrentlyActive ? '#10b981' : '#94a3b8'">
+            {{ selectedShift.isCurrentlyActive ? '✔ Yes' : '— No' }}
+          </div>
+        </div>
+
+        <div class="ms-detail-card">
+          <div class="ms-detail-label">📋 Requested</div>
+          <div class="ms-detail-val">{{ fmt(selectedShift.requestedDate) }}</div>
+        </div>
+
+        <div class="ms-detail-card" *ngIf="selectedShift.updatedAt">
+          <div class="ms-detail-label">✏ Last Updated</div>
+          <div class="ms-detail-val">{{ fmt(selectedShift.updatedAt) }}</div>
+        </div>
+
+        <div class="ms-detail-card full" *ngIf="selectedShift.changeReason">
+          <div class="ms-detail-label">💬 Reason from Admin</div>
+          <div class="ms-detail-val italic">{{ selectedShift.changeReason }}</div>
+        </div>
+
+        <div class="ms-detail-card full approved-card" *ngIf="isApproved(selectedShift)">
+          <div class="ms-detail-label green">✅ Confirmed On</div>
+          <div class="ms-detail-val">{{ fmt(selectedShift.approvedDate) }}</div>
+        </div>
+
+        <div class="ms-detail-card full rejected-card" *ngIf="isRejected(selectedShift)">
+          <div class="ms-detail-label red">❌ Declined On · {{ fmt(selectedShift.rejectedDate) }}</div>
+          <div class="ms-detail-val italic">{{ selectedShift.rejectionReason }}</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="ms-detail-footer">
+      <ng-container *ngIf="isPending(selectedShift)">
+        <button class="ms-btn ms-btn-approve" (click)="closeDetail(); confirmShift(selectedShift)">
+          <i class="bi bi-check-lg"></i> Confirm Shift
+        </button>
+        <button class="ms-btn ms-btn-reject" (click)="closeDetail(); openRejectDialog(selectedShift)">
+          <i class="bi bi-x-lg"></i> Decline
+        </button>
+      </ng-container>
+      <button class="ms-btn ms-btn-secondary" (click)="closeDetail()">Close</button>
+    </div>
+
+  </div>
+</div>

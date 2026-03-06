@@ -314,7 +314,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { label: "My Requests", route: "/attendance-regularization/list", icon: "fas fa-list-alt" }
           ]
         },
-
+        { label: "My Shifts", route: "/my-shifts", icon: "fas fa-user-clock" },
         {
           label: "Leave",                            // <-- ADD THIS BLOCK
           icon: "fas fa-plane-departure",
