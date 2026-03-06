@@ -1,187 +1,176 @@
-<div class="emp-wfh">
+<div class="mw-page-container">
 
-  <!-- ── Header ────────────────────────────────────────────────── -->
-  <div class="emp-wfh__header">
-    <div>
-      <h1 class="emp-wfh__title">My WFH Requests</h1>
-      <p class="emp-wfh__sub">Track and manage your work-from-home requests</p>
-    </div>
-    <button class="emp-btn emp-btn--primary" (click)="openCreateForm()">
-      <i class="bi bi-plus-circle"></i> New WFH Request
-    </button>
+  <!-- ── Page Header ──────────────────────────────────────────────── -->
+  <div class="mw-page-header">
+    <h1 class="mw-page-title">My WFH Requests</h1>
   </div>
 
-  <!-- ── Stats Strip ────────────────────────────────────────────── -->
-  <div class="emp-stats">
-    <div class="emp-stat emp-stat--blue"
-         [class.emp-stat--active]="selectedStatus === ''"
-         (click)="onStatusFilter('')">
-      <span class="emp-stat__num">{{ totalCount }}</span>
-      <span class="emp-stat__lbl">Total</span>
+  <!-- ── Stats Grid ───────────────────────────────────────────────── -->
+  <div class="mw-stats-grid">
+    <div class="mw-stat-card mw-stat-total"
+      [class.mw-stat-active]="selectedStatus === ''"
+      (click)="onStatusFilter('')">
+      <p class="mw-stat-label">Total</p>
+      <p class="mw-stat-value">{{ totalCount }}</p>
     </div>
-    <div class="emp-stat emp-stat--yellow"
-         [class.emp-stat--active]="selectedStatus === ApprovalStatus.Pending"
-         (click)="onStatusFilter(ApprovalStatus.Pending)">
-      <span class="emp-stat__num">{{ pendingCount }}</span>
-      <span class="emp-stat__lbl">Pending</span>
+    <div class="mw-stat-card mw-stat-pending"
+      [class.mw-stat-active]="selectedStatus === ApprovalStatus.Pending"
+      (click)="onStatusFilter(ApprovalStatus.Pending)">
+      <p class="mw-stat-label">Pending</p>
+      <p class="mw-stat-value">{{ pendingCount }}</p>
     </div>
-    <div class="emp-stat emp-stat--green"
-         [class.emp-stat--active]="selectedStatus === ApprovalStatus.Approved"
-         (click)="onStatusFilter(ApprovalStatus.Approved)">
-      <span class="emp-stat__num">{{ approvedCount }}</span>
-      <span class="emp-stat__lbl">Approved</span>
+    <div class="mw-stat-card mw-stat-approved"
+      [class.mw-stat-active]="selectedStatus === ApprovalStatus.Approved"
+      (click)="onStatusFilter(ApprovalStatus.Approved)">
+      <p class="mw-stat-label">Approved</p>
+      <p class="mw-stat-value">{{ approvedCount }}</p>
     </div>
-    <div class="emp-stat emp-stat--red"
-         [class.emp-stat--active]="selectedStatus === ApprovalStatus.Rejected"
-         (click)="onStatusFilter(ApprovalStatus.Rejected)">
-      <span class="emp-stat__num">{{ rejectedCount }}</span>
-      <span class="emp-stat__lbl">Rejected</span>
+    <div class="mw-stat-card mw-stat-rejected"
+      [class.mw-stat-active]="selectedStatus === ApprovalStatus.Rejected"
+      (click)="onStatusFilter(ApprovalStatus.Rejected)">
+      <p class="mw-stat-label">Rejected</p>
+      <p class="mw-stat-value">{{ rejectedCount }}</p>
     </div>
-    <div class="emp-stat emp-stat--grey"
-         [class.emp-stat--active]="selectedStatus === ApprovalStatus.Cancelled"
-         (click)="onStatusFilter(ApprovalStatus.Cancelled)">
-      <span class="emp-stat__num">{{ cancelledCount }}</span>
-      <span class="emp-stat__lbl">Cancelled</span>
+    <div class="mw-stat-card mw-stat-cancelled"
+      [class.mw-stat-active]="selectedStatus === ApprovalStatus.Cancelled"
+      (click)="onStatusFilter(ApprovalStatus.Cancelled)">
+      <p class="mw-stat-label">Cancelled</p>
+      <p class="mw-stat-value">{{ cancelledCount }}</p>
     </div>
   </div>
 
-  <!-- ── Card ──────────────────────────────────────────────────── -->
-  <div class="emp-card">
-
-    <!-- Toolbar -->
-    <div class="emp-toolbar">
-      <span class="emp-toolbar__label">
-        <i class="bi bi-funnel"></i>
-        Showing
-        <strong>{{ totalItems }}</strong>
-        {{ selectedStatus === '' ? 'total' : '' }} request{{ totalItems !== 1 ? 's' : '' }}
-        <ng-container *ngIf="selectedStatus !== ''">
-          — filtered by
-          <span class="emp-toolbar__filter-tag" (click)="onStatusFilter('')">
-            {{ ApprovalStatus[selectedStatus] }} &times;
-          </span>
-        </ng-container>
-      </span>
-      <button class="emp-btn emp-btn--outline emp-btn--sm" (click)="loadAll()" [class.spinning]="refreshing">
+  <!-- ── Toolbar ───────────────────────────────────────────────────── -->
+  <div class="mw-toolbar">
+    <div class="mw-search-wrapper">
+      <input
+        type="text"
+        placeholder="Search WFH requests..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearch()"
+        class="mw-search-input"
+      />
+    </div>
+    <div class="mw-toolbar-actions">
+      <button (click)="clearFilters()" class="mw-btn mw-btn-clear">Clear</button>
+      <button (click)="loadAll()" class="mw-btn mw-btn-refresh" [class.mw-btn-spinning]="refreshing">
         <i class="bi bi-arrow-clockwise"></i> Refresh
       </button>
-    </div>
-
-    <!-- Loading -->
-    <div *ngIf="loading" class="emp-state">
-      <div class="emp-spinner"></div>
-      <span>Loading your requests...</span>
-    </div>
-
-    <!-- Error -->
-    <div *ngIf="error && !loading" class="emp-state emp-state--error">
-      <i class="bi bi-exclamation-circle"></i>
-      <span>{{ error }}</span>
-      <button class="emp-btn emp-btn--outline" (click)="loadAll()">Try Again</button>
-    </div>
-
-    <!-- Empty -->
-    <div *ngIf="!loading && !error && totalItems === 0" class="emp-state emp-state--empty">
-      <div class="emp-empty-icon"><i class="bi bi-house-x"></i></div>
-      <p class="emp-empty-title">No requests found</p>
-      <p class="emp-empty-sub" *ngIf="selectedStatus === ''">You haven't submitted any WFH requests yet.</p>
-      <p class="emp-empty-sub" *ngIf="selectedStatus !== ''">
-        No requests match this filter.
-        <span class="emp-link" (click)="onStatusFilter('')">View all</span>
-      </p>
-      <button class="emp-btn emp-btn--primary" *ngIf="selectedStatus === ''" (click)="openCreateForm()">
-        <i class="bi bi-plus-circle"></i> New WFH Request
+      <div class="mw-toolbar-divider"></div>
+      <button (click)="openCreateForm()" class="mw-btn mw-btn-primary">
+        <i class="bi bi-plus-lg"></i> New WFH Request
       </button>
     </div>
+  </div>
 
-    <!-- AG Grid -->
-    <ag-grid-angular
-      *ngIf="!loading && !error && totalItems > 0"
-      style="width:100%;"
-      [theme]="gridTheme"
-      [rowData]="rowData"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      (gridReady)="onGridReady($event)"
-      [rowHeight]="52"
-      [headerHeight]="44"
-      [floatingFiltersHeight]="36"
-      [domLayout]="'autoHeight'"
-      [suppressPaginationPanel]="true">
-    </ag-grid-angular>
+  <!-- ── Active Filters ────────────────────────────────────────────── -->
+  <div *ngIf="selectedStatus !== ''" class="mw-active-filters">
+    <span class="mw-filter-label">Active Filters:</span>
+    <span class="mw-filter-badge-tag">
+      Status: {{ getStatusName(selectedStatus) }}
+      <i class="bi bi-x" (click)="onStatusFilter('')" style="cursor:pointer;margin-left:4px;"></i>
+    </span>
+  </div>
 
-    <!-- ── Pagination Bar ──────────────────────────────────────── -->
-    <div class="emp-pagination" *ngIf="!loading && !error && totalItems > 0">
+  <!-- ── Grid Card ─────────────────────────────────────────────────── -->
+  <div class="mw-grid-card">
 
-      <!-- Page size selector -->
-      <div class="emp-pagination__size">
-        <span>Show:</span>
-        <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)" class="emp-pagination__select">
-          <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
-        </select>
+    <!-- Refresh progress bar -->
+    <div class="mw-refresh-bar" *ngIf="refreshing">
+      <div class="mw-refresh-bar-inner"></div>
+    </div>
+
+    <div class="mw-grid-container">
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="mw-loading">
+        <div class="mw-spinner"></div>
+        <span>Loading your requests...</span>
       </div>
 
-      <!-- Range info -->
-      <span class="emp-pagination__info">
-        {{ startIndex }} to {{ endIndex }} of {{ totalItems }}
-      </span>
+      <!-- Error -->
+      <div *ngIf="error && !loading" class="mw-error">
+        <i class="bi bi-exclamation-circle"></i>
+        <span>{{ error }}</span>
+        <button class="mw-btn mw-btn-refresh" (click)="loadAll()">Try Again</button>
+      </div>
 
-      <!-- Page info -->
-      <span class="emp-pagination__pages">
-        Page {{ currentPage }} of {{ totalPages }}
-      </span>
-
-      <!-- Controls -->
-      <div class="emp-pagination__controls">
-        <!-- First -->
-        <button class="emp-page-btn" [disabled]="currentPage === 1" (click)="goToPage(1)" title="First">
-          «
+      <!-- Empty -->
+      <div *ngIf="!loading && !error && totalItems === 0" class="mw-empty">
+        <i class="bi bi-house-x"></i>
+        <span *ngIf="selectedStatus === ''">You haven't submitted any WFH requests yet.</span>
+        <span *ngIf="selectedStatus !== ''">No {{ getStatusName(selectedStatus) }} requests found.</span>
+        <button class="mw-btn mw-btn-primary" *ngIf="selectedStatus === ''" (click)="openCreateForm()">
+          <i class="bi bi-plus-lg"></i> New WFH Request
         </button>
-        <!-- Prev -->
-        <button class="emp-page-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)" title="Previous">
-          ‹
-        </button>
-
-        <!-- Page numbers -->
-        <ng-container *ngFor="let p of pageNumbers">
-          <span *ngIf="p === -1" class="emp-page-ellipsis">…</span>
-          <button
-            *ngIf="p !== -1"
-            class="emp-page-btn"
-            [class.emp-page-btn--active]="p === currentPage"
-            (click)="goToPage(p)">
-            {{ p }}
-          </button>
-        </ng-container>
-
-        <!-- Next -->
-        <button class="emp-page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)" title="Next">
-          ›
-        </button>
-        <!-- Last -->
-        <button class="emp-page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)" title="Last">
-          »
+        <button class="mw-btn mw-btn-clear" *ngIf="selectedStatus !== ''" (click)="onStatusFilter('')">
+          View all
         </button>
       </div>
+
+      <!-- AG Grid -->
+      <ag-grid-angular
+        *ngIf="!loading && !error && totalItems > 0"
+        style="width: 100%;"
+        [theme]="gridTheme"
+        [rowData]="rowData"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        (gridReady)="onGridReady($event)"
+        [rowHeight]="44"
+        [headerHeight]="44"
+        [floatingFiltersHeight]="36"
+        [domLayout]="'autoHeight'"
+        [animateRows]="true"
+        [suppressPaginationPanel]="true">
+      </ag-grid-angular>
 
     </div>
-    <!-- ── /Pagination Bar ─────────────────────────────────────── -->
 
-  </div>
-</div>
+    <!-- ── Pagination ─────────────────────────────────────────────── -->
+    <div class="mw-pagination" *ngIf="!loading && !error && totalItems > 0">
+      <div class="mw-pagination-inner">
+        <div class="mw-page-size">
+          <label>Show:</label>
+          <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)" class="mw-page-size-select">
+            <option *ngFor="let s of pageSizeOptions" [value]="s">{{ s }}</option>
+          </select>
+        </div>
+        <span class="mw-pagination-text">{{ startIndex }} to {{ endIndex }} of {{ totalItems }}</span>
+        <span class="mw-pagination-text">Page {{ currentPage }} of {{ totalPages }}</span>
+        <div class="mw-pagination-btns">
+          <button class="mw-pgbtn" [disabled]="currentPage === 1" (click)="goToPage(1)">«</button>
+          <button class="mw-pgbtn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
+          <ng-container *ngFor="let p of pageNumbers">
+            <span *ngIf="p === -1" class="mw-page-ellipsis">…</span>
+            <button *ngIf="p !== -1" class="mw-pgbtn" [class.active]="p === currentPage" (click)="goToPage(p)">
+              {{ p }}
+            </button>
+          </ng-container>
+          <button class="mw-pgbtn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
+          <button class="mw-pgbtn" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">»</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /mw-grid-card -->
+
+</div><!-- /mw-page-container -->
 
 
-<!-- ── New WFH Modal ─────────────────────────────────────────── -->
-<div class="emp-overlay" *ngIf="showForm" (click)="closeModal()">
-  <div class="emp-modal" (click)="$event.stopPropagation()">
-    <div class="emp-modal__head">
-      <h2 class="emp-modal__title">
+<!-- ── New WFH Modal ─────────────────────────────────────────────── -->
+<div class="mw-modal-overlay" *ngIf="showForm" (click)="closeModal()">
+  <div class="mw-modal-container mw-modal-xlarge" (click)="$event.stopPropagation()">
+    <div class="mw-modal-header">
+      <h2 class="mw-modal-title">
         <i class="bi bi-plus-circle-dotted"></i> New WFH Request
       </h2>
-      <button class="emp-modal__close" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
+      <button class="mw-modal-close" (click)="closeModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
-    <div class="emp-modal__body">
+    <div class="mw-modal-body">
       <app-wfh-request-form
+      [restrictToEmployeeId]="currentUserId"
         [existingRequest]="editingRequest"
         (saved)="onRequestSaved()"
         (cancelled)="closeModal()">
@@ -190,17 +179,18 @@
   </div>
 </div>
 
-
-<!-- ── Details Modal ─────────────────────────────────────────── -->
-<div class="emp-overlay" *ngIf="showDetails" (click)="closeModal()">
-  <div class="emp-modal" (click)="$event.stopPropagation()">
-    <div class="emp-modal__head">
-      <h2 class="emp-modal__title">
+<!-- ── Details Modal ─────────────────────────────────────────────── -->
+<div class="mw-modal-overlay" *ngIf="showDetails" (click)="closeModal()">
+  <div class="mw-modal-container mw-modal-xlarge" (click)="$event.stopPropagation()">
+    <div class="mw-modal-header">
+      <h2 class="mw-modal-title">
         <i class="bi bi-eye"></i> Request Details
       </h2>
-      <button class="emp-modal__close" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
+      <button class="mw-modal-close" (click)="closeModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
-    <div class="emp-modal__body">
+    <div class="mw-modal-body">
       <app-wfh-request-details
         *ngIf="selectedRequestId"
         [requestId]="selectedRequestId"

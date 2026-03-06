@@ -18,25 +18,25 @@ import Swal from 'sweetalert2';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+
 const empGridTheme = themeQuartz.withParams({
   backgroundColor:               '#ffffff',
-  foregroundColor:               '#374151',
+  foregroundColor:               '#1f2937',
   borderColor:                   '#e5e7eb',
-  headerBackgroundColor:         '#ffffff',
+  headerBackgroundColor:         '#f9fafb',
   headerTextColor:               '#374151',
   oddRowBackgroundColor:         '#ffffff',
   rowHoverColor:                 '#f8faff',
   selectedRowBackgroundColor:    '#dbeafe',
-  fontFamily:                    '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontFamily:                    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   fontSize:                      13,
   columnBorder:                  true,
   headerColumnBorder:            true,
   headerColumnBorderHeight:      '50%',
-  headerColumnResizeHandleColor: '#d1d5db',
-  headerFontWeight:              500,
-  headerFontSize:                13,
-  rowBorder:                     true,
-  cellHorizontalPaddingScale:    0.75,
+  headerColumnResizeHandleColor: '#9ca3af',
+  headerColumnResizeHandleHeight: '50%',
+  headerColumnResizeHandleWidth: 2,
+  cellHorizontalPaddingScale:    0.8,
 });
 
 @Component({
@@ -50,53 +50,58 @@ const empGridTheme = themeQuartz.withParams({
 export class MyWfhRequestsComponent implements OnInit, OnDestroy {
 
   readonly gridTheme = empGridTheme;
+  ApprovalStatus = ApprovalStatus;
 
-  allRequests: WfhRequest[] = [];
-  filteredRequests: WfhRequest[] = [];   // after status filter, before pagination
-  rowData: WfhRequest[] = [];            // current page slice shown in grid
-  loading = false;
+  allRequests:       WfhRequest[] = [];
+  filteredRequests:  WfhRequest[] = [];
+  rowData:           WfhRequest[] = [];
+  loading   = false;
   refreshing = false;
   error: string | null = null;
+
+  currentUserId: string | null = null;
+
+  searchTerm = '';
 
   private gridApi!: GridApi;
   private resizeObserver!: ResizeObserver;
   private resizeTimer: any;
+  private searchDebounceTimer: any;
 
-  // Modal
-  showForm = false;
+  // Modals
+  showForm    = false;
   showDetails = false;
   editingRequest: WfhRequest | null = null;
   selectedRequestId: string | null = null;
 
   // Filter
   selectedStatus: ApprovalStatus | '' = '';
-  ApprovalStatus = ApprovalStatus;
 
-  // ── Pagination ───────────────────────────────────────────────
-  currentPage   = 1;
-  pageSize      = 10;
+  // Pagination
+  currentPage     = 1;
+  pageSize        = 10;
   pageSizeOptions = [10, 25, 50, 100];
 
-  get totalItems()  { return this.filteredRequests.length; }
-  get totalPages()  { return Math.max(1, Math.ceil(this.totalItems / this.pageSize)); }
-  get startIndex()  { return this.totalItems === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1; }
-  get endIndex()    { return Math.min(this.currentPage * this.pageSize, this.totalItems); }
+  get totalItems():  number { return this.filteredRequests.length; }
+  get totalPages():  number { return Math.max(1, Math.ceil(this.totalItems / this.pageSize)); }
+  get startIndex():  number { return this.totalItems === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1; }
+  get endIndex():    number { return Math.min(this.currentPage * this.pageSize, this.totalItems); }
 
   get pageNumbers(): number[] {
     const total = this.totalPages;
     if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
     const cur = this.currentPage;
-    if (cur <= 4)      return [1, 2, 3, 4, 5, -1, total];
+    if (cur <= 4)         return [1, 2, 3, 4, 5, -1, total];
     if (cur >= total - 3) return [1, -1, total - 4, total - 3, total - 2, total - 1, total];
     return [1, -1, cur - 1, cur, cur + 1, -1, total];
   }
 
-  // ── Stats ────────────────────────────────────────────────────
-  get totalCount()    { return this.allRequests.length; }
-  get pendingCount()  { return this.countByStatus('pending');   }
-  get approvedCount() { return this.countByStatus('approved');  }
-  get rejectedCount() { return this.countByStatus('rejected');  }
-  get cancelledCount(){ return this.countByStatus('cancelled'); }
+  // Stats
+  get totalCount():    number { return this.allRequests.length; }
+  get pendingCount():  number { return this.countByStatus('pending'); }
+  get approvedCount(): number { return this.countByStatus('approved'); }
+  get rejectedCount(): number { return this.countByStatus('rejected'); }
+  get cancelledCount(): number { return this.countByStatus('cancelled'); }
 
   private countByStatus(s: string): number {
     return this.allRequests.filter(r => String(r.statusName ?? '').toLowerCase() === s).length;
@@ -111,21 +116,29 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
   columnDefs: ColDef[] = [
     {
       headerName: 'Actions',
-      width: 80, minWidth: 80, maxWidth: 80,
+      width: 100, minWidth: 100, maxWidth: 110,
       sortable: false, filter: false, floatingFilter: false,
       suppressFloatingFilterButton: true,
-      headerClass: 'emp-action-col',
-      cellClass: 'emp-action-cell emp-action-col',
+      cellClass: 'actions-cell',
       cellStyle: { display: 'flex', alignItems: 'center', padding: '0', overflow: 'visible' },
       suppressSizeToFit: true,
       cellRenderer: (p: any) => {
+        const btnBase = `
+          display:inline-flex;align-items:center;justify-content:center;
+          width:28px;height:28px;border:none;border-radius:4px;
+          cursor:pointer;font-size:15px;padding:0;flex-shrink:0;
+          line-height:1;transition:background 0.15s;background:transparent;
+        `;
+
         const wrap = document.createElement('div');
-        wrap.style.cssText = 'display:flex;align-items:center;gap:6px;padding:0 10px;';
+        wrap.style.cssText = 'display:flex;align-items:center;gap:4px;padding:0 4px;height:100%;';
 
         const viewBtn = document.createElement('button');
         viewBtn.innerHTML = '<i class="bi bi-eye"></i>';
         viewBtn.title = 'View Details';
-        viewBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;color:#3b82f6;cursor:pointer;font-size:14px;transition:all 0.15s;';
+        viewBtn.style.cssText = btnBase + 'color:#10b981;';
+        viewBtn.onmouseover = () => viewBtn.style.background = '#ecfdf5';
+        viewBtn.onmouseout  = () => viewBtn.style.background = 'transparent';
         viewBtn.addEventListener('click', () => this.viewDetails(p.data));
         wrap.appendChild(viewBtn);
 
@@ -133,7 +146,9 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
           const cancelBtn = document.createElement('button');
           cancelBtn.innerHTML = '<i class="bi bi-slash-circle"></i>';
           cancelBtn.title = 'Cancel';
-          cancelBtn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid #fecaca;background:#fef2f2;color:#ef4444;cursor:pointer;font-size:14px;transition:all 0.15s;';
+          cancelBtn.style.cssText = btnBase + 'color:#d97706;';
+          cancelBtn.onmouseover = () => cancelBtn.style.background = '#fef3c7';
+          cancelBtn.onmouseout  = () => cancelBtn.style.background = 'transparent';
           cancelBtn.addEventListener('click', () => this.cancelRequest(p.data));
           wrap.appendChild(cancelBtn);
         }
@@ -190,8 +205,8 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
           [ApprovalStatus.Rejected]:  ['#fee2e2', '#991b1b', 'Rejected'],
           [ApprovalStatus.Cancelled]: ['#f1f5f9', '#475569', 'Cancelled'],
         };
-        const byNum  = numMap[Number(p.value)];
-        const byStr  = strMap[String(p.data?.statusName ?? '').toLowerCase()];
+        const byNum = numMap[Number(p.value)];
+        const byStr = strMap[String(p.data?.statusName ?? '').toLowerCase()];
         const [bg, color, lbl] = byNum ?? byStr ?? ['#fef9c3', '#92400e', 'Pending'];
         return `<span style="display:inline-flex;padding:2px 12px;border-radius:9999px;
           font-size:12px;font-weight:600;background:${bg};color:${color};">${lbl}</span>`;
@@ -202,17 +217,35 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
       field: 'createdAt',
       width: 130, minWidth: 110,
       valueFormatter: (p: any) => p.value
-        ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+        ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+      cellStyle: { color: '#6b7280', fontSize: '12px' }
     }
   ];
 
   constructor(private wfhService: WfhRequestService, private cdr: ChangeDetectorRef) {}
 
-  ngOnInit(): void { this.loadAll(); }
+ngOnInit(): void {
+  this.currentUserId = sessionStorage.getItem('EmployeeId')
+  || sessionStorage.getItem('employeeId')
+  || sessionStorage.getItem('UserId')
+  || sessionStorage.getItem('userId')
+  || null;
+  
+  console.log('All sessionStorage keys:');
+  for (let i = 0; i < sessionStorage.length; i++) {
+    const key = sessionStorage.key(i)!;
+    console.log(`  ${key} = ${sessionStorage.getItem(key)}`);
+  }
+  console.log('currentUserId =', this.currentUserId);
+  
+  this.loadAll();
+}
+
 
   ngOnDestroy(): void {
     if (this.resizeObserver) this.resizeObserver.disconnect();
     clearTimeout(this.resizeTimer);
+    clearTimeout(this.searchDebounceTimer);
   }
 
   @HostListener('window:resize')
@@ -251,15 +284,11 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
             ? raw.data
             : (raw?.data as any)?.items ?? [];
 
-        if (items.length >= 0) {
-          this.allRequests = items.sort((a: WfhRequest, b: WfhRequest) =>
-            new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
-          );
-          this.currentPage = 1;
-          this.applyFilter();
-        } else {
-          this.error = (r as any)?.message || 'Failed to load requests';
-        }
+        this.allRequests = items.sort((a: WfhRequest, b: WfhRequest) =>
+          new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+        );
+        this.currentPage = 1;
+        this.applyFilter();
         this.cdr.detectChanges();
       },
       error: (e) => {
@@ -271,19 +300,26 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Filter + Pagination ──────────────────────────────────────
-
   applyFilter(): void {
-    if (!this.selectedStatus) {
-      this.filteredRequests = [...this.allRequests];
-    } else {
+    let filtered = [...this.allRequests];
+
+    if (this.searchTerm.trim()) {
+      const term = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(r =>
+        r.reason?.toLowerCase().includes(term) ||
+        String(r.statusName ?? '').toLowerCase().includes(term)
+      );
+    }
+
+    if (this.selectedStatus !== '') {
       const num = Number(this.selectedStatus);
-      this.filteredRequests = this.allRequests.filter(r =>
+      filtered = filtered.filter(r =>
         Number(r.status) === num ||
         String(r.statusName ?? '').toLowerCase() === ApprovalStatus[num]?.toLowerCase()
       );
     }
-    // Reset to page 1 whenever filter changes
+
+    this.filteredRequests = filtered;
     this.currentPage = 1;
     this.applyPage();
   }
@@ -298,12 +334,23 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  onSearch(): void {
+    clearTimeout(this.searchDebounceTimer);
+    this.searchDebounceTimer = setTimeout(() => this.applyFilter(), 350);
+  }
+
   onStatusFilter(status: ApprovalStatus | ''): void {
     this.selectedStatus = status;
     this.applyFilter();
   }
 
-  // ── Pagination controls ──────────────────────────────────────
+  clearFilters(): void {
+    clearTimeout(this.searchDebounceTimer);
+    this.searchTerm    = '';
+    this.selectedStatus = '';
+    this.currentPage   = 1;
+    this.applyFilter();
+  }
 
   goToPage(page: number): void {
     if (page < 1 || page > this.totalPages || page === this.currentPage) return;
@@ -317,17 +364,21 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
     this.applyPage();
   }
 
-  // ── Modals ───────────────────────────────────────────────────
+  getStatusName(status: ApprovalStatus | ''): string {
+    if (status === '') return '';
+    return ApprovalStatus[Number(status)] ?? String(status);
+  }
 
+  // Modals
   openCreateForm(): void { this.editingRequest = null; this.showForm = true; this.showDetails = false; }
   viewDetails(req: WfhRequest): void { this.selectedRequestId = req.id; this.showDetails = true; this.showForm = false; }
   closeModal(): void { this.showForm = false; this.showDetails = false; this.editingRequest = null; this.selectedRequestId = null; }
-  onRequestSaved(): void { this.closeModal(); this.loadAll(); }
+  onRequestSaved():   void { this.closeModal(); this.loadAll(); }
   onRequestUpdated(): void { this.loadAll(); }
 
   async cancelRequest(req: WfhRequest): Promise<void> {
     const result = await Swal.fire({
-      title: 'Cancel WFH Request?', text: 'Are you sure?',
+      title: 'Cancel WFH Request?', text: 'Are you sure you want to cancel this request?',
       icon: 'warning', showCancelButton: true,
       confirmButtonColor: '#f59e0b', cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, Cancel It'
@@ -345,6 +396,7 @@ export class MyWfhRequestsComponent implements OnInit, OnDestroy {
   }
 
   isPending(req: WfhRequest): boolean {
-    return String(req.statusName ?? '').toLowerCase() === 'pending';
+    return Number(req.status) === ApprovalStatus.Pending
+      || String(req.statusName ?? '').toLowerCase() === 'pending';
   }
 }

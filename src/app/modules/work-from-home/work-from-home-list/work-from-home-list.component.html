@@ -1,164 +1,184 @@
-<div class="wl-page">
+<div class="wl-page-container">
 
-  <h1 class="wl-page-title">Work From Home Requests</h1>
+  <!-- ── Page Header ─────────────────────────────────────────────── -->
+  <div class="wl-page-header">
+    <h1 class="wl-page-title">Work From Home Requests</h1>
+  </div>
 
-  <!-- ── Stats ─────────────────────────────────────────────────────── -->
-  <div class="wl-stats-row">
-    <div class="wl-stat wl-stat-blue">
+  <!-- ── Stats ───────────────────────────────────────────────────── -->
+  <div class="wl-stats-grid">
+    <div class="wl-stat-card wl-stat-total">
       <p class="wl-stat-label">Total Requests</p>
       <p class="wl-stat-value">{{ statsTotal }}</p>
     </div>
-    <div class="wl-stat wl-stat-yellow">
+    <div class="wl-stat-card wl-stat-pending">
       <p class="wl-stat-label">Pending</p>
       <p class="wl-stat-value">{{ getStatCount('Pending') }}</p>
     </div>
-    <div class="wl-stat wl-stat-green">
+    <div class="wl-stat-card wl-stat-approved">
       <p class="wl-stat-label">Approved</p>
       <p class="wl-stat-value">{{ getStatCount('Approved') }}</p>
     </div>
-    <div class="wl-stat wl-stat-red">
+    <div class="wl-stat-card wl-stat-rejected">
       <p class="wl-stat-label">Rejected</p>
       <p class="wl-stat-value">{{ getStatCount('Rejected') }}</p>
     </div>
   </div>
 
-  <!-- ── ONE white card ────────────────────────────────────────────── -->
-  <div class="wl-card">
-
-    <!-- Toolbar -->
-    <div class="wl-toolbar">
+  <!-- ── Toolbar ──────────────────────────────────────────────────── -->
+  <div class="wl-toolbar">
+    <div class="wl-search-wrapper">
       <input
         type="text"
-        class="wl-search"
         placeholder="Search WFH requests..."
         [(ngModel)]="searchTerm"
-        (input)="onSearch()" />
-
-      <div class="wl-toolbar-btns">
-        <button class="wl-btn wl-btn-filter" (click)="showFilters = !showFilters">
-          <i class="bi bi-funnel"></i> Filters
-          <span class="wl-filter-badge" *ngIf="activeFilterCount > 0">{{ activeFilterCount }}</span>
-        </button>
-        <button class="wl-btn wl-btn-clear" (click)="clearFilters()">Clear</button>
-        <button class="wl-btn wl-btn-refresh" (click)="loadRequests()" [class.wl-btn-spinning]="refreshing">
-          <i class="bi bi-arrow-clockwise"></i> Refresh
-        </button>
-        <button class="wl-btn wl-btn-export" (click)="exportData()">
-          <i class="bi bi-download"></i> Export
-        </button>
-        <button class="wl-btn wl-btn-add" (click)="openCreateForm()">
-          <i class="bi bi-plus-circle"></i> New WFH Request
-        </button>
-      </div>
+        (input)="onSearch()"
+        class="wl-search-input"
+      />
     </div>
-
-    <!-- Filter Panel -->
-    <div class="wl-filter-panel" [class.open]="showFilters">
-      <div class="wl-filter-inner">
-        <div class="wl-fg">
-          <label>Status</label>
-          <select [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()">
-            <option value="">All Statuses</option>
-            <option [value]="ApprovalStatus.Pending">Pending</option>
-            <option [value]="ApprovalStatus.Approved">Approved</option>
-            <option [value]="ApprovalStatus.Rejected">Rejected</option>
-            <option [value]="ApprovalStatus.Cancelled">Cancelled</option>
-          </select>
-        </div>
-        <div class="wl-fg">
-          <label>Start Date From</label>
-          <input type="date" [(ngModel)]="filters.startDateFrom" (change)="onFilterChange()" class="wl-fg-input" />
-        </div>
-        <div class="wl-fg">
-          <label>Start Date To</label>
-          <input type="date" [(ngModel)]="filters.startDateTo" (change)="onFilterChange()" class="wl-fg-input" />
-        </div>
-        <div class="wl-fg">
-          <label>Applied From</label>
-          <input type="date" [(ngModel)]="filters.appliedDateFrom" (change)="onFilterChange()" class="wl-fg-input" />
-        </div>
-      </div>
-    </div>
-
-    <!-- Initial Loading (first load only — grid not yet mounted) -->
-    <div *ngIf="loading" class="wl-loading">
-      <div class="wl-spinner"></div>
-      <span>Loading WFH requests...</span>
-    </div>
-
-    <!-- Error -->
-    <div *ngIf="error && !loading" class="wl-error">
-      <i class="bi bi-exclamation-circle"></i>
-      <span>{{ error }}</span>
-      <button class="wl-btn wl-btn-refresh" (click)="loadRequests()">Try Again</button>
-    </div>
-
-    <!-- Empty -->
-    <div *ngIf="!loading && !error && rowData.length === 0" class="wl-empty">
-      <i class="bi bi-house-x"></i>
-      <span>No WFH requests found. Adjust filters or submit a new request.</span>
-      <button class="wl-btn wl-btn-add" (click)="openCreateForm()">
-        <i class="bi bi-plus-circle"></i> New WFH Request
+    <div class="wl-toolbar-actions">
+      <button (click)="clearFilters()" class="wl-btn wl-btn-clear">
+        Clear
+      </button>
+      <button (click)="loadRequests()" class="wl-btn wl-btn-refresh" [class.wl-btn-spinning]="refreshing">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+      <button (click)="exportData()" class="wl-btn wl-btn-export">
+        <i class="bi bi-download"></i> Export
+      </button>
+      <div class="wl-toolbar-divider"></div>
+      <button (click)="openCreateForm()" class="wl-btn wl-btn-primary">
+        <i class="bi bi-plus-lg"></i> New WFH Request
       </button>
     </div>
+  </div>
 
-    <!-- Refresh overlay bar (shown during refresh without unmounting grid) -->
+  <!-- ── Filter Panel ─────────────────────────────────────────────── -->
+  <div class="wl-filter-panel" [class.open]="showFilters">
+    <div class="wl-filter-inner">
+      <div class="wl-fg">
+        <label>Status</label>
+        <select [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()" class="wl-fg-control">
+          <option value="">All Statuses</option>
+          <option [value]="ApprovalStatus.Pending">Pending</option>
+          <option [value]="ApprovalStatus.Approved">Approved</option>
+          <option [value]="ApprovalStatus.Rejected">Rejected</option>
+          <option [value]="ApprovalStatus.Cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="wl-fg">
+        <label>Start Date From</label>
+        <input type="date" [(ngModel)]="filters.startDateFrom" (change)="onFilterChange()" class="wl-fg-control" />
+      </div>
+      <div class="wl-fg">
+        <label>Start Date To</label>
+        <input type="date" [(ngModel)]="filters.startDateTo" (change)="onFilterChange()" class="wl-fg-control" />
+      </div>
+      <div class="wl-fg">
+        <label>Applied From</label>
+        <input type="date" [(ngModel)]="filters.appliedDateFrom" (change)="onFilterChange()" class="wl-fg-control" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Active Filters ───────────────────────────────────────────── -->
+  <div *ngIf="activeFilterCount > 0" class="wl-active-filters">
+    <span class="wl-filter-label">Active Filters:</span>
+    <span *ngIf="selectedStatus" class="wl-filter-badge-tag">Status: {{ selectedStatus }}</span>
+    <span *ngIf="filters.startDateFrom" class="wl-filter-badge-tag">From: {{ filters.startDateFrom }}</span>
+    <span *ngIf="filters.startDateTo" class="wl-filter-badge-tag">To: {{ filters.startDateTo }}</span>
+    <span *ngIf="filters.appliedDateFrom" class="wl-filter-badge-tag">Applied: {{ filters.appliedDateFrom }}</span>
+  </div>
+
+  <!-- ── Grid Card ────────────────────────────────────────────────── -->
+  <div class="wl-grid-card">
+
+    <!-- Refresh progress bar -->
     <div class="wl-refresh-bar" *ngIf="refreshing">
       <div class="wl-refresh-bar-inner"></div>
     </div>
 
-    <!-- AG Grid — stays mounted after first load; rowData binding handles updates -->
-    <ag-grid-angular
-      *ngIf="!loading && !error && rowData.length > 0"
-      style="width: 100%;"
-      [theme]="gridTheme"
-      [rowData]="rowData"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      (gridReady)="onGridReady($event)"
-      [rowHeight]="52"
-      [headerHeight]="44"
-      [floatingFiltersHeight]="36"
-      [domLayout]="'autoHeight'"
-      [context]="context"
-      [suppressPaginationPanel]="true">
-    </ag-grid-angular>
+    <div class="wl-grid-container">
 
-    <!-- Pagination -->
-    <div class="wl-pagination" *ngIf="!loading && rowData.length > 0">
-      <div class="wl-ps-wrap">
-        <label>Show:</label>
-        <select class="wl-ps-select" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
-          <option [value]="10">10</option>
-          <option [value]="25">25</option>
-          <option [value]="50">50</option>
-        </select>
+      <!-- Initial Loading -->
+      <div *ngIf="loading" class="wl-loading">
+        <div class="wl-spinner"></div>
+        <span>Loading WFH requests...</span>
       </div>
-      <span class="wl-pag-info">
-        {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
-      </span>
-      <span class="wl-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
-      <div class="wl-pag-btns">
-        <button class="wl-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">«</button>
-        <button class="wl-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">‹</button>
-        <button *ngFor="let page of pages" class="wl-pgbtn"
-          [class.active]="page === currentPage" (click)="onPageChange(page)">
-          {{ page }}
+
+      <!-- Error -->
+      <div *ngIf="error && !loading" class="wl-error">
+        <i class="bi bi-exclamation-circle"></i>
+        <span>{{ error }}</span>
+        <button class="wl-btn wl-btn-refresh" (click)="loadRequests()">Try Again</button>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!loading && !error && rowData.length === 0" class="wl-empty">
+        <i class="bi bi-house-x"></i>
+        <span>No WFH requests found. Adjust filters or submit a new request.</span>
+        <button class="wl-btn wl-btn-primary" (click)="openCreateForm()">
+          <i class="bi bi-plus-lg"></i> New WFH Request
         </button>
-        <button class="wl-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">›</button>
-        <button class="wl-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">»</button>
+      </div>
+
+      <!-- AG Grid -->
+      <ag-grid-angular
+        *ngIf="!loading && !error && rowData.length > 0"
+        style="width: 100%;"
+        [theme]="gridTheme"
+        [rowData]="rowData"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        (gridReady)="onGridReady($event)"
+        [rowHeight]="44"
+        [headerHeight]="44"
+        [floatingFiltersHeight]="36"
+        [domLayout]="'autoHeight'"
+        [context]="context"
+        [animateRows]="true"
+        [suppressPaginationPanel]="true">
+      </ag-grid-angular>
+
+    </div>
+
+    <!-- ── Pagination ──────────────────────────────────────────────── -->
+    <div class="wl-pagination" *ngIf="!loading && rowData.length > 0">
+      <div class="wl-pagination-inner">
+        <div class="wl-page-size">
+          <label>Show:</label>
+          <select [(ngModel)]="pageSize" (change)="onPageSizeChange($event)" class="wl-page-size-select">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+          </select>
+        </div>
+        <span class="wl-pagination-text">
+          {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
+        </span>
+        <span class="wl-pagination-text">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <div class="wl-pagination-btns">
+          <button class="wl-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">«</button>
+          <button class="wl-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">‹</button>
+          <button *ngFor="let page of pages" class="wl-pgbtn"
+            [class.active]="page === currentPage" (click)="onPageChange(page)">
+            {{ page }}
+          </button>
+          <button class="wl-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">›</button>
+          <button class="wl-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">»</button>
+        </div>
       </div>
     </div>
 
-  </div><!-- /wl-card -->
+  </div><!-- /wl-grid-card -->
 
-</div><!-- /wl-page -->
+</div><!-- /wl-page-container -->
 
 
 <!-- ── Form Modal ─────────────────────────────────────────────────── -->
-<div class="wl-overlay" *ngIf="showForm" (click)="onSidebarClose()">
-  <div class="wl-modal wl-modal-xl" (click)="$event.stopPropagation()">
-    <div class="wl-modal-head">
+<div class="wl-modal-overlay" *ngIf="showForm" (click)="onSidebarClose()">
+  <div class="wl-modal-container wl-modal-xlarge" (click)="$event.stopPropagation()">
+    <div class="wl-modal-header">
       <h2 class="wl-modal-title">
         <i class="bi" [ngClass]="editingRequest ? 'bi-pencil-square' : 'bi-plus-circle-dotted'"></i>
         {{ editingRequest ? 'Edit WFH Request' : 'New WFH Request' }}
@@ -178,9 +198,9 @@
 </div>
 
 <!-- ── Details Modal ─────────────────────────────────────────────── -->
-<div class="wl-overlay" *ngIf="showDetails" (click)="onSidebarClose()">
-  <div class="wl-modal wl-modal-xl" (click)="$event.stopPropagation()">
-    <div class="wl-modal-head">
+<div class="wl-modal-overlay" *ngIf="showDetails" (click)="onSidebarClose()">
+  <div class="wl-modal-container wl-modal-xlarge" (click)="$event.stopPropagation()">
+    <div class="wl-modal-header">
       <h2 class="wl-modal-title">
         <i class="bi bi-eye"></i> WFH Request Details
       </h2>
