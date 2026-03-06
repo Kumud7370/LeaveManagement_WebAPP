@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { ActivatedRoute, Router } from '@angular/router';
 import { AdminInvitationService } from '../../../core/services/api/admin-invitation.api';
 import { ValidateTokenResponse, AcceptInvitationDto } from '../../../core/Models/admin-invitation.model';
-
+import { InvitationActionCellRendererComponent } from '../invitation-action-cell-renderer.component';
 @Component({
   selector: 'app-accept-invitation',
   standalone: true,
