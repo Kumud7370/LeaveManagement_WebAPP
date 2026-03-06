@@ -120,9 +120,24 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
 
   stats = { total: 0, pending: 0, approved: 0, rejected: 0 };
 
-  private resizeObserver: ResizeObserver | null = null;
+  // ── Resize tracking ──────────────────────────────────────────────────────────
+  // Observes document.body width changes (sidebar open/close) only.
   private sidebarResizeObserver: ResizeObserver | null = null;
   private resizeDebounceTimer: any = null;
+
+  // Once the user manually drags a column resize handle, we stop calling
+  // sizeColumnsToFit() so their custom widths are preserved.
+  // This flag is reset only when a genuine layout-width change is detected
+  // (e.g. sidebar toggled), because at that point the old widths are stale.
+  private userHasResizedColumn = false;
+
+  // Whether a column-resize drag is currently in progress.
+  // We must NOT call sizeColumnsToFit() while a drag is active.
+  private isColumnResizeDragActive = false;
+
+  // Track last known body width so we only react to width changes.
+  private lastBodyWidth = 0;
+  // ─────────────────────────────────────────────────────────────────────────────
 
   activeFilters = {
     hasActiveFilters: false,
@@ -160,6 +175,8 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     floatingFilter:    true,
     resizable:         true,
     minWidth:          80,
+    // Do NOT set suppressSizeToFit globally — it prevents sizeColumnsToFit()
+    // from working on any column and is the primary cause of resize-handle issues.
     suppressSizeToFit: false,
     suppressAutoSize:  false
   };
@@ -178,6 +195,8 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
         suppressFloatingFilterButton: true,
         cellClass:   'actions-cell',
         cellRenderer: RegularizationActionCellRendererComponent,
+        // This column has a fixed width — exclude it from sizeColumnsToFit
+        // calculations so it never shrinks/grows and disrupts the layout.
         suppressSizeToFit: true,
         pinned: 'left'
       },
@@ -272,7 +291,6 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
           return `<span class="badge-status" style="${style}">${params.value || ''}</span>`;
         }
       },
-      
       {
         headerName: 'Requested At',
         field:      'requestedAt',
@@ -294,41 +312,80 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     this.loadRegularizations();
 
     if (typeof ResizeObserver !== 'undefined') {
+      this.lastBodyWidth = document.body.clientWidth;
+
       this.sidebarResizeObserver = new ResizeObserver(() => {
-        this.debouncedGridResize();
+        const newWidth = document.body.clientWidth;
+        // Only react to genuine layout-width changes (sidebar open/close).
+        // Ignore height-only changes (scrollbar appearing, content growing, etc.)
+        if (Math.abs(newWidth - this.lastBodyWidth) > 5) {
+          this.lastBodyWidth = newWidth;
+          // A layout-width change means the user's manual column widths are
+          // stale — safe to auto-fit once more.
+          this.userHasResizedColumn = false;
+          this.debouncedGridResize();
+        }
       });
+
       this.sidebarResizeObserver.observe(document.body);
     }
   }
 
   ngOnDestroy(): void {
-    if (this.resizeObserver)        { this.resizeObserver.disconnect();        this.resizeObserver        = null; }
     if (this.sidebarResizeObserver) { this.sidebarResizeObserver.disconnect(); this.sidebarResizeObserver = null; }
     if (this.searchDebounceTimer)   { clearTimeout(this.searchDebounceTimer); }
     if (this.resizeDebounceTimer)   { clearTimeout(this.resizeDebounceTimer); }
   }
 
+  // ── Safe sizeColumnsToFit wrapper ─────────────────────────────────────────
+  // Never calls sizeColumnsToFit() while a drag is in progress or after the
+  // user has set custom widths (unless a layout-width change reset the flag).
+  private safeAutoFit(): void {
+    if (!this.gridApi) return;
+    if (this.userHasResizedColumn) return;
+    if (this.isColumnResizeDragActive) return;
+    requestAnimationFrame(() => {
+      // Double-check inside rAF — drag state may have changed.
+      if (!this.isColumnResizeDragActive && !this.userHasResizedColumn) {
+        this.gridApi?.sizeColumnsToFit();
+      }
+    });
+  }
+
   private debouncedGridResize(): void {
     clearTimeout(this.resizeDebounceTimer);
-    this.resizeDebounceTimer = setTimeout(() => {
-      if (this.gridApi) requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
-    }, 150);
+    this.resizeDebounceTimer = setTimeout(() => this.safeAutoFit(), 200);
   }
+  // ─────────────────────────────────────────────────────────────────────────
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
+
+    // ── Column resize listeners ──────────────────────────────────────────────
+    // `columnResized` fires continuously during a drag (source = 'uiColumnDragged')
+    // AND once more when the drag ends (finished = true).
+    //
+    // We track drag-active state so safeAutoFit() is never called mid-drag,
+    // which was the root cause of resize handles appearing non-functional.
+    this.gridApi.addEventListener('columnResized', (e: any) => {
+      if (e.source === 'uiColumnDragged') {
+        if (!e.finished) {
+          // Drag started or ongoing — block any auto-fit calls.
+          this.isColumnResizeDragActive = true;
+        } else {
+          // Drag completed — record user intent and unblock auto-fit.
+          this.isColumnResizeDragActive = false;
+          this.userHasResizedColumn     = true;
+        }
+      }
+    });
+    // ────────────────────────────────────────────────────────────────────────
+
     this.gridApi.addEventListener('sortChanged',   this.onSortChanged.bind(this));
     this.gridApi.addEventListener('filterChanged', this.onFilterChanged.bind(this));
-    setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
 
-    const hostEl    = this.agGridElement?.nativeElement;
-    const container = (hostEl?.closest('.rl-grid-container') as HTMLElement) ?? hostEl;
-    if (container && typeof ResizeObserver !== 'undefined') {
-      this.resizeObserver = new ResizeObserver(() => {
-        if (this.gridApi) requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
-      });
-      this.resizeObserver.observe(container);
-    }
+    // Initial fit — only on first render when no user widths exist yet.
+    setTimeout(() => this.safeAutoFit(), 150);
   }
 
   onSortChanged(_e: SortChangedEvent):     void { this.currentPage = 1; this.loadRegularizations(); }
@@ -374,7 +431,10 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
           if (this.gridApi) {
             this.gridApi.setGridOption('rowData', this.rowData);
             refreshGrid(this.gridApi);
-            setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
+            // After a data reload, only auto-fit if the user has not set
+            // custom column widths. Never call sizeColumnsToFit() immediately
+            // here — defer to safeAutoFit() which guards against drag-active state.
+            setTimeout(() => this.safeAutoFit(), 50);
           }
           this.cdr.detectChanges();
         }
@@ -433,6 +493,7 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     this.currentPage = 1;
     this.loadRegularizations();
   }
+
   goToPage(page: number | string): void {
     const p = typeof page === 'string' ? parseInt(page, 10) : page;
     if (isNaN(p) || p < 1 || p > this.totalPages || p === this.currentPage) return;
