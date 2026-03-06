@@ -39,10 +39,10 @@ const summaryGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
   foregroundColor:                '#1f2937',
   borderColor:                    '#e5e7eb',
-  headerBackgroundColor:          '#f9fafb',
+  headerBackgroundColor:          '#f8faff',
   headerTextColor:                '#374151',
   oddRowBackgroundColor:          '#ffffff',
-  rowHoverColor:                  '#f8faff',
+  rowHoverColor:                  '#f0f7ff',
   selectedRowBackgroundColor:     '#dbeafe',
   fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   fontSize:                       13,
@@ -71,119 +71,113 @@ export class AttendanceSummaryComponent implements OnInit {
 
   readonly gridTheme = summaryGridTheme;
 
-  // ── Role / identity 
+  // ── Role / identity ─────────────────────────────────────────
   get isAdmin(): boolean {
     const role = (sessionStorage.getItem('RoleName') || '').toLowerCase();
     return role === 'admin' || role === 'superadmin' || role === 'manager';
   }
-  get employeeId(): string {
+
+  get selfEmployeeId(): string {
     return sessionStorage.getItem('EmployeeId') || '';
   }
 
-  // ── Summary KPI 
+  // ── State ────────────────────────────────────────────────────
   summary: AttendanceSummaryDto | null = null;
   summaryLoading = false;
+  recordsLoading = false;
   errorMsg       = '';
+  hasSearched    = false;
 
-  // ── Grid state 
-  allRecords: AttendanceResponseDto[] = []; 
-  rowData: AttendanceResponseDto[]    = [];  
-  gridApi!: GridApi;
+  allRecords: AttendanceResponseDto[] = [];
+  rowData:    AttendanceResponseDto[] = [];
+  gridApi!:   GridApi;
 
-  // ── Filters 
+  // ── Form fields ──────────────────────────────────────────────
+  lookupEmployeeId = '';
   startDate        = '';
   endDate          = '';
-  lookupEmployeeId = '';
   searchTerm       = '';
-  private searchDebounceTimer: any  = null;
-  private isLoadingData             = false;
 
-  // ── Pagination 
+  private searchDebounceTimer: any = null;
+
+  // ── Pagination ───────────────────────────────────────────────
   currentPage = 1;
   pageSize    = 20;
   totalItems  = 0;
   totalPages  = 0;
   Math        = Math;
 
-  activeFilters = {
-    hasActiveFilters: false,
-    filters: [] as string[],
-    count: 0
-  };
-
+  activeFilters = { hasActiveFilters: false, filters: [] as string[], count: 0 };
   context = { componentParent: this };
 
-  // ── Column definitions 
+  // ── Column definitions (Method & Approved removed) ───────────
   defaultColDef: ColDef = {
-    sortable:       true,
-    filter:         true,
-    floatingFilter: true,
-    resizable:      true,
-    minWidth:       80
+    sortable: true, filter: true, floatingFilter: true, resizable: true, minWidth: 80
   };
 
   columnDefs: ColDef[] = [
     {
       headerName: 'Date',
       field: 'attendanceDate',
-      width: 150,
-      minWidth: 120,
-      sort: 'asc',
+      width: 160, minWidth: 130, sort: 'asc',
       valueFormatter: (p: any) =>
-        p.value
-          ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-          : '',
+        p.value ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '',
       cellStyle: { color: '#374151', fontWeight: '600' }
     },
     {
       headerName: 'Day',
       field: 'attendanceDate',
       colId: 'dayOfWeek',
-      width: 90,
-      minWidth: 80,
-      filter: false,
-      floatingFilter: false,
-      suppressFloatingFilterButton: true,
+      width: 90, minWidth: 80,
+      filter: false, floatingFilter: false, suppressFloatingFilterButton: true,
       valueFormatter: (p: any) =>
         p.value ? new Date(p.value).toLocaleDateString('en-GB', { weekday: 'short' }) : '',
-      cellStyle: { color: '#6b7280', fontSize: '12px' }
+      cellStyle: (p: any) => {
+        const day = p.value ? new Date(p.value).getDay() : -1;
+        const isWeekend = day === 0 || day === 6;
+        return { color: isWeekend ? '#ef4444' : '#6b7280', fontSize: '12px', fontWeight: isWeekend ? '700' : '400' };
+      }
     },
     {
       headerName: 'Check In',
       field: 'checkInTime',
-      width: 110,
-      minWidth: 90,
+      width: 120, minWidth: 100,
       valueFormatter: (p: any) =>
-        p.value
-          ? new Date(p.value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-          : '—',
-      cellStyle: { color: '#374151' }
+        p.value ? new Date(p.value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—',
+      cellStyle: (p: any) => ({
+        color: p.data?.isLate ? '#d97706' : '#374151',
+        fontWeight: p.data?.isLate ? '700' : '400'
+      })
     },
     {
       headerName: 'Check Out',
       field: 'checkOutTime',
-      width: 110,
-      minWidth: 90,
+      width: 120, minWidth: 100,
       valueFormatter: (p: any) =>
-        p.value
-          ? new Date(p.value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-          : '—',
-      cellStyle: { color: '#374151' }
+        p.value ? new Date(p.value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—',
+      cellStyle: (p: any) => ({
+        color: p.data?.isEarlyLeave ? '#ef4444' : '#374151',
+        fontWeight: p.data?.isEarlyLeave ? '700' : '400'
+      })
     },
     {
       headerName: 'Hours',
       field: 'workingHours',
-      width: 90,
-      minWidth: 75,
-      valueFormatter: (p: any) =>
-        p.value != null ? `${(+p.value).toFixed(1)}h` : '—',
-      cellStyle: { textAlign: 'center', color: '#374151' }
+      width: 100, minWidth: 85,
+      valueFormatter: (p: any) => p.value != null ? `${(+p.value).toFixed(1)}h` : '—',
+      cellStyle: (p: any) => {
+        const h = p.value ?? 0;
+        return {
+          textAlign: 'center',
+          color: h >= 8 ? '#059669' : h >= 4 ? '#d97706' : '#ef4444',
+          fontWeight: '600'
+        };
+      }
     },
     {
       headerName: 'Status',
       field: 'status',
-      width: 140,
-      minWidth: 110,
+      width: 150, minWidth: 120,
       cellRenderer: (p: any) => {
         const status: AttendanceStatus = p.value;
         const label: string = p.data?.statusName ?? '';
@@ -198,17 +192,15 @@ export class AttendanceSummaryComponent implements OnInit {
           [AttendanceStatus.OnDuty]:       { bg: '#fff7ed', color: '#9a3412', border: '#fdba74' }
         };
         const s = map[status] ?? map[AttendanceStatus.Absent];
-        return `<span style="display:inline-flex;align-items:center;padding:3px 10px;
-                             border-radius:9999px;font-size:12px;font-weight:600;
-                             background:${s.bg};color:${s.color};border:1px solid ${s.border};"
-                >${label}</span>`;
+        return `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:9999px;
+                             font-size:11px;font-weight:600;background:${s.bg};color:${s.color};
+                             border:1px solid ${s.border};">${label}</span>`;
       }
     },
     {
       headerName: 'Late',
       field: 'isLate',
-      width: 90,
-      minWidth: 75,
+      width: 100, minWidth: 85,
       cellStyle: { textAlign: 'center' },
       cellRenderer: (p: any) =>
         p.value
@@ -218,40 +210,22 @@ export class AttendanceSummaryComponent implements OnInit {
     {
       headerName: 'Early Exit',
       field: 'isEarlyLeave',
-      width: 100,
-      minWidth: 85,
+      width: 110, minWidth: 90,
       cellStyle: { textAlign: 'center' },
       cellRenderer: (p: any) =>
         p.value
-          ? `<span style="color:#ef4444;font-weight:700;font-size:12px;">Yes</span>`
+          ? `<span style="color:#ef4444;font-weight:700;font-size:12px;">-${p.data?.earlyLeaveMinutes ?? 0}m</span>`
           : `<span style="color:#9ca3af;font-size:12px;">—</span>`
     },
     {
       headerName: 'Overtime',
       field: 'overtimeHours',
-      width: 100,
-      minWidth: 85,
+      width: 110, minWidth: 90,
       valueFormatter: (p: any) =>
         p.value != null && p.value > 0 ? `${(+p.value).toFixed(1)}h` : '—',
       cellStyle: { textAlign: 'center', color: '#6366f1', fontWeight: '600' }
-    },
-    {
-      headerName: 'Method',
-      field: 'checkInMethodName',
-      width: 120,
-      minWidth: 100,
-      cellStyle: { color: '#64748b', fontSize: '12px' }
-    },
-    {
-      headerName: 'Approved',
-      field: 'approvedBy',
-      width: 110,
-      minWidth: 90,
-      cellRenderer: (p: any) =>
-        p.value
-          ? `<span style="color:#059669;font-weight:600;font-size:12px;">✓ Yes</span>`
-          : `<span style="color:#9ca3af;font-size:12px;">Pending</span>`
     }
+    // ── Method and Approved columns intentionally removed ──────
   ];
 
   constructor(
@@ -261,25 +235,49 @@ export class AttendanceSummaryComponent implements OnInit {
 
   ngOnInit(): void {
     this.setCurrentMonth();
-    this.lookupEmployeeId = this.employeeId;
-    if (this.employeeId) {
-      this.loadAll();
+
+    if (this.isAdmin) {
+      this.lookupEmployeeId = '';
+    } else {
+      this.lookupEmployeeId = this.selfEmployeeId;
+      if (this.selfEmployeeId) {
+        this.loadAll();
+      }
     }
   }
 
-  loadAll(): void {
-    this.loadSummary();
-    this.loadRecords();
+  private resolveEid(): string {
+    return this.isAdmin ? this.lookupEmployeeId.trim() : this.selfEmployeeId;
   }
 
-  // ── KPI Summary 
-  loadSummary(): void {
-    const eid = this.resolveEid();
-    if (!eid || !this.startDate || !this.endDate) return;
+  loadAll(): void {
+    this.errorMsg = '';
 
+    const eid = this.resolveEid();
+    if (!eid) {
+      this.errorMsg = 'Please enter an Employee ID to search.';
+      return;
+    }
+    if (!this.startDate || !this.endDate) {
+      this.errorMsg = 'Please select both From and To dates.';
+      return;
+    }
+    if (this.startDate > this.endDate) {
+      this.errorMsg = 'From date cannot be after To date.';
+      return;
+    }
+
+    this.hasSearched = true;
+    this.summary     = null;
+    this.allRecords  = [];
+    this.rowData     = [];
+
+    this.doLoadSummary(eid);
+    this.doLoadRecords(eid);
+  }
+
+  private doLoadSummary(eid: string): void {
     this.summaryLoading = true;
-    this.errorMsg       = '';
-    this.summary        = null;
     this.cdr.detectChanges();
 
     this.attendanceService.getAttendanceSummary(eid, this.startDate, this.endDate).subscribe({
@@ -288,58 +286,59 @@ export class AttendanceSummaryComponent implements OnInit {
         if (r.success && r.data) {
           this.summary = r.data;
         } else {
-          this.errorMsg = r.message || 'No summary data found for this period.';
+          this.errorMsg = r.message || 'No summary data found. Check the employee ID.';
         }
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.summaryLoading = false;
-        this.errorMsg = err?.error?.message || 'Failed to load summary.';
+        this.errorMsg = err?.error?.message || 'Failed to load summary. Check the employee ID and try again.';
         this.cdr.detectChanges();
       }
     });
   }
 
-  // ── Grid records 
-  loadRecords(): void {
-    if (this.isLoadingData) return;
-    const eid = this.resolveEid();
-    if (!eid || !this.startDate || !this.endDate) return;
-
-    this.isLoadingData = true;
+  private doLoadRecords(eid: string): void {
+    this.recordsLoading = true;
+    this.cdr.detectChanges();
 
     this.attendanceService.getEmployeeHistory(eid, this.startDate, this.endDate).subscribe({
       next: (r: any) => {
-        this.isLoadingData = false;
+        this.recordsLoading = false;
         if (r.success) {
-          this.allRecords = r.data ?? [];
+          this.allRecords  = r.data ?? [];
+          this.currentPage = 1;
           this.applySearchAndPage();
         }
         this.cdr.detectChanges();
       },
       error: () => {
-        this.isLoadingData = false;
+        this.recordsLoading = false;
         this.cdr.detectChanges();
       }
     });
+  }
+
+  refreshRecords(): void {
+    const eid = this.resolveEid();
+    if (eid && this.startDate && this.endDate) this.doLoadRecords(eid);
   }
 
   private applySearchAndPage(): void {
     const term = this.searchTerm.toLowerCase().trim();
     const filtered = term
       ? this.allRecords.filter(i =>
-          (i.statusName          || '').toLowerCase().includes(term) ||
-          (i.checkInMethodName   || '').toLowerCase().includes(term) ||
+          (i.statusName        || '').toLowerCase().includes(term) ||
           (i.attendanceDate?.toString() || '').includes(term)
         )
       : [...this.allRecords];
 
-    this.totalItems  = filtered.length;
-    this.totalPages  = Math.ceil(this.totalItems / this.pageSize);
+    this.totalItems = filtered.length;
+    this.totalPages = Math.ceil(this.totalItems / this.pageSize) || 1;
     if (this.currentPage > this.totalPages) this.currentPage = 1;
 
-    const start   = (this.currentPage - 1) * this.pageSize;
-    this.rowData  = filtered.slice(start, start + this.pageSize);
+    const start  = (this.currentPage - 1) * this.pageSize;
+    this.rowData = filtered.slice(start, start + this.pageSize);
 
     if (this.gridApi) {
       this.gridApi.setGridOption('rowData', this.rowData);
@@ -349,22 +348,12 @@ export class AttendanceSummaryComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  private resolveEid(): string {
-    return this.isAdmin
-      ? (this.lookupEmployeeId.trim() || this.employeeId)
-      : this.employeeId;
-  }
-
-  // ── Grid events 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
-    this.gridApi.addEventListener('filterChanged', (_e: FilterChangedEvent) => {
-      this.updateActiveFilters();
-    });
+    this.gridApi.addEventListener('filterChanged', (_e: FilterChangedEvent) => this.updateActiveFilters());
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
   }
 
-  // ── Search 
   onSearchChange(): void {
     clearTimeout(this.searchDebounceTimer);
     this.searchDebounceTimer = setTimeout(() => {
@@ -378,76 +367,48 @@ export class AttendanceSummaryComponent implements OnInit {
     clearTimeout(this.searchDebounceTimer);
     this.searchTerm  = '';
     this.currentPage = 1;
-    clearAllFilters(this.gridApi);
+    if (this.gridApi) clearAllFilters(this.gridApi);
     this.applySearchAndPage();
     this.updateActiveFilters();
   }
 
   updateActiveFilters(): void {
-    const columnFilterCount = this.gridApi
-      ? Object.keys(this.gridApi.getFilterModel()).length
-      : 0;
+    const n = this.gridApi ? Object.keys(this.gridApi.getFilterModel()).length : 0;
     const extra: Record<string, any> = {};
-    if (columnFilterCount > 0) extra['Column filters'] = `${columnFilterCount} active`;
+    if (n > 0) extra['Column filters'] = `${n} active`;
     const filters = getActiveFiltersSummary(this.searchTerm, undefined, extra);
     this.activeFilters = { hasActiveFilters: filters.length > 0, filters, count: filters.length };
   }
 
-  highlightText(text: string, term: string): string {
-    if (!term || !text) return String(text);
-    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return String(text).replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="search-highlight">$1</mark>');
-  }
-
-  // ── Pagination 
-  onPageSizeChanged(size: number): void {
-    this.pageSize    = size;
-    this.currentPage = 1;
-    this.applySearchAndPage();
-  }
-
+  onPageSizeChanged(size: number): void { this.pageSize = +size; this.currentPage = 1; this.applySearchAndPage(); }
   goToPage(page: number | string): void {
     const p = typeof page === 'string' ? parseInt(page, 10) : page;
     if (isNaN(p) || p < 1 || p > this.totalPages || p === this.currentPage) return;
-    this.currentPage = p;
-    this.applySearchAndPage();
+    this.currentPage = p; this.applySearchAndPage();
   }
+  nextPage():     void { if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1); }
+  previousPage(): void { if (this.currentPage > 1)              this.goToPage(this.currentPage - 1); }
 
-  nextPage(): void     { if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1); }
-  previousPage(): void { if (this.currentPage > 1) this.goToPage(this.currentPage - 1); }
-
-  // ── Quick date setters 
   setCurrentMonth(): void {
-    const today = new Date();
-    const first = new Date(today.getFullYear(), today.getMonth(), 1);
-    this.startDate = this.toDateStr(first);
-    this.endDate   = this.toDateStr(today);
+    const t = new Date();
+    this.startDate = this.toDateStr(new Date(t.getFullYear(), t.getMonth(), 1));
+    this.endDate   = this.toDateStr(t);
   }
-
-  setCurrentMonthAndLoad(): void {
-    this.setCurrentMonth();
-    this.loadAll();
-  }
-
+  setCurrentMonthAndLoad(): void { this.setCurrentMonth(); this.loadAll(); }
   setLastMonth(): void {
-    const today       = new Date();
-    const firstOfLast = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const lastOfLast  = new Date(today.getFullYear(), today.getMonth(), 0);
-    this.startDate = this.toDateStr(firstOfLast);
-    this.endDate   = this.toDateStr(lastOfLast);
+    const t = new Date();
+    this.startDate = this.toDateStr(new Date(t.getFullYear(), t.getMonth() - 1, 1));
+    this.endDate   = this.toDateStr(new Date(t.getFullYear(), t.getMonth(), 0));
     this.loadAll();
   }
-
   private toDateStr(d: Date): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  // ── Export 
   exportData(): void {
-    exportToCsv(this.gridApi, `attendance_${this.resolveEid()}`);
+    exportToCsv(this.gridApi, `attendance_${this.resolveEid()}_${this.startDate}_to_${this.endDate}`);
   }
 
-  // ── SVG gauge arc 
   getAttendanceArc(): string {
     const pct   = Math.min(Math.max((this.summary?.attendancePercentage ?? 0) / 100, 0), 1);
     const angle = pct * Math.PI;
@@ -455,12 +416,13 @@ export class AttendanceSummaryComponent implements OnInit {
     const y     = 50 + 40 * Math.sin(Math.PI + angle);
     return `M 10 50 A 40 40 0 ${angle > Math.PI / 2 ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)}`;
   }
-
-  safePercent(value: number, total: number): number {
-    if (!total) return 0;
-    return Math.min((value / total) * 100, 100);
+  getGaugeColor(): string {
+    const p = this.summary?.attendancePercentage ?? 0;
+    return p >= 90 ? '#059669' : p >= 75 ? '#d97706' : '#ef4444';
   }
-
+  safePercent(value: number, total: number): number {
+    return total ? Math.min((value / total) * 100, 100) : 0;
+  }
   formatDate(dateStr: string): string {
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
