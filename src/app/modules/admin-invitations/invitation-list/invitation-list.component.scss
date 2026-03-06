@@ -229,13 +229,25 @@ select.il-form-control {
   .il-toolbar-actions { justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
   .il-toolbar-divider { display: none; }
   .il-btn { padding: 8px 12px; font-size: 13px; }
+  .il-grid-card { border-radius: 8px; }
   .il-pagination-inner { flex-wrap: wrap; justify-content: center; gap: 10px; }
   .il-modal-overlay { padding: 0; align-items: flex-end; }
-  .il-modal-container { border-radius: 16px 16px 0 0; max-width: 100%; width: 100%; max-height: 95vh; }
+  .il-modal-container {
+    border-radius: 16px 16px 0 0;
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 95vh !important;
+  }
+  .il-modal-header { padding: 16px; }
+  .il-modal-body { padding: 16px; }
+  .il-modal-footer { padding: 12px 16px; }
 }
 
 @media (max-width: 480px) {
   .il-stats-grid { grid-template-columns: 1fr; }
+  .il-toolbar-actions { justify-content: stretch; }
+  .il-toolbar-actions .il-btn { flex: 1; justify-content: center; }
+  .il-toolbar-divider { display: none; }
   .il-pagination-inner { gap: 8px; }
   .il-page-size { display: none; }
 }
