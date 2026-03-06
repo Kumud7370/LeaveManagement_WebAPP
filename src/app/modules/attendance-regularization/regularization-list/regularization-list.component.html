@@ -1,11 +1,11 @@
 <div class="rl-page-container">
 
-  <!-- ── Page Title ────────────────────────────────────────────────── -->
+  <!-- ── Page Title  -->
   <div class="rl-page-header">
     <h1 class="rl-page-title">Attendance Regularization</h1>
   </div>
 
-  <!-- ── Stats Cards ───────────────────────────────────────────────── -->
+  <!-- ── Stats Cards  -->
   <div class="rl-stats-grid">
     <div class="rl-stat-card rl-stat-total">
       <p class="rl-stat-label">Total Requests</p>
@@ -25,7 +25,7 @@
     </div>
   </div>
 
-  <!-- ── Toolbar ───────────────────────────────────────────────────── -->
+  <!-- ── Toolbar  -->
   <div class="rl-toolbar">
     <div class="rl-search-wrapper">
       <input
@@ -49,13 +49,13 @@
     </div>
   </div>
 
-  <!-- ── Active Filters ────────────────────────────────────────────── -->
+  <!-- ── Active Filters  -->
   <div *ngIf="activeFilters.hasActiveFilters" class="rl-active-filters">
     <span class="rl-filter-label">Active Filters:</span>
     <span *ngFor="let filter of activeFilters.filters" class="rl-filter-badge">{{ filter }}</span>
   </div>
 
-  <!-- ── Grid ──────────────────────────────────────────────────────── -->
+  <!-- ── Grid  -->
   <div class="rl-grid-card">
     <div class="rl-grid-container">
       <ag-grid-angular
@@ -84,7 +84,7 @@
       ></ag-grid-angular>
     </div>
 
-    <!-- ── Pagination ─────────────────────────────────────────────── -->
+    <!-- ── Pagination  -->
     <div class="rl-pagination">
       <div class="rl-pagination-inner">
         <div class="rl-page-size">
@@ -111,13 +111,8 @@
     </div>
   </div>
 
-</div><!-- /.rl-page-container -->
+</div>
 
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     VIEW MODAL
-     Approve + Reject buttons shown only when status = Pending (1)
-     ═══════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showViewModal && viewRegularizationData"
      class="rl-modal-overlay"
      (click)="closeViewModal()">
@@ -249,7 +244,7 @@
 
         </div>
       </div>
-    </div><!-- /.rl-modal-body -->
+    </div>
 
     <!-- Footer: Close always; Approve + Reject only when Pending -->
     <div class="rl-modal-footer">
@@ -271,10 +266,6 @@
   </div>
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     ADD REGULARIZATION MODAL
-     ═══════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showAddModal" class="rl-modal-overlay" (click)="closeAddModal()">
   <div class="rl-modal-container rl-modal-xlarge" (click)="$event.stopPropagation()">
     <div class="rl-modal-header">
@@ -292,10 +283,6 @@
   </div>
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     EDIT REGULARIZATION MODAL
-     ═══════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showEditModal" class="rl-modal-overlay" (click)="closeEditModal()">
   <div class="rl-modal-container rl-modal-xlarge" (click)="$event.stopPropagation()">
     <div class="rl-modal-header">
@@ -313,10 +300,6 @@
   </div>
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════════════════════
-     REJECTION REASON MODAL
-     ═══════════════════════════════════════════════════════════════════ -->
 <div *ngIf="showApprovalModal" class="rl-modal-overlay" (click)="closeApprovalModal()">
   <div class="rl-modal-container" (click)="$event.stopPropagation()">
     <div class="rl-modal-header">
