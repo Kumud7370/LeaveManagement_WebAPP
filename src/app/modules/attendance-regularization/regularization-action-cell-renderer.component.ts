@@ -123,11 +123,6 @@ export class RegularizationActionCellRendererComponent implements ICellRendererA
     );
   }
 
-  /**
-   * Reads userRole passed via grid context.
-   * Strips spaces, lowercases, then checks for admin-level roles.
-   * Matches: Admin, admin, SuperAdmin, superadmin, super admin, Manager, manager
-   */
   get isAdminOrManager(): boolean {
     const role = String(this.params?.context?.userRole ?? '')
       .toLowerCase()

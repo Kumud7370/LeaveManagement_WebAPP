@@ -8,11 +8,11 @@ import { ICellRendererParams } from 'ag-grid-community';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="la-action-row">
+    <div class="action-buttons">
 
       <button
         *ngIf="isEditable"
-        class="la-btn la-btn-edit"
+        class="btn-icon btn-edit"
         title="Edit"
         (click)="onEdit()">
         <i class="bi bi-pencil"></i>
@@ -20,14 +20,14 @@ import { ICellRendererParams } from 'ag-grid-community';
 
       <button
         *ngIf="isEditable"
-        class="la-btn la-btn-reject"
+        class="btn-icon btn-revoke"
         title="Revoke"
         (click)="onRevoke()">
         <i class="bi bi-x-circle"></i>
       </button>
 
-      <button class="la-btn la-btn-delete" title="Delete" (click)="onDelete()">
-        <i class="bi bi-trash3"></i>
+      <button class="btn-icon btn-delete" title="Delete" (click)="onDelete()">
+        <i class="bi bi-trash"></i>
       </button>
 
     </div>
@@ -39,39 +39,41 @@ import { ICellRendererParams } from 'ag-grid-community';
       height: 100%;
       overflow: visible;
     }
-    .la-action-row {
+
+    .action-buttons {
       display: flex;
       align-items: center;
-      gap: 1px;
+      justify-content: flex-start;
+      gap: 4px;
       height: 100%;
-      width: 100%;
       padding: 0 4px;
-      box-sizing: border-box;
-      overflow: visible;
     }
-    .la-btn {
-      width: 26px;
-      height: 26px;
-      min-width: 26px;
+
+    .btn-icon {
+      width: 28px;
+      height: 28px;
       border: none;
       background: transparent;
-      border-radius: 4px;
-      display: inline-flex;
+      cursor: pointer;
+      display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      font-size: 13px;
-      transition: background 0.15s, color 0.15s;
+      font-size: 15px;
+      transition: background 0.15s;
       padding: 0;
+      border-radius: 4px;
       flex-shrink: 0;
       line-height: 1;
     }
-    .la-btn-edit         { color: #3b82f6; }
-    .la-btn-edit:hover   { background: #eff6ff; }
-    .la-btn-reject       { color: #dc2626; }
-    .la-btn-reject:hover { background: #fee2e2; }
-    .la-btn-delete       { color: #ef4444; }
-    .la-btn-delete:hover { background: #fef2f2; }
+
+    .btn-edit         { color: #3b82f6; }
+    .btn-edit:hover   { background: #eff6ff; }
+
+    .btn-revoke       { color: #dc2626; }
+    .btn-revoke:hover { background: #fee2e2; }
+
+    .btn-delete       { color: #ef4444; }
+    .btn-delete:hover { background: #fef2f2; }
   `]
 })
 export class InvitationActionCellRendererComponent implements ICellRendererAngularComp {
