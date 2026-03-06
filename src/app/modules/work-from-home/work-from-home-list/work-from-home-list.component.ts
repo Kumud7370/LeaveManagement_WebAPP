@@ -34,25 +34,22 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 const wfhGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
-  foregroundColor:                '#374151',
+  foregroundColor:                '#1f2937',
   borderColor:                    '#e5e7eb',
-  headerBackgroundColor:          '#ffffff',
+  headerBackgroundColor:          '#f9fafb',
   headerTextColor:                '#374151',
   oddRowBackgroundColor:          '#ffffff',
   rowHoverColor:                  '#f8faff',
   selectedRowBackgroundColor:     '#dbeafe',
-  fontFamily:                     '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontFamily:                     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   fontSize:                       13,
   columnBorder:                   true,
   headerColumnBorder:             true,
   headerColumnBorderHeight:       '50%',
-  headerColumnResizeHandleColor:  '#d1d5db',
+  headerColumnResizeHandleColor:  '#9ca3af',
   headerColumnResizeHandleHeight: '50%',
   headerColumnResizeHandleWidth:  2,
-  cellHorizontalPaddingScale:     0.75,
-  headerFontWeight:               500,
-  headerFontSize:                 13,
-  rowBorder:                      true,
+  cellHorizontalPaddingScale:     0.8,
 });
 
 @Component({
@@ -76,10 +73,10 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
 
   rowData: WfhRequest[] = [];
   private gridApi!: GridApi;
-  loading = false;       // true only on first load (mounts/unmounts grid)
-  refreshing = false;    // true on subsequent refreshes (grid stays mounted)
+  loading   = false;
+  refreshing = false;
   error: string | null = null;
-  context = { componentParent: this };
+  context   = { componentParent: this };
 
   // Modal state
   showForm    = false;
@@ -133,10 +130,10 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
       width: 190, minWidth: 190, maxWidth: 190,
       sortable: false, filter: false, floatingFilter: false,
       suppressFloatingFilterButton: true,
-      headerClass: 'wl-action-col',
-      cellClass: 'wl-action-cell wl-action-col',
+      // Matches holiday list: 'actions-cell' class for right border
+      cellClass: 'actions-cell',
       cellStyle: { display: 'flex', alignItems: 'center', padding: '0', overflow: 'visible' },
-      cellRenderer: WfhActionCellRendererComponent,   // ← proper Angular component
+      cellRenderer: WfhActionCellRendererComponent,
       suppressSizeToFit: true
     },
     {
@@ -144,7 +141,7 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
       field: 'employeeName',
       width: 200, minWidth: 160,
       cellRenderer: (p: any) => p.value
-        ? `<span style="font-weight:600;font-size:13px;color:#111827;font-family:'Inter',-apple-system,sans-serif;">${p.value}</span>`
+        ? `<span style="font-weight:600;color:#1f2937;">${p.value}</span>`
         : ''
     },
     {
@@ -173,8 +170,7 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
       cellRenderer: (p: any) =>
         `<span style="display:inline-flex;align-items:center;justify-content:center;
           width:28px;height:24px;background:#f1f5f9;border-radius:5px;
-          font-size:12px;font-weight:700;color:#475569;
-          font-family:'Inter',-apple-system,sans-serif;">${p.value ?? 0}</span>`
+          font-size:12px;font-weight:700;color:#475569;">${p.value ?? 0}</span>`
     },
     {
       headerName: 'Reason',
@@ -182,7 +178,7 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
       width: 230, minWidth: 180,
       cellRenderer: (p: any) => {
         const txt = p.value?.length > 45 ? p.value.substring(0, 45) + '…' : (p.value || '');
-        return `<span style="font-size:13px;color:#6b7280;font-family:'Inter',-apple-system,sans-serif;">${txt}</span>`;
+        return `<span style="font-size:13px;color:#6b7280;">${txt}</span>`;
       }
     },
     {
@@ -190,7 +186,6 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
       field: 'status',
       width: 130, minWidth: 110,
       cellRenderer: (p: any) => {
-        // Support numeric enum values AND string status names from API
         const numMap: Record<number, [string, string, string]> = {
           [ApprovalStatus.Pending]:   ['#fef9c3', '#92400e', 'Pending'],
           [ApprovalStatus.Approved]:  ['#dcfce7', '#166534', 'Approved'],
@@ -203,15 +198,12 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
           'rejected':  ['#fee2e2', '#991b1b', 'Rejected'],
           'cancelled': ['#f1f5f9', '#475569', 'Cancelled'],
         };
-        // Try numeric key first, then string key, then fall back to statusName field
-        const byNum = numMap[Number(p.value)];
-        const byStr = strMap[String(p.value).toLowerCase()];
-        // Also check statusName on the row data as last resort
+        const byNum  = numMap[Number(p.value)];
+        const byStr  = strMap[String(p.value).toLowerCase()];
         const byName = strMap[String(p.data?.statusName ?? '').toLowerCase()];
         const [bg, color, lbl] = byNum ?? byStr ?? byName ?? ['#fef9c3', '#92400e', String(p.data?.statusName ?? p.value ?? 'Unknown')];
         return `<span style="display:inline-flex;padding:2px 12px;border-radius:9999px;
-          font-size:12px;font-weight:600;background:${bg};color:${color};
-          font-family:'Inter',-apple-system,sans-serif;">${lbl}</span>`;
+          font-size:12px;font-weight:600;background:${bg};color:${color};">${lbl}</span>`;
       }
     },
     {
@@ -219,7 +211,8 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
       field: 'createdAt',
       width: 135, minWidth: 120,
       valueFormatter: (p: any) => p.value
-        ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+        ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+      cellStyle: { color: '#6b7280', fontSize: '12px' }
     }
   ];
 
@@ -261,8 +254,6 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
   }
 
   loadRequests(): void {
-    // First load: show full loading state (grid not yet mounted)
-    // Subsequent loads: keep grid mounted, just show a subtle refresh indicator
     const isFirstLoad = this.rowData.length === 0 && !this.error;
     if (isFirstLoad) {
       this.loading = true;
@@ -272,16 +263,17 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
     this.error = null;
 
     const f: WfhRequestFilterDto = {
-      pageNumber:    this.currentPage,
-      pageSize:      this.pageSize,
-      sortBy:        'StartDate',
+      pageNumber:     this.currentPage,
+      pageSize:       this.pageSize,
+      sortBy:         'StartDate',
       sortDescending: true,
-      searchTerm:    this.searchTerm || undefined,
-      status:        this.selectedStatus !== '' ? this.selectedStatus : undefined,
-      ...(this.filters.startDateFrom   && { startDateFrom:  new Date(this.filters.startDateFrom) }),
-      ...(this.filters.startDateTo     && { startDateTo:    new Date(this.filters.startDateTo) }),
+      searchTerm:     this.searchTerm || undefined,
+      status:         this.selectedStatus !== '' ? this.selectedStatus : undefined,
+      ...(this.filters.startDateFrom   && { startDateFrom:   new Date(this.filters.startDateFrom) }),
+      ...(this.filters.startDateTo     && { startDateTo:     new Date(this.filters.startDateTo) }),
       ...(this.filters.appliedDateFrom && { appliedDateFrom: new Date(this.filters.appliedDateFrom) }),
     };
+
     this.wfhRequestService.getFilteredWfhRequests(f).subscribe({
       next: (r) => {
         this.loading    = false;
@@ -290,7 +282,6 @@ export class WfhRequestListComponent implements OnInit, OnDestroy {
           this.rowData    = r.data.items;
           this.totalPages = r.data.totalPages;
           this.totalCount = r.data.totalCount;
-          // Update grid rows in-place if grid is alive, otherwise Angular binding handles it
           if (this.gridApi && !this.gridApi.isDestroyed()) {
             this.gridApi.setGridOption('rowData', this.rowData);
             setTimeout(() => {

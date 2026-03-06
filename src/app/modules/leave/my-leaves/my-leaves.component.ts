@@ -21,26 +21,23 @@ import { LeaveActionCellRendererComponent } from '../leave-action-cell-renderer.
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const myLeavesGridTheme = themeQuartz.withParams({
-  backgroundColor: '#ffffff',
-  foregroundColor: '#374151',
-  borderColor: '#e5e7eb',
-  headerBackgroundColor: '#ffffff',
-  headerTextColor: '#374151',
-  oddRowBackgroundColor: '#ffffff',
-  rowHoverColor: '#f8faff',
-  selectedRowBackgroundColor: '#dbeafe',
-  fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-  fontSize: 13,
-  columnBorder: true,
-  headerColumnBorder: true,
-  headerColumnBorderHeight: '50%',
-  headerColumnResizeHandleColor: '#d1d5db',
+  backgroundColor:               '#ffffff',
+  foregroundColor:               '#1f2937',
+  borderColor:                   '#e5e7eb',
+  headerBackgroundColor:         '#f9fafb',
+  headerTextColor:               '#374151',
+  oddRowBackgroundColor:         '#ffffff',
+  rowHoverColor:                 '#f8faff',
+  selectedRowBackgroundColor:    '#dbeafe',
+  fontFamily:                    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontSize:                      13,
+  columnBorder:                  true,
+  headerColumnBorder:            true,
+  headerColumnBorderHeight:      '50%',
+  headerColumnResizeHandleColor: '#9ca3af',
   headerColumnResizeHandleHeight: '50%',
   headerColumnResizeHandleWidth: 2,
-  cellHorizontalPaddingScale: 0.75,
-  headerFontWeight: 500,
-  headerFontSize: 13,
-  rowBorder: true,
+  cellHorizontalPaddingScale:    0.8,
 });
 
 @Component({
@@ -56,7 +53,6 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
   readonly gridTheme = myLeavesGridTheme;
   Math = Math;
 
-  // ── data
   currentYear = new Date().getFullYear();
   employeeId: string = '';
   allLeaves: Leave[] = [];
@@ -65,27 +61,26 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
   gridApi!: GridApi;
   context = { componentParent: this, isEmployee: true };
 
-  // ── state
-  loading = false;
+  loading         = false;
   balancesLoading = false;
   error: string | null = null;
-  searchTerm = '';
-  showFilters = false;
+  searchTerm      = '';
+  showFilters     = false;
   activeStatusFilter: string | null = null;
+  
 
-  // ── modals
-  showFormModal = false;
+  // Modals
+  showFormModal    = false;
   showDetailsModal = false;
   formMode: 'create' | 'edit' = 'create';
   selectedLeaveId: string | null = null;
 
-  // ── pagination
+  // Pagination
   currentPage = 1;
-  pageSize = 10;
-  totalPages = 0;
-  totalCount = 0;
+  pageSize    = 10;
+  totalPages  = 0;
+  totalCount  = 0;
 
-  // ── filters
   filters: LeaveFilterDto = {
     pageNumber: 1, pageSize: 10,
     sortBy: 'AppliedDate', sortDescending: true
@@ -96,15 +91,14 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
   private resizeObserver!: ResizeObserver;
   private sidebarResizeTimer: any = null;
 
-  // ── computed stats from loaded data
-  get statTotal(): number { return this.allLeaves.length; }
-  get statPending(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Pending').length; }
-  get statApproved(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Approved').length; }
-  get statRejected(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Rejected').length; }
+  get statTotal():     number { return this.allLeaves.length; }
+  get statPending():   number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Pending').length; }
+  get statApproved():  number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Approved').length; }
+  get statRejected():  number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Rejected').length; }
   get statCancelled(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Cancelled').length; }
 
   get activeFilterCount(): number {
-    return [this.selectedStatus, this.filters.leaveTypeId].filter(Boolean).length;
+    return [this.selectedStatus, (this.filters as any).startDateFrom, (this.filters as any).startDateTo].filter(Boolean).length;
   }
 
   defaultColDef: ColDef = {
@@ -115,36 +109,31 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
 
   columnDefs: ColDef[] = [
     {
-      headerName: '',
-      width: 100, minWidth: 100, maxWidth: 120,
+      headerName: 'Actions',
+      width: 120, minWidth: 120, maxWidth: 140,
       sortable: false, filter: false, floatingFilter: false,
       suppressFloatingFilterButton: true,
-      headerClass: 'ml-action-col',
-      cellClass: 'ml-action-cell ml-action-col',
+      cellClass: 'actions-cell',
       cellStyle: { display: 'flex', alignItems: 'center', padding: '0', overflow: 'visible' },
       suppressSizeToFit: true,
-      cellRenderer: LeaveActionCellRendererComponent 
+      cellRenderer: LeaveActionCellRendererComponent
     },
-
     {
       headerName: 'Leave Type',
       field: 'leaveTypeName',
       width: 150, minWidth: 130,
-      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
         if (!p.value) return '';
         const c = p.data?.leaveTypeColor || '#3b82f6';
         return `<span style="display:inline-flex;align-items:center;padding:3px 10px;
           background:${c}18;color:${c};border:1px solid ${c}40;
-          border-radius:5px;font-size:12px;font-weight:600;
-          font-family:'Inter',-apple-system,sans-serif;">${p.value}</span>`;
+          border-radius:5px;font-size:12px;font-weight:600;">${p.value}</span>`;
       }
     },
     {
       headerName: 'Start Date',
       field: 'startDate',
       width: 130, minWidth: 110,
-      cellStyle: { display: 'flex', alignItems: 'center' },
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
     },
@@ -152,7 +141,6 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
       headerName: 'End Date',
       field: 'endDate',
       width: 130, minWidth: 110,
-      cellStyle: { display: 'flex', alignItems: 'center' },
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
     },
@@ -160,54 +148,49 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
       headerName: 'Days',
       field: 'totalDays',
       width: 80, minWidth: 70,
-      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) =>
         `<span style="display:inline-flex;align-items:center;justify-content:center;
           width:28px;height:24px;background:#f1f5f9;border-radius:5px;
-          font-size:12px;font-weight:700;color:#475569;
-          font-family:'Inter',-apple-system,sans-serif;">${p.value ?? 0}</span>`
+          font-size:12px;font-weight:700;color:#475569;">${p.value ?? 0}</span>`
     },
     {
       headerName: 'Reason',
       field: 'reason',
       width: 220, minWidth: 180,
-      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
         const txt = p.value?.length > 40 ? p.value.substring(0, 40) + '…' : (p.value || '');
         const em = p.data?.isEmergencyLeave
           ? `<span style="display:inline-flex;align-items:center;background:#fee2e2;color:#991b1b;
               padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;
               margin-left:5px;white-space:nowrap;">Emergency</span>` : '';
-        return `<div style="display:flex;align-items:center;font-size:13px;color:#6b7280;
-          font-family:'Inter',-apple-system,sans-serif;"><span>${txt}</span>${em}</div>`;
+        return `<div style="display:flex;align-items:center;font-size:13px;color:#6b7280;">
+          <span>${txt}</span>${em}</div>`;
       }
     },
     {
       headerName: 'Status',
       field: 'leaveStatus',
       width: 120, minWidth: 110,
-      cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
         const lbl = this.statusLabel(p.data);
         const map: Record<string, [string, string]> = {
-          'Pending': ['#fef9c3', '#92400e'],
-          'Approved': ['#dcfce7', '#166534'],
-          'Rejected': ['#fee2e2', '#991b1b'],
+          'Pending':   ['#fef9c3', '#92400e'],
+          'Approved':  ['#dcfce7', '#166534'],
+          'Rejected':  ['#fee2e2', '#991b1b'],
           'Cancelled': ['#f1f5f9', '#475569'],
         };
         const [bg, color] = map[lbl] ?? ['#fef9c3', '#92400e'];
         return `<span style="display:inline-flex;padding:2px 12px;border-radius:9999px;
-          font-size:12px;font-weight:600;background:${bg};color:${color};
-          font-family:'Inter',-apple-system,sans-serif;">${lbl}</span>`;
+          font-size:12px;font-weight:600;background:${bg};color:${color};">${lbl}</span>`;
       }
     },
     {
       headerName: 'Applied On',
       field: 'appliedDate',
       width: 130, minWidth: 110,
-      cellStyle: { display: 'flex', alignItems: 'center' },
       valueFormatter: (p: any) => p.value
-        ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+        ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+      cellStyle: { color: '#6b7280', fontSize: '12px' }
     }
   ];
 
@@ -215,16 +198,13 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
     private leaveService: LeaveService,
     private leaveBalanceService: LeaveBalanceService,
     private cdr: ChangeDetectorRef
-  ) { }
+  ) {}
 
   ngOnInit(): void {
-    // Resolve Employee ID — tries dedicated key first, falls back to UserId.
-    // Your login service must store 'EmployeeId' in sessionStorage for filtering to work.
     this.employeeId = sessionStorage.getItem('EmployeeId')
       || sessionStorage.getItem('employeeId')
       || sessionStorage.getItem('UserId')
       || '';
-    console.debug('[MyLeaves] resolved employeeId →', this.employeeId);
     this.loadLeaves();
     this.loadBalances();
   }
@@ -259,20 +239,20 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
     this.loading = true; this.error = null;
     const filter: LeaveFilterDto = {
       ...this.filters,
-      searchTerm: this.searchTerm || undefined,
-      pageNumber: this.currentPage,
-      pageSize: this.pageSize,
+      searchTerm:  this.searchTerm || undefined,
+      pageNumber:  this.currentPage,
+      pageSize:    this.pageSize,
       leaveStatus: this.selectedStatus !== '' ? Number(this.selectedStatus) : undefined,
-      employeeId: this.employeeId || undefined
+      employeeId:  this.employeeId || undefined
     };
     this.leaveService.getMyLeaves(filter).subscribe({
       next: (r) => {
         this.loading = false;
         if (r.success) {
-          this.allLeaves = r.data.items;
+          this.allLeaves     = r.data.items;
           this.filteredLeaves = r.data.items;
-          this.totalPages = r.data.totalPages;
-          this.totalCount = r.data.totalCount;
+          this.totalPages    = r.data.totalPages;
+          this.totalCount    = r.data.totalCount;
           if (this.gridApi) {
             this.gridApi.setGridOption('rowData', this.filteredLeaves);
             setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
@@ -290,10 +270,9 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
 
   loadBalances(): void {
     this.balancesLoading = true;
-    const year = new Date().getFullYear();
     this.leaveBalanceService.getFilteredLeaveBalances({
       pageNumber: 1, pageSize: 50,
-      year,
+      year: new Date().getFullYear(),
       employeeId: this.employeeId || undefined
     } as any).subscribe({
       next: (r) => {
@@ -319,15 +298,13 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
     } else {
       this.filteredLeaves = this.allLeaves.filter(l => this.statusLabel(l) === status);
     }
-    if (this.gridApi) {
-      this.gridApi.setGridOption('rowData', this.filteredLeaves);
-    }
+    if (this.gridApi) this.gridApi.setGridOption('rowData', this.filteredLeaves);
   }
 
   clearFilters(): void {
     clearTimeout(this.searchDebounceTimer);
-    this.searchTerm = '';
-    this.selectedStatus = '';
+    this.searchTerm        = '';
+    this.selectedStatus    = '';
     this.activeStatusFilter = null;
     this.filters = { pageNumber: 1, pageSize: 10, sortBy: 'AppliedDate', sortDescending: true };
     this.currentPage = 1;
@@ -352,7 +329,6 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
     return Array.from({ length: e - s + 1 }, (_, i) => s + i);
   }
 
-  // ── Modal helpers
   applyLeave(): void { this.formMode = 'create'; this.selectedLeaveId = null; this.showFormModal = true; }
   viewDetails(leave: Leave): void { this.selectedLeaveId = leave.id; this.showDetailsModal = true; }
   editLeave(leave: Leave): void { this.selectedLeaveId = leave.id; this.formMode = 'edit'; this.showFormModal = true; }
@@ -363,13 +339,9 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
 
   async cancelLeave(leave: Leave): Promise<void> {
     const { value: reason } = await Swal.fire({
-      title: 'Cancel Leave Request',
-      input: 'textarea',
-      inputLabel: 'Reason for cancellation',
-      inputPlaceholder: 'Enter reason...',
-      showCancelButton: true,
-      confirmButtonColor: '#f59e0b',
-      cancelButtonColor: '#6b7280',
+      title: 'Cancel Leave Request', input: 'textarea',
+      inputLabel: 'Reason for cancellation', inputPlaceholder: 'Enter reason...',
+      showCancelButton: true, confirmButtonColor: '#f59e0b', cancelButtonColor: '#6b7280',
       confirmButtonText: 'Cancel Request',
       inputValidator: (v) => !v ? 'Reason is required!' : null
     });
@@ -385,15 +357,12 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Helpers
   statusLabel(leave: Leave): string {
     const map: Record<string, string> = {
       '0': 'Pending', '1': 'Approved', '2': 'Rejected', '3': 'Cancelled',
       'pending': 'Pending', 'approved': 'Approved', 'rejected': 'Rejected', 'cancelled': 'Cancelled'
     };
-    const byNum = map[String(leave.leaveStatus)];
-    const byName = map[(leave as any).leaveStatusName?.toLowerCase() ?? ''];
-    return byNum ?? byName ?? 'Pending';
+    return map[String(leave.leaveStatus)] ?? map[(leave as any).leaveStatusName?.toLowerCase() ?? ''] ?? 'Pending';
   }
 
   utilizationColor(pct: number): string {

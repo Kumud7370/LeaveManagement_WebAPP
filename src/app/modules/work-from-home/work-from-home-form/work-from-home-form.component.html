@@ -1,6 +1,34 @@
 <div class="wfh-form-container">
-
   <form (ngSubmit)="onSubmit()">
+
+    <!-- Employee Row — shown for admin, read-only for single employee -->
+    <div class="form-row two-col">
+      <div class="form-group">
+        <label>Employee <span class="required">*</span></label>
+
+        <!-- Read-only for employee login -->
+        <div *ngIf="isSingleEmployee" class="readonly-employee">
+          <span class="emp-code">{{ employees[0].employeeCode }}</span>
+          <span class="emp-name">{{ employees[0].fullName }}</span>
+        </div>
+
+        <!-- Dropdown for admin -->
+        <select
+          *ngIf="!isSingleEmployee"
+          [(ngModel)]="formData.employeeId"
+          name="employeeId"
+          [class.is-error]="errors['employeeId']"
+          (change)="errors['employeeId'] = ''"
+          [disabled]="isEditMode"
+        >
+          <option value="">Select employee...</option>
+          <option *ngFor="let emp of employees" [value]="emp.id">
+            {{ emp.employeeCode }} — {{ emp.fullName }}
+          </option>
+        </select>
+        <span class="error-msg" *ngIf="errors['employeeId']">{{ errors['employeeId'] }}</span>
+      </div>
+    </div>
 
     <!-- Date Range Row -->
     <div class="form-row two-col">
@@ -36,12 +64,7 @@
       <div class="form-group">
         <label>Total Days</label>
         <div class="days-input-wrapper">
-          <input
-            type="number"
-            [value]="totalDays"
-            readonly
-            class="readonly-input"
-          />
+          <input type="number" [value]="totalDays" readonly class="readonly-input" />
           <span class="days-unit">days</span>
         </div>
         <span class="hint-msg">Auto-computed: {{ totalDays }} calendar day(s)</span>
@@ -70,9 +93,7 @@
 
     <!-- Actions -->
     <div class="form-actions">
-      <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="submitting">
-        Cancel
-      </button>
+      <button type="button" class="btn btn-cancel" (click)="onCancel()" [disabled]="submitting">Cancel</button>
       <button type="submit" class="btn btn-submit" [disabled]="submitting">
         <span *ngIf="!submitting">
           <i class="bi" [ngClass]="isEditMode ? 'bi-pencil-square' : 'bi-check-circle'"></i>
