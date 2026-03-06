@@ -30,7 +30,6 @@ export class RegularizationFormComponent implements OnInit {
 
   RegularizationType = RegularizationType;
 
-  // ✅ Arrow function so [compareWith] binding works correctly in template
   compareTypeValues = (a: any, b: any): boolean => Number(a) === Number(b);
 
   get isEditMode(): boolean {
@@ -53,7 +52,6 @@ export class RegularizationFormComponent implements OnInit {
   initializeForm(): void {
     this.regularizationForm = this.fb.group({
       employeeId: ['', Validators.required],
-      // ✅ Store as actual Number enum value, never string
       regularizationType: [RegularizationType.MissedPunch, Validators.required],
       attendanceDate: ['', Validators.required],
       requestedCheckIn: [''],
@@ -81,23 +79,22 @@ export class RegularizationFormComponent implements OnInit {
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     };
 
-    // ✅ Force to Number so select [ngValue] comparison works
     const regType: RegularizationType = Number(data.regularizationType) as RegularizationType;
 
     this.regularizationForm.patchValue({
-      employeeId:           data.employeeId || '',
-      regularizationType:   regType,
-      attendanceDate:       toDateInput(data.attendanceDate),
-      requestedCheckIn:     toDateTimeLocal(data.requestedCheckIn),
-      requestedCheckOut:    toDateTimeLocal(data.requestedCheckOut),
-      reason:               data.reason || ''
+      employeeId:         data.employeeId || '',
+      regularizationType: regType,
+      attendanceDate:     toDateInput(data.attendanceDate),
+      requestedCheckIn:   toDateTimeLocal(data.requestedCheckIn),
+      requestedCheckOut:  toDateTimeLocal(data.requestedCheckOut),
+      reason:             data.reason || ''
     });
 
     this.updateFieldValidators(regType);
   }
 
   regularizationValidator(form: FormGroup) {
-    const type = Number(form.get('regularizationType')?.value);
+    const type     = Number(form.get('regularizationType')?.value);
     const checkIn  = form.get('requestedCheckIn')?.value;
     const checkOut = form.get('requestedCheckOut')?.value;
 
@@ -163,19 +160,6 @@ export class RegularizationFormComponent implements OnInit {
     return [RegularizationType.EarlyExit, RegularizationType.FullDayRegularization].includes(type);
   }
 
-  formatDisplayTime(date: any): string {
-    if (!date) return '—';
-    return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  formatDisplayDateTime(date: any): string {
-    if (!date) return '—';
-    return new Date(date).toLocaleString('en-US', {
-      year: 'numeric', month: 'long', day: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
-  }
-
   onSubmit(): void {
     if (this.regularizationForm.invalid) {
       this.markFormGroupTouched(this.regularizationForm);
@@ -187,37 +171,41 @@ export class RegularizationFormComponent implements OnInit {
 
     const fv = this.regularizationForm.value;
 
-    // ✅ THE FIX: explicitly build the payload with regularizationType as a plain integer
-    // Using parseInt ensures JSON.stringify sends 1/2/3/4, never "1"/"2"/"3"/"4"
     const requestData: RegularizationRequestDto = {
-      employeeId:           String(fv.employeeId).trim(),
-      regularizationType:   parseInt(fv.regularizationType, 10) as RegularizationType,
-      attendanceDate:       new Date(fv.attendanceDate),
-      requestedCheckIn:     fv.requestedCheckIn  ? new Date(fv.requestedCheckIn)  : undefined,
-      requestedCheckOut:    fv.requestedCheckOut ? new Date(fv.requestedCheckOut) : undefined,
-      reason:               fv.reason
+      employeeId:         String(fv.employeeId).trim(),
+      regularizationType: parseInt(fv.regularizationType, 10) as RegularizationType,
+      attendanceDate:     new Date(fv.attendanceDate),
+      requestedCheckIn:   fv.requestedCheckIn  ? new Date(fv.requestedCheckIn)  : undefined,
+      requestedCheckOut:  fv.requestedCheckOut ? new Date(fv.requestedCheckOut) : undefined,
+      reason:             fv.reason
     };
 
     this.regularizationService.requestRegularization(requestData).subscribe({
       next: (response) => {
         this.submitting = false;
         if (response.success) {
-          Swal.fire({
-            title: 'Success!',
-            text: this.isEditMode
-              ? 'Regularization request updated successfully!'
-              : 'Regularization request submitted successfully!',
-            icon: 'success',
-            confirmButtonColor: '#3b82f6'
-          }).then(() => {
-            this.formSubmitted.emit();
-            if (!this.isModal) {
-              this.router.navigate(['/attendance-regularization/list']);
-            }
-          });
+          this.formSubmitted.emit();
+          setTimeout(() => {
+            Swal.fire({
+              title: 'Success!',
+              text: this.isEditMode
+                ? 'Regularization request updated successfully!'
+                : 'Regularization request submitted successfully!',
+              icon: 'success',
+              confirmButtonColor: '#3b82f6',
+              timer: 2500,
+              timerProgressBar: true,
+              showConfirmButton: false,
+              customClass: { container: 'swal-on-top' }
+            });
+          }, 0);
+
+          if (!this.isModal) {
+            this.router.navigate(['/attendance-regularization/list']);
+          }
         } else {
           this.error = response.message || 'Failed to submit request';
-          Swal.fire('Error!', this.error, 'error');
+          Swal.fire('Error!', this.error ?? 'Failed to submit request', 'error');
         }
       },
       error: (err) => {
@@ -231,7 +219,7 @@ export class RegularizationFormComponent implements OnInit {
           Swal.fire('Validation Error', messages, 'error');
         } else {
           this.error = err.error?.message || 'An error occurred';
-          Swal.fire('Error!', this.error || 'An error occurred', 'error');
+          Swal.fire('Error!', this.error ?? 'An error occurred', 'error');
         }
       }
     });

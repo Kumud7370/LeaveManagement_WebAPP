@@ -85,12 +85,10 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
 
   readonly gridTheme = regularizationGridTheme;
 
-  // ─── Grid state ───────────────────────────────────────────────────
   rowData: RegularizationResponseDto[] = [];
   gridApi!: GridApi;
   searchTerm = '';
 
-  // ─── Pagination ───────────────────────────────────────────────────
   currentPage = 1;
   pageSize    = 20;
   totalItems  = 0;
@@ -99,7 +97,6 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
   private searchDebounceTimer: any = null;
   Math = Math;
 
-  // ─── Filters ──────────────────────────────────────────────────────
   employeeIdFilter            = '';
   regularizationTypeFilter: RegularizationType | null = null;
   statusFilter: RegularizationStatus | null           = null;
@@ -108,39 +105,31 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
   sortBy         = 'RequestedAt';
   sortDirection: 'asc' | 'desc' = 'desc';
 
-  // ─── Modal visibility ─────────────────────────────────────────────
   showAddModal      = false;
   showEditModal     = false;
   showViewModal     = false;
   showApprovalModal = false;
 
-  // ─── Modal data ───────────────────────────────────────────────────
   selectedRegularization: RegularizationResponseDto | null = null;
   editRegularizationData: RegularizationResponseDto | null = null;
   viewRegularizationData: RegularizationResponseDto | null = null;
   approvalReason = '';
 
-  // ─── Enums exposed to template ────────────────────────────────────
   RegularizationType   = RegularizationType;
   RegularizationStatus = RegularizationStatus;
 
-  // ─── Stats cards ──────────────────────────────────────────────────
   stats = { total: 0, pending: 0, approved: 0, rejected: 0 };
 
-  // ─── ResizeObserver ───────────────────────────────────────────────
   private resizeObserver: ResizeObserver | null = null;
+  private sidebarResizeObserver: ResizeObserver | null = null;
+  private resizeDebounceTimer: any = null;
 
-  // ─── Active filters summary ───────────────────────────────────────
   activeFilters = {
     hasActiveFilters: false,
     filters: [] as string[],
     count: 0
   };
 
-  // ─────────────────────────────────────────────────────────────────
-  // Role detection
-  // Reads 'RoleName' from sessionStorage — e.g. "SuperAdmin", "Employee"
-  // ─────────────────────────────────────────────────────────────────
   private get rawRole(): string {
     return (sessionStorage.getItem('RoleName') ?? '').trim();
   }
@@ -157,24 +146,14 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────
-  // AG Grid context — getter so it always reflects current session
-  // ─────────────────────────────────────────────────────────────────
   get context() {
-    return {
-      componentParent: this,
-      userRole: this.rawRole   // e.g. "SuperAdmin" | "Employee"
-    };
+    return { componentParent: this, userRole: this.rawRole };
   }
 
-  // ─── Actions column width based on role ──────────────────────────
-  // Admin/SuperAdmin: View+Edit+Approve+Reject+Cancel+Delete = 6 → 210px
-  // Employee:         View+Cancel+Delete = 3                   → 120px
   private get actionsColWidth(): number {
     return this.isAdminOrManager ? 210 : 120;
   }
 
-  // ─── Default column definition ────────────────────────────────────
   defaultColDef: ColDef = {
     sortable:          true,
     filter:            true,
@@ -185,7 +164,6 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     suppressAutoSize:  false
   };
 
-  // ─── Column definitions ───────────────────────────────────────────
   get columnDefs(): ColDef[] {
     return [
       {
@@ -194,8 +172,8 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
         width:    this.actionsColWidth,
         minWidth: this.actionsColWidth,
         maxWidth: this.actionsColWidth,
-        sortable:      false,
-        filter:        false,
+        sortable:       false,
+        filter:         false,
         floatingFilter: false,
         suppressFloatingFilterButton: true,
         cellClass:   'actions-cell',
@@ -294,13 +272,7 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
           return `<span class="badge-status" style="${style}">${params.value || ''}</span>`;
         }
       },
-      {
-        headerName: 'Approved By',
-        field:      'approvedByName',
-        width: 160, minWidth: 130,
-        valueFormatter: (params: any) => params.value || '—',
-        cellStyle: { color: '#6b7280' }
-      },
+      
       {
         headerName: 'Requested At',
         field:      'requestedAt',
@@ -317,18 +289,32 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
-  // ─── Lifecycle ────────────────────────────────────────────────────
   ngOnInit(): void {
     this.setDefaultDateFilters();
     this.loadRegularizations();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      this.sidebarResizeObserver = new ResizeObserver(() => {
+        this.debouncedGridResize();
+      });
+      this.sidebarResizeObserver.observe(document.body);
+    }
   }
 
   ngOnDestroy(): void {
-    if (this.resizeObserver) { this.resizeObserver.disconnect(); this.resizeObserver = null; }
-    if (this.searchDebounceTimer) { clearTimeout(this.searchDebounceTimer); }
+    if (this.resizeObserver)        { this.resizeObserver.disconnect();        this.resizeObserver        = null; }
+    if (this.sidebarResizeObserver) { this.sidebarResizeObserver.disconnect(); this.sidebarResizeObserver = null; }
+    if (this.searchDebounceTimer)   { clearTimeout(this.searchDebounceTimer); }
+    if (this.resizeDebounceTimer)   { clearTimeout(this.resizeDebounceTimer); }
   }
 
-  // ─── Grid ready ───────────────────────────────────────────────────
+  private debouncedGridResize(): void {
+    clearTimeout(this.resizeDebounceTimer);
+    this.resizeDebounceTimer = setTimeout(() => {
+      if (this.gridApi) requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
+    }, 150);
+  }
+
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     this.gridApi.addEventListener('sortChanged',   this.onSortChanged.bind(this));
@@ -345,17 +331,15 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     }
   }
 
-  onSortChanged(_e: SortChangedEvent):    void { this.currentPage = 1; this.loadRegularizations(); }
+  onSortChanged(_e: SortChangedEvent):     void { this.currentPage = 1; this.loadRegularizations(); }
   onFilterChanged(_e: FilterChangedEvent): void { this.currentPage = 1; this.loadRegularizations(); this.updateActiveFilters(); }
 
-  // ─── Search highlight ─────────────────────────────────────────────
   highlightText(text: string, term: string): string {
     if (!term?.trim() || !text) return String(text);
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return String(text).replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="search-highlight">$1</mark>');
   }
 
-  // ─── Data loading ─────────────────────────────────────────────────
   setDefaultDateFilters(): void {
     const today = new Date();
     this.startDateFilter = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -411,7 +395,6 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     this.stats.rejected = items.filter(r => r.status === RegularizationStatus.Rejected).length;
   }
 
-  // ─── Search ───────────────────────────────────────────────────────
   onSearchChange(): void {
     clearTimeout(this.searchDebounceTimer);
     this.searchDebounceTimer = setTimeout(() => {
@@ -445,9 +428,8 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     this.activeFilters = { hasActiveFilters: filters.length > 0, filters, count: filters.length };
   }
 
-  // ─── Pagination ───────────────────────────────────────────────────
   onPageSizeChanged(newSize: number): void {
-    this.pageSize = newSize;
+    this.pageSize    = newSize;
     this.currentPage = 1;
     this.loadRegularizations();
   }
@@ -458,41 +440,29 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     this.loadRegularizations();
   }
   nextPage():     void { if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1); }
-  previousPage(): void { if (this.currentPage > 1) this.goToPage(this.currentPage - 1); }
+  previousPage(): void { if (this.currentPage > 1)               this.goToPage(this.currentPage - 1); }
 
-  // ─── Add modal ────────────────────────────────────────────────────
   openAddModal():  void { this.editRegularizationData = null; this.showAddModal = true; }
   closeAddModal(): void { this.showAddModal = false; this.editRegularizationData = null; }
+
   onFormSubmitted(): void {
-    this.showAddModal = this.showEditModal = false;
+    this.showAddModal  = false;
+    this.showEditModal = false;
     this.editRegularizationData = null;
+    this.isLoadingData = false;
     this.loadRegularizations();
   }
 
-  // ─── Edit modal ───────────────────────────────────────────────────
   openEditModal(reg: RegularizationResponseDto):  void { this.editRegularizationData = reg; this.showEditModal = true; }
   closeEditModal(): void { this.showEditModal = false; this.editRegularizationData = null; }
 
-  // ─── View modal ───────────────────────────────────────────────────
   openViewModal(reg: RegularizationResponseDto):  void { this.viewRegularizationData = reg; this.showViewModal = true; }
   closeViewModal(): void { this.showViewModal = false; this.viewRegularizationData = null; }
 
-  // ─── Cell renderer callbacks ──────────────────────────────────────
+  viewDetails(reg: RegularizationResponseDto):      void { this.openViewModal(reg); }
+  editDepartment(reg: RegularizationResponseDto):   void { this.openEditModal(reg); }
+  deleteDepartment(reg: RegularizationResponseDto): void { this.cancelRegularization(reg); }
 
-  viewDetails(reg: RegularizationResponseDto): void {
-    this.openViewModal(reg);
-  }
-
-  editDepartment(reg: RegularizationResponseDto): void {
-    this.openEditModal(reg);
-  }
-
-  /** Called by renderer onCancel() — runs the cancel API (status → Cancelled) */
-  deleteDepartment(reg: RegularizationResponseDto): void {
-    this.cancelRegularization(reg);
-  }
-
-  // ─── Approve / Reject ─────────────────────────────────────────────
   openApprovalModal(reg: RegularizationResponseDto, approve: boolean): void {
     this.selectedRegularization = reg;
     this.approvalReason         = '';
@@ -561,7 +531,6 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     this.approvalReason         = '';
   }
 
-  // ─── Cancel flow ──────────────────────────────────────────────────
   async cancelRegularization(reg: RegularizationResponseDto): Promise<void> {
     const result = await Swal.fire({
       title: 'Cancel Request?',
@@ -592,13 +561,6 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ─── Delete flow ──────────────────────────────────────────────────
-  /**
-   * Called by renderer onDelete().
-   * Calls DELETE /api/AttendanceRegularization/{id} on the backend.
-   * Backend soft-deletes the record (IsDeleted = true).
-   * Works for ALL statuses — Pending, Approved, Rejected, Cancelled.
-   */
   async deleteRegularization(reg: RegularizationResponseDto): Promise<void> {
     const result = await Swal.fire({
       title: 'Delete Request?',
@@ -617,36 +579,19 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
     this.regularizationService.deleteRegularization(reg.id).subscribe({
       next: (res) => {
         if (res.success) {
-          Swal.fire({
-            title: 'Deleted!',
-            text:  'Regularization request deleted successfully.',
-            icon:  'success',
-            confirmButtonColor: '#3b82f6',
-            timer: 2000,
-            showConfirmButton: false
-          });
+          Swal.fire({ title: 'Deleted!', text: 'Regularization request deleted successfully.', icon: 'success',
+            confirmButtonColor: '#3b82f6', timer: 2000, showConfirmButton: false });
           this.loadRegularizations();
         } else {
-          Swal.fire({
-            title: 'Error!',
-            text:  res.message || 'Failed to delete the request.',
-            icon:  'error',
-            confirmButtonColor: '#ef4444'
-          });
+          Swal.fire({ title: 'Error!', text: res.message || 'Failed to delete the request.', icon: 'error', confirmButtonColor: '#ef4444' });
         }
       },
       error: (err) => {
-        Swal.fire({
-          title: 'Error!',
-          text:  err.error?.message || 'An error occurred while deleting.',
-          icon:  'error',
-          confirmButtonColor: '#ef4444'
-        });
+        Swal.fire({ title: 'Error!', text: err.error?.message || 'An error occurred while deleting.', icon: 'error', confirmButtonColor: '#ef4444' });
       }
     });
   }
 
-  // ─── Export ───────────────────────────────────────────────────────
   exportToExcel(): void {
     if (!this.rowData.length) {
       Swal.fire({ title: 'No Data', text: 'No requests to export.', icon: 'info', confirmButtonColor: '#3b82f6' });
@@ -677,7 +622,6 @@ export class RegularizationListComponent implements OnInit, OnDestroy {
       confirmButtonColor: '#3b82f6', timer: 3000, showConfirmButton: false });
   }
 
-  // ─── View-modal helpers ───────────────────────────────────────────
   formatViewTime(date: any): string {
     if (!date) return '—';
     return new Date(date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
