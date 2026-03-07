@@ -1,292 +1,406 @@
-<div class="AbelAttendanceWebAPP-dashboard-container">
-  <!-- Header -->
-  <div class="dashboard-header">
-    <div class="header-content">
-      <div class="header-title">
-        <i class="fas fa-chart-bar"></i>
-        <h1>AbelAttendanceWebAPP</h1>
-      </div>
-    </div>
+<div class="dash-page">
+
+  <!-- ══ Loading ════════════════════════════════════════════════ -->
+  <div class="dash-loading" *ngIf="isLoading">
+    <div class="dash-spinner"></div>
+    <span>Loading dashboard…</span>
   </div>
 
-  <!-- Loading Indicator with BMC Logo -->
-  <div class="loading-overlay" *ngIf="isLoadingWardData">
-    <div class="loading-spinner">
-      <div class="logo-container">
-        <img
-          src="assets/images/mcgmlogo.png"
-          alt="BMC Logo"
-          class="loading-logo"
-        />
-        <div class="loading-ring"></div>
-      </div>
-      <span class="loading-text">Loading dashboard data...</span>
-    </div>
+  <!-- ══ Error ══════════════════════════════════════════════════ -->
+  <div class="dash-error" *ngIf="loadingError && !isLoading">
+    <i class="bi bi-exclamation-circle"></i>
+    <span>{{ loadingError }}</span>
+    <button class="dash-btn dash-btn-primary" (click)="loadDashboard()">
+      <i class="bi bi-arrow-clockwise"></i> Retry
+    </button>
   </div>
 
-  <!-- Dashboard Content -->
-  <div class="dashboard-content" *ngIf="!isLoadingWardData">
-    <!-- ══════════════════════════════════════════════════════════
-         ✅ UPCOMING HOLIDAYS WIDGET
-         OUTSIDE the hasData block — so every employee always
-         sees upcoming holidays even when site data is empty.
-         ══════════════════════════════════════════════════════════ -->
-    <div class="cards-wrapper">
+  <ng-container *ngIf="!isLoading && !loadingError">
+
+    <!-- ══ Page header ════════════════════════════════════════════ -->
+    <div class="dash-header">
+      <div>
+        <h1 class="dash-title">Dashboard</h1>
+        <p class="dash-subtitle">Welcome back — here's what's happening today.</p>
+      </div>
+      <button class="dash-btn dash-btn-outline" (click)="loadDashboard()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+
+    <!-- ══ Upcoming Holidays ══════════════════════════════════════ -->
+    <div class="dash-holidays-row">
       <app-upcoming-holidays-widget [count]="5"></app-upcoming-holidays-widget>
     </div>
 
-    <!-- ✅ Empty State Section -->
-    <div class="empty-state" *ngIf="!hasData && !isLoadingWardData">
-      <div class="empty-state-content">
-        <div class="empty-state-icon">
-          <i class="fas fa-inbox"></i>
+    <!-- ══ Stat Cards ════════════════════════════════════════════ -->
+    <!-- Row 1: Attendance -->
+    <div class="dash-row-label">
+      <i class="bi bi-calendar-check"></i> Today's Attendance
+    </div>
+    <div class="dash-stats-grid dash-stats-grid-4">
+
+      <div class="dash-stat dash-stat-green">
+        <div class="dash-stat-icon"><i class="bi bi-person-check-fill"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Present</p>
+          <p class="dash-stat-value">{{ presentToday }}</p>
+          <div class="dash-progress-bar">
+            <div class="dash-progress-fill dash-progress-green"
+                 [style.width.%]="attendancePct()"></div>
+          </div>
+          <p class="dash-stat-sub">{{ attendancePct() }}% attendance rate</p>
         </div>
-        <h3>No Data Available</h3>
-        <p>There is currently no data to display for the selected period.</p>
-        <button class="retry-btn" (click)="retryLoadData()">
-          <i class="fas fa-sync-alt"></i>
-          Retry
-        </button>
       </div>
+
+      <div class="dash-stat dash-stat-red">
+        <div class="dash-stat-icon"><i class="bi bi-person-x-fill"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Absent</p>
+          <p class="dash-stat-value">{{ absentToday }}</p>
+          <p class="dash-stat-sub">out of {{ presentToday + absentToday }} employees</p>
+        </div>
+      </div>
+
+      <div class="dash-stat dash-stat-yellow">
+        <div class="dash-stat-icon"><i class="bi bi-clock-history"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Late Arrivals</p>
+          <p class="dash-stat-value">{{ lateToday }}</p>
+          <p class="dash-stat-sub">checked in late today</p>
+        </div>
+      </div>
+
+      <div class="dash-stat dash-stat-orange">
+        <div class="dash-stat-icon"><i class="bi bi-box-arrow-left"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Early Leaves</p>
+          <p class="dash-stat-value">{{ earlyLeaveToday }}</p>
+          <p class="dash-stat-sub">left before shift end</p>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Existing content - only show when hasData is true -->
-    <ng-container *ngIf="hasData">
-      <!-- SWM Sites Cards Section -->
-      <div class="cards-wrapper">
-        <div class="section-header">
-          <h2 class="section-title">
-            <i class="fas fa-recycle"></i>
-            <span>AbelAttendanceWebAPP Sites</span>
-          </h2>
-        </div>
-        <div class="location-cards-section">
-          <div
-            class="location-card"
-            *ngFor="let card of swmSites"
-            [ngStyle]="{ '--card-color': card.colorCode }"
-          >
-            <div class="card-header">
-              <h3>{{ card.siteName }}</h3>
-              <i class="fas fa-truck"></i>
-            </div>
-            <div class="card-stats">
-              <div class="stat-item">
-                <div class="stat-value">{{ card.vehicleCount }}</div>
-                <div class="stat-label">Trips</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value">
-                  {{ card.netWeight | number: "1.2-2" }}
-                </div>
-                <div class="stat-label">Net Weight (MT)</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RTS Sites Cards Section -->
-      <div class="cards-wrapper">
-        <div class="section-header">
-          <h2 class="section-title">
-            <i class="fas fa-warehouse"></i>
-            <span>RTS Sites</span>
-          </h2>
-        </div>
-        <div class="location-cards-section">
-          <div
-            class="location-card"
-            *ngFor="let card of rtsSites"
-            [ngStyle]="{ '--card-color': card.colorCode }"
-          >
-            <div class="card-header">
-              <h3>{{ card.siteName }}</h3>
-              <i class="fas fa-truck"></i>
-            </div>
-            <div class="card-stats">
-              <div class="stat-item">
-                <div class="stat-value">{{ card.vehicleCount }}</div>
-                <div class="stat-label">Trips</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value">
-                  {{ card.netWeight | number: "1.2-2" }}
-                </div>
-                <div class="stat-label">Net Weight (MT)</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Enhanced Tab Section -->
-      <div class="tab-section-wrapper">
-        <div class="tab-section-header">
-          <div class="tab-section-title">
-            <i class="fas fa-layer-group"></i>
-            <span>Site Analysis</span>
-          </div>
-          <div class="site-tabs">
-            <button
-              class="tab-button"
-              [class.active]="selectedSite === 'AbelAttendanceWebAPP'"
-              (click)="switchSite('AbelAttendanceWebAPP')"
-              type="button"
-            >
-              <i class="fas fa-recycle"></i>
-              <span class="tab-label">AbelAttendanceWebAPP</span>
-              <span class="tab-badge" *ngIf="swmSites.length > 0">{{
-                swmSites.length
-              }}</span>
-            </button>
-            <button
-              class="tab-button"
-              [class.active]="selectedSite === 'RTS'"
-              (click)="switchSite('RTS')"
-              type="button"
-            >
-              <i class="fas fa-warehouse"></i>
-              <span class="tab-label">RTS Sites</span>
-              <span class="tab-badge" *ngIf="rtsSites.length > 0">{{
-                rtsSites.length
-              }}</span>
-            </button>
-          </div>
-          <div class="tab-loading" *ngIf="isLoadingCumulative">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Loading data...</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Ward-wise Cumulative Net Weight Summary Chart (Last 30 Days) -->
-      <div class="summary-section">
-        <div class="summary-card">
-          <div class="summary-header">
-            <div class="summary-title-group">
-              <h3>Ward-wise Cumulative Net Weight Summary (Last 30 Days)</h3>
-              <div class="summary-subtitle">
-                <span
-                  class="site-indicator"
-                  [class.swm-indicator]="
-                    selectedSite === 'AbelAttendanceWebAPP'
-                  "
-                  [class.rts-indicator]="selectedSite === 'RTS'"
-                >
-                  {{ selectedSite }} Sites
-                </span>
-              </div>
-            </div>
-            <div class="summary-actions">
-              <button
-                class="expand-btn"
-                (click)="openFullscreenChart()"
-                *ngIf="isMobileView"
-                aria-label="Expand Chart"
-              >
-                <i class="fas fa-expand-arrows-alt"></i>
-                <span>View Details</span>
-              </button>
-              <i class="fas fa-chart-column desktop-icon"></i>
-            </div>
-          </div>
-          <div class="chart-container" #chartContainer>
-            <div class="chart-scroll-hint" *ngIf="isMobileView">
-              <div class="hint-item" [class.active]="isSwiping">
-                <i class="fas fa-arrows-alt-h swipe-icon"></i>
-                <span>Swipe to Explore Data</span>
-              </div>
-              <div class="hint-item">
-                <i class="fas fa-search-plus zoom-icon"></i>
-                <span>Pinch to Zoom</span>
-              </div>
-            </div>
-            <div
-              class="chart-wrapper"
-              [class.zoomed]="isChartZoomed"
-              [style.width]="chartWidth"
-            >
-              <apx-chart
-                [series]="wardChartOptions.series"
-                [chart]="wardChartOptions.chart"
-                [xaxis]="wardChartOptions.xaxis"
-                [yaxis]="wardChartOptions.yaxis"
-                [dataLabels]="wardChartOptions.dataLabels"
-                [colors]="wardChartOptions.colors"
-                [legend]="wardChartOptions.legend"
-                [grid]="wardChartOptions.grid"
-                [plotOptions]="wardChartOptions.plotOptions"
-                [stroke]="wardChartOptions.stroke"
-                [markers]="wardChartOptions.markers"
-                [responsive]="wardChartOptions.responsive || []"
-              >
-              </apx-chart>
-            </div>
-          </div>
-        </div>
-      </div>
-    </ng-container>
-  </div>
-</div>
-
-<!-- Fullscreen Chart Modal for Mobile -->
-<div
-  class="chart-modal"
-  *ngIf="showFullscreenChart"
-  (click)="closeFullscreenChart()"
->
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Ward-wise Summary - {{ selectedSite }} Sites</h3>
-      <button class="close-btn" (click)="closeFullscreenChart()">
-        <i class="fas fa-times"></i>
-      </button>
+    <!-- Row 2: Leave Summary -->
+    <div class="dash-row-label">
+      <i class="bi bi-calendar3"></i> Leave Summary
     </div>
-    <div class="modal-body">
-      <div class="zoom-controls">
-        <button class="zoom-btn" (click)="zoomOut()" aria-label="Zoom Out">
-          <i class="fas fa-minus"></i>
-        </button>
-        <div class="zoom-indicator">
-          <i class="fas fa-search"></i>
-          <span>{{ zoomLevel }}%</span>
+    <div class="dash-stats-grid dash-stats-grid-5">
+
+      <div class="dash-stat dash-stat-blue">
+        <div class="dash-stat-icon"><i class="bi bi-calendar3"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Total Requests</p>
+          <p class="dash-stat-value">{{ leaveTotal }}</p>
+          <p class="dash-stat-sub">all time</p>
         </div>
-        <button class="zoom-btn" (click)="zoomIn()" aria-label="Zoom In">
-          <i class="fas fa-plus"></i>
-        </button>
-        <button class="zoom-btn reset" (click)="resetZoom()" title="Reset Zoom">
-          <i class="fas fa-sync-alt"></i>
-        </button>
       </div>
-      <div class="fullscreen-viewport">
-        <div
-          class="fullscreen-chart-container"
-          #fullscreenChartContainer
-          [style.width]="fullscreenChartWidth"
-        >
+
+      <div class="dash-stat dash-stat-yellow">
+        <div class="dash-stat-icon"><i class="bi bi-hourglass-split"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Pending</p>
+          <p class="dash-stat-value">{{ leavePending }}</p>
+          <p class="dash-stat-sub">awaiting approval</p>
+        </div>
+      </div>
+
+      <div class="dash-stat dash-stat-green">
+        <div class="dash-stat-icon"><i class="bi bi-calendar-check"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Approved</p>
+          <p class="dash-stat-value">{{ leaveApproved }}</p>
+          <p class="dash-stat-sub">{{ leaveTotal > 0 ? Math.round((leaveApproved/leaveTotal)*100) : 0 }}% approval rate</p>
+        </div>
+      </div>
+
+      <div class="dash-stat dash-stat-red">
+        <div class="dash-stat-icon"><i class="bi bi-calendar-x"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Rejected</p>
+          <p class="dash-stat-value">{{ leaveRejected }}</p>
+          <p class="dash-stat-sub">declined requests</p>
+        </div>
+      </div>
+
+      <div class="dash-stat dash-stat-slate">
+        <div class="dash-stat-icon"><i class="bi bi-x-circle"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Cancelled</p>
+          <p class="dash-stat-value">{{ leaveCancelled }}</p>
+          <p class="dash-stat-sub">cancelled by employee</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Row 3: Workforce -->
+    <div class="dash-row-label">
+      <i class="bi bi-people"></i> Workforce
+    </div>
+    <div class="dash-stats-grid dash-stats-grid-3">
+
+      <div class="dash-stat dash-stat-navy">
+        <div class="dash-stat-icon"><i class="bi bi-people-fill"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Active Employees</p>
+          <p class="dash-stat-value">{{ activeEmployees }}</p>
+          <p class="dash-stat-sub">currently on roster</p>
+        </div>
+      </div>
+
+      <div class="dash-stat dash-stat-teal">
+        <div class="dash-stat-icon"><i class="bi bi-building"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Active Departments</p>
+          <p class="dash-stat-value">{{ activeDepartments }}</p>
+          <p class="dash-stat-sub">across the organisation</p>
+        </div>
+      </div>
+
+      <div class="dash-stat dash-stat-purple">
+        <div class="dash-stat-icon"><i class="bi bi-calendar-event"></i></div>
+        <div class="dash-stat-body">
+          <p class="dash-stat-label">Next Holiday</p>
+          <p class="dash-stat-value dash-stat-value-sm">{{ nextHolidayName }}</p>
+          <p class="dash-stat-sub">{{ nextHolidayDate }}</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ Charts ════════════════════════════════════════════════ -->
+    <div class="dash-row-label"><i class="bi bi-bar-chart"></i> Trends</div>
+
+    <div class="dash-charts-grid">
+
+      <!-- Attendance Bar Chart -->
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <h3><i class="bi bi-bar-chart-fill"></i> Attendance — Last 7 Days</h3>
+        </div>
+        <div class="dash-card-body">
           <apx-chart
-            [series]="wardChartOptions.series"
-            [chart]="fullscreenChartOptions.chart"
-            [xaxis]="fullscreenChartOptions.xaxis"
-            [yaxis]="fullscreenChartOptions.yaxis"
-            [dataLabels]="fullscreenChartOptions.dataLabels"
-            [colors]="fullscreenChartOptions.colors"
-            [legend]="fullscreenChartOptions.legend"
-            [grid]="fullscreenChartOptions.grid"
-            [plotOptions]="fullscreenChartOptions.plotOptions"
-            [stroke]="fullscreenChartOptions.stroke"
-            [markers]="fullscreenChartOptions.markers"
-          >
+            [series]="attendanceBarChart.series"
+            [chart]="attendanceBarChart.chart"
+            [xaxis]="attendanceBarChart.xaxis"
+            [yaxis]="attendanceBarChart.yaxis"
+            [dataLabels]="attendanceBarChart.dataLabels"
+            [plotOptions]="attendanceBarChart.plotOptions"
+            [colors]="attendanceBarChart.colors"
+            [grid]="attendanceBarChart.grid"
+            [legend]="attendanceBarChart.legend"
+            [stroke]="attendanceBarChart.stroke"
+            [markers]="attendanceBarChart.markers"
+            [fill]="attendanceBarChart.fill"
+            [tooltip]="attendanceBarChart.tooltip">
           </apx-chart>
         </div>
       </div>
-      <div class="modal-instructions">
-        <i class="fas fa-info-circle"></i>
-        <span
-          >Use zoom controls or pinch gesture to zoom • Swipe to scroll</span
-        >
+
+      <!-- Leave Trend Line Chart -->
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <h3><i class="bi bi-graph-up-arrow"></i> Leave Trends — Last 7 Days</h3>
+        </div>
+        <div class="dash-card-body">
+          <apx-chart
+            [series]="leaveTrendLineChart.series"
+            [chart]="leaveTrendLineChart.chart"
+            [xaxis]="leaveTrendLineChart.xaxis"
+            [yaxis]="leaveTrendLineChart.yaxis"
+            [dataLabels]="leaveTrendLineChart.dataLabels"
+            [plotOptions]="leaveTrendLineChart.plotOptions"
+            [colors]="leaveTrendLineChart.colors"
+            [grid]="leaveTrendLineChart.grid"
+            [legend]="leaveTrendLineChart.legend"
+            [stroke]="leaveTrendLineChart.stroke"
+            [markers]="leaveTrendLineChart.markers"
+            [fill]="leaveTrendLineChart.fill"
+            [tooltip]="leaveTrendLineChart.tooltip">
+          </apx-chart>
+        </div>
       </div>
+
+      <!-- Leave Breakdown Donut -->
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <h3><i class="bi bi-pie-chart-fill"></i> Leave Breakdown</h3>
+        </div>
+        <div class="dash-card-body">
+          <apx-chart
+            [series]="leaveDonutChart.series"
+            [chart]="leaveDonutChart.chart"
+            [labels]="leaveDonutChart.labels"
+            [colors]="leaveDonutChart.colors"
+            [legend]="leaveDonutChart.legend"
+            [plotOptions]="leaveDonutChart.plotOptions"
+            [dataLabels]="leaveDonutChart.dataLabels"
+            [tooltip]="leaveDonutChart.tooltip">
+          </apx-chart>
+        </div>
+      </div>
+
+      <!-- Department Employees Donut -->
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <h3><i class="bi bi-building"></i> Employees by Department</h3>
+        </div>
+        <div class="dash-card-body">
+          <div *ngIf="activeDepartments === 0" class="dash-empty">
+            <i class="bi bi-building"></i> No department data available
+          </div>
+          <apx-chart *ngIf="activeDepartments > 0"
+            [series]="deptDonutChart.series"
+            [chart]="deptDonutChart.chart"
+            [labels]="deptDonutChart.labels"
+            [colors]="deptDonutChart.colors"
+            [legend]="deptDonutChart.legend"
+            [plotOptions]="deptDonutChart.plotOptions"
+            [dataLabels]="deptDonutChart.dataLabels"
+            [tooltip]="deptDonutChart.tooltip">
+          </apx-chart>
+        </div>
+      </div>
+
     </div>
-  </div>
+
+    <!-- ══ Tables ═════════════════════════════════════════════════ -->
+    <div class="dash-row-label"><i class="bi bi-list-check"></i> Activity</div>
+
+    <div class="dash-tables-grid">
+
+      <!-- Pending Leaves -->
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <h3><i class="bi bi-hourglass-split"></i> Pending Leave Requests</h3>
+          <span class="dash-badge dash-badge-yellow">{{ leavePending }}</span>
+        </div>
+        <div class="dash-card-body-table">
+          <div *ngIf="pendingLeavesList.length === 0" class="dash-empty">
+            <i class="bi bi-check2-all"></i> No pending requests
+          </div>
+          <table *ngIf="pendingLeavesList.length > 0" class="dash-table">
+            <thead><tr>
+              <th>Employee</th><th>Type</th><th>From</th><th>Days</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let l of pendingLeavesList">
+                <td>
+                  <div class="dash-person">
+                    <div class="dash-avatar">{{ (l.employeeName || 'U')[0].toUpperCase() }}</div>
+                    <div>
+                      <div class="dash-name">{{ l.employeeName || '—' }}</div>
+                      <div class="dash-code">{{ l.employeeCode || '' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ l.leaveTypeName || '—' }}</td>
+                <td>{{ fmt(l.startDate) }}</td>
+                <td><span class="dash-days">{{ l.totalDays }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Late Arrivals -->
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <h3><i class="bi bi-clock-history"></i> Late Arrivals Today</h3>
+          <span class="dash-badge dash-badge-yellow">{{ lateList.length }}</span>
+        </div>
+        <div class="dash-card-body-table">
+          <div *ngIf="lateList.length === 0" class="dash-empty">
+            <i class="bi bi-check2-all"></i> No late arrivals today
+          </div>
+          <table *ngIf="lateList.length > 0" class="dash-table">
+            <thead><tr><th>Employee</th><th>Check In</th><th>Shift</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let a of lateList">
+                <td>
+                  <div class="dash-person">
+                    <div class="dash-avatar dash-avatar-yellow">{{ (a.employeeName || 'U')[0].toUpperCase() }}</div>
+                    <div>
+                      <div class="dash-name">{{ a.employeeName || '—' }}</div>
+                      <div class="dash-code">{{ a.employeeCode || '' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ a.checkInTime ? fmt(a.checkInTime) : '—' }}</td>
+                <td>{{ a.shiftName || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Upcoming Approved Leaves -->
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <h3><i class="bi bi-calendar-week"></i> Upcoming Leaves (14 days)</h3>
+          <span class="dash-badge dash-badge-blue">{{ upcomingLeaves.length }}</span>
+        </div>
+        <div class="dash-card-body-table">
+          <div *ngIf="upcomingLeaves.length === 0" class="dash-empty">
+            <i class="bi bi-calendar2-check"></i> No upcoming leaves
+          </div>
+          <table *ngIf="upcomingLeaves.length > 0" class="dash-table">
+            <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>Days</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let l of upcomingLeaves">
+                <td>
+                  <div class="dash-person">
+                    <div class="dash-avatar dash-avatar-green">{{ (l.employeeName || 'U')[0].toUpperCase() }}</div>
+                    <div>
+                      <div class="dash-name">{{ l.employeeName || '—' }}</div>
+                      <div class="dash-code">{{ l.employeeCode || '' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ l.leaveTypeName || '—' }}</td>
+                <td>{{ fmt(l.startDate) }}</td>
+                <td><span class="dash-days">{{ l.totalDays }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Early Leave Today -->
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <h3><i class="bi bi-box-arrow-left"></i> Early Leaves Today</h3>
+          <span class="dash-badge dash-badge-orange">{{ earlyList.length }}</span>
+        </div>
+        <div class="dash-card-body-table">
+          <div *ngIf="earlyList.length === 0" class="dash-empty">
+            <i class="bi bi-check2-all"></i> No early departures today
+          </div>
+          <table *ngIf="earlyList.length > 0" class="dash-table">
+            <thead><tr><th>Employee</th><th>Check Out</th><th>Shift</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let a of earlyList">
+                <td>
+                  <div class="dash-person">
+                    <div class="dash-avatar dash-avatar-orange">{{ (a.employeeName || 'U')[0].toUpperCase() }}</div>
+                    <div>
+                      <div class="dash-name">{{ a.employeeName || '—' }}</div>
+                      <div class="dash-code">{{ a.employeeCode || '' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ a.checkOutTime ? fmt(a.checkOutTime) : '—' }}</td>
+                <td>{{ a.shiftName || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    <!-- /dash-tables-grid -->
+
+  </ng-container>
 </div>

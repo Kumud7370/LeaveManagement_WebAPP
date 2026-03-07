@@ -100,6 +100,7 @@ export class LeaveListComponent implements OnInit, OnDestroy {
   private searchDebounceTimer: any = null;
   private resizeObserver!: ResizeObserver;
   private sidebarResizeTimer: any = null;
+  
 
   defaultColDef: ColDef = {
     sortable: true, filter: true, floatingFilter: true,
@@ -249,7 +250,6 @@ export class LeaveListComponent implements OnInit, OnDestroy {
     this.scheduleSizeColumnsToFit();
   }
 
-  /** Debounced sizeColumnsToFit — safe to call repeatedly */
   private scheduleSizeColumnsToFit(delay = 320): void {
     clearTimeout(this.sidebarResizeTimer);
     this.sidebarResizeTimer = setTimeout(() => {
@@ -260,10 +260,7 @@ export class LeaveListComponent implements OnInit, OnDestroy {
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
 
-    // Initial fit
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
-
-    // Watch the grid wrapper element for size changes caused by sidebar toggling
     const gridEl = document.querySelector('app-leave-list ag-grid-angular') as HTMLElement;
     if (gridEl && typeof ResizeObserver !== 'undefined') {
       this.resizeObserver = new ResizeObserver(() => {
@@ -376,6 +373,8 @@ export class LeaveListComponent implements OnInit, OnDestroy {
   deleteLeave(leave: Leave):  void { this._doDelete(leave); }
 
   private async _doApprove(leave: Leave): Promise<void> {
+    console.log('ID value:', leave.id);      // is this undefined?
+  console.log('Full object:', leave);       
     const r = await Swal.fire({
       title: 'Approve Leave?',
       html: `Approve <strong>${leave.employeeName}</strong>'s leave (${leave.totalDays} days)?`,
