@@ -1,182 +1,248 @@
-import { type ComponentFixture, TestBed } from "@angular/core/testing"
-import { DashboardComponent } from "./dashboard.component"
-import { NgApexchartsModule } from "ng-apexcharts"
-import { FormsModule } from "@angular/forms"
-import { ApiClientService } from "src/app/core/services/api/apiClient"
-import { of } from "rxjs"
+import { type ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { DashboardComponent } from './dashboard.component';
+import { NgApexchartsModule } from 'ng-apexcharts';
+import { FormsModule } from '@angular/forms';
+import { ApiClientService } from 'src/app/core/services/api/apiClient';
+import { UpcomingHolidaysWidgetComponent } from '../holiday/upcoming-holidays-widget/upcoming-holidays-widget.component';
+import { of, throwError } from 'rxjs';
 
-describe("DashboardComponent", () => {
-  let component: DashboardComponent
-  let fixture: ComponentFixture<DashboardComponent>
-  let mockApiClientService: jasmine.SpyObj<ApiClientService>
+import { Component, Input } from '@angular/core';
+@Component({ selector: 'app-upcoming-holidays-widget', template: '', standalone: true })
+class MockHolidaysWidget { @Input() count = 5; }
+
+const MOCK_ATT_STATS = {
+  data: { presentCount: 42, absentCount: 8, lateCount: 5, earlyLeaveCount: 3 }
+};
+const MOCK_LATE      = { data: [
+  { employeeName: 'Alice', employeeCode: 'E001', checkInTime: '2026-01-01T09:30:00Z', shiftName: 'Morning' },
+  { employeeName: 'Bob',   employeeCode: 'E002', checkInTime: '2026-01-01T09:45:00Z', shiftName: 'Morning' },
+]};
+const MOCK_EARLY     = { data: [
+  { employeeName: 'Carol', employeeCode: 'E003', checkOutTime: '2026-01-01T16:00:00Z', shiftName: 'Morning' },
+]};
+const MOCK_PENDING   = { data: [
+  { employeeName: 'Dave', employeeCode: 'E004', leaveTypeName: 'Casual Leave',
+    startDate: '2026-01-10T00:00:00Z', totalDays: 2, leaveStatus: 'Pending' },
+  { employeeName: 'Eve',  employeeCode: 'E005', leaveTypeName: 'Sick Leave',
+    startDate: '2026-01-12T00:00:00Z', totalDays: 1, leaveStatus: 'Pending' },
+]};
+const MOCK_EMPLOYEES  = { data: Array.from({ length: 50 }, (_, i) => ({ id: `emp-${i}` })) };
+const MOCK_DEPTS      = { data: [
+  { name: 'Engineering', employeeCount: 20 },
+  { name: 'HR',          employeeCount: 10 },
+  { name: 'Finance',     employeeCount: 15 },
+]};
+const MOCK_HOLIDAYS   = { data: [
+  { name: 'Republic Day', date: '2026-01-26T00:00:00Z' },
+]};
+const MOCK_ALL_LEAVES = { data: { items: [
+  { appliedDate: new Date().toISOString(), leaveStatus: 'Pending',  employeeName: 'Dave' },
+  { appliedDate: new Date().toISOString(), leaveStatus: 'Approved', employeeName: 'Eve'  },
+  { appliedDate: new Date().toISOString(), leaveStatus: 'Rejected', employeeName: 'Frank'},
+  { appliedDate: new Date().toISOString(), leaveStatus: 'Approved', employeeName: 'Gina' },
+]}};
+
+describe('DashboardComponent', () => {
+  let component: DashboardComponent;
+  let fixture: ComponentFixture<DashboardComponent>;
+  let mockApi: jasmine.SpyObj<ApiClientService>;
 
   beforeEach(async () => {
-    const spy = jasmine.createSpyObj("ApiClientService", [
-      "GetWBTripSummary",
-      "getWardwiseReport",
-      "getImportantUpdates",
-    ])
+    mockApi = jasmine.createSpyObj<ApiClientService>('ApiClientService', [
+      'getAttendanceStatistics',
+      'getLateAttendance',
+      'getEarlyLeave',
+      'getPendingLeaves',
+      'getActiveEmployees',
+      'getActiveDepartments',
+      'getUpcomingHolidays',
+      'filterLeaves',
+    ]);
+
+    mockApi.getAttendanceStatistics.and.returnValue(of(MOCK_ATT_STATS));
+    mockApi.getLateAttendance      .and.returnValue(of(MOCK_LATE));
+    mockApi.getEarlyLeave          .and.returnValue(of(MOCK_EARLY));
+    mockApi.getPendingLeaves       .and.returnValue(of(MOCK_PENDING));
+    mockApi.getActiveEmployees     .and.returnValue(of(MOCK_EMPLOYEES));
+    mockApi.getActiveDepartments   .and.returnValue(of(MOCK_DEPTS));
+    mockApi.getUpcomingHolidays    .and.returnValue(of(MOCK_HOLIDAYS));
+    mockApi.filterLeaves           .and.returnValue(of(MOCK_ALL_LEAVES));
 
     await TestBed.configureTestingModule({
       imports: [DashboardComponent, NgApexchartsModule, FormsModule],
-      providers: [{ provide: ApiClientService, useValue: spy }],
-    }).compileComponents()
+      providers: [{ provide: ApiClientService, useValue: mockApi }],
+    })
+    .overrideComponent(DashboardComponent, {
+      remove: { imports: [UpcomingHolidaysWidgetComponent] },
+      add:    { imports: [MockHolidaysWidget] },
+    })
+    .compileComponents();
 
-    fixture = TestBed.createComponent(DashboardComponent)
-    component = fixture.componentInstance
-    mockApiClientService = TestBed.inject(ApiClientService) as jasmine.SpyObj<ApiClientService>
+    fixture   = TestBed.createComponent(DashboardComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
 
-    // mockApiClientService.GetWBTripSummary.and.returnValue(
-    //   of({
-    //     isSuccess: true,
-    //     data: {
-    //       swmSites: [
-    //         {
-    //           siteName: "Kanjur",
-    //           vehicleCount: 831,
-    //           netWeight: 6140.29,
-    //           colorCode: "#1a2a6c",
-    //         },
-    //       ],
-    //       rtsSites: [
-    //         {
-    //           siteName: "Deonar Refuse",
-    //           vehicleCount: 229,
-    //           netWeight: 1624.82,
-    //           colorCode: "#b21f1f",
-    //         },
-    //       ],
-    //     },
-    //   }),
-    // )
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
 
-    // mockApiClientService.getWardwiseReport.and.returnValue(
-    //   of({
-    //     serviceResponse: 1,
-    //     wardData: [
-    //       { wardName: "Ward A", vehicleCount: 10, totalNetWeight: 100, transactionDate: "2025-01-01" },
-    //       { wardName: "Ward B", vehicleCount: 15, totalNetWeight: 150, transactionDate: "2025-01-01" },
-    //     ],
-    //   }),
-    // )
+  it('should initialise stat values to 0', () => {
+    const fresh = new DashboardComponent(mockApi as any, { detectChanges: () => {} } as any);
+    expect(fresh.presentToday).toBe(0);
+    expect(fresh.absentToday).toBe(0);
+    expect(fresh.lateToday).toBe(0);
+    expect(fresh.earlyLeaveToday).toBe(0);
+    expect(fresh.leavePending).toBe(0);
+    expect(fresh.leaveApproved).toBe(0);
+    expect(fresh.leaveRejected).toBe(0);
+    expect(fresh.leaveCancelled).toBe(0);
+    expect(fresh.leaveTotal).toBe(0);
+    expect(fresh.activeEmployees).toBe(0);
+    expect(fresh.activeDepartments).toBe(0);
+  });
 
-    // mockApiClientService.getImportantUpdates.and.returnValue(
-    //   of([
-    //     {
-    //       id: 1,
-    //       type: "News",
-    //       priority: "High",
-    //       date: "2025-01-01",
-    //       year: 2025,
-    //       category: "System",
-    //       title: "Test News",
-    //       content: "Test content",
-    //       timeAgo: "1 hour ago",
-    //       createdAt: "2025-01-01T00:00:00Z",
-    //       monthYear: "01-2025",
-    //       siteLocation: "Mumbai",
-    //       eventDate: "2025-01-01",
-    //       notification: "Test notification",
-    //     },
-    //   ]),
-    // )
+  it('should initialise all four charts', () => {
+    component.initEmptyChartsPublic();
+    expect(component.attendanceBarChart).toBeDefined();
+    expect(component.leaveTrendLineChart).toBeDefined();
+    expect(component.leaveDonutChart).toBeDefined();
+    expect(component.deptDonutChart).toBeDefined();
+  });
 
-    fixture.detectChanges()
-  })
+  it('should call all required API methods on loadDashboard()', () => {
+    component.loadDashboard();
+    expect(mockApi.getAttendanceStatistics).toHaveBeenCalled();
+    expect(mockApi.getLateAttendance)      .toHaveBeenCalled();
+    expect(mockApi.getEarlyLeave)          .toHaveBeenCalled();
+    expect(mockApi.getPendingLeaves)       .toHaveBeenCalled();
+    expect(mockApi.getActiveEmployees)     .toHaveBeenCalled();
+    expect(mockApi.getActiveDepartments)   .toHaveBeenCalled();
+    expect(mockApi.getUpcomingHolidays)    .toHaveBeenCalled();
+    expect(mockApi.filterLeaves)           .toHaveBeenCalled();
+  });
 
-  it("should create", () => {
-    expect(component).toBeTruthy()
-  })
+  it('should populate attendance stats from API response', () => {
+    component.loadDashboard();
+    expect(component.presentToday).toBe(42);
+    expect(component.absentToday) .toBe(8);
+    expect(component.lateToday)   .toBe(5);
+    expect(component.earlyLeaveToday).toBe(3);
+  });
 
-  it("should have correct initial data structure", () => {
-    expect(component.kanjurData).toBeDefined()
-    expect(component.kanjurData.trips).toBe(0)
-    expect(component.kanjurData.netWeight).toBe(0)
-    expect(component.deonarData).toBeDefined()
-    expect(component.deonarData.trips).toBe(0)
-    expect(component.deonarData.netWeight).toBe(0)
-  })
+  it('should populate late list from API response', () => {
+    component.loadDashboard();
+    expect(component.lateList.length).toBe(2);
+    expect(component.lateList[0].employeeName).toBe('Alice');
+  });
 
-  it("should have last 30 days summary initialized", () => {
-    expect(component.last30DaysSummary).toBeDefined()
-    expect(component.last30DaysSummary.trips).toBe(0)
-    expect(component.last30DaysSummary.netWeight).toBe(0)
-    expect(component.last30DaysSummary.averageWardTrips).toBe(0)
-    expect(component.last30DaysSummary.averageWardWeight).toBe(0)
-  })
+  it('should populate early leave list from API response', () => {
+    component.loadDashboard();
+    expect(component.earlyList.length).toBe(1);
+    expect(component.earlyList[0].employeeName).toBe('Carol');
+  });
 
-  it("should initialize chart options", () => {
-    expect(component.vehicleChartOptions).toBeDefined()
-    expect(component.wardChartOptions).toBeDefined()
-  })
+  it('should populate pendingLeavesList from API response', () => {
+    component.loadDashboard();
+    expect(component.pendingLeavesList.length).toBe(2);
+    expect(component.pendingLeavesList[0].employeeName).toBe('Dave');
+  });
 
-//   it("should load site data on init", () => {
-//     expect(mockApiClientService.GetWBTripSummary).toHaveBeenCalled()
-//     expect(component.swmSites.length).toBeGreaterThan(0)
-//   })
+  it('should set activeEmployees from getActiveEmployees response', () => {
+    component.loadDashboard();
+    expect(component.activeEmployees).toBe(50);
+  });
 
-  it("should process dynamic site data correctly", () => {
-    component.swmSites = [
-      {
-        siteName: "Kanjur",
-        vehicleCount: 831,
-        netWeight: 6140.29,
-        colorCode: "#1a2a6c",
-      },
-    ]
-    component.rtsSites = [
-      {
-        siteName: "Deonar Refuse",
-        vehicleCount: 229,
-        netWeight: 1624.82,
-        colorCode: "#b21f1f",
-      },
-    ]
+  it('should set activeDepartments from getActiveDepartments response', () => {
+    component.loadDashboard();
+    expect(component.activeDepartments).toBe(3);
+  });
 
-    component.processDynamicSiteData()
+  it('should set nextHolidayName from getUpcomingHolidays response', () => {
+    component.loadDashboard();
+    expect(component.nextHolidayName).toBe('Republic Day');
+  });
 
-    expect(component.kanjurData.trips).toBe(831)
-    expect(component.kanjurData.netWeight).toBe(6140.29)
-    expect(component.deonarData.trips).toBe(229)
-    expect(component.deonarData.netWeight).toBe(1624.82)
-  })
+  it('should calculate leave totals from filterLeaves response', () => {
+    component.loadDashboard();
+    expect(component.leaveTotal)    .toBe(4);
+    expect(component.leavePending)  .toBe(1);
+    expect(component.leaveApproved) .toBe(2);
+    expect(component.leaveRejected) .toBe(1);
+    expect(component.leaveCancelled).toBe(0);
+  });
 
-  it("should calculate last 30 days summary correctly", () => {
-    const wardData = [
-      { wardName: "Ward A", vehicleCount: 10, totalNetWeight: 100, transactionDate: "2025-01-01" },
-      { wardName: "Ward B", vehicleCount: 15, totalNetWeight: 150, transactionDate: "2025-01-01" },
-      { wardName: "Ward C", vehicleCount: 20, totalNetWeight: 200, transactionDate: "2025-01-01" },
-    ]
+  it('should calculate attendance percentage correctly', () => {
+    component.presentToday = 80;
+    component.absentToday  = 20;
+    expect(component.attendancePct()).toBe(80);
+  });
 
-    component.calculateLast30DaysSummary(wardData)
+  it('should return 0 attendance percent when no employees', () => {
+    component.presentToday = 0;
+    component.absentToday  = 0;
+    expect(component.attendancePct()).toBe(0);
+  });
 
-    expect(component.last30DaysSummary.trips).toBe(45)
-    expect(component.last30DaysSummary.netWeight).toBe(450)
-    expect(component.last30DaysSummary.averageWardTrips).toBe(15)
-    expect(component.last30DaysSummary.averageWardWeight).toBe(150)
-  })
+  it('should resolve numeric leave status to name', () => {
+    expect(component.statusName(0)).toBe('Pending');
+    expect(component.statusName(1)).toBe('Approved');
+    expect(component.statusName(2)).toBe('Rejected');
+    expect(component.statusName(3)).toBe('Cancelled');
+  });
 
-  it("should set loading to false after initialization", (done) => {
-    component.ngOnInit()
-    expect(component.isLoading).toBe(true)
-    setTimeout(() => {
-      expect(component.isLoading).toBe(false)
-      done()
-    }, 1100)
-  })
+  it('should return string leave status unchanged', () => {
+    expect(component.statusName('Approved')).toBe('Approved');
+    expect(component.statusName('Pending')) .toBe('Pending');
+  });
 
-  it("should handle pagination correctly", () => {
-    component.totalItems = 20
-    component.pageSize = 6
-    component.currentPage = 1
-    component.totalPages = Math.ceil(component.totalItems / component.pageSize)
+  it('should return correct CSS class for leave status', () => {
+    expect(component.statusClass(0)).toBe('badge-pending');
+    expect(component.statusClass(1)).toBe('badge-approved');
+    expect(component.statusClass(2)).toBe('badge-rejected');
+    expect(component.statusClass(3)).toBe('badge-cancelled');
+  });
 
-    expect(component.totalPages).toBe(4)
+  it('should format a valid date string', () => {
+    const result = component.fmt('2026-01-26T00:00:00Z');
+    expect(result).toContain('Jan');
+    expect(result).toContain('2026');
+  });
 
-    component.goToNextPage()
-    expect(component.currentPage).toBe(2)
+  it('should return em-dash for empty date', () => {
+    expect(component.fmt('')).toBe('—');
+  });
 
-    component.goToPreviousPage()
-    expect(component.currentPage).toBe(1)
-  })
-})
+  it('should set isLoading to false after data loads', fakeAsync(() => {
+    component.loadDashboard();
+    tick();
+    expect(component.isLoading).toBeFalse();
+  }));
+
+  it('should set loadingError when all APIs fail', fakeAsync(() => {
+    mockApi.getAttendanceStatistics.and.returnValue(throwError(() => ({ error: { message: 'Server error' } })));
+    mockApi.getLateAttendance      .and.returnValue(throwError(() => ({})));
+    mockApi.getEarlyLeave          .and.returnValue(throwError(() => ({})));
+    mockApi.getPendingLeaves       .and.returnValue(throwError(() => ({})));
+    mockApi.getActiveEmployees     .and.returnValue(throwError(() => ({})));
+    mockApi.getActiveDepartments   .and.returnValue(throwError(() => ({})));
+    mockApi.getUpcomingHolidays    .and.returnValue(throwError(() => ({})));
+    mockApi.filterLeaves           .and.returnValue(throwError(() => ({})));
+
+    component.loadDashboard();
+    tick();
+    expect(component.isLoading).toBeFalse();
+  }));
+
+  it('should detect mobile view correctly', () => {
+    spyOnProperty(window, 'innerWidth').and.returnValue(500);
+    component.checkMobileView();
+    expect(component.isMobileView).toBeTrue();
+  });
+
+  it('should detect desktop view correctly', () => {
+    spyOnProperty(window, 'innerWidth').and.returnValue(1200);
+    component.checkMobileView();
+    expect(component.isMobileView).toBeFalse();
+  });
+});
