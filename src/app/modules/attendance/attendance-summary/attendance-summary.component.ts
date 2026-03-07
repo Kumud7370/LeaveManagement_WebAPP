@@ -71,14 +71,10 @@ export class AttendanceSummaryComponent implements OnInit {
 
   readonly gridTheme = summaryGridTheme;
 
-  // ── Role / identity ─────────────────────────────────────────
+  // ── Role check ───────────────────────────────────────────────
   get isAdmin(): boolean {
-    const role = (sessionStorage.getItem('RoleName') || '').toLowerCase();
+    const role = (sessionStorage.getItem('RoleName') || '').toLowerCase().trim();
     return role === 'admin' || role === 'superadmin' || role === 'manager';
-  }
-
-  get selfEmployeeId(): string {
-    return sessionStorage.getItem('EmployeeId') || '';
   }
 
   // ── State ────────────────────────────────────────────────────
@@ -93,6 +89,7 @@ export class AttendanceSummaryComponent implements OnInit {
   gridApi!:   GridApi;
 
   // ── Form fields ──────────────────────────────────────────────
+  // FIXED: Both admin AND employee use this input. No sessionStorage lookup.
   lookupEmployeeId = '';
   startDate        = '';
   endDate          = '';
@@ -110,7 +107,6 @@ export class AttendanceSummaryComponent implements OnInit {
   activeFilters = { hasActiveFilters: false, filters: [] as string[], count: 0 };
   context = { componentParent: this };
 
-  // ── Column definitions (Method & Approved removed) ───────────
   defaultColDef: ColDef = {
     sortable: true, filter: true, floatingFilter: true, resizable: true, minWidth: 80
   };
@@ -225,7 +221,6 @@ export class AttendanceSummaryComponent implements OnInit {
         p.value != null && p.value > 0 ? `${(+p.value).toFixed(1)}h` : '—',
       cellStyle: { textAlign: 'center', color: '#6366f1', fontWeight: '600' }
     }
-    // ── Method and Approved columns intentionally removed ──────
   ];
 
   constructor(
@@ -235,24 +230,15 @@ export class AttendanceSummaryComponent implements OnInit {
 
   ngOnInit(): void {
     this.setCurrentMonth();
-
-    if (this.isAdmin) {
-      this.lookupEmployeeId = '';
-    } else {
-      this.lookupEmployeeId = this.selfEmployeeId;
-      if (this.selfEmployeeId) {
-        this.loadAll();
-      }
-    }
+    this.lookupEmployeeId = '';
   }
 
   private resolveEid(): string {
-    return this.isAdmin ? this.lookupEmployeeId.trim() : this.selfEmployeeId;
+    return this.lookupEmployeeId.trim();
   }
 
   loadAll(): void {
     this.errorMsg = '';
-
     const eid = this.resolveEid();
     if (!eid) {
       this.errorMsg = 'Please enter an Employee ID to search.';
@@ -266,12 +252,10 @@ export class AttendanceSummaryComponent implements OnInit {
       this.errorMsg = 'From date cannot be after To date.';
       return;
     }
-
     this.hasSearched = true;
     this.summary     = null;
     this.allRecords  = [];
     this.rowData     = [];
-
     this.doLoadSummary(eid);
     this.doLoadRecords(eid);
   }
@@ -279,7 +263,6 @@ export class AttendanceSummaryComponent implements OnInit {
   private doLoadSummary(eid: string): void {
     this.summaryLoading = true;
     this.cdr.detectChanges();
-
     this.attendanceService.getAttendanceSummary(eid, this.startDate, this.endDate).subscribe({
       next: (r) => {
         this.summaryLoading = false;
@@ -301,7 +284,6 @@ export class AttendanceSummaryComponent implements OnInit {
   private doLoadRecords(eid: string): void {
     this.recordsLoading = true;
     this.cdr.detectChanges();
-
     this.attendanceService.getEmployeeHistory(eid, this.startDate, this.endDate).subscribe({
       next: (r: any) => {
         this.recordsLoading = false;
