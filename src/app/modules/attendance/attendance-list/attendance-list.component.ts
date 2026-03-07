@@ -77,8 +77,7 @@ const attendanceGridTheme = themeQuartz.withParams({
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class AttendanceListComponent implements OnInit, OnDestroy {
-
-  @ViewChild('agGrid', { read: ElementRef })
+  @ViewChild(AgGridAngular, { read: ElementRef })
   agGridElement!: ElementRef<HTMLElement>;
 
   readonly gridTheme = attendanceGridTheme;
@@ -98,7 +97,10 @@ export class AttendanceListComponent implements OnInit, OnDestroy {
   totalPages: number = 0;
   private isLoadingData: boolean = false;
   private searchDebounceTimer: any = null;
-  private resizeListener!: () => void;
+
+  // ── ResizeObserver replaces window resize listener 
+  private resizeObserver: ResizeObserver | null = null;
+
   Math = Math;
 
   statistics: { [key: string]: number } = {};
@@ -244,29 +246,42 @@ export class AttendanceListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadStats();
     this.loadAttendance();
-
-    // Window resize → re-fit columns
-    this.resizeListener = () => this.sizeColumns();
-    window.addEventListener('resize', this.resizeListener);
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('resize', this.resizeListener);
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
   }
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     this.gridApi.addEventListener('sortChanged',   this.onSortChanged.bind(this));
     this.gridApi.addEventListener('filterChanged', this.onFilterChanged.bind(this));
-    this.sizeColumns();
+
+    // Initial fit
+    setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
+
+    const hostEl    = this.agGridElement?.nativeElement;
+    const container = (hostEl?.closest('.att-grid-card') as HTMLElement) ?? hostEl;
+
+    if (container && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.gridApi) {
+          requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
+        }
+      });
+      this.resizeObserver.observe(container);
+    }
   }
 
   private sizeColumns(): void {
     if (!this.gridApi) return;
-    setTimeout(() => this.gridApi.sizeColumnsToFit(), 60);
+    requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
   }
 
-  onSortChanged(_e: SortChangedEvent): void   { this.currentPage = 1; this.loadAttendance(); }
+  onSortChanged(_e: SortChangedEvent): void    { this.currentPage = 1; this.loadAttendance(); }
   onFilterChanged(_e: FilterChangedEvent): void { this.currentPage = 1; this.loadAttendance(); this.updateActiveFilters(); }
 
   loadAttendance(): void {

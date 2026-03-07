@@ -41,7 +41,6 @@ import {
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-// ── Same themeQuartz pattern as Holiday component ──
 const shiftGridTheme = themeQuartz.withParams({
   backgroundColor:                '#ffffff',
   foregroundColor:                '#1f2937',
@@ -80,22 +79,24 @@ const shiftGridTheme = themeQuartz.withParams({
 export class ShiftListComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  @ViewChild('agGrid', { read: ElementRef })
+  @ViewChild(AgGridAngular, { read: ElementRef })
   agGridElement!: ElementRef<HTMLElement>;
 
   readonly gridTheme = shiftGridTheme;
 
-  // ── Grid state ────────────────────────────────────────────
+  // ── Grid state 
   rowData: Shift[] = [];
   gridApi!: GridApi;
   searchTerm: string = '';
 
-  // ── Modal state ───────────────────────────────────────────
+  private resizeObserver: ResizeObserver | null = null;
+
+  // ── Modal state 
   showModal    = false;
   modalMode: 'create' | 'edit' | 'view' = 'create';
   selectedShift: Shift | null = null;
 
-  // ── Pagination ────────────────────────────────────────────
+  // ── Pagination 
   currentPage      = 1;
   pageSize         = 20;
   totalItems       = 0;
@@ -104,58 +105,60 @@ export class ShiftListComponent implements OnInit, OnDestroy {
   private searchDebounceTimer: any = null;
   Math = Math;
 
-  // ── Stats ─────────────────────────────────────────────────
+  // ── Stats 
   stats = { total: 0, active: 0, nightShifts: 0 };
 
-  // ── Loading flag ──────────────────────────────────────────
+  // ── Loading flag 
   isLoading = false;
 
   context = { componentParent: this };
 
-  // ── Active Filters ────────────────────────────────────────
+  // ── Active Filters 
   activeFilters = {
     hasActiveFilters: false,
     filters: [] as string[],
     count: 0
   };
 
-  // ── Grid config ───────────────────────────────────────────
   defaultColDef: ColDef = {
-    sortable:               true,
-    filter:                 true,
-    floatingFilter:         true,
-    resizable:              true,
-    minWidth:               80,
-    suppressSizeToFit:      false,
-    suppressAutoSize:       false
+    sortable:          true,
+    filter:            true,
+    floatingFilter:    true,
+    resizable:         true,
+    minWidth:          80,
+    flex:              1,         
+    suppressSizeToFit: false,
+    suppressAutoSize:  false
   };
 
   columnDefs: ColDef[] = [
     {
-      headerName:                 'Actions',
-      field:                      'actions',
-      width:                      155,
-      minWidth:                   155,
-      maxWidth:                   155,
-      sortable:                   false,
-      filter:                     false,
-      floatingFilter:             false,
+      headerName:                   'Actions',
+      field:                        'actions',
+      width:                        155,
+      minWidth:                     155,
+      maxWidth:                     155,
+      flex:                         0,          
+      sortable:                     false,
+      filter:                       false,
+      floatingFilter:               false,
       suppressFloatingFilterButton: true,
-      cellClass:                  'actions-cell',
-      cellRenderer:               ActionCellRendererComponent,
-      suppressSizeToFit:          true
+      cellClass:                    'actions-cell',
+      cellRenderer:                 ActionCellRendererComponent,
+      suppressSizeToFit:            true
     },
     {
-      headerName: 'Color',
-      field:      'color',
-      width:      75,
-      minWidth:   60,
-      maxWidth:   75,
-      sortable:   false,
-      filter:     false,
-      floatingFilter: false,
+      headerName:                   'Color',
+      field:                        'color',
+      width:                        75,
+      minWidth:                     60,
+      maxWidth:                     75,
+      flex:                         0,          
+      sortable:                     false,
+      filter:                       false,
+      floatingFilter:               false,
       suppressFloatingFilterButton: true,
-      suppressSizeToFit: true,
+      suppressSizeToFit:            true,
       cellRenderer: (params: ICellRendererParams) =>
         `<div style="width:26px;height:26px;border-radius:6px;background:${params.value};
          border:1px solid rgba(0,0,0,.15);margin-top:9px;"></div>`
@@ -163,12 +166,12 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     {
       headerName: 'Shift Name',
       field:      'shiftName',
-      width:      200,
       minWidth:   160,
+      flex:       2,
       cellStyle:  { fontWeight: '600', color: '#1f2937' },
       cellRenderer: (params: ICellRendererParams) => {
-        const val    = params.value || '';
-        const search = params.context?.componentParent?.searchTerm || '';
+        const val       = params.value || '';
+        const search    = params.context?.componentParent?.searchTerm || '';
         const highlighted = params.context?.componentParent?.highlightText(val, search) || val;
         return `<span style="font-weight:600;color:#1f2937;">${highlighted}</span>`;
       }
@@ -176,8 +179,8 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     {
       headerName: 'Code',
       field:      'shiftCode',
-      width:      120,
       minWidth:   100,
+      flex:       1,
       cellRenderer: (params: ICellRendererParams) =>
         `<span style="font-family:monospace;font-size:0.78rem;background:#f1f5f9;
          padding:2px 8px;border-radius:4px;font-weight:600;">${params.value ?? ''}</span>`
@@ -185,16 +188,16 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     {
       headerName: 'Timing',
       field:      'shiftTimingDisplay',
-      width:      150,
       minWidth:   130,
+      flex:       1.2,
       sortable:   false,
       cellStyle:  { fontWeight: '600', color: '#334155' }
     },
     {
       headerName: 'Net Working',
       field:      'netWorkingHours',
-      width:      130,
       minWidth:   110,
+      flex:       1,
       sortable:   false,
       cellRenderer: (params: ICellRendererParams) =>
         `<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;
@@ -203,16 +206,16 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     {
       headerName:     'Grace Period',
       field:          'gracePeriodMinutes',
-      width:          130,
       minWidth:       110,
+      flex:           1,
       sortable:       true,
       valueFormatter: (p) => p.value != null ? `${p.value} min` : ''
     },
     {
       headerName: 'Night Shift',
       field:      'isNightShift',
-      width:      120,
       minWidth:   100,
+      flex:       1,
       sortable:   true,
       cellRenderer: (params: ICellRendererParams) =>
         params.value
@@ -222,16 +225,16 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     {
       headerName:     'Allowance %',
       field:          'nightShiftAllowancePercentage',
-      width:          130,
       minWidth:       110,
+      flex:           1,
       sortable:       true,
       valueFormatter: (p) => p.data?.isNightShift ? `${p.value}%` : '—'
     },
     {
       headerName: 'Status',
       field:      'isActive',
-      width:      110,
       minWidth:   90,
+      flex:       0.9,
       sortable:   true,
       cellRenderer: (params: ICellRendererParams) =>
         params.value
@@ -241,15 +244,15 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     {
       headerName: 'Order',
       field:      'displayOrder',
-      width:      85,
       minWidth:   70,
+      flex:       0.7,
       sortable:   true
     },
     {
       headerName:     'Created',
       field:          'createdAt',
-      width:          175,
       minWidth:       150,
+      flex:           1.3,
       sortable:       true,
       valueFormatter: dateTimeFormatter,
       cellStyle:      { color: '#6b7280', fontSize: '12px' }
@@ -270,15 +273,34 @@ export class ShiftListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
   }
 
-  // ── Grid events ───────────────────────────────────────────
+  // ── Grid events 
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
     this.gridApi.addEventListener('sortChanged',   this.onSortChanged.bind(this));
     this.gridApi.addEventListener('filterChanged', this.onFilterChanged.bind(this));
+
+    // Initial fit
     setTimeout(() => this.gridApi?.sizeColumnsToFit(), 100);
+
+    const hostEl   = this.agGridElement?.nativeElement;
+    const container = (hostEl?.closest('.sl-grid-card') as HTMLElement) ?? hostEl;
+
+    if (container && typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.gridApi) {
+          requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
+        }
+      });
+      this.resizeObserver.observe(container);
+    }
   }
 
   onSortChanged(_event: SortChangedEvent): void {
@@ -292,13 +314,13 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     this.updateActiveFilters();
   }
 
-  // ── Data Loading ──────────────────────────────────────────
+  // ── Data Loading 
 
   loadStats(): void {
     const filter: ShiftFilterDto = {
-      pageNumber:    1,
-      pageSize:      1000,
-      sortBy:        'DisplayOrder',
+      pageNumber:     1,
+      pageSize:       1000,
+      sortBy:         'DisplayOrder',
       sortDescending: false
     };
 
@@ -346,7 +368,7 @@ export class ShiftListComponent implements OnInit, OnDestroy {
             if (this.gridApi) {
               this.gridApi.setGridOption('rowData', this.rowData);
               refreshGrid(this.gridApi);
-              setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
+              requestAnimationFrame(() => this.gridApi?.sizeColumnsToFit());
             }
             this.cdr.detectChanges();
           }
@@ -365,7 +387,7 @@ export class ShiftListComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ── Search ────────────────────────────────────────────────
+  // ── Search 
 
   onSearchChange(): void {
     clearTimeout(this.searchDebounceTimer);
@@ -396,7 +418,7 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     this.activeFilters = { hasActiveFilters: filters.length > 0, filters, count: filters.length };
   }
 
-  // ── Pagination ────────────────────────────────────────────
+  // ── Pagination 
 
   onPageSizeChanged(newPageSize: number): void {
     this.pageSize    = newPageSize;
@@ -423,7 +445,7 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     return Math.min(this.currentPage * this.pageSize, this.totalItems);
   }
 
-  // ── Export ────────────────────────────────────────────────
+  // ── Export 
 
   exportData(): void {
     exportToCsv(this.gridApi, 'shifts');
@@ -436,12 +458,12 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Modal ─────────────────────────────────────────────────
+  // ── Modal 
 
   openCreateModal(): void {
-    this.modalMode    = 'create';
+    this.modalMode     = 'create';
     this.selectedShift = null;
-    this.showModal    = true;
+    this.showModal     = true;
   }
 
   viewDetails(shift: Shift): void {
@@ -485,13 +507,13 @@ export class ShiftListComponent implements OnInit, OnDestroy {
               this.loadStats();
               this.cdr.detectChanges();
               Swal.fire({
-                icon:              'success',
-                title:             `${action}d!`,
-                text:              `"${shift.shiftName}" has been ${action.toLowerCase()}d.`,
+                icon:               'success',
+                title:              `${action}d!`,
+                text:               `"${shift.shiftName}" has been ${action.toLowerCase()}d.`,
                 confirmButtonColor: '#3b82f6',
-                timer:             1800,
-                timerProgressBar:  true,
-                showConfirmButton: false
+                timer:              1800,
+                timerProgressBar:   true,
+                showConfirmButton:  false
               });
             }
           },
@@ -545,11 +567,11 @@ export class ShiftListComponent implements OnInit, OnDestroy {
               this.loadStats();
               this.cdr.detectChanges();
               Swal.fire({
-                icon:              'success',
-                title:             'Deleted!',
-                text:              `"${shift.shiftName}" has been deleted.`,
-                timer:             2000,
-                timerProgressBar:  true,
+                icon:             'success',
+                title:            'Deleted!',
+                text:             `"${shift.shiftName}" has been deleted.`,
+                timer:            2000,
+                timerProgressBar: true,
                 showConfirmButton: false
               });
             } else {
@@ -576,11 +598,11 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ── Modal events ──────────────────────────────────────────
+  // ── Modal events 
   onModalClose(): void   { this.showModal = false; this.selectedShift = null; }
   onModalSuccess(): void { this.showModal = false; this.selectedShift = null; this.loadShifts(); this.loadStats(); }
 
-  // ── Highlight search term ─────────────────────────────────
+  // ── Highlight search term 
   highlightText(text: string, term: string): string {
     if (!term || !term.trim() || !text) return String(text);
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -588,7 +610,7 @@ export class ShiftListComponent implements OnInit, OnDestroy {
     return String(text).replace(regex, '<mark class="search-highlight">$1</mark>');
   }
 
-  // ── Utils ─────────────────────────────────────────────────
+  // ── Utils 
   formatDate(date: any): string {
     if (!date) return '';
     return new Date(date).toLocaleDateString('en-GB', {
