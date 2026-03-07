@@ -30,7 +30,6 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Initialize the login form
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
       password: ['', [Validators.required]]
@@ -49,29 +48,23 @@ export class LoginComponent implements OnInit {
     if (!this.isBrowser) {
       return 'ssr-device-' + Date.now();
     }
-
     let deviceId = sessionStorage.getItem('deviceId');
-    
     if (!deviceId) {
-      deviceId = 'device-' + Math.random().toString(36).substring(2, 15) + 
-                 Math.random().toString(36).substring(2, 15);
+      deviceId = 'device-' + Math.random().toString(36).substring(2, 15) +
+        Math.random().toString(36).substring(2, 15);
       sessionStorage.setItem('deviceId', deviceId);
     }
-    
     return deviceId;
   }
 
-  // Toggle password visibility
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
   }
 
-  // Navigate to forgot password page
   navigateToForgotPassword(): void {
     this.router.navigate(['/forgot-password']);
   }
 
- 
   onLogin(): void {
     if (this.loginForm.valid) {
       this.isLoading = true;
@@ -85,15 +78,37 @@ export class LoginComponent implements OnInit {
 
       this.apiClient.loginUser(credentials).subscribe({
         next: (response: any) => {
-          // console.log('Login successful:', response);
           console.log('Full login response:', JSON.stringify(response));
-          
+
           if (response.accessToken) {
+            // ── Save everything the app needs from the login response ──
+            sessionStorage.setItem('token', response.accessToken);
+            sessionStorage.setItem('refreshToken', response.refreshToken ?? '');
+
+            const user = response.user;
+            if (user) {
+              sessionStorage.setItem('UserId',    user.id       ?? '');
+              sessionStorage.setItem('username',  user.username ?? '');
+              sessionStorage.setItem('Email',     user.email    ?? '');
+              sessionStorage.setItem('FirstName', user.firstName ?? '');
+              sessionStorage.setItem('LastName',  user.lastName  ?? '');
+
+              // ── CRITICAL: save the linked EmployeeId ──
+              if (user.employeeId) {
+                sessionStorage.setItem('EmployeeId', user.employeeId);
+              }
+
+              // Save first role as RoleName (used by sidebar & attendance)
+              if (user.roles && user.roles.length > 0) {
+                sessionStorage.setItem('RoleName', user.roles[0]);
+              }
+            }
+
             this.router.navigate(['/dashboard']);
           } else {
             this.loginError = 'Invalid response from server. Please try again.';
           }
-          
+
           this.isLoading = false;
         },
         error: (error: any) => {

@@ -1,4 +1,3 @@
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -24,26 +23,22 @@ import {
 export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
 
   todayRecord: AttendanceResponseDto | null = null;
-  loading = false;
-  checkingIn = false;
+  loading    = false;
+  checkingIn  = false;
   checkingOut = false;
 
-  currentRole = (sessionStorage.getItem('RoleName') || '').toLowerCase();
-  isAdmin = ['admin', 'manager', 'superadmin'].includes(this.currentRole);
-
-  // FIX: Try every possible key name your login stores the employee ID under
-  employeeId = this.resolveEmployeeId();
-  employeeName = sessionStorage.getItem('username')
-    || sessionStorage.getItem('Username')
-    || sessionStorage.getItem('UserName')
-    || sessionStorage.getItem('name')
-    || sessionStorage.getItem('Name')
-    || '';
+  currentRole  = (sessionStorage.getItem('RoleName') || '').toLowerCase();
+  employeeId   = sessionStorage.getItem('EmployeeId') || '';
+  employeeName =
+    sessionStorage.getItem('username')  ||
+    sessionStorage.getItem('Username')  ||
+    sessionStorage.getItem('FirstName') ||
+    'Employee';
 
   currentTime = new Date();
   private clockSub!: Subscription;
 
-  CheckInMethod = CheckInMethod;
+  CheckInMethod   = CheckInMethod;
   AttendanceStatus = AttendanceStatus;
   selectedMethod: CheckInMethod = CheckInMethod.WebApp;
   remarks = '';
@@ -51,59 +46,37 @@ export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
   currentLocation: LocationDto | null = null;
   locationStatus: 'idle' | 'loading' | 'granted' | 'denied' = 'idle';
 
-  get hasCheckedIn(): boolean { return !!this.todayRecord?.checkInTime; }
+  get hasCheckedIn():  boolean { return !!this.todayRecord?.checkInTime; }
   get hasCheckedOut(): boolean { return !!this.todayRecord?.checkOutTime; }
 
   get workingHoursDisplay(): string {
     if (!this.todayRecord?.checkInTime) return '--:--';
-    const inTime = new Date(this.todayRecord.checkInTime);
-    const outTime = this.todayRecord.checkOutTime ? new Date(this.todayRecord.checkOutTime) : new Date();
+    const inTime  = new Date(this.todayRecord.checkInTime);
+    const outTime = this.todayRecord.checkOutTime
+      ? new Date(this.todayRecord.checkOutTime)
+      : new Date();
     const diff = outTime.getTime() - inTime.getTime();
-    const h = Math.floor(diff / 3_600_000);
-    const m = Math.floor((diff % 3_600_000) / 60_000);
+    const h    = Math.floor(diff / 3_600_000);
+    const m    = Math.floor((diff % 3_600_000) / 60_000);
     return `${h}h ${m}m`;
   }
 
-  constructor(private attendanceService: AttendanceService) { }
+  constructor(private attendanceService: AttendanceService) {}
 
   ngOnInit(): void {
     this.clockSub = interval(1000).subscribe(() => { this.currentTime = new Date(); });
-
-    // Debug: open DevTools console to see what keys are actually stored
-    console.log('[Attendance] All sessionStorage keys:', { ...sessionStorage });
-    console.log('[Attendance] Resolved employeeId:', this.employeeId);
-    console.log('[Attendance] Resolved employeeName:', this.employeeName);
-
     this.loadTodayRecord();
     this.requestLocation();
   }
 
   ngOnDestroy(): void { this.clockSub?.unsubscribe(); }
 
-  // FIX: Scan every common key name variation
-  private resolveEmployeeId(): string {
-    const candidates = [
-      'EmployeeId', 'employeeId', 'EmployeeID', 'employeeID',
-      'employee_id', 'EmpId', 'empId', 'emp_id',
-      'UserId', 'userId', 'UserID', 'Id', 'id'
-    ];
-    for (const key of candidates) {
-      const val = sessionStorage.getItem(key);
-      if (val && val.trim() !== '') {
-        console.log(`[Attendance] Found employee ID under key "${key}":`, val);
-        return val.trim();
-      }
-    }
-    console.warn('[Attendance] Could not find employee ID in sessionStorage!');
-    return '';
-  }
-
   loadTodayRecord(): void {
-    if (!this.employeeId) { console.warn('[Attendance] employeeId empty, skipping loadTodayRecord'); return; }
+    if (!this.employeeId) return;
     this.loading = true;
     this.attendanceService.getTodayAttendance(this.employeeId).subscribe({
-      next: (r) => { if (r.success) this.todayRecord = r.data; this.loading = false; },
-      error: () => { this.loading = false; }
+      next:  (r) => { if (r.success) this.todayRecord = r.data; this.loading = false; },
+      error: ()  => { this.loading = false; }
     });
   }
 
@@ -113,63 +86,66 @@ export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         this.currentLocation = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-        this.locationStatus = 'granted';
+        this.locationStatus  = 'granted';
       },
       () => { this.locationStatus = 'denied'; }
     );
   }
 
-  private safeNow(): string {
+  /**
+   * toISOString() always returns UTC (ends with "Z").
+   * We subtract 10s to absorb any browser↔server clock skew so the
+   * "not in the future" validator on the server always passes.
+   */
+  private utcNowSafe(): string {
     const d = new Date();
-    d.setSeconds(d.getSeconds() - 2);
-    return d.toISOString();
+    d.setSeconds(d.getSeconds() - 10);
+    return d.toISOString();   // e.g. "2026-03-07T11:05:10.000Z"
   }
 
+  // ── Check In ───────────────────────────────────────────────────────────────
   async onCheckIn(): Promise<void> {
-    // Re-try resolution in case it was populated after init
-    if (!this.employeeId) this.employeeId = this.resolveEmployeeId();
-
-    if (!this.employeeId) {
-      const keys = Object.keys(sessionStorage).join(', ') || 'none';
-      Swal.fire('Employee ID Not Found',
-        `Cannot find your Employee ID.<br><br>
-         Session keys found: <code>${keys}</code><br><br>
-         Please log out and log in again, or contact your administrator.`,
-        'error');
-      return;
-    }
-
     const confirmed = await Swal.fire({
       title: 'Confirm Check-In',
       html: `<div style="text-align:left;padding:0.5rem 0">
-          <p><strong>Time:</strong> ${this.currentTime.toLocaleTimeString()}</p>
-          <p><strong>Method:</strong> ${CheckInMethod[this.selectedMethod]}</p>
-          ${this.currentLocation
+        <p><strong>Time:</strong> ${this.currentTime.toLocaleTimeString()}</p>
+        <p><strong>Method:</strong> ${CheckInMethod[this.selectedMethod]}</p>
+        ${this.currentLocation
           ? `<p><strong>Location:</strong> ${this.currentLocation.latitude.toFixed(4)}, ${this.currentLocation.longitude.toFixed(4)}</p>`
-          : '<p><strong>Location:</strong> Not available (proceeding without location)</p>'}
-        </div>`,
-      icon: 'question', showCancelButton: true,
-      confirmButtonColor: '#10b981', cancelButtonColor: '#6b7280', confirmButtonText: 'Check In'
+          : '<p><strong>Location:</strong> Not available</p>'}
+      </div>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor:  '#6b7280',
+      confirmButtonText:  'Check In'
     });
     if (!confirmed.isConfirmed) return;
 
     this.checkingIn = true;
+
     const dto: CheckInDto = {
-      employeeId: this.employeeId,
-      checkInTime: this.safeNow(),
-      checkInMethod: Number(this.selectedMethod) as CheckInMethod,
+      employeeId:      this.employeeId,     // backend resolves real ID from JWT
+      checkInTime:     this.utcNowSafe(),   // guaranteed UTC, slightly in the past
+      checkInMethod:   Number(this.selectedMethod) as CheckInMethod,
       checkInLocation: this.currentLocation ?? undefined,
-      remarks: this.remarks.trim() || undefined
+      remarks:         this.remarks.trim() || undefined
     };
-    console.log('[Attendance] checkIn DTO:', dto);
 
     this.attendanceService.checkIn(dto).subscribe({
       next: (r) => {
         this.checkingIn = false;
         if (r.success) {
-          this.todayRecord = r.data; this.remarks = '';
+          this.todayRecord = r.data;
+          if (!this.employeeId && r.data?.employeeId) {
+            this.employeeId = r.data.employeeId;
+            sessionStorage.setItem('EmployeeId', this.employeeId);
+          }
+          this.remarks = '';
           Swal.fire({ title: 'Checked In!', text: r.message, icon: 'success', timer: 2000, showConfirmButton: false });
-        } else { Swal.fire('Error!', r.message || 'Check-in failed', 'error'); }
+        } else {
+          Swal.fire('Error!', r.message || 'Check-in failed', 'error');
+        }
       },
       error: (e) => {
         this.checkingIn = false;
@@ -178,37 +154,42 @@ export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ── Check Out ──────────────────────────────────────────────────────────────
   async onCheckOut(): Promise<void> {
-    if (!this.employeeId) this.employeeId = this.resolveEmployeeId();
-    if (!this.employeeId) { Swal.fire('Employee ID Not Found', 'Please log out and log in again.', 'error'); return; }
-
     const confirmed = await Swal.fire({
       title: 'Confirm Check-Out',
       html: `<div style="text-align:left;padding:0.5rem 0">
-          <p><strong>Time:</strong> ${this.currentTime.toLocaleTimeString()}</p>
-          <p><strong>Working Hours:</strong> ${this.workingHoursDisplay}</p>
-        </div>`,
-      icon: 'question', showCancelButton: true,
-      confirmButtonColor: '#3b82f6', cancelButtonColor: '#6b7280', confirmButtonText: 'Check Out'
+        <p><strong>Time:</strong> ${this.currentTime.toLocaleTimeString()}</p>
+        <p><strong>Working Hours:</strong> ${this.workingHoursDisplay}</p>
+      </div>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor:  '#6b7280',
+      confirmButtonText:  'Check Out'
     });
     if (!confirmed.isConfirmed) return;
 
     this.checkingOut = true;
+
     const dto: CheckOutDto = {
-      employeeId: this.employeeId,
-      checkOutTime: this.safeNow(),
-      checkOutMethod: Number(this.selectedMethod) as CheckInMethod,
+      employeeId:       this.employeeId,
+      checkOutTime:     this.utcNowSafe(),
+      checkOutMethod:   Number(this.selectedMethod) as CheckInMethod,
       checkOutLocation: this.currentLocation ?? undefined,
-      remarks: this.remarks.trim() || undefined
+      remarks:          this.remarks.trim() || undefined
     };
 
     this.attendanceService.checkOut(dto).subscribe({
       next: (r) => {
         this.checkingOut = false;
         if (r.success) {
-          this.todayRecord = r.data; this.remarks = '';
+          this.todayRecord = r.data;
+          this.remarks = '';
           Swal.fire({ title: 'Checked Out!', text: r.message, icon: 'success', timer: 2000, showConfirmButton: false });
-        } else { Swal.fire('Error!', r.message || 'Check-out failed', 'error'); }
+        } else {
+          Swal.fire('Error!', r.message || 'Check-out failed', 'error');
+        }
       },
       error: (e) => {
         this.checkingOut = false;
@@ -217,6 +198,7 @@ export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
     });
   }
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
   formatTime(dateStr?: string): string {
     if (!dateStr) return '--:--';
     return new Date(dateStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -224,14 +206,14 @@ export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
 
   getStatusClass(status?: AttendanceStatus): string {
     const map: Record<number, string> = {
-      [AttendanceStatus.Present]: 'present',
-      [AttendanceStatus.Absent]: 'absent',
-      [AttendanceStatus.HalfDay]: 'halfday',
-      [AttendanceStatus.Leave]: 'leave',
-      [AttendanceStatus.Holiday]: 'holiday',
-      [AttendanceStatus.WeekOff]: 'weekoff',
+      [AttendanceStatus.Present]:      'present',
+      [AttendanceStatus.Absent]:       'absent',
+      [AttendanceStatus.HalfDay]:      'halfday',
+      [AttendanceStatus.Leave]:        'leave',
+      [AttendanceStatus.Holiday]:      'holiday',
+      [AttendanceStatus.WeekOff]:      'weekoff',
       [AttendanceStatus.WorkFromHome]: 'wfh',
-      [AttendanceStatus.OnDuty]: 'onduty'
+      [AttendanceStatus.OnDuty]:       'onduty'
     };
     return status !== undefined ? (map[status] ?? 'absent') : 'absent';
   }
