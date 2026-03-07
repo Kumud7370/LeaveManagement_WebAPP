@@ -1,11 +1,7 @@
-// =============================================
-// attendance.api.ts
-// HTTP service - mirrors every backend endpoint
-// =============================================
 
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ApiClientService } from './apiClient'; // your existing HTTP wrapper
+import { ApiClientService } from './apiClient'; 
 import {
   ApiResponse,
   PagedResultDto,
@@ -23,7 +19,7 @@ export class AttendanceService {
 
   constructor(private apiClient: ApiClientService) {}
 
-  // ---------- Check In / Out ----------
+  
   checkIn(dto: CheckInDto): Observable<ApiResponse<AttendanceResponseDto>> {
     return this.apiClient.post<ApiResponse<AttendanceResponseDto>>(
       `${this.endpoint}/checkin`, dto
@@ -36,7 +32,7 @@ export class AttendanceService {
     );
   }
 
-  // ---------- Manual (Admin / Manager) ----------
+  
   markManualAttendance(dto: ManualAttendanceDto): Observable<ApiResponse<AttendanceResponseDto>> {
     return this.apiClient.post<ApiResponse<AttendanceResponseDto>>(
       `${this.endpoint}/manual`, dto
@@ -68,7 +64,7 @@ export class AttendanceService {
     );
   }
 
-  // ---------- Read ----------
+  
   getAttendanceById(id: string): Observable<ApiResponse<AttendanceResponseDto>> {
     return this.apiClient.get<ApiResponse<AttendanceResponseDto>>(
       `${this.endpoint}/${id}`

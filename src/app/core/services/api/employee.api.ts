@@ -43,7 +43,7 @@ export class EmployeeService {
     );
   }
 
-  // Get employee by code
+ 
   getEmployeeByCode(employeeCode: string): Observable<EmployeeResponseDto> {
     return this.apiClient.get<ApiResponseDto<EmployeeResponseDto>>(`Employee/code/${employeeCode}`).pipe(
       map(response => response.data),
@@ -85,7 +85,7 @@ export class EmployeeService {
     );
   }
 
-  // Get employees by department
+  
   getEmployeesByDepartment(departmentId: string): Observable<EmployeeResponseDto[]> {
     return this.apiClient.get<ApiResponseDto<EmployeeResponseDto[]>>(`Employee/department/${departmentId}`).pipe(
       map(response => response.data),

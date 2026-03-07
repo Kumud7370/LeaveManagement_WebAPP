@@ -1,6 +1,3 @@
-// ============================================================
-// shift.api.ts  →  src/app/core/services/api/shift.api.ts
-// ============================================================
 
 import { Injectable } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
@@ -13,7 +10,7 @@ import {
   PagedResult,
   ApiResponse,
   ToggleShiftStatusRequestDto
-} from '../../Models/shift.model';        // ✅ FIXED: was "shoft.model"
+} from '../../Models/shift.model';        
 
 @Injectable({
   providedIn: 'root'
@@ -22,17 +19,17 @@ export class ShiftService {
 
   constructor(private apiClient: ApiClientService) {}
 
-  // ── Helper: "HH:mm" → "HH:mm:ss"  (ASP.NET TimeOnly needs seconds) ──────
+  
   private toTimeOnly(time: string): string {
     if (!time) return time;
-    if (/^\d{2}:\d{2}:\d{2}$/.test(time)) return time;   // already has seconds
-    if (/^\d{2}:\d{2}$/.test(time))        return `${time}:00`;  // add :00
+    if (/^\d{2}:\d{2}:\d{2}$/.test(time)) return time;   
+    if (/^\d{2}:\d{2}$/.test(time))        return `${time}:00`;  
     return time;
   }
 
-  // POST /api/Shift
+ 
   createShift(dto: CreateShiftDto): Observable<ApiResponse<Shift>> {
-    // ✅ CRITICAL: Convert "HH:mm" → "HH:mm:ss" before sending
+  
     const payload = {
       ...dto,
       startTime: this.toTimeOnly(dto.startTime),

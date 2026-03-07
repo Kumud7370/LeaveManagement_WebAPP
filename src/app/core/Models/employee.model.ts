@@ -1,6 +1,3 @@
-// Employee Model File
-// src/app/modules/dashboard/employees/models/employee.model.ts
-
 export enum Gender {
   Male = 0,
   Female = 1,

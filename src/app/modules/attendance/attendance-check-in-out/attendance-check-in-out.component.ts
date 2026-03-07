@@ -1,8 +1,4 @@
-// =============================================
-// attendance-check-in-out.component.ts
-// FIXED: EmployeeId not found — checks all
-// possible sessionStorage key variants
-// =============================================
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -28,26 +24,26 @@ import {
 export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
 
   todayRecord: AttendanceResponseDto | null = null;
-  loading     = false;
-  checkingIn  = false;
+  loading = false;
+  checkingIn = false;
   checkingOut = false;
 
   currentRole = (sessionStorage.getItem('RoleName') || '').toLowerCase();
   isAdmin = ['admin', 'manager', 'superadmin'].includes(this.currentRole);
 
   // FIX: Try every possible key name your login stores the employee ID under
-  employeeId   = this.resolveEmployeeId();
+  employeeId = this.resolveEmployeeId();
   employeeName = sessionStorage.getItem('username')
-              || sessionStorage.getItem('Username')
-              || sessionStorage.getItem('UserName')
-              || sessionStorage.getItem('name')
-              || sessionStorage.getItem('Name')
-              || '';
+    || sessionStorage.getItem('Username')
+    || sessionStorage.getItem('UserName')
+    || sessionStorage.getItem('name')
+    || sessionStorage.getItem('Name')
+    || '';
 
   currentTime = new Date();
   private clockSub!: Subscription;
 
-  CheckInMethod    = CheckInMethod;
+  CheckInMethod = CheckInMethod;
   AttendanceStatus = AttendanceStatus;
   selectedMethod: CheckInMethod = CheckInMethod.WebApp;
   remarks = '';
@@ -55,12 +51,12 @@ export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
   currentLocation: LocationDto | null = null;
   locationStatus: 'idle' | 'loading' | 'granted' | 'denied' = 'idle';
 
-  get hasCheckedIn():  boolean { return !!this.todayRecord?.checkInTime; }
+  get hasCheckedIn(): boolean { return !!this.todayRecord?.checkInTime; }
   get hasCheckedOut(): boolean { return !!this.todayRecord?.checkOutTime; }
 
   get workingHoursDisplay(): string {
     if (!this.todayRecord?.checkInTime) return '--:--';
-    const inTime  = new Date(this.todayRecord.checkInTime);
+    const inTime = new Date(this.todayRecord.checkInTime);
     const outTime = this.todayRecord.checkOutTime ? new Date(this.todayRecord.checkOutTime) : new Date();
     const diff = outTime.getTime() - inTime.getTime();
     const h = Math.floor(diff / 3_600_000);
@@ -68,7 +64,7 @@ export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
     return `${h}h ${m}m`;
   }
 
-  constructor(private attendanceService: AttendanceService) {}
+  constructor(private attendanceService: AttendanceService) { }
 
   ngOnInit(): void {
     this.clockSub = interval(1000).subscribe(() => { this.currentTime = new Date(); });
@@ -149,8 +145,8 @@ export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
           <p><strong>Time:</strong> ${this.currentTime.toLocaleTimeString()}</p>
           <p><strong>Method:</strong> ${CheckInMethod[this.selectedMethod]}</p>
           ${this.currentLocation
-            ? `<p><strong>Location:</strong> ${this.currentLocation.latitude.toFixed(4)}, ${this.currentLocation.longitude.toFixed(4)}</p>`
-            : '<p><strong>Location:</strong> Not available (proceeding without location)</p>'}
+          ? `<p><strong>Location:</strong> ${this.currentLocation.latitude.toFixed(4)}, ${this.currentLocation.longitude.toFixed(4)}</p>`
+          : '<p><strong>Location:</strong> Not available (proceeding without location)</p>'}
         </div>`,
       icon: 'question', showCancelButton: true,
       confirmButtonColor: '#10b981', cancelButtonColor: '#6b7280', confirmButtonText: 'Check In'
@@ -159,11 +155,11 @@ export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
 
     this.checkingIn = true;
     const dto: CheckInDto = {
-      employeeId:      this.employeeId,
-      checkInTime:     this.safeNow(),
-      checkInMethod:   Number(this.selectedMethod) as CheckInMethod,
+      employeeId: this.employeeId,
+      checkInTime: this.safeNow(),
+      checkInMethod: Number(this.selectedMethod) as CheckInMethod,
       checkInLocation: this.currentLocation ?? undefined,
-      remarks:         this.remarks.trim() || undefined
+      remarks: this.remarks.trim() || undefined
     };
     console.log('[Attendance] checkIn DTO:', dto);
 
@@ -199,11 +195,11 @@ export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
 
     this.checkingOut = true;
     const dto: CheckOutDto = {
-      employeeId:       this.employeeId,
-      checkOutTime:     this.safeNow(),
-      checkOutMethod:   Number(this.selectedMethod) as CheckInMethod,
+      employeeId: this.employeeId,
+      checkOutTime: this.safeNow(),
+      checkOutMethod: Number(this.selectedMethod) as CheckInMethod,
       checkOutLocation: this.currentLocation ?? undefined,
-      remarks:          this.remarks.trim() || undefined
+      remarks: this.remarks.trim() || undefined
     };
 
     this.attendanceService.checkOut(dto).subscribe({
@@ -228,14 +224,14 @@ export class AttendanceCheckInOutComponent implements OnInit, OnDestroy {
 
   getStatusClass(status?: AttendanceStatus): string {
     const map: Record<number, string> = {
-      [AttendanceStatus.Present]:      'present',
-      [AttendanceStatus.Absent]:       'absent',
-      [AttendanceStatus.HalfDay]:      'halfday',
-      [AttendanceStatus.Leave]:        'leave',
-      [AttendanceStatus.Holiday]:      'holiday',
-      [AttendanceStatus.WeekOff]:      'weekoff',
+      [AttendanceStatus.Present]: 'present',
+      [AttendanceStatus.Absent]: 'absent',
+      [AttendanceStatus.HalfDay]: 'halfday',
+      [AttendanceStatus.Leave]: 'leave',
+      [AttendanceStatus.Holiday]: 'holiday',
+      [AttendanceStatus.WeekOff]: 'weekoff',
       [AttendanceStatus.WorkFromHome]: 'wfh',
-      [AttendanceStatus.OnDuty]:       'onduty'
+      [AttendanceStatus.OnDuty]: 'onduty'
     };
     return status !== undefined ? (map[status] ?? 'absent') : 'absent';
   }
