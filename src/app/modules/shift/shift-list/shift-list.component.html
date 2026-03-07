@@ -1,13 +1,10 @@
-<!-- shift-list.component.html -->
-
 <div class="sl-page-container">
-
-  <!-- ── Page Title ──────────────────────────────────────────────── -->
+  <!-- ── Page Title  -->
   <div class="sl-page-header">
     <h1 class="sl-page-title">Shift Management</h1>
   </div>
 
-  <!-- ── Stats Cards ────────────────────────────────────────────── -->
+  <!-- ── Stats Cards  -->
   <div class="sl-stats-grid">
     <div class="sl-stat-card sl-stat-total">
       <p class="sl-stat-label">Total Shifts</p>
@@ -23,7 +20,7 @@
     </div>
   </div>
 
-  <!-- ── Toolbar Row ──── -->
+  <!-- ── Toolbar Row  -->
   <div class="sl-toolbar">
     <div class="sl-search-wrapper">
       <input
@@ -57,10 +54,11 @@
     <span
       *ngFor="let filter of activeFilters.filters"
       class="sl-filter-badge"
-    >{{ filter }}</span>
+      >{{ filter }}</span
+    >
   </div>
 
-  <!-- ── Grid Card ─────────────────────────────────────────────── -->
+  <!-- ── Grid Card  -->
   <div class="sl-grid-card">
     <div class="sl-grid-container">
       <ag-grid-angular
@@ -81,8 +79,6 @@
         [floatingFiltersHeight]="36"
         [suppressMenuHide]="true"
         [enableBrowserTooltips]="true"
-        [suppressColumnVirtualisation]="true"
-        [suppressRowVirtualisation]="false"
         [rowBuffer]="10"
         [suppressLoadingOverlay]="false"
         [suppressNoRowsOverlay]="false"
@@ -92,7 +88,7 @@
       </ag-grid-angular>
     </div>
 
-    <!-- ── Pagination ─────────────────────────────────────────── -->
+    <!-- ── Pagination  -->
     <div class="sl-pagination">
       <div class="sl-pagination-inner">
         <div class="sl-page-size">
@@ -122,37 +118,41 @@
             (click)="goToPage(1)"
             [disabled]="currentPage === 1"
             class="sl-pgbtn"
-          >«</button>
+          >
+            «
+          </button>
           <button
             (click)="previousPage()"
             [disabled]="currentPage === 1"
             class="sl-pgbtn"
-          >‹</button>
+          >
+            ‹
+          </button>
           <button
             (click)="nextPage()"
             [disabled]="currentPage === totalPages || totalPages === 0"
             class="sl-pgbtn"
-          >›</button>
+          >
+            ›
+          </button>
           <button
             (click)="goToPage(totalPages)"
             [disabled]="currentPage === totalPages || totalPages === 0"
             class="sl-pgbtn"
-          >»</button>
+          >
+            »
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ── Loading Overlay ────────────────────────────────────────── -->
+  <!-- ── Loading Overlay  -->
   <div *ngIf="isLoading" class="sl-loading-overlay">
     <div class="sl-spinner"></div>
   </div>
-
 </div>
 
-<!-- ════════════════════════════════════════════════════════════════
-     SHIFT FORM MODAL
-     ════════════════════════════════════════════════════════════════ -->
 <app-shift-form
   *ngIf="showModal"
   [mode]="modalMode"

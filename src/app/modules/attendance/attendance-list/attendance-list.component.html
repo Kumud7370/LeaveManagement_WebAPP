@@ -1,9 +1,7 @@
 <div class="att-page-container">
-  <!-- ── Page Title ── -->
+  <!-- ── Page Title (icon removed) ── -->
   <div class="att-page-header">
-    <h1 class="att-page-title">
-      <i class="bi bi-calendar-check-fill"></i> Attendance Management
-    </h1>
+    <h1 class="att-page-title">Attendance Management</h1>
   </div>
 
   <!-- ── Stats Cards ── -->
@@ -78,7 +76,17 @@
 
   <!-- ── Grid Card ── -->
   <div class="att-grid-card">
-    <div class="att-grid-container">
+    <div *ngIf="rowData.length === 0" class="att-empty-box">
+      <i class="bi bi-inbox"></i>
+      <h3>No attendance records found</h3>
+      <p>Adjust your search or mark new attendance</p>
+      <button class="att-btn att-btn-primary" (click)="openCreateForm()">
+        Mark Attendance
+      </button>
+    </div>
+
+    <!-- Grid only rendered when there is data (eliminates phantom space) -->
+    <div *ngIf="rowData.length > 0" class="att-grid-container">
       <ag-grid-angular
         #agGrid
         style="width: 100%"
@@ -108,8 +116,8 @@
       </ag-grid-angular>
     </div>
 
-    <!-- ── Pagination ── -->
-    <div class="att-pagination">
+    <!-- ── Pagination (only when data exists) ── -->
+    <div *ngIf="rowData.length > 0" class="att-pagination">
       <div class="att-pagination-inner">
         <div class="att-page-size">
           <label for="attPageSize">Show:</label>
@@ -168,6 +176,7 @@
   </div>
 </div>
 
+<!-- ── Details Modal ── -->
 <div
   *ngIf="showDetails"
   class="att-modal-overlay"
@@ -194,6 +203,7 @@
   </div>
 </div>
 
+<!-- ── Form Modal ── -->
 <div
   *ngIf="showForm"
   class="att-modal-overlay"
