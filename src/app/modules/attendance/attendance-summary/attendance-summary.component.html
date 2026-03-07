@@ -1,6 +1,6 @@
 <div class="as-page-container">
 
-  <!-- ══ PAGE HEADER ═══════════════════════════════════════════ -->
+  <!-- PAGE HEADER -->
   <div class="as-page-header">
     <div class="as-header-left">
       <div class="as-header-icon"><i class="fas fa-calendar-check"></i></div>
@@ -11,19 +11,23 @@
         <p class="as-page-subtitle">
           {{ isAdmin
             ? 'Enter an Employee ID and date range, then click Search'
-            : 'Your attendance details for the selected period' }}
+            : 'Enter your Employee ID and date range, then click Search' }}
         </p>
       </div>
     </div>
   </div>
 
-  <!-- ══ FILTER CARD ═══════════════════════════════════════════ -->
+  <!-- FILTER CARD -->
   <div class="as-filter-card">
     <div class="as-filter-row">
 
-      <!-- Admin-only: Employee ID input -->
-      <div class="as-form-group" *ngIf="isAdmin">
-        <label><i class="fas fa-id-badge"></i> Employee ID <span class="as-required">*</span></label>
+      <!-- EMPLOYEE ID INPUT — shown for BOTH admin and employee (KEY FIX) -->
+      <div class="as-form-group">
+        <label>
+          <i class="fas fa-id-badge"></i>
+          {{ isAdmin ? 'Employee ID' : 'My Employee ID' }}
+          <span class="as-required">*</span>
+        </label>
         <div class="as-input-wrap">
           <i class="fas fa-user as-input-prefix"></i>
           <input
@@ -54,27 +58,32 @@
           <i class="fas fa-calendar-minus"></i> Last Month
         </button>
         <button class="as-btn as-btn-primary" (click)="loadAll()" [disabled]="summaryLoading || recordsLoading">
-          <i class="fas" [class.fa-search]="!summaryLoading" [class.fa-circle-notch]="summaryLoading" [class.fa-spin]="summaryLoading"></i>
+          <i class="fas"
+             [class.fa-search]="!summaryLoading"
+             [class.fa-circle-notch]="summaryLoading"
+             [class.fa-spin]="summaryLoading"></i>
           {{ summaryLoading ? 'Loading...' : 'Search' }}
         </button>
       </div>
     </div>
 
-    <!-- Admin hint -->
-    <p class="as-hint" *ngIf="isAdmin && !lookupEmployeeId">
+    <!-- Hint -->
+    <p class="as-hint" *ngIf="!lookupEmployeeId">
       <i class="fas fa-info-circle"></i>
-      Enter the Employee ID above and click <strong>Search</strong> to view their attendance details.
+      {{ isAdmin
+        ? 'Enter the Employee ID above and click Search to view their attendance details.'
+        : 'Enter your Employee ID above and click Search to view your attendance.' }}
     </p>
   </div>
 
-  <!-- ══ ERROR BANNER ══════════════════════════════════════════ -->
+  <!-- ERROR BANNER -->
   <div *ngIf="errorMsg" class="as-error-banner">
     <i class="fas fa-exclamation-circle"></i>
     <span>{{ errorMsg }}</span>
     <button class="as-close-btn" (click)="errorMsg=''"><i class="fas fa-times"></i></button>
   </div>
 
-  <!-- ══ SKELETON (loading) ════════════════════════════════════ -->
+  <!-- SKELETON LOADING -->
   <ng-container *ngIf="summaryLoading">
     <div class="as-skeleton-banner"></div>
     <div class="as-kpi-row">
@@ -85,10 +94,9 @@
     </div>
   </ng-container>
 
-  <!-- ══ EMPLOYEE BANNER + KPI (after summary loads) ══════════ -->
+  <!-- EMPLOYEE BANNER + KPI -->
   <ng-container *ngIf="summary && !summaryLoading">
 
-    <!-- Employee identity strip -->
     <div class="as-emp-banner">
       <div class="as-emp-avatar">{{ summary.employeeName?.charAt(0)?.toUpperCase() || '?' }}</div>
       <div class="as-emp-info">
@@ -99,7 +107,6 @@
           <span><i class="fas fa-calendar-alt"></i> {{ formatDate(summary.startDate) }} – {{ formatDate(summary.endDate) }}</span>
         </div>
       </div>
-      <!-- Gauge -->
       <div class="as-gauge-wrap">
         <svg viewBox="0 0 100 60" class="as-gauge-svg">
           <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#e2e8f0" stroke-width="10" stroke-linecap="round"/>
@@ -112,7 +119,7 @@
       </div>
     </div>
 
-    <!-- ── Row 1: Hours & Performance ── -->
+    <!-- Row 1: Hours & Performance -->
     <div class="as-section-label"><i class="fas fa-clock"></i> Hours &amp; Performance</div>
     <div class="as-kpi-row">
 
@@ -169,7 +176,7 @@
 
     </div>
 
-    <!-- ── Row 2: Day Breakdown ── -->
+    <!-- Row 2: Day Breakdown -->
     <div class="as-section-label"><i class="fas fa-calendar-week"></i> Day Breakdown</div>
     <div class="as-kpi-row as-kpi-row-6">
 
@@ -218,7 +225,7 @@
     </div>
   </ng-container>
 
-  <!-- ══ DAILY RECORDS GRID ════════════════════════════════════ -->
+  <!-- DAILY RECORDS GRID -->
   <div class="as-grid-section" *ngIf="hasSearched">
 
     <div class="as-grid-header">
@@ -232,7 +239,7 @@
           <input
             class="as-search-input"
             type="text"
-            placeholder="Search status, method..."
+            placeholder="Search status, date..."
             [(ngModel)]="searchTerm"
             (input)="onSearchChange()"
           />
@@ -283,13 +290,11 @@
         ></ag-grid-angular>
       </div>
 
-      <!-- No data message inside grid area -->
       <div *ngIf="!recordsLoading && rowData.length === 0 && hasSearched" class="as-grid-empty">
         <i class="fas fa-inbox"></i>
         <p>No attendance records found for this period.</p>
       </div>
 
-      <!-- Pagination -->
       <div class="as-pagination" *ngIf="totalItems > 0">
         <div class="as-pg-inner">
           <div class="as-pg-size">
@@ -306,11 +311,11 @@
             of {{ totalItems }}
           </span>
           <div class="as-pg-btns">
-            <button class="as-pgbtn" (click)="goToPage(1)"          [disabled]="currentPage===1"                              title="First">«</button>
-            <button class="as-pgbtn" (click)="previousPage()"       [disabled]="currentPage===1"                              title="Prev">‹</button>
+            <button class="as-pgbtn" (click)="goToPage(1)"          [disabled]="currentPage===1"                          title="First">«</button>
+            <button class="as-pgbtn" (click)="previousPage()"       [disabled]="currentPage===1"                          title="Prev">‹</button>
             <span class="as-pg-cur">{{ currentPage }} / {{ totalPages||1 }}</span>
-            <button class="as-pgbtn" (click)="nextPage()"           [disabled]="currentPage===totalPages||totalPages===0"     title="Next">›</button>
-            <button class="as-pgbtn" (click)="goToPage(totalPages)" [disabled]="currentPage===totalPages||totalPages===0"     title="Last">»</button>
+            <button class="as-pgbtn" (click)="nextPage()"           [disabled]="currentPage===totalPages||totalPages===0" title="Next">›</button>
+            <button class="as-pgbtn" (click)="goToPage(totalPages)" [disabled]="currentPage===totalPages||totalPages===0" title="Last">»</button>
           </div>
         </div>
       </div>
@@ -318,14 +323,14 @@
 
   </div>
 
-  <!-- ══ INITIAL EMPTY STATE ═══════════════════════════════════ -->
+  <!-- INITIAL EMPTY STATE -->
   <div *ngIf="!hasSearched && !summaryLoading" class="as-empty-state">
     <div class="as-empty-icon"><i class="fas fa-calendar-search"></i></div>
     <h3>{{ isAdmin ? 'Search Employee Attendance' : 'View Your Attendance' }}</h3>
     <p>
       {{ isAdmin
         ? 'Enter an Employee ID, choose a date range, then click Search.'
-        : 'Select a date range and click Search to see your attendance summary.' }}
+        : 'Enter your Employee ID, choose a date range, then click Search.' }}
     </p>
     <button class="as-btn as-btn-primary" (click)="setCurrentMonthAndLoad()">
       <i class="fas fa-calendar"></i> Load This Month
