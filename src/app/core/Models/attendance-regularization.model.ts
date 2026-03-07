@@ -12,7 +12,7 @@ export enum RegularizationStatus {
   Cancelled = 4
 }
 
-// ✅ employeeId is required, no attendanceId
+
 export interface RegularizationRequestDto {
   employeeId: string;
   regularizationType: RegularizationType;

@@ -1,8 +1,3 @@
-// =============================================
-// attendance-details.component.ts
-// Read-only detail panel (sidebar) with
-// approve and delete actions for admins
-// =============================================
 
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';

@@ -1,7 +1,3 @@
-// =============================================
-// attendance.model.ts
-// Core models matching the .NET backend exactly
-// =============================================
 
 export enum AttendanceStatus {
   Present = 1,
@@ -22,10 +18,10 @@ export enum CheckInMethod {
   RFID = 5
 }
 
-// ---- Request DTOs ----
+
 export interface CheckInDto {
   employeeId: string;
-  checkInTime: string;           // ISO string (DateTime)
+  checkInTime: string;          
   checkInMethod: CheckInMethod;
   checkInLocation?: LocationDto;
   checkInDeviceId?: string;
@@ -71,7 +67,7 @@ export interface AttendanceFilterDto {
   sortDescending: boolean;
 }
 
-// ---- Response DTOs ----
+
 export interface AttendanceResponseDto {
   id: string;
   employeeId: string;

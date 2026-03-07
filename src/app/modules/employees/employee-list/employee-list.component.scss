@@ -445,10 +445,48 @@
 
 @media (max-width: 768px) {
   .el-stats-grid    { grid-template-columns: 1fr 1fr; }
-  .el-toolbar       { flex-wrap: wrap; align-items: center; }
-  .el-search-wrapper { flex: 1; min-width: 200px; }
-  .el-toolbar-actions { justify-content: flex-end; flex-wrap: wrap; gap: 6px; }
+
+  /* ── Toolbar: search on row 1, secondary buttons on row 2, Add Employee full-width on row 3 ── */
+  .el-toolbar {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .el-search-wrapper {
+    flex: 1 1 100%;   /* full width — own row */
+    min-width: 0;
+  }
+
+  .el-toolbar-actions {
+    flex: 1 1 100%;   /* full width — own row */
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* Clear, Refresh, Export share the first actions row equally */
+  .el-toolbar-actions .el-btn-clear,
+  .el-toolbar-actions .el-btn-refresh,
+  .el-toolbar-actions .el-btn-export {
+    flex: 1 1 0;
+  }
+
+  /* Divider hidden on mobile */
   .el-toolbar-divider { display: none; }
+
+  /* Add Employee: full width, own row */
+  .el-toolbar-actions .el-btn-primary {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  /* Force the primary button onto its own row */
+  .el-toolbar-actions {
+    flex-wrap: wrap;
+  }
+
   .el-pagination-inner { flex-wrap: wrap; justify-content: center; gap: 10px; }
   .el-modal-overlay { padding: 0; align-items: flex-end; }
   .el-modal-container {
