@@ -204,7 +204,14 @@ export const routes: Routes = [
             .then(m => m.EmployeeShiftModule),
         data: { breadcrumb: 'Employee Shifts' },
       },
-
+      // ==================== MY SHIFTS MODULE (Employee self-service) ====================
+      {
+        path: 'my-shifts',
+        loadComponent: () =>
+          import('./modules/my-shifts/my-shifts.component')
+            .then(m => m.MyShiftsComponent),
+        data: { breadcrumb: 'My Shifts' },
+      },
       // ==================== LEAVE MODULE ====================
       {
         path: "leave",

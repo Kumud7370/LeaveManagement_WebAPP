@@ -1,0 +1,272 @@
+<div class="ms-page-container">
+
+  <!-- ── Page Header ── -->
+  <div class="ms-page-header">
+    <h1 class="ms-page-title">
+      <i class="bi bi-calendar2-week-fill"></i> My Shift Assignments
+    </h1>
+    <p class="ms-page-sub">View and respond to shifts assigned to you by your admin.</p>
+  </div>
+
+  <!-- ── Stats Grid ── -->
+  <div class="ms-stats-grid">
+    <div class="ms-stat-card ms-stat-total">
+      <p class="ms-stat-label">Total Shifts</p>
+      <p class="ms-stat-value">{{ shifts.length }}</p>
+    </div>
+    <div class="ms-stat-card ms-stat-pending">
+      <p class="ms-stat-label">⏳ Pending</p>
+      <p class="ms-stat-value">{{ pendingCount }}</p>
+    </div>
+    <div class="ms-stat-card ms-stat-approved">
+      <p class="ms-stat-label">✅ Approved</p>
+      <p class="ms-stat-value">{{ approvedCount }}</p>
+    </div>
+    <div class="ms-stat-card ms-stat-rejected">
+      <p class="ms-stat-label">❌ Rejected</p>
+      <p class="ms-stat-value">{{ rejectedCount }}</p>
+    </div>
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="ms-toolbar">
+    <div class="ms-search-wrapper">
+      <input
+        type="text"
+        placeholder="Search by shift name, timing, reason..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()"
+        class="ms-search-input"
+      />
+    </div>
+    <div class="ms-toolbar-actions">
+      <button class="ms-btn ms-btn-refresh" (click)="loadMyShifts()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+      <!-- Employee button — always visible, opens ID popup -->
+      <button class="ms-btn ms-btn-emp" (click)="openEmpDialog()">
+        <i class="bi bi-person-badge-fill"></i>
+        <span class="ms-emp-name">{{ employeeName || (employeeId ? employeeId : 'Set Employee ID') }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── AG-Grid Card ── -->
+  <div class="ms-grid-card">
+    <div class="ms-grid-container">
+      <ag-grid-angular
+        #agGrid
+        style="width: 100%"
+        [theme]="gridTheme"
+        [domLayout]="'autoHeight'"
+        [rowData]="pagedShifts"
+        [columnDefs]="columnDefs"
+        [defaultColDef]="defaultColDef"
+        [pagination]="false"
+        [animateRows]="true"
+        [rowSelection]="'single'"
+        [enableCellTextSelection]="true"
+        [suppressRowClickSelection]="true"
+        [rowHeight]="48"
+        [headerHeight]="44"
+        [floatingFiltersHeight]="36"
+        [suppressMenuHide]="true"
+        [enableBrowserTooltips]="true"
+        [suppressColumnVirtualisation]="true"
+        [rowBuffer]="10"
+        [overlayLoadingTemplate]="loadingOverlay"
+        [overlayNoRowsTemplate]="noRowsOverlay"
+        (gridReady)="onGridReady($event)"
+        [context]="context"
+      ></ag-grid-angular>
+    </div>
+
+    <!-- ── Pagination ── -->
+    <div class="ms-pagination">
+      <div class="ms-pagination-inner">
+        <div class="ms-page-size">
+          <label for="msPageSize">Show:</label>
+          <select id="msPageSize" [(ngModel)]="pageSize" (change)="onPageSizeChanged(pageSize)" class="ms-page-size-select">
+            <option [value]="10">10</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </div>
+        <span class="ms-pagination-text">
+          {{ filteredShifts.length > 0 ? (currentPage - 1) * pageSize + 1 : 0 }}
+          to {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }}
+        </span>
+        <span class="ms-pagination-text">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <div class="ms-pagination-btns">
+          <button (click)="goToPage(1)"         [disabled]="currentPage === 1"                              class="ms-pgbtn">«</button>
+          <button (click)="previousPage()"       [disabled]="currentPage === 1"                              class="ms-pgbtn">‹</button>
+          <button (click)="nextPage()"           [disabled]="currentPage === totalPages || totalPages === 0" class="ms-pgbtn">›</button>
+          <button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages || totalPages === 0" class="ms-pgbtn">»</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ Employee ID Popup (opens on button click) ═══════════════════════════ -->
+<div class="ms-overlay" *ngIf="showEmpDialog" (click)="closeEmpDialog()">
+  <div class="ms-emp-dialog" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="ms-emp-dialog-hdr">
+      <div class="ms-emp-dialog-avatar">
+        <i class="bi bi-person-fill"></i>
+      </div>
+      <div class="ms-emp-dialog-titles">
+        <div class="ms-emp-dialog-title">Change Employee ID</div>
+        <div class="ms-emp-dialog-sub">Enter a new Employee ID to load their shift assignments.</div>
+      </div>
+      <button class="ms-emp-close-btn" (click)="closeEmpDialog()">×</button>
+    </div>
+
+    <!-- Body -->
+    <div class="ms-emp-dialog-body">
+      <label class="ms-field-label">Employee ID <span class="ms-required">*</span></label>
+      <input
+        type="text"
+        class="ms-field-input"
+        placeholder="e.g. EMP001"
+        [(ngModel)]="newEmployeeIdInput"
+        (keyup.enter)="applyNewEmployeeId()"
+      />
+    </div>
+
+    <!-- Footer -->
+    <div class="ms-emp-dialog-ftr">
+      <button class="ms-btn ms-btn-cancel" (click)="closeEmpDialog()">Cancel</button>
+      <button class="ms-btn ms-btn-load" (click)="applyNewEmployeeId()">
+        <i class="bi bi-search"></i> Load Shifts
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ Reject Dialog ═══════════════════════════════════════════════════════ -->
+<div class="ms-overlay" *ngIf="showRejectDialog" (click)="cancelReject()">
+  <div class="ms-reject-box" (click)="$event.stopPropagation()">
+    <div class="ms-reject-header">
+      <span class="ms-reject-icon">❌</span>
+      <div>
+        <div class="ms-reject-title">Decline Shift Assignment</div>
+        <div class="ms-reject-sub">
+          Declining <b>{{ rejectTarget?.shiftName }}</b> ({{ rejectTarget?.shiftTimingDisplay }})
+        </div>
+      </div>
+    </div>
+    <div class="ms-reject-info-row">
+      <div class="ms-reject-info-item">
+        <span class="ms-reject-info-label">Effective From</span>
+        <span class="ms-reject-info-val">{{ fmt(rejectTarget?.effectiveFrom) }}</span>
+      </div>
+      <div class="ms-reject-info-item">
+        <span class="ms-reject-info-label">Effective To</span>
+        <span class="ms-reject-info-val">{{ rejectTarget?.effectiveTo ? fmt(rejectTarget?.effectiveTo) : 'Ongoing' }}</span>
+      </div>
+    </div>
+    <label class="ms-reject-label">Reason for Declining <span style="color:#ef4444">*</span></label>
+    <textarea
+      class="ms-reject-area"
+      rows="3"
+      placeholder="Please provide a reason (e.g. schedule conflict, health reasons...)"
+      [(ngModel)]="rejectReason"
+    ></textarea>
+    <div class="ms-reject-hint" *ngIf="rejectReason.trim().length > 0 && rejectReason.trim().length < 5">
+      Please enter at least 5 characters.
+    </div>
+    <div class="ms-reject-footer">
+      <button class="ms-btn ms-btn-cancel" (click)="cancelReject()">Cancel</button>
+      <button class="ms-btn ms-btn-decline" [disabled]="rejectReason.trim().length < 5" (click)="confirmReject()">
+        <i class="bi bi-x-lg"></i> Confirm Decline
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Detail Modal ════════════════════════════════════════════════════════ -->
+<div class="ms-overlay" *ngIf="showDetailModal && selectedShift" (click)="closeDetail()">
+  <div class="ms-detail-box" (click)="$event.stopPropagation()">
+    <div class="ms-detail-header">
+      <div class="ms-detail-header-left">
+        <div class="ms-detail-icon" [style.background]="selectedShift.shiftColor || '#3b82f6'">
+          <i class="bi bi-calendar-week"></i>
+        </div>
+        <div>
+          <div class="ms-detail-title">{{ selectedShift.shiftName }}</div>
+          <div class="ms-detail-sub">
+            <span class="ms-status-badge"
+              [ngStyle]="{ background: getStatusStyle(selectedShift.status).bg, color: getStatusStyle(selectedShift.status).color }">
+              {{ getStatusLabel(selectedShift.status) }}
+            </span>
+            <span class="ms-detail-timing">&nbsp;· {{ selectedShift.shiftTimingDisplay }}</span>
+          </div>
+        </div>
+      </div>
+      <button class="ms-emp-close-btn" (click)="closeDetail()">×</button>
+    </div>
+    <div class="ms-detail-body">
+      <div class="ms-detail-grid">
+        <div class="ms-detail-card">
+          <div class="ms-detail-label">📅 Effective From</div>
+          <div class="ms-detail-val">{{ fmt(selectedShift.effectiveFrom) }}</div>
+        </div>
+        <div class="ms-detail-card">
+          <div class="ms-detail-label">📅 Effective To</div>
+          <div class="ms-detail-val" [class.ongoing]="!selectedShift.effectiveTo">
+            {{ selectedShift.effectiveTo ? fmt(selectedShift.effectiveTo) : 'Ongoing' }}
+          </div>
+        </div>
+        <div class="ms-detail-card">
+          <div class="ms-detail-label">⏱ Duration</div>
+          <div class="ms-detail-val" [class.ongoing]="selectedShift.durationInDays === -1">
+            {{ (selectedShift.durationInDays === -1 || !selectedShift.durationInDays) ? 'Ongoing' : selectedShift.durationInDays + ' days' }}
+          </div>
+        </div>
+        <div class="ms-detail-card">
+          <div class="ms-detail-label">⚡ Currently Active</div>
+          <div class="ms-detail-val" [style.color]="selectedShift.isCurrentlyActive ? '#10b981' : '#94a3b8'">
+            {{ selectedShift.isCurrentlyActive ? '✔ Yes' : '— No' }}
+          </div>
+        </div>
+        <div class="ms-detail-card">
+          <div class="ms-detail-label">📋 Requested</div>
+          <div class="ms-detail-val">{{ fmt(selectedShift.requestedDate) }}</div>
+        </div>
+        <div class="ms-detail-card" *ngIf="selectedShift.updatedAt">
+          <div class="ms-detail-label">✏ Last Updated</div>
+          <div class="ms-detail-val">{{ fmt(selectedShift.updatedAt) }}</div>
+        </div>
+        <div class="ms-detail-card full" *ngIf="selectedShift.changeReason">
+          <div class="ms-detail-label">💬 Reason from Admin</div>
+          <div class="ms-detail-val italic">{{ selectedShift.changeReason }}</div>
+        </div>
+        <div class="ms-detail-card full approved-card" *ngIf="isApproved(selectedShift)">
+          <div class="ms-detail-label green">✅ Confirmed On</div>
+          <div class="ms-detail-val">{{ fmt(selectedShift.approvedDate) }}</div>
+        </div>
+        <div class="ms-detail-card full rejected-card" *ngIf="isRejected(selectedShift)">
+          <div class="ms-detail-label red">❌ Declined On · {{ fmt(selectedShift.rejectedDate) }}</div>
+          <div class="ms-detail-val italic">{{ selectedShift.rejectionReason }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="ms-detail-footer">
+      <ng-container *ngIf="isPending(selectedShift)">
+        <button class="ms-btn ms-btn-approve" (click)="closeDetail(); confirmShift(selectedShift)">
+          <i class="bi bi-check-lg"></i> Confirm Shift
+        </button>
+        <button class="ms-btn ms-btn-decline" (click)="closeDetail(); openRejectDialog(selectedShift)">
+          <i class="bi bi-x-lg"></i> Decline
+        </button>
+      </ng-container>
+      <button class="ms-btn ms-btn-cancel" (click)="closeDetail()">Close</button>
+    </div>
+  </div>
+</div>
