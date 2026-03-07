@@ -87,22 +87,22 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
 
   readonly gridTheme = shiftGridTheme;
 
-  //  Grid state 
+  //  Grid state
   rowData: EmployeeShift[] = [];
   gridApi!: GridApi;
   searchTerm: string = '';
 
-  //  Modal state 
+  //  Modal state
   showModal: boolean = false;
   modalMode: 'create' | 'edit' | 'view' = 'create';
   selectedShift: EmployeeShift | null = null;
 
-  //  Reject dialog 
+  //  Reject dialog
   showRejectDialog: boolean = false;
   rejectTarget: EmployeeShift | null = null;
   rejectReason: string = '';
 
-  //  Pagination 
+  //  Pagination
   currentPage: number = 1;
   pageSize: number = 20;
   totalItems: number = 0;
@@ -113,7 +113,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
 
   ShiftChangeStatus = ShiftChangeStatus;
 
-  //  Stats 
+  //  Stats
   stats: Record<string, number> = {};
   statsLoaded: boolean = false;
 
@@ -125,7 +125,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
 
   context = { componentParent: this };
 
-  //  Grid config 
+  //  Grid config
   defaultColDef: ColDef = {
     sortable: true,
     filter: true,
@@ -273,7 +273,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  //  Grid 
+  //  Grid
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
@@ -300,7 +300,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
     return String(text).replace(regex, '<mark class="search-highlight">$1</mark>');
   }
 
-  //  Data Loading 
+  //  Data Loading
 
   loadStats(): void {
     this.svc.getStatisticsByStatus()
@@ -355,7 +355,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
       });
   }
 
-  //  Pagination 
+  //  Pagination
 
   onPageSizeChanged(newPageSize: number): void {
     this.pageSize    = newPageSize;
@@ -373,7 +373,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
   nextPage(): void     { if (this.currentPage < this.totalPages) this.goToPage(this.currentPage + 1); }
   previousPage(): void { if (this.currentPage > 1) this.goToPage(this.currentPage - 1); }
 
-  //  Search 
+  //  Search
 
   onSearchChange(): void {
     clearTimeout(this.searchDebounceTimer);
@@ -412,12 +412,12 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
     this.activeFilters = { hasActiveFilters: filters.length > 0, filters, count: filters.length };
   }
 
-  //  Modal 
+  //  Modal
 
   openCreateModal(): void {
-    this.modalMode    = 'create';
+    this.modalMode     = 'create';
     this.selectedShift = null;
-    this.showModal    = true;
+    this.showModal     = true;
     this.cdr.detectChanges();
   }
 
@@ -476,7 +476,7 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Delete ───────────
+  //  Delete
   deleteDepartment(shift: EmployeeShift): void {
     if (this.isPending(shift)) {
       Swal.fire({
@@ -501,8 +501,8 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
   }
 
   openRejectDialog(shift: EmployeeShift): void {
-    this.rejectTarget = shift;
-    this.rejectReason = '';
+    this.rejectTarget     = shift;
+    this.rejectReason     = '';
     this.showRejectDialog = true;
   }
 
@@ -550,13 +550,13 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ─── Export 
+  //  Export
   exportData(): void {
     exportToCsv(this.gridApi, 'employee_shifts');
     Swal.fire({ icon: 'success', title: 'Exported!', text: 'Shift data exported as CSV.', timer: 2000, showConfirmButton: false });
   }
 
-  // ─── Helpers 
+  //  Helpers
   private resolveStatus(status: any): ShiftChangeStatus {
     if (typeof status === 'string') {
       const map: Record<string, ShiftChangeStatus> = {
@@ -579,12 +579,23 @@ export class EmployeeShiftListComponent implements OnInit, OnDestroy {
     return new Date(val).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
+  /** Returns the CSS class for each stat card based on its key */
+  getStatCardClass(key: string): string {
+    const map: Record<string, string> = {
+      Pending:   'es-stat-card-pending',
+      Approved:  'es-stat-card-approved',
+      Rejected:  'es-stat-card-rejected',
+      Cancelled: 'es-stat-card-cancelled',
+    };
+    return map[key] ?? '';
+  }
+
   getStatColor(key: string): { bg: string; color: string } {
     const map: Record<string, { bg: string; color: string }> = {
-      Pending:   { bg: '#fef9c3', color: '#713f12' },
-      Approved:  { bg: '#d1fae5', color: '#065f46' },
-      Rejected:  { bg: '#fee2e2', color: '#991b1b' },
-      Cancelled: { bg: '#f1f5f9', color: '#475569' },
+      Pending:   { bg: '#eff6ff', color: '#1d4ed8' },
+      Approved:  { bg: '#f0fdf4', color: '#15803d' },
+      Rejected:  { bg: '#fef2f2', color: '#dc2626' },
+      Cancelled: { bg: '#fefce8', color: '#b45309' },
     };
     return map[key] ?? { bg: '#f1f5f9', color: '#475569' };
   }
