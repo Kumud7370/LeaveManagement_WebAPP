@@ -77,82 +77,6 @@
   gap: 1rem;
 }
 
-// Offcanvas Toggle Button Styles
-.offcanvas-toggle-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #1a2a6c 0%, #b21f1f 100%);
-  border: none;
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 0.875rem;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgba(26, 42, 108, 0.2);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(26, 42, 108, 0.3);
-    background: linear-gradient(135deg, #2a3a7c 0%, #c22f2f 100%);
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 255, 204, 0.3);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  i {
-    font-size: 1rem;
-  }
-
-  .btn-text {
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-}
-
-.search-box {
-  position: relative;
-
-  i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-    font-size: 0.875rem;
-  }
-
-  input {
-    width: 240px;
-    height: 38px;
-    padding: 0 12px 0 36px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    background: #f9fafb;
-    font-size: 0.875rem;
-    transition: all 0.2s;
-
-    &:focus {
-      outline: none;
-      border-color: #00ffcc;
-      background: white;
-      box-shadow: 0 0 0 3px rgba(0, 255, 204, 0.1);
-    }
-
-    &::placeholder {
-      color: #9ca3af;
-    }
-  }
-}
-
 .header-actions {
   display: flex;
   align-items: center;
@@ -208,7 +132,6 @@
 .main-content {
   flex: 1;
   overflow-y: auto;
-  // padding: 1.5rem;
   padding: 0 1.5rem 1.5rem;
 
   &::-webkit-scrollbar {
@@ -452,21 +375,8 @@
 }
 
 @media (max-width: 767px) {
-  .search-box {
-    display: none;
-  }
-
   .breadcrumb {
     display: none;
-  }
-
-  .offcanvas-toggle-btn {
-    .btn-text {
-      display: none;
-    }
-
-    padding: 0.5rem;
-    min-width: 38px;
   }
 
   .custom-offcanvas {

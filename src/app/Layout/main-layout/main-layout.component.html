@@ -4,30 +4,32 @@
   <div class="content-wrapper" [class.sidebar-expanded]="isSidebarExpanded">
     <header class="main-header">
       <div class="header-left">
-        <button class="menu-toggle" (click)="toggleSidebar()" aria-label="Toggle menu">
+        <button
+          class="menu-toggle"
+          (click)="toggleSidebar()"
+          aria-label="Toggle menu"
+        >
           <i class="fas fa-bars"></i>
         </button>
         <div class="breadcrumb">
           <span>Home</span>
           <i class="fas fa-chevron-right separator"></i>
-          <!-- <span>Dashboard</span> -->
-          <span>{{currentPageTitle}}</span>
+          <span>{{ currentPageTitle }}</span>
         </div>
       </div>
 
       <div class="header-right">
-        <div class="search-box">
-          <i class="fas fa-search"></i>
-          <input type="text" placeholder="Search...">
-        </div>
-
         <div class="header-actions">
           <button class="action-button" aria-label="Notifications">
             <i class="fas fa-bell"></i>
             <span class="notification-badge">5</span>
           </button>
 
-          <button class="action-button" aria-label="Settings">
+          <button
+            class="action-button"
+            aria-label="Settings"
+            (click)="openSettings()"
+          >
             <i class="fas fa-cog"></i>
           </button>
         </div>

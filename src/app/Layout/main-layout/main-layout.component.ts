@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { SidebarComponent } from 'src/app/shared/sidebar/sidebar.component';
 import { SidebarService } from '../../shared/sidebar/sidebar.service';
+import { ThemeService } from '../../shared/services/theme.service';  
 import { filter, map, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import {
@@ -33,6 +34,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private sidebarService = inject(SidebarService);
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
+  private themeService = inject(ThemeService);  
 
   private destroy$ = new Subject<void>();
 
@@ -40,7 +42,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   currentPageTitle = 'Dashboard';
   isOffcanvasVisible = false;
 
-  // Filter data model
   filterData = {
     fromDate: '',
     toDate: '',
@@ -54,16 +55,13 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
-    // Sidebar state subscription
     this.sidebarService.sidebarState$.subscribe((state) => {
       this.isSidebarExpanded = state;
     });
 
-    // Set initial breadcrumb on first page load
     this.currentPageTitle =
       this.getDeepestChild(this.activatedRoute).snapshot.data['breadcrumb'] ?? 'Dashboard';
 
-    // Update breadcrumb on every route change
     this.router.events
       .pipe(
         takeUntil(this.destroy$),
@@ -74,7 +72,6 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
         this.currentPageTitle = title ?? 'Dashboard';
       });
 
-    // Initialize default filter dates
     this.initializeDefaultDates();
   }
 
@@ -85,6 +82,10 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
 
   toggleSidebar(): void {
     this.sidebarService.toggle();
+  }
+
+  openSettings(): void {
+    this.router.navigate(['/settings']);
   }
 
   toggleOffcanvas(): void {
