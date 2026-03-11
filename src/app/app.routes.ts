@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { MainLayoutComponent } from 'src/app/Layout/main-layout/main-layout.component';
 import { AuthGuard } from './modules/login/auth.guard';
 import { LoginComponent } from './modules/login/login.component';
+import { SettingsComponent } from './shared/settings/settings.component';
 
 export const routes: Routes = [
   {
@@ -33,7 +34,6 @@ export const routes: Routes = [
     canActivateChild: [AuthGuard],
     children: [
 
-      // ==================== DASHBOARD ====================
       {
         path: "dashboard",
         loadComponent: () => import("./modules/dashboard/dashboard.component")
@@ -41,7 +41,6 @@ export const routes: Routes = [
         data: { breadcrumb: "Dashboard" },
       },
 
-      // ==================== EMPLOYEES MODULE ====================
       {
         path: "employees",
         children: [
@@ -72,7 +71,6 @@ export const routes: Routes = [
         ]
       },
 
-      // ==================== ATTENDANCE MODULE ====================
       {
         path: 'attendance',
         children: [
@@ -105,7 +103,6 @@ export const routes: Routes = [
         ]
       },
 
-      // ==================== ATTENDANCE REGULARIZATION MODULE ====================
       {
         path: "attendance-regularization",
         children: [
@@ -141,7 +138,6 @@ export const routes: Routes = [
         ]
       },
 
-      // ==================== DEPARTMENTS MODULE ====================
       {
         path: "departments",
         loadChildren: () => import("./modules/departments/department.module")
@@ -149,7 +145,6 @@ export const routes: Routes = [
         data: { breadcrumb: "Departments" },
       },
 
-      // ==================== ADMIN INVITATIONS MODULE ====================
       {
         path: "admin-invitations",
         loadChildren: () => import("./modules/admin-invitations/admin-invitation.module")
@@ -157,7 +152,6 @@ export const routes: Routes = [
         data: { breadcrumb: "Admin Invitations" },
       },
 
-      // ==================== DESIGNATIONS MODULE ====================
       {
         path: "designations",
         children: [
@@ -182,7 +176,6 @@ export const routes: Routes = [
         ]
       },
 
-      // ==================== HOLIDAYS MODULE ====================
       {
         path: "holidays",
         loadChildren: () => import("./modules/holiday/holiday.module")
@@ -204,7 +197,7 @@ export const routes: Routes = [
             .then(m => m.EmployeeShiftModule),
         data: { breadcrumb: 'Employee Shifts' },
       },
-      // ==================== MY SHIFTS MODULE (Employee self-service) ====================
+
       {
         path: 'my-shifts',
         loadComponent: () =>
@@ -212,7 +205,7 @@ export const routes: Routes = [
             .then(m => m.MyShiftsComponent),
         data: { breadcrumb: 'My Shifts' },
       },
-      // ==================== LEAVE MODULE ====================
+
       {
         path: "leave",
         children: [
@@ -230,7 +223,6 @@ export const routes: Routes = [
         ]
       },
 
-      // ==================== LEAVE TYPE MODULE ====================
       {
         path: "leave-types",
         children: [
@@ -268,7 +260,6 @@ export const routes: Routes = [
         data: { breadcrumb: "My Leaves" },
       },
 
-
       {
         path: "wfh-requests",
         children: [
@@ -283,7 +274,6 @@ export const routes: Routes = [
               .then((m) => m.WfhRequestListComponent),
             data: { breadcrumb: "WFH Requests" },
           },
-
         ]
       },
 
@@ -293,6 +283,12 @@ export const routes: Routes = [
           import("./modules/work-from-home/my-wfh-requests/my-wfh-requests.component")
             .then((m) => m.MyWfhRequestsComponent),
         data: { breadcrumb: "My WFH Requests" },
+      },
+
+      {
+        path: 'settings',
+        component: SettingsComponent,
+        data: { breadcrumb: 'Settings' },
       },
 
     ],

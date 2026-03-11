@@ -74,7 +74,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
       icon: "fas fa-calendar-check",
       expanded: false,
       children: [
-        // { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
         { label: "Attendance List", route: "/attendance/list", icon: "fas fa-list" },
         { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
       ]
@@ -249,7 +248,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
           icon: "fas fa-calendar-check",
           expanded: false,
           children: [
-            // { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
             { label: "Attendance List", route: "/attendance/list", icon: "fas fa-list" },
             { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
           ]
@@ -293,7 +291,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
       ]
     } else if (uRoleName?.toLowerCase() === 'employee') {
-      // ✅ Menu for regular employees
+    
       this.menuItems = [
         { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
         {
@@ -316,7 +314,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         },
         { label: "My Shifts", route: "/my-shifts", icon: "fas fa-user-clock" },
         {
-          label: "Leave",                            // <-- ADD THIS BLOCK
+          label: "Leave",                            
           icon: "fas fa-plane-departure",
           expanded: false,
           children: [
@@ -424,7 +422,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   openSettings() {
-    console.log("Opening settings...")
+   this.router.navigate(['/settings']);
   }
 
   logout() {
