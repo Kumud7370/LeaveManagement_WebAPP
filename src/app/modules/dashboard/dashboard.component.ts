@@ -7,7 +7,6 @@ import { NgApexchartsModule } from 'ng-apexcharts';
 import { Subject, forkJoin, of } from 'rxjs';
 import { takeUntil, finalize, catchError } from 'rxjs/operators';
 import { ApiClientService } from 'src/app/core/services/api/apiClient';
-import { UpcomingHolidaysWidgetComponent } from '../holiday/upcoming-holidays-widget/upcoming-holidays-widget.component';
 import type {
   ApexAxisChartSeries, ApexChart, ApexXAxis, ApexYAxis,
   ApexDataLabels, ApexPlotOptions, ApexLegend, ApexGrid,
@@ -35,17 +34,16 @@ export type DonutChartOptions = {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
   standalone: true,
-  imports: [CommonModule, NgApexchartsModule, FormsModule, UpcomingHolidaysWidgetComponent],
+  imports: [CommonModule, NgApexchartsModule, FormsModule],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  isLoading     = true;
+  isLoading = true;
   loadingError: string | null = null;
-  isMobileView  = false;
+  isMobileView = false;
 
-  // ── Colour tokens ──────────────────────────────────────────────
   private C = {
     navy: '#1a2a6c', crimson: '#b21f1f',
     green: '#10b981', red: '#ef4444',
@@ -54,36 +52,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
     orange: '#f97316', gray: '#6b7280',
   };
 
-  // ── Stat values ────────────────────────────────────────────────
-  presentToday     = 0;
-  absentToday      = 0;
-  lateToday        = 0;
-  earlyLeaveToday  = 0;
-  leavePending     = 0;
-  leaveApproved    = 0;
-  leaveRejected    = 0;
-  leaveCancelled   = 0;
-  leaveTotal       = 0;
-  activeEmployees  = 0;
-  activeDepartments = 0;
-  nextHolidayName  = '—';
-  nextHolidayDate  = '—';
+  // ── Workforce stats ────────────────────────────────────────────
+  totalEmployees = 0;
+  totalDepartments = 0;
+  totalDesignations = 0;
 
-  // ── Activity lists ─────────────────────────────────────────────
+  // ── Leave stats ────────────────────────────────────────────────
+  leavePending = 0;
+  leaveApproved = 0;
+  leaveRejected = 0;
+  leaveCancelled = 0;
+  leaveTotal = 0;
+
+  // ── Leave balance stats ────────────────────────────────────────
+  totalLeaveTypes = 0;
+  avgLeaveBalance = 0;
+  totalLeaveBalanceRecords = 0;
+
+  // ── Lists ──────────────────────────────────────────────────────
   pendingLeavesList: any[] = [];
-  lateList:          any[] = [];
-  earlyList:         any[] = [];
-  upcomingLeaves:    any[] = [];
+  upcomingLeaves: any[] = [];
+  departmentList: any[] = [];
+  designationList: any[] = [];
 
   // ── Charts ─────────────────────────────────────────────────────
-  attendanceBarChart!:  BarLineChartOptions;
+  leaveDonutChart!: DonutChartOptions;
+  deptDonutChart!: DonutChartOptions;
   leaveTrendLineChart!: BarLineChartOptions;
-  leaveDonutChart!:     DonutChartOptions;
-  deptDonutChart!:      DonutChartOptions;
+  leaveTypeBarChart!: BarLineChartOptions;
 
   private allLeaveItems: any[] = [];
 
-  constructor(private api: ApiClientService, private cdr: ChangeDetectorRef) {}
+  constructor(private api: ApiClientService, private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     this.checkMobileView();
@@ -98,68 +98,76 @@ export class DashboardComponent implements OnInit, OnDestroy {
   checkMobileView(): void { this.isMobileView = window.innerWidth <= 768; }
 
   loadDashboard(): void {
-    this.isLoading    = true;
+    this.isLoading = true;
     this.loadingError = null;
 
     forkJoin({
-      attStats:  this.api.getAttendanceStatistics() .pipe(catchError(() => of(null))),
-      late:      this.api.getLateAttendance()        .pipe(catchError(() => of([]))),
-      early:     this.api.getEarlyLeave()            .pipe(catchError(() => of([]))),
-      pending:   this.api.getPendingLeaves()         .pipe(catchError(() => of([]))),
-      employees: this.api.getActiveEmployees()       .pipe(catchError(() => of([]))),
-      depts:     this.api.getActiveDepartments()     .pipe(catchError(() => of([]))),
-      holidays:  this.api.getUpcomingHolidays()      .pipe(catchError(() => of([]))),
+      employees: this.api.getActiveEmployees().pipe(catchError(() => of([]))),
+      depts: this.api.getActiveDepartments().pipe(catchError(() => of([]))),
+      designations: of([]),
+      leaveTypes: of([]),
+      leaveBalance: of([]),
+      pending: this.api.getPendingLeaves().pipe(catchError(() => of([]))),
       allLeaves: this.api.filterLeaves({
         pageNumber: 1, pageSize: 500,
         sortBy: 'AppliedDate', sortDescending: true,
       }).pipe(catchError(() => of(null))),
     })
-    .pipe(
-      takeUntil(this.destroy$),
-      finalize(() => { this.isLoading = false; this.cdr.detectChanges(); }),
-    )
-    .subscribe({
-      next: (r) => {
-        this.processAttendance(r.attStats);
-        this.processLate(r.late);
-        this.processEarly(r.early);
-        this.processPending(r.pending);
-        this.processEmployees(r.employees);
-        this.processDepartments(r.depts);
-        this.processHolidays(r.holidays);
-        this.processAllLeaves(r.allLeaves);
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => { this.isLoading = false; this.cdr.detectChanges(); }),
+      )
+      .subscribe({
+        next: (r) => {
+          this.processEmployees(r.employees);
+          this.processDepartments(r.depts);
+          this.processDesignations(r.designations);
+          this.processLeaveTypes(r.leaveTypes);
+          this.processLeaveBalances(r.leaveBalance);
+          this.processPending(r.pending);
+          this.processAllLeaves(r.allLeaves);
 
-        this.buildAttendanceBarChart();
-        this.buildLeaveTrendChart();
-        this.buildLeaveDonut();
-        this.buildDeptDonut(r.depts);
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.loadingError = err?.error?.message || 'Failed to load dashboard data.';
-      },
-    });
+          this.buildLeaveDonut();
+          this.buildDeptDonut(r.depts);
+          this.buildLeaveTrendChart();
+          this.buildLeaveTypeBarChart();
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.loadingError = err?.error?.message || 'Failed to load dashboard data.';
+        },
+      });
   }
 
   // ── Processors ─────────────────────────────────────────────────
-  private processAttendance(res: any): void {
-    const d = res?.data ?? res ?? {};
-    this.presentToday   = d.presentCount    ?? d.present    ?? d.Present    ?? 0;
-    this.absentToday    = d.absentCount     ?? d.absent     ?? d.Absent     ?? 0;
-    this.lateToday      = d.lateCount       ?? d.late       ?? d.Late       ?? 0;
-    this.earlyLeaveToday = d.earlyLeaveCount ?? d.earlyLeave ?? d.EarlyLeave ?? 0;
+  private processEmployees(res: any): void {
+    const list = res?.data ?? res ?? [];
+    this.totalEmployees = Array.isArray(list) ? list.length : (res?.data?.totalCount ?? 0);
   }
 
-  private processLate(res: any): void {
+  private processDepartments(res: any): void {
     const list = res?.data ?? res ?? [];
-    this.lateList  = Array.isArray(list) ? list.slice(0, 6) : [];
-    if (!this.lateToday) this.lateToday = this.lateList.length;
+    this.departmentList = Array.isArray(list) ? list : [];
+    this.totalDepartments = this.departmentList.length;
   }
 
-  private processEarly(res: any): void {
+  private processDesignations(res: any): void {
     const list = res?.data ?? res ?? [];
-    this.earlyList = Array.isArray(list) ? list.slice(0, 6) : [];
-    if (!this.earlyLeaveToday) this.earlyLeaveToday = this.earlyList.length;
+    this.designationList = Array.isArray(list) ? list : [];
+    this.totalDesignations = this.designationList.length;
+  }
+
+  private processLeaveTypes(res: any): void {
+    const list = res?.data ?? res ?? [];
+    this.totalLeaveTypes = Array.isArray(list) ? list.length : 0;
+  }
+
+  private processLeaveBalances(res: any): void {
+    const list: any[] = res?.data ?? res ?? [];
+    if (!Array.isArray(list) || list.length === 0) return;
+    this.totalLeaveBalanceRecords = list.length;
+    const total = list.reduce((sum, b) => sum + (b.balance ?? b.remainingDays ?? b.remaining ?? 0), 0);
+    this.avgLeaveBalance = Math.round(total / list.length);
   }
 
   private processPending(res: any): void {
@@ -167,53 +175,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.pendingLeavesList = Array.isArray(list) ? list.slice(0, 6) : [];
   }
 
-  private processEmployees(res: any): void {
-    const list = res?.data ?? res ?? [];
-    this.activeEmployees = Array.isArray(list) ? list.length : (res?.data?.totalCount ?? 0);
-  }
-
-  private processDepartments(res: any): void {
-    const list = res?.data ?? res ?? [];
-    this.activeDepartments = Array.isArray(list) ? list.length : 0;
-  }
-
-  private processHolidays(res: any): void {
-    const list = res?.data ?? res ?? [];
-    if (Array.isArray(list) && list.length > 0) {
-      const h = list[0];
-      this.nextHolidayName = h.name ?? h.holidayName ?? '—';
-      this.nextHolidayDate = h.date ? this.fmt(h.date) : '—';
-    }
-  }
-
   private processAllLeaves(res: any): void {
     const items: any[] = res?.data?.items ?? res?.data ?? [];
-    this.allLeaveItems  = Array.isArray(items) ? items : [];
-    // Upcoming = approved leaves with startDate in the future
+    this.allLeaveItems = Array.isArray(items) ? items : [];
     const today = new Date();
     this.upcomingLeaves = this.allLeaveItems
       .filter(l => this.statusName(l.leaveStatus) === 'Approved' && new Date(l.startDate) >= today)
       .slice(0, 5);
-    this.leaveTotal     = this.allLeaveItems.length;
-    this.leavePending   = this.allLeaveItems.filter(l => this.statusName(l.leaveStatus) === 'Pending').length;
-    this.leaveApproved  = this.allLeaveItems.filter(l => this.statusName(l.leaveStatus) === 'Approved').length;
-    this.leaveRejected  = this.allLeaveItems.filter(l => this.statusName(l.leaveStatus) === 'Rejected').length;
+    this.leaveTotal = this.allLeaveItems.length;
+    this.leavePending = this.allLeaveItems.filter(l => this.statusName(l.leaveStatus) === 'Pending').length;
+    this.leaveApproved = this.allLeaveItems.filter(l => this.statusName(l.leaveStatus) === 'Approved').length;
+    this.leaveRejected = this.allLeaveItems.filter(l => this.statusName(l.leaveStatus) === 'Rejected').length;
     this.leaveCancelled = this.allLeaveItems.filter(l => this.statusName(l.leaveStatus) === 'Cancelled').length;
   }
 
   // ── Chart builders ─────────────────────────────────────────────
-  private buildAttendanceBarChart(): void {
-    const labels = this.last7Labels();
-    const fill7  = (v: number) => [...Array(6).fill(0), v];
-    this.attendanceBarChart = {
-      ...this.attendanceBarChart,
-      series: [
-        { name: 'Present',     data: fill7(this.presentToday)    },
-        { name: 'Absent',      data: fill7(this.absentToday)     },
-        { name: 'Late',        data: fill7(this.lateToday)       },
-        { name: 'Early Leave', data: fill7(this.earlyLeaveToday) },
-      ],
-      xaxis: { ...this.attendanceBarChart.xaxis, categories: labels },
+  private buildLeaveDonut(): void {
+    this.leaveDonutChart = {
+      ...this.leaveDonutChart,
+      series: [this.leavePending, this.leaveApproved, this.leaveRejected, this.leaveCancelled],
+    };
+  }
+
+  private buildDeptDonut(res: any): void {
+    const list: any[] = res?.data ?? res ?? [];
+    if (!Array.isArray(list) || list.length === 0) return;
+    this.deptDonutChart = {
+      ...this.deptDonutChart,
+      labels: list.map(d => d.name ?? d.departmentName ?? 'Dept'),
+      series: list.map(d => d.employeeCount ?? d.totalEmployees ?? 1),
     };
   }
 
@@ -228,7 +218,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         .toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
       if (!buckets[lbl]) return;
       const s = this.statusName(leave.leaveStatus);
-      if (s === 'Pending')  buckets[lbl].p++;
+      if (s === 'Pending') buckets[lbl].p++;
       if (s === 'Approved') buckets[lbl].a++;
       if (s === 'Rejected') buckets[lbl].r++;
     });
@@ -236,7 +226,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.leaveTrendLineChart = {
       ...this.leaveTrendLineChart,
       series: [
-        { name: 'Pending',  data: labels.map(l => buckets[l].p) },
+        { name: 'Pending', data: labels.map(l => buckets[l].p) },
         { name: 'Approved', data: labels.map(l => buckets[l].a) },
         { name: 'Rejected', data: labels.map(l => buckets[l].r) },
       ],
@@ -244,20 +234,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     };
   }
 
-  private buildLeaveDonut(): void {
-    this.leaveDonutChart = {
-      ...this.leaveDonutChart,
-      series: [this.leavePending, this.leaveApproved, this.leaveRejected, this.leaveCancelled],
-    };
-  }
+  private buildLeaveTypeBarChart(): void {
+    // Group allLeaveItems by leaveTypeName
+    const typeCounts: Record<string, number> = {};
+    this.allLeaveItems.forEach(l => {
+      const name = l.leaveTypeName ?? 'Other';
+      typeCounts[name] = (typeCounts[name] ?? 0) + 1;
+    });
+    const labels = Object.keys(typeCounts);
+    const values = Object.values(typeCounts);
 
-  private buildDeptDonut(res: any): void {
-    const list: any[] = res?.data ?? res ?? [];
-    if (!Array.isArray(list) || list.length === 0) return;
-    this.deptDonutChart = {
-      ...this.deptDonutChart,
-      labels:  list.map(d => d.name ?? d.departmentName ?? 'Dept'),
-      series:  list.map(d => d.employeeCount ?? d.totalEmployees ?? 1),
+    this.leaveTypeBarChart = {
+      ...this.leaveTypeBarChart,
+      series: [{ name: 'Requests', data: values }],
+      xaxis: { ...this.leaveTypeBarChart.xaxis, categories: labels },
     };
   }
 
@@ -285,20 +275,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       },
     });
 
-    this.attendanceBarChart = {
-      series: [],
-      chart: { type: 'bar', height: 300, fontFamily: "'Inter',sans-serif", toolbar: { show: false } },
-      plotOptions: { bar: { horizontal: false, columnWidth: '60%', borderRadius: 4 } },
-      dataLabels: { enabled: false },
-      stroke: { show: true, width: 2, colors: ['transparent'] },
-      markers: { size: 0 },
-      xaxis: baseXAxis(), yaxis: baseYAxis('Employees'),
-      colors: [this.C.green, this.C.red, this.C.yellow, this.C.orange],
-      grid: baseGrid, legend: baseLegend,
-      fill: { opacity: 1 },
-      tooltip: { y: { formatter: (v: number) => `${v} employees` } },
-    };
-
     this.leaveTrendLineChart = {
       series: [],
       chart: { type: 'line', height: 300, fontFamily: "'Inter',sans-serif", toolbar: { show: false } },
@@ -311,6 +287,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
       grid: baseGrid, legend: baseLegend,
       fill: {},
       tooltip: { y: { formatter: (v: number) => `${v} leaves` } },
+    };
+
+    this.leaveTypeBarChart = {
+      series: [],
+      chart: { type: 'bar', height: 300, fontFamily: "'Inter',sans-serif", toolbar: { show: false } },
+      plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
+      dataLabels: { enabled: false },
+      stroke: { show: true, width: 2, colors: ['transparent'] },
+      markers: { size: 0 },
+      xaxis: { categories: [], labels: { style: { fontSize: '11px', colors: [] } } },
+      yaxis: baseYAxis('Requests'),
+      colors: [this.C.blue, this.C.purple, this.C.teal, this.C.orange,
+      this.C.green, this.C.yellow, this.C.crimson],
+      grid: baseGrid, legend: baseLegend,
+      fill: { opacity: 1 },
+      tooltip: { y: { formatter: (v: number) => `${v} requests` } },
     };
 
     this.leaveDonutChart = {
@@ -346,7 +338,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       chart: { type: 'donut', height: 280, fontFamily: "'Inter',sans-serif" },
       labels: [],
       colors: [this.C.navy, this.C.blue, this.C.teal, this.C.purple,
-               this.C.green, this.C.yellow, this.C.orange, this.C.crimson],
+      this.C.green, this.C.yellow, this.C.orange, this.C.crimson],
       legend: { ...baseLegend, position: 'bottom' },
       plotOptions: { pie: { donut: { size: '55%' } } },
       dataLabels: {
@@ -358,23 +350,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     };
   }
 
-  // ── Public helpers (used by template & tests) ──────────────────
+  // ── Public helpers ─────────────────────────────────────────────
   statusName(status: any): string {
     if (typeof status === 'string' && isNaN(+status)) return status;
     return ({ 0: 'Pending', 1: 'Approved', 2: 'Rejected', 3: 'Cancelled' } as any)[Number(status)] ?? 'Pending';
   }
   statusClass(s: any): string { return `badge-${this.statusName(s).toLowerCase()}`; }
-  attendancePct(): number {
-    const t = this.presentToday + this.absentToday;
-    return t > 0 ? Math.round((this.presentToday / t) * 100) : 0;
-  }
   fmt(d: string | Date): string {
     if (!d) return '—';
     return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   }
   get Math() { return Math; }
 
-  // ── Private helper ─────────────────────────────────────────────
   private last7Labels(): string[] {
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date();

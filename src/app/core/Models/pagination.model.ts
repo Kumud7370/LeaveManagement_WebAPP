@@ -1,11 +1,3 @@
-// pagination.model.ts
-// Mirrors: PaginationDto.cs + PagedResultDto.cs
-// Location: src/app/core/Models/pagination.model.ts
-
-// ---------------------------------------------------------------------------
-// Interfaces
-// ---------------------------------------------------------------------------
-
 export interface IPaginationDto {
   pageNumber: number;
   pageSize: number;
@@ -17,11 +9,6 @@ export interface IPagedResultDto<T> {
   pageNumber: number;
   pageSize: number;
 }
-
-// ---------------------------------------------------------------------------
-// PaginationDto — mirrors PaginationDto.cs
-// PageNumber: min 1 | PageSize: clamp 1–100, default 10
-// ---------------------------------------------------------------------------
 
 export class PaginationDto implements IPaginationDto {
   private _pageNumber: number = 1;
@@ -61,11 +48,6 @@ export class PaginationDto implements IPaginationDto {
   }
 }
 
-// ---------------------------------------------------------------------------
-// PagedResultDto — mirrors PagedResultDto.cs
-// Computed: TotalPages, HasPreviousPage, HasNextPage
-// ---------------------------------------------------------------------------
-
 export class PagedResultDto<T> implements IPagedResultDto<T> {
   items: T[];
   totalCount: number;
@@ -100,10 +82,6 @@ export class PagedResultDto<T> implements IPagedResultDto<T> {
     return new PagedResultDto<T>(data);
   }
 }
-
-// ---------------------------------------------------------------------------
-// PaginationManager — stateful helper for use in Angular components/services
-// ---------------------------------------------------------------------------
 
 export class PaginationManager {
   private dto: PaginationDto;

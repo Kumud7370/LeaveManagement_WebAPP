@@ -28,61 +28,42 @@
       </button>
     </div>
 
-    <!-- ══ Upcoming Holidays ══════════════════════════════════════ -->
-    <div class="dash-holidays-row">
-      <app-upcoming-holidays-widget [count]="5"></app-upcoming-holidays-widget>
-    </div>
-
-    <!-- ══ Stat Cards ════════════════════════════════════════════ -->
-    <!-- Row 1: Attendance -->
+    <!-- ══ Workforce ══════════════════════════════════════════════ -->
     <div class="dash-row-label">
-      <i class="bi bi-calendar-check"></i> Today's Attendance
+      <i class="bi bi-people"></i> Workforce
     </div>
-    <div class="dash-stats-grid dash-stats-grid-4">
+    <div class="dash-stats-grid dash-stats-grid-3">
 
-      <div class="dash-stat dash-stat-green">
-        <div class="dash-stat-icon"><i class="bi bi-person-check-fill"></i></div>
+      <div class="dash-stat dash-stat-navy">
+        <div class="dash-stat-icon"><i class="bi bi-people-fill"></i></div>
         <div class="dash-stat-body">
-          <p class="dash-stat-label">Present</p>
-          <p class="dash-stat-value">{{ presentToday }}</p>
-          <div class="dash-progress-bar">
-            <div class="dash-progress-fill dash-progress-green"
-                 [style.width.%]="attendancePct()"></div>
-          </div>
-          <p class="dash-stat-sub">{{ attendancePct() }}% attendance rate</p>
+          <p class="dash-stat-label">Total Employees</p>
+          <p class="dash-stat-value">{{ totalEmployees }}</p>
+          <p class="dash-stat-sub">active on roster</p>
         </div>
       </div>
 
-      <div class="dash-stat dash-stat-red">
-        <div class="dash-stat-icon"><i class="bi bi-person-x-fill"></i></div>
+      <div class="dash-stat dash-stat-teal">
+        <div class="dash-stat-icon"><i class="bi bi-building"></i></div>
         <div class="dash-stat-body">
-          <p class="dash-stat-label">Absent</p>
-          <p class="dash-stat-value">{{ absentToday }}</p>
-          <p class="dash-stat-sub">out of {{ presentToday + absentToday }} employees</p>
+          <p class="dash-stat-label">Departments</p>
+          <p class="dash-stat-value">{{ totalDepartments }}</p>
+          <p class="dash-stat-sub">across the organisation</p>
         </div>
       </div>
 
-      <div class="dash-stat dash-stat-yellow">
-        <div class="dash-stat-icon"><i class="bi bi-clock-history"></i></div>
+      <div class="dash-stat dash-stat-purple">
+        <div class="dash-stat-icon"><i class="bi bi-award"></i></div>
         <div class="dash-stat-body">
-          <p class="dash-stat-label">Late Arrivals</p>
-          <p class="dash-stat-value">{{ lateToday }}</p>
-          <p class="dash-stat-sub">checked in late today</p>
-        </div>
-      </div>
-
-      <div class="dash-stat dash-stat-orange">
-        <div class="dash-stat-icon"><i class="bi bi-box-arrow-left"></i></div>
-        <div class="dash-stat-body">
-          <p class="dash-stat-label">Early Leaves</p>
-          <p class="dash-stat-value">{{ earlyLeaveToday }}</p>
-          <p class="dash-stat-sub">left before shift end</p>
+          <p class="dash-stat-label">Designations</p>
+          <p class="dash-stat-value">{{ totalDesignations }}</p>
+          <p class="dash-stat-sub">distinct job roles</p>
         </div>
       </div>
 
     </div>
 
-    <!-- Row 2: Leave Summary -->
+    <!-- ══ Leave Summary ══════════════════════════════════════════ -->
     <div class="dash-row-label">
       <i class="bi bi-calendar3"></i> Leave Summary
     </div>
@@ -135,36 +116,36 @@
 
     </div>
 
-    <!-- Row 3: Workforce -->
+    <!-- ══ Leave Types & Balance ══════════════════════════════════ -->
     <div class="dash-row-label">
-      <i class="bi bi-people"></i> Workforce
+      <i class="bi bi-tag"></i> Leave Types & Balance
     </div>
     <div class="dash-stats-grid dash-stats-grid-3">
 
-      <div class="dash-stat dash-stat-navy">
-        <div class="dash-stat-icon"><i class="bi bi-people-fill"></i></div>
+      <div class="dash-stat dash-stat-orange">
+        <div class="dash-stat-icon"><i class="bi bi-tags-fill"></i></div>
         <div class="dash-stat-body">
-          <p class="dash-stat-label">Active Employees</p>
-          <p class="dash-stat-value">{{ activeEmployees }}</p>
-          <p class="dash-stat-sub">currently on roster</p>
+          <p class="dash-stat-label">Leave Types</p>
+          <p class="dash-stat-value">{{ totalLeaveTypes }}</p>
+          <p class="dash-stat-sub">configured in system</p>
         </div>
       </div>
 
-      <div class="dash-stat dash-stat-teal">
-        <div class="dash-stat-icon"><i class="bi bi-building"></i></div>
+      <div class="dash-stat dash-stat-green">
+        <div class="dash-stat-icon"><i class="bi bi-wallet2"></i></div>
         <div class="dash-stat-body">
-          <p class="dash-stat-label">Active Departments</p>
-          <p class="dash-stat-value">{{ activeDepartments }}</p>
-          <p class="dash-stat-sub">across the organisation</p>
+          <p class="dash-stat-label">Avg Balance</p>
+          <p class="dash-stat-value">{{ avgLeaveBalance }}</p>
+          <p class="dash-stat-sub">days per employee</p>
         </div>
       </div>
 
-      <div class="dash-stat dash-stat-purple">
-        <div class="dash-stat-icon"><i class="bi bi-calendar-event"></i></div>
+      <div class="dash-stat dash-stat-blue">
+        <div class="dash-stat-icon"><i class="bi bi-bar-chart-steps"></i></div>
         <div class="dash-stat-body">
-          <p class="dash-stat-label">Next Holiday</p>
-          <p class="dash-stat-value dash-stat-value-sm">{{ nextHolidayName }}</p>
-          <p class="dash-stat-sub">{{ nextHolidayDate }}</p>
+          <p class="dash-stat-label">Total Balance Records</p>
+          <p class="dash-stat-value">{{ totalLeaveBalanceRecords }}</p>
+          <p class="dash-stat-sub">across all employees</p>
         </div>
       </div>
 
@@ -172,29 +153,45 @@
 
     <!-- ══ Charts ════════════════════════════════════════════════ -->
     <div class="dash-row-label"><i class="bi bi-bar-chart"></i> Trends</div>
-
     <div class="dash-charts-grid">
 
-      <!-- Attendance Bar Chart -->
+      <!-- Leave Breakdown Donut -->
       <div class="dash-card">
         <div class="dash-card-head">
-          <h3><i class="bi bi-bar-chart-fill"></i> Attendance — Last 7 Days</h3>
+          <h3><i class="bi bi-pie-chart-fill"></i> Leave Breakdown</h3>
         </div>
         <div class="dash-card-body">
           <apx-chart
-            [series]="attendanceBarChart.series"
-            [chart]="attendanceBarChart.chart"
-            [xaxis]="attendanceBarChart.xaxis"
-            [yaxis]="attendanceBarChart.yaxis"
-            [dataLabels]="attendanceBarChart.dataLabels"
-            [plotOptions]="attendanceBarChart.plotOptions"
-            [colors]="attendanceBarChart.colors"
-            [grid]="attendanceBarChart.grid"
-            [legend]="attendanceBarChart.legend"
-            [stroke]="attendanceBarChart.stroke"
-            [markers]="attendanceBarChart.markers"
-            [fill]="attendanceBarChart.fill"
-            [tooltip]="attendanceBarChart.tooltip">
+            [series]="leaveDonutChart.series"
+            [chart]="leaveDonutChart.chart"
+            [labels]="leaveDonutChart.labels"
+            [colors]="leaveDonutChart.colors"
+            [legend]="leaveDonutChart.legend"
+            [plotOptions]="leaveDonutChart.plotOptions"
+            [dataLabels]="leaveDonutChart.dataLabels"
+            [tooltip]="leaveDonutChart.tooltip">
+          </apx-chart>
+        </div>
+      </div>
+
+      <!-- Department Employees Donut -->
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <h3><i class="bi bi-building"></i> Employees by Department</h3>
+        </div>
+        <div class="dash-card-body">
+          <div *ngIf="totalDepartments === 0" class="dash-empty">
+            <i class="bi bi-building"></i> No department data available
+          </div>
+          <apx-chart *ngIf="totalDepartments > 0"
+            [series]="deptDonutChart.series"
+            [chart]="deptDonutChart.chart"
+            [labels]="deptDonutChart.labels"
+            [colors]="deptDonutChart.colors"
+            [legend]="deptDonutChart.legend"
+            [plotOptions]="deptDonutChart.plotOptions"
+            [dataLabels]="deptDonutChart.dataLabels"
+            [tooltip]="deptDonutChart.tooltip">
           </apx-chart>
         </div>
       </div>
@@ -223,43 +220,26 @@
         </div>
       </div>
 
-      <!-- Leave Breakdown Donut -->
+      <!-- Leave Type Bar Chart -->
       <div class="dash-card">
         <div class="dash-card-head">
-          <h3><i class="bi bi-pie-chart-fill"></i> Leave Breakdown</h3>
+          <h3><i class="bi bi-bar-chart-fill"></i> Leaves by Type</h3>
         </div>
         <div class="dash-card-body">
           <apx-chart
-            [series]="leaveDonutChart.series"
-            [chart]="leaveDonutChart.chart"
-            [labels]="leaveDonutChart.labels"
-            [colors]="leaveDonutChart.colors"
-            [legend]="leaveDonutChart.legend"
-            [plotOptions]="leaveDonutChart.plotOptions"
-            [dataLabels]="leaveDonutChart.dataLabels"
-            [tooltip]="leaveDonutChart.tooltip">
-          </apx-chart>
-        </div>
-      </div>
-
-      <!-- Department Employees Donut -->
-      <div class="dash-card">
-        <div class="dash-card-head">
-          <h3><i class="bi bi-building"></i> Employees by Department</h3>
-        </div>
-        <div class="dash-card-body">
-          <div *ngIf="activeDepartments === 0" class="dash-empty">
-            <i class="bi bi-building"></i> No department data available
-          </div>
-          <apx-chart *ngIf="activeDepartments > 0"
-            [series]="deptDonutChart.series"
-            [chart]="deptDonutChart.chart"
-            [labels]="deptDonutChart.labels"
-            [colors]="deptDonutChart.colors"
-            [legend]="deptDonutChart.legend"
-            [plotOptions]="deptDonutChart.plotOptions"
-            [dataLabels]="deptDonutChart.dataLabels"
-            [tooltip]="deptDonutChart.tooltip">
+            [series]="leaveTypeBarChart.series"
+            [chart]="leaveTypeBarChart.chart"
+            [xaxis]="leaveTypeBarChart.xaxis"
+            [yaxis]="leaveTypeBarChart.yaxis"
+            [dataLabels]="leaveTypeBarChart.dataLabels"
+            [plotOptions]="leaveTypeBarChart.plotOptions"
+            [colors]="leaveTypeBarChart.colors"
+            [grid]="leaveTypeBarChart.grid"
+            [legend]="leaveTypeBarChart.legend"
+            [stroke]="leaveTypeBarChart.stroke"
+            [markers]="leaveTypeBarChart.markers"
+            [fill]="leaveTypeBarChart.fill"
+            [tooltip]="leaveTypeBarChart.tooltip">
           </apx-chart>
         </div>
       </div>
@@ -268,7 +248,6 @@
 
     <!-- ══ Tables ═════════════════════════════════════════════════ -->
     <div class="dash-row-label"><i class="bi bi-list-check"></i> Activity</div>
-
     <div class="dash-tables-grid">
 
       <!-- Pending Leaves -->
@@ -299,37 +278,6 @@
                 <td>{{ l.leaveTypeName || '—' }}</td>
                 <td>{{ fmt(l.startDate) }}</td>
                 <td><span class="dash-days">{{ l.totalDays }}</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Late Arrivals -->
-      <div class="dash-card">
-        <div class="dash-card-head">
-          <h3><i class="bi bi-clock-history"></i> Late Arrivals Today</h3>
-          <span class="dash-badge dash-badge-yellow">{{ lateList.length }}</span>
-        </div>
-        <div class="dash-card-body-table">
-          <div *ngIf="lateList.length === 0" class="dash-empty">
-            <i class="bi bi-check2-all"></i> No late arrivals today
-          </div>
-          <table *ngIf="lateList.length > 0" class="dash-table">
-            <thead><tr><th>Employee</th><th>Check In</th><th>Shift</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let a of lateList">
-                <td>
-                  <div class="dash-person">
-                    <div class="dash-avatar dash-avatar-yellow">{{ (a.employeeName || 'U')[0].toUpperCase() }}</div>
-                    <div>
-                      <div class="dash-name">{{ a.employeeName || '—' }}</div>
-                      <div class="dash-code">{{ a.employeeCode || '' }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td>{{ a.checkInTime ? fmt(a.checkInTime) : '—' }}</td>
-                <td>{{ a.shiftName || '—' }}</td>
               </tr>
             </tbody>
           </table>
@@ -368,31 +316,54 @@
         </div>
       </div>
 
-      <!-- Early Leave Today -->
+      <!-- Department List -->
       <div class="dash-card">
         <div class="dash-card-head">
-          <h3><i class="bi bi-box-arrow-left"></i> Early Leaves Today</h3>
-          <span class="dash-badge dash-badge-orange">{{ earlyList.length }}</span>
+          <h3><i class="bi bi-building"></i> Departments</h3>
+          <span class="dash-badge dash-badge-blue">{{ totalDepartments }}</span>
         </div>
         <div class="dash-card-body-table">
-          <div *ngIf="earlyList.length === 0" class="dash-empty">
-            <i class="bi bi-check2-all"></i> No early departures today
+          <div *ngIf="departmentList.length === 0" class="dash-empty">
+            <i class="bi bi-building"></i> No department data
           </div>
-          <table *ngIf="earlyList.length > 0" class="dash-table">
-            <thead><tr><th>Employee</th><th>Check Out</th><th>Shift</th></tr></thead>
+          <table *ngIf="departmentList.length > 0" class="dash-table">
+            <thead><tr><th>Department</th><th>Employees</th></tr></thead>
             <tbody>
-              <tr *ngFor="let a of earlyList">
+              <tr *ngFor="let d of departmentList">
                 <td>
                   <div class="dash-person">
-                    <div class="dash-avatar dash-avatar-orange">{{ (a.employeeName || 'U')[0].toUpperCase() }}</div>
-                    <div>
-                      <div class="dash-name">{{ a.employeeName || '—' }}</div>
-                      <div class="dash-code">{{ a.employeeCode || '' }}</div>
-                    </div>
+                    <div class="dash-avatar dash-avatar-teal">{{ (d.name || 'D')[0].toUpperCase() }}</div>
+                    <div class="dash-name">{{ d.name || d.departmentName || '—' }}</div>
                   </div>
                 </td>
-                <td>{{ a.checkOutTime ? fmt(a.checkOutTime) : '—' }}</td>
-                <td>{{ a.shiftName || '—' }}</td>
+                <td><span class="dash-days">{{ d.employeeCount ?? d.totalEmployees ?? 0 }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Designation List -->
+      <div class="dash-card">
+        <div class="dash-card-head">
+          <h3><i class="bi bi-award"></i> Designations</h3>
+          <span class="dash-badge dash-badge-blue">{{ totalDesignations }}</span>
+        </div>
+        <div class="dash-card-body-table">
+          <div *ngIf="designationList.length === 0" class="dash-empty">
+            <i class="bi bi-award"></i> No designation data
+          </div>
+          <table *ngIf="designationList.length > 0" class="dash-table">
+            <thead><tr><th>Designation</th><th>Employees</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let d of designationList">
+                <td>
+                  <div class="dash-person">
+                    <div class="dash-avatar dash-avatar-purple">{{ (d.name || 'D')[0].toUpperCase() }}</div>
+                    <div class="dash-name">{{ d.name || d.designationName || '—' }}</div>
+                  </div>
+                </td>
+                <td><span class="dash-days">{{ d.employeeCount ?? d.totalEmployees ?? 0 }}</span></td>
               </tr>
             </tbody>
           </table>
@@ -400,7 +371,6 @@
       </div>
 
     </div>
-    <!-- /dash-tables-grid -->
 
   </ng-container>
 </div>

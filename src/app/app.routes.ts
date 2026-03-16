@@ -72,73 +72,6 @@ export const routes: Routes = [
       },
 
       {
-        path: 'attendance',
-        children: [
-          {
-            path: '',
-            redirectTo: 'check-in-out',
-            pathMatch: 'full'
-          },
-          {
-            path: 'check-in-out',
-            loadComponent: () =>
-              import('./modules/attendance/attendance-check-in-out/attendance-check-in-out.component')
-                .then(m => m.AttendanceCheckInOutComponent),
-            data: { breadcrumb: 'Check In / Out' }
-          },
-          {
-            path: 'list',
-            loadComponent: () =>
-              import('./modules/attendance/attendance-list/attendance-list.component')
-                .then(m => m.AttendanceListComponent),
-            data: { breadcrumb: 'Attendance List' }
-          },
-          {
-            path: 'summary',
-            loadComponent: () =>
-              import('./modules/attendance/attendance-summary/attendance-summary.component')
-                .then(m => m.AttendanceSummaryComponent),
-            data: { breadcrumb: 'My Summary' }
-          }
-        ]
-      },
-
-      {
-        path: "attendance-regularization",
-        children: [
-          {
-            path: "",
-            redirectTo: "list",
-            pathMatch: "full"
-          },
-          {
-            path: "list",
-            loadComponent: () => import("./modules/attendance-regularization/regularization-list/regularization-list.component")
-              .then((m) => m.RegularizationListComponent),
-            data: { breadcrumb: "Regularization Requests" },
-          },
-          {
-            path: "create",
-            loadComponent: () => import("./modules/attendance-regularization/regularization-form/regularization-form.component")
-              .then((m) => m.RegularizationFormComponent),
-            data: { breadcrumb: "Request Regularization" },
-          },
-          {
-            path: "edit/:id",
-            loadComponent: () => import("./modules/attendance-regularization/regularization-form/regularization-form.component")
-              .then((m) => m.RegularizationFormComponent),
-            data: { breadcrumb: "Edit Regularization" },
-          },
-          {
-            path: "details/:id",
-            loadComponent: () => import("./modules/attendance-regularization/regularization-details/regularization-details.component")
-              .then((m) => m.RegularizationDetailsComponent),
-            data: { breadcrumb: "Regularization Details" },
-          }
-        ]
-      },
-
-      {
         path: "departments",
         loadChildren: () => import("./modules/departments/department.module")
           .then((m) => m.DepartmentModule),
@@ -174,36 +107,6 @@ export const routes: Routes = [
             data: { breadcrumb: "Edit Designation" },
           },
         ]
-      },
-
-      {
-        path: "holidays",
-        loadChildren: () => import("./modules/holiday/holiday.module")
-          .then((m) => m.HolidayModule),
-        data: { breadcrumb: "Holidays" },
-      },
-
-      {
-        path: "shifts",
-        loadChildren: () => import("./modules/shift/shift.module")
-          .then(m => m.ShiftModule),
-        data: { breadcrumb: "Shifts" },
-      },
-
-      {
-        path: 'employee-shifts',
-        loadChildren: () =>
-          import('./modules/employee-shift/employee-shift.module')
-            .then(m => m.EmployeeShiftModule),
-        data: { breadcrumb: 'Employee Shifts' },
-      },
-
-      {
-        path: 'my-shifts',
-        loadComponent: () =>
-          import('./modules/my-shifts/my-shifts.component')
-            .then(m => m.MyShiftsComponent),
-        data: { breadcrumb: 'My Shifts' },
       },
 
       {
@@ -259,32 +162,6 @@ export const routes: Routes = [
             .then((m) => m.MyLeavesComponent),
         data: { breadcrumb: "My Leaves" },
       },
-
-      {
-        path: "wfh-requests",
-        children: [
-          {
-            path: "",
-            redirectTo: "list",
-            pathMatch: "full"
-          },
-          {
-            path: "list",
-            loadComponent: () => import("./modules/work-from-home/work-from-home-list/work-from-home-list.component")
-              .then((m) => m.WfhRequestListComponent),
-            data: { breadcrumb: "WFH Requests" },
-          },
-        ]
-      },
-
-      {
-        path: "my-wfh-requests",
-        loadComponent: () =>
-          import("./modules/work-from-home/my-wfh-requests/my-wfh-requests.component")
-            .then((m) => m.MyWfhRequestsComponent),
-        data: { breadcrumb: "My WFH Requests" },
-      },
-
       {
         path: 'settings',
         component: SettingsComponent,

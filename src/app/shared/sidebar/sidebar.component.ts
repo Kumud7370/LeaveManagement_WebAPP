@@ -69,29 +69,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
       route: "/employees",
       icon: "fas fa-users"
     },
-    {
-      label: "Attendance",
-      icon: "fas fa-calendar-check",
-      expanded: false,
-      children: [
-        { label: "Attendance List", route: "/attendance/list", icon: "fas fa-list" },
-        { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
-      ]
-    },
-    {
-      label: "Attendance Regularization",
-      icon: "fas fa-calendar-check",
-      expanded: false,
-      children: [
-        { label: "Regularization", route: "/attendance-regularization/list", icon: "fas fa-edit" }
-      ]
-    },
-    { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
+
     { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
-    { label: "Shifts", route: "/shifts", icon: "fas fa-business-time" },
-    { label: 'Employee Shifts', route: '/employee-shifts', icon: 'fas fa-user-clock' },
     { label: "Designations", route: "/designations", icon: "fas fa-award" },
-    { label: "Holidays", route: "/holidays", icon: "fas fa-calendar-alt" },
     {
       label: "Leave",
       icon: "fas fa-plane-departure",
@@ -100,14 +80,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: "Leave Management", route: "/leave/list", icon: "fas fa-list-alt" },
         { label: "Leave Types", route: "/leave-types", icon: "fas fa-tags" },
         { label: "Leave Balances", route: "/leave-balance/list", icon: "fas fa-wallet" },
-      ]
-    },
-    {
-      label: "Work From Home",
-      icon: "fas fa-house-user",
-      expanded: false,
-      children: [
-        { label: "WFH Requests", route: "/wfh-requests/list", icon: "fas fa-list-alt" },
       ]
     },
     { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" }
@@ -243,28 +215,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.menuItems = [
         { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
         { label: "Employees", route: "/employees", icon: "fas fa-users" },
-        {
-          label: "Attendance",
-          icon: "fas fa-calendar-check",
-          expanded: false,
-          children: [
-            { label: "Attendance List", route: "/attendance/list", icon: "fas fa-list" },
-            { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
-          ]
-        },
-        {
-          label: "Attendance Regularization",
-          icon: "fas fa-calendar-check",
-          expanded: false,
-          children: [
-            { label: "Regularization", route: "/attendance-regularization/list", icon: "fas fa-edit" }
-          ]
-        },
-        { label: "Dashboard Overview", route: "/dashboard2", icon: "fas fa-chart-pie" },
-        { label: "Shifts", route: "/shifts", icon: "fas fa-business-time" },
         { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
         { label: "Designations", route: "/designations", icon: "fas fa-award" },
-        { label: "Holidays", route: "/holidays", icon: "fas fa-calendar-alt" },
         {
           label: "Leave",
           icon: "fas fa-plane-departure",
@@ -273,14 +225,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
             { label: "Leave Management", route: "/leave/list", icon: "fas fa-list-alt" },
             { label: "Leave Types", route: "/leave-types", icon: "fas fa-tags" },
             { label: "Leave Balances", route: "/leave-balance/list", icon: "fas fa-wallet" },
-          ]
-        },
-        {
-          label: "Work From Home",
-          icon: "fas fa-house-user",
-          expanded: false,
-          children: [
-            { label: "WFH Requests", route: "/wfh-requests/list", icon: "fas fa-list-alt" },
           ]
         },
         { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" },
@@ -295,25 +239,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.menuItems = [
         { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
         {
-          label: "Attendance",
-          icon: "fas fa-calendar-check",
-          expanded: false,
-          children: [
-            { label: "Check In/Out", route: "/attendance/check-in-out", icon: "fas fa-clock" },
-            { label: "My Summary", route: "/attendance/summary", icon: "fas fa-chart-bar" },
-          ]
-        },
-        {
-          label: "Attendance Regularization",
-          icon: "fas fa-calendar-check",
-          expanded: false,
-          children: [
-
-            { label: "My Requests", route: "/attendance-regularization/list", icon: "fas fa-list-alt" }
-          ]
-        },
-        { label: "My Shifts", route: "/my-shifts", icon: "fas fa-user-clock" },
-        {
           label: "Leave",                            
           icon: "fas fa-plane-departure",
           expanded: false,
@@ -322,14 +247,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
           ]
         },
 
-        {
-          label: "Work From Home",
-          icon: "fas fa-house-user",
-          expanded: false,
-          children: [
-            { label: "My WFH Requests", route: "/my-wfh-requests", icon: "fas fa-list-alt" },
-          ]
-        },
       ]
     } else {
       this.menuItems = this.navItems;
