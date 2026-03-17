@@ -6,6 +6,8 @@ export interface DesignationResponseDto {
   level: number;
   isActive: boolean;
   employeeCount: number;
+  departmentId?: string;     
+  departmentName?: string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -16,6 +18,7 @@ export interface CreateDesignationDto {
   description?: string;
   level: number;
   isActive?: boolean;
+  departmentId?: string;
 }
 
 export interface UpdateDesignationDto {

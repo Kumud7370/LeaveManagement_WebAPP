@@ -17,6 +17,8 @@ import { EmployeeService } from '../../core/services/api/employee.api';
 import { AdminCreatableRole, CreateUserDto, UserResponseDto } from '../../core/Models/admin-management.model';
 import { EmployeeResponseDto } from '../../core/Models/employee.model';
 import { UserActionCellRendererComponent } from './user-action-cell-renderer.component';
+import { DepartmentService } from '../../core/services/api/department.api';
+import { Department } from '../../core/Models/department.model';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -28,7 +30,7 @@ type ModalMode = 'createEmployee' | 'createSenior' | 'resetPassword' | 'viewDeta
   encapsulation: ViewEncapsulation.None,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, AgGridAngular, UserActionCellRendererComponent],
   templateUrl: './user-management.component.html',
-  styleUrls: ['./user-management.component.scss']
+  styleUrls: ['./user-management.component.scss'],
 })
 export class UserManagementComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -42,8 +44,9 @@ export class UserManagementComponent implements OnInit, OnDestroy {
 
   loading = false;
   error: string | null = null;
+  activeDepartments: Department[] = [];
 
-  stats = { total: 0, active: 0, inactive: 0, tehsildar: 0 };
+  stats = { total: 0, active: 0, inactive: 0, tehsildar: 0, hr:0 };
 
   searchTerm = '';
   private searchTimer: any = null;
@@ -96,7 +99,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
         const role = p.value || '—';
         const map: Record<string, [string, string]> = {
           Admin: ['#dbeafe', '#1d4ed8'], Tehsildar: ['#f3e8ff', '#7c3aed'],
-          NayabTehsildar: ['#e0e7ff', '#4338ca'], Employee: ['#d1fae5', '#065f46'],
+          NayabTehsildar: ['#e0e7ff', '#4338ca'], Employee: ['#d1fae5', '#065f46'],HR:['#fef9c3', '#854d0e'],
         };
         const [bg, color] = map[role] ?? ['#f3f4f6', '#374151'];
         return `<span style="display:inline-flex;align-items:center;padding:2px 10px;border-radius:9999px;
@@ -129,6 +132,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private userService: UserManagementService,
     private employeeService: EmployeeService,
+    private departmentService: DepartmentService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -166,6 +170,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       email: ['', [Validators.required, Validators.email]],
       username: ['', [Validators.required, Validators.minLength(3)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
+      departmentId: ['']
     });
     this.resetPasswordForm = this.fb.group({
       newPassword: ['', [Validators.required, Validators.minLength(6)]],
@@ -193,19 +198,18 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  private computeStats(): void {
-    this.stats.total = this.users.length;
-    this.stats.active = this.users.filter(u => u.isActive).length;
-    this.stats.inactive = this.users.filter(u => !u.isActive).length;
-    this.stats.tehsildar = this.users.filter(u =>
-      u.roles?.some(r => r === 'Tehsildar' || r === 'NayabTehsildar')
-    ).length;
-  }
+ private computeStats(): void {
+  this.stats.total    = this.users.length;
+  this.stats.active   = this.users.filter(u => u.isActive).length;
+  this.stats.inactive = this.users.filter(u => !u.isActive).length;
+  this.stats.tehsildar = this.users.filter(u =>
+    u.roles?.some(r => r === 'Tehsildar' || r === 'NayabTehsildar')
+  ).length;
+  this.stats.hr = this.users.filter(u =>
+    u.roles?.some(r => r === 'HR')
+  ).length;
+}
 
-  /**
-   * Single source of truth for pagination state.
-   * Always call this instead of touching rowData / totalCount / pages directly.
-   */
   private applyPage(): void {
     const filtered = this.filteredUsers();
     this.totalCount = filtered.length;
@@ -275,8 +279,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   private loadUnlinkedEmployees(): void {
     this.employeeService.getActiveEmployees().pipe(takeUntil(this.destroy$)).subscribe({
       next: (emps) => {
-        // Filter out employees that already have a login account.
-        // Cross-reference against the loaded users list using employeeId.
         const linkedIds = new Set(
           this.users
             .filter(u => u.employeeId)
@@ -290,7 +292,6 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   }
 
   // ── Modals ─────────────────────────────────────────────────────
-
   viewUserDetails(user: UserResponseDto): void {
     this.targetUser = user; this.modalMode = 'viewDetails';
     this.modalError = null; this.generatedCredentials = null;
@@ -305,21 +306,31 @@ export class UserManagementComponent implements OnInit, OnDestroy {
   openCreateSeniorModal(): void {
     this.modalMode = 'createSenior'; this.modalError = null;
     this.generatedCredentials = null; this.seniorUserForm.reset({ role: 'Tehsildar' });
+    this.loadActiveDepartments();
   }
 
   openResetModal(user: UserResponseDto): void {
-    this.targetUser = user; this.modalMode = 'resetPassword';
-    this.modalError = null; this.generatedCredentials = null;
-    this.resetPasswordForm.reset();
-  }
+  this.targetUser = user;
+  this.modalMode = 'resetPassword';
+  this.modalError = null;
+  this.generatedCredentials = null;
+  this.resetPasswordForm.reset();
+}
 
+private loadActiveDepartments(): void {
+  this.departmentService.getActiveDepartments()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (res: any) => { this.activeDepartments = res.data ?? []; },
+      error: () => {}
+    });
+}
   closeModal(): void {
     this.modalMode = null; this.targetUser = null;
     this.modalError = null; this.generatedCredentials = null;
   }
 
   // ── CRUD ───────────────────────────────────────────────────────
-
   submitCreateEmployeeUser(): void {
     if (this.employeeUserForm.invalid) { this.employeeUserForm.markAllAsTouched(); return; }
     this.submitting = true; this.modalError = null;
@@ -329,7 +340,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
       username: fv.username, password: fv.password,
       firstName: emp?.firstName ?? '', lastName: emp?.lastName ?? '',
       email: emp?.email ?? '', role: 'Employee' as AdminCreatableRole,
-      employeeId: fv.employeeId
+      employeeId: fv.employeeId, departmentId: fv.departmentId || undefined
     };
     this.userService.createUser(dto).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
@@ -418,6 +429,7 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     const map: Record<string, string> = {
       Admin: 'background:#dbeafe;color:#1d4ed8', Tehsildar: 'background:#f3e8ff;color:#7c3aed',
       NayabTehsildar: 'background:#e0e7ff;color:#4338ca', Employee: 'background:#d1fae5;color:#065f46',
+      HR:'background:#fef9c3;color:#854d0e'
     };
     return map[role] ?? 'background:#f3f4f6;color:#374151';
   }

@@ -8,7 +8,9 @@ import {
   EmployeeFilterDto,
   PagedResultDto,
   ApiResponseDto,
-  EmployeeStatus
+  EmployeeStatus,
+  ReassignEmployeeDto,  
+  AssignmentHistoryResponseDto
 } from '../../Models/employee.model';
 
 @Injectable({
@@ -172,4 +174,29 @@ export class EmployeeService {
       })
     );
   }
+
+  // Add these two methods to EmployeeService:
+reassignEmployee(id: string, dto: ReassignEmployeeDto): Observable<EmployeeResponseDto> {
+  return this.apiClient.post<ApiResponseDto<EmployeeResponseDto>>(
+    `Employee/${id}/reassign`, dto
+  ).pipe(
+    map(response => response.data),
+    catchError(error => {
+      console.error('Error reassigning employee:', error);
+      return throwError(() => error);
+    })
+  );
+}
+
+getAssignmentHistory(employeeId: string): Observable<AssignmentHistoryResponseDto[]> {
+  return this.apiClient.get<ApiResponseDto<AssignmentHistoryResponseDto[]>>(
+    `Employee/${employeeId}/assignment-history`
+  ).pipe(
+    map(response => response.data),
+    catchError(error => {
+      console.error('Error fetching assignment history:', error);
+      return throwError(() => error);
+    })
+  );
+}
 }
