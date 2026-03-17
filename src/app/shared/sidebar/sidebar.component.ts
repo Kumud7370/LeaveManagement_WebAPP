@@ -1,97 +1,76 @@
-import { Component, HostListener, inject, type OnDestroy, type OnInit, Inject, PLATFORM_ID, Input } from "@angular/core"
-import { CommonModule, isPlatformBrowser } from "@angular/common"
-import { Router, NavigationEnd, RouterModule } from "@angular/router"
-import { SidebarService } from "../sidebar/sidebar.service"
-import type { Subscription } from "rxjs"
-import { trigger, state, style, transition, animate } from "@angular/animations"
+import {
+  Component, HostListener, inject, type OnDestroy, type OnInit,
+  Inject, PLATFORM_ID, Input
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Router, NavigationEnd, RouterModule } from '@angular/router';
+import { SidebarService } from '../sidebar/sidebar.service';
+import type { Subscription } from 'rxjs';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 interface NavItem {
-  label: string
-  route?: string
-  icon: string
-  badge?: number
-  children?: NavItem[]
-  expanded?: boolean
+  label: string;
+  route?: string;
+  icon: string;
+  badge?: number;
+  children?: NavItem[];
+  expanded?: boolean;
 }
 
 interface UserProfile {
-  name: string
-  role: string
-  avatar: string
-  isOnline: boolean
+  name: string;
+  role: string;
+  avatar: string;
+  isOnline: boolean;
 }
 
 @Component({
-  selector: "app-sidebar",
+  selector: 'app-sidebar',
   standalone: true,
   imports: [CommonModule, RouterModule, MatTooltipModule],
-  templateUrl: "./sidebar.component.html",
-  styleUrls: ["./sidebar.component.scss"],
+  templateUrl: './sidebar.component.html',
+  styleUrls: ['./sidebar.component.scss'],
   animations: [
-    trigger("fadeInOut", [
-      state("in", style({ opacity: 1 })),
-      transition(":enter", [style({ opacity: 0 }), animate("300ms ease-in", style({ opacity: 1 }))]),
-      transition(":leave", [animate("300ms ease-out", style({ opacity: 0 }))]),
+    trigger('fadeInOut', [
+      state('in', style({ opacity: 1 })),
+      transition(':enter', [style({ opacity: 0 }), animate('300ms ease-in', style({ opacity: 1 }))]),
+      transition(':leave', [animate('300ms ease-out', style({ opacity: 0 }))]),
     ]),
-    trigger("expandCollapse", [
-      state("expanded", style({ height: "*", opacity: 1 })),
-      state("collapsed", style({ height: "0px", opacity: 0 })),
-      transition("expanded <=> collapsed", animate("300ms ease-in-out")),
+    trigger('expandCollapse', [
+      state('expanded', style({ height: '*', opacity: 1 })),
+      state('collapsed', style({ height: '0px', opacity: 0 })),
+      transition('expanded <=> collapsed', animate('300ms ease-in-out')),
     ]),
   ],
 })
 export class SidebarComponent implements OnInit, OnDestroy {
-  public router = inject(Router)
-  private sidebarService = inject(SidebarService)
-  private isBrowser: boolean
+  public router  = inject(Router);
+  private sidebarService = inject(SidebarService);
+  private isBrowser: boolean;
 
-  isExpanded = false
-  isMobile = false
-  activeRoute = ""
-  isPinned = false
-  @Input() isBlurred = false
-  private isUserInteraction = false
-  private hoverTimeout: any
+  isExpanded = false;
+  isMobile   = false;
+  activeRoute = '';
+  isPinned    = false;
+  @Input() isBlurred = false;
+
+  private isUserInteraction = false;
+  private hoverTimeout: any;
 
   userProfile: UserProfile = {
-    name: sessionStorage.getItem('username') || 'Guest User',
-    role: sessionStorage.getItem('RoleName') || 'Guest',
-    avatar:
-      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMiAxMkM5Ljc5IDEyIDggMTAuMjEgOCA4UzkuNzkgNDEyIDRTMTQuMjEgNiAxNiA4UzEyIDEwLjIxIDEyIDEyWk0xMiAxNEM5LjMzIDE0IDQgMTUuMzQgNCAyMFYyMkgyMFYyMEMxNiAxNS4zNCAxNC42NyAxNCAxMiAxNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo8L3N2Zz4K",
+    name:     sessionStorage.getItem('username') || 'Guest User',
+    role:     sessionStorage.getItem('RoleName') || 'Guest',
+    avatar:   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMiAxMkM5Ljc5IDEyIDggMTAuMjEgOCA4UzkuNzkgNDEyIDRTMTQuMjEgNiAxNiA4UzEyIDEwLjIxIDEyIDEyWk0xMiAxNEM5LjMzIDE0IDQgMTUuMzQgNCAyMFYyMkgyMFYyMEMxNiAxNS4zNCAxNC42NyAxNCAxMiAxNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo8L3N2Zz4K',
     isOnline: true,
-  }
+  };
 
-  navItems: NavItem[] = [
-    { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-    {
-      label: "Employees",
-      route: "/employees",
-      icon: "fas fa-users"
-    },
+  menuItems: NavItem[] = [];
 
-    { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
-    { label: "Designations", route: "/designations", icon: "fas fa-award" },
-    {
-      label: "Leave",
-      icon: "fas fa-plane-departure",
-      expanded: false,
-      children: [
-        { label: "Leave Management", route: "/leave/list", icon: "fas fa-list-alt" },
-        { label: "Leave Types", route: "/leave-types", icon: "fas fa-tags" },
-        { label: "Leave Balances", route: "/leave-balance/list", icon: "fas fa-wallet" },
-      ]
-    },
-    { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" }
-  ]
-
-  menuItems = this.navItems
   private subscriptions: Subscription[] = [];
-  userSiteName: any;
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    this.userSiteName = String(sessionStorage.getItem("SiteName")) || "";
 
     if (this.isBrowser) {
       const savedPinState = localStorage.getItem('sidebarPinned');
@@ -99,256 +78,260 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     if (this.isBrowser) {
-      this.checkScreenSize()
-      this.setupUserProfile()
-      this.setupMenuItems()
+      this.checkScreenSize();
+      this.setupUserProfile();
+      this.setupMenuItems();
 
       if (this.isPinned && !this.isMobile) {
-        this.sidebarService.expand()
+        this.sidebarService.expand();
       }
     }
 
     this.subscriptions.push(
-      this.sidebarService.sidebarState$.subscribe((state) => {
-        this.isExpanded = state
-      }),
+      this.sidebarService.sidebarState$.subscribe(state => {
+        this.isExpanded = state;
+      })
     );
 
     this.subscriptions.push(
-      this.router.events.subscribe((event) => {
+      this.router.events.subscribe(event => {
         if (event instanceof NavigationEnd) {
-          this.activeRoute = event.urlAfterRedirects
-          this.updateExpandedStates()
-
+          this.activeRoute = event.urlAfterRedirects;
+          this.updateExpandedStates();
           if (this.isMobile && this.isExpanded) {
-            this.sidebarService.collapse()
+            this.sidebarService.collapse();
           }
         }
-      }),
+      })
     );
 
     this.activeRoute = this.router.url;
     this.updateExpandedStates();
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach((sub) => sub.unsubscribe())
-    if (this.hoverTimeout) {
-      clearTimeout(this.hoverTimeout)
-    }
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(s => s.unsubscribe());
+    if (this.hoverTimeout) clearTimeout(this.hoverTimeout);
   }
 
-  @HostListener("window:resize")
-  onResize() {
-    if (this.isBrowser) {
-      this.checkScreenSize()
-    }
+  @HostListener('window:resize')
+  onResize(): void {
+    if (this.isBrowser) this.checkScreenSize();
   }
 
-  private checkScreenSize() {
-    if (this.isBrowser && typeof window !== "undefined") {
-      const wasMobile = this.isMobile
-      this.isMobile = window.innerWidth < 768
+  // ── Screen size ───────────────────────────────────────────────
 
-      if (wasMobile !== this.isMobile) {
-        if (this.isMobile) {
-          this.sidebarService.collapse()
-          this.isUserInteraction = false
+  private checkScreenSize(): void {
+    if (!this.isBrowser || typeof window === 'undefined') return;
+    const wasMobile = this.isMobile;
+    this.isMobile   = window.innerWidth < 768;
+
+    if (wasMobile !== this.isMobile) {
+      if (this.isMobile) {
+        this.sidebarService.collapse();
+        this.isUserInteraction = false;
+      } else {
+        if (this.isPinned) {
+          this.sidebarService.expand();
         } else {
-          if (this.isPinned) {
-            this.sidebarService.expand()
-          } else {
-            this.sidebarService.collapse()
-            this.isUserInteraction = false
-          }
+          this.sidebarService.collapse();
+          this.isUserInteraction = false;
         }
       }
     }
   }
 
-  private setupUserProfile() {
+  // ── User profile ──────────────────────────────────────────────
+
+  private setupUserProfile(): void {
     const storedUsername = sessionStorage.getItem('username');
-    const storedRole = sessionStorage.getItem('RoleName');
+    const storedRole     = sessionStorage.getItem('RoleName');
+    if (storedUsername) this.userProfile.name = storedUsername;
+    if (storedRole)     this.userProfile.role = storedRole;
+  }
 
-    if (storedUsername) {
-      this.userProfile.name = storedUsername;
-    }
+  // ── Menu items per role ───────────────────────────────────────
 
-    if (storedRole) {
-      this.userProfile.role = storedRole;
+  private setupMenuItems(): void {
+    const role = sessionStorage.getItem('RoleName') || '';
+
+    switch (role) {
+
+      // ── Admin: full access ──────────────────────────────────
+      case 'Admin':
+        this.menuItems = [
+          { label: 'Dashboard',       route: '/dashboard',       icon: 'fas fa-tachometer-alt' },
+          { label: 'User Management', route: '/user-management', icon: 'fas fa-user-shield' },
+          { label: 'Employees',       route: '/employees',       icon: 'fas fa-users' },
+          { label: 'Departments',     route: '/departments',     icon: 'fas fa-sitemap' },
+          { label: 'Designations',    route: '/designations',    icon: 'fas fa-award' },
+          {
+            label: 'Leave',
+            icon: 'fas fa-plane-departure',
+            expanded: false,
+            children: [
+              { label: 'Leave Management', route: '/leave/list',         icon: 'fas fa-list-alt' },
+              { label: 'Leave Types',      route: '/leave-types',        icon: 'fas fa-tags' },
+              { label: 'Leave Balances',   route: '/leave-balance/list', icon: 'fas fa-wallet' },
+            ]
+          },
+        ];
+        break;
+
+      // ── Tehsildar: read-only senior authority ───────────────
+      case 'Tehsildar':
+        this.menuItems = [
+          { label: 'Dashboard',    route: '/dashboard',    icon: 'fas fa-tachometer-alt' },
+          { label: 'Employees',    route: '/employees',    icon: 'fas fa-users' },
+          { label: 'Departments',  route: '/departments',  icon: 'fas fa-sitemap' },
+          { label: 'Designations', route: '/designations', icon: 'fas fa-award' },
+          {
+            label: 'Leave',
+            icon: 'fas fa-plane-departure',
+            expanded: false,
+            children: [
+              { label: 'Leave Management', route: '/leave/list',         icon: 'fas fa-list-alt' },
+              { label: 'Leave Balances',   route: '/leave-balance/list', icon: 'fas fa-wallet' },
+            ]
+          },
+        ];
+        break;
+
+      // ── NayabTehsildar: same as Tehsildar ───────────────────
+      case 'NayabTehsildar':
+        this.menuItems = [
+          { label: 'Dashboard',    route: '/dashboard',    icon: 'fas fa-tachometer-alt' },
+          { label: 'Employees',    route: '/employees',    icon: 'fas fa-users' },
+          { label: 'Departments',  route: '/departments',  icon: 'fas fa-sitemap' },
+          { label: 'Designations', route: '/designations', icon: 'fas fa-award' },
+          {
+            label: 'Leave',
+            icon: 'fas fa-plane-departure',
+            expanded: false,
+            children: [
+              { label: 'Leave Management', route: '/leave/list',         icon: 'fas fa-list-alt' },
+              { label: 'Leave Balances',   route: '/leave-balance/list', icon: 'fas fa-wallet' },
+            ]
+          },
+        ];
+        break;
+
+      // ── Employee: minimal access ────────────────────────────
+      case 'Employee':
+        this.menuItems = [
+          { label: 'Dashboard', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
+          {
+            label: 'Leave',
+            icon: 'fas fa-plane-departure',
+            expanded: false,
+            children: [
+              { label: 'My Leaves', route: '/my-leaves', icon: 'fas fa-list-alt' },
+            ]
+          },
+        ];
+        break;
+
+      // ── Fallback ────────────────────────────────────────────
+      default:
+        this.menuItems = [
+          { label: 'Dashboard', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
+        ];
+        break;
     }
   }
 
-  private setupMenuItems() {
-    const uRoleName = sessionStorage.getItem('RoleName');
+  // ── Navigation helpers ────────────────────────────────────────
 
-    if (uRoleName === 'SE' || uRoleName === 'AE') {
-      this.menuItems = [
-        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-        { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
-        { label: "Verification", route: "/verifications", icon: "fas fa-check-circle" },
-      ]
-    } else if (uRoleName === 'CO') {
-      this.menuItems = [
-        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-        { label: "Search Report", route: "/search-report", icon: "fas fa-search" },
-        { label: "Billing Report", route: "/billing-report", icon: "fas fa-file-invoice-dollar" },
-      ]
-    } else if (uRoleName?.toLowerCase() === 'generator') {
-      this.menuItems = [
-        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-        {
-          label: "Logsheet",
-          icon: "fas fa-clipboard-list",
-          expanded: false,
-          children: [
-            { label: "Generate Logsheet", route: "/logsheet/generatelogsheet", icon: "fas fa-plus-circle" },
-            { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
-          ],
-        },
-        { label: "Vehicles", route: "/vehiclelist", icon: "fas fa-truck" },
-        { label: "Agency", route: "/agencylist", icon: "fas fa-building" },
-      ]
-    } else if (uRoleName?.toLowerCase() === 'admin') {
-      this.menuItems = [
-        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-        { label: "Employees", route: "/employees", icon: "fas fa-users" },
-        { label: "Departments", route: "/departments", icon: "fas fa-sitemap" },
-        { label: "Designations", route: "/designations", icon: "fas fa-award" },
-        {
-          label: "Leave",
-          icon: "fas fa-plane-departure",
-          expanded: false,
-          children: [
-            { label: "Leave Management", route: "/leave/list", icon: "fas fa-list-alt" },
-            { label: "Leave Types", route: "/leave-types", icon: "fas fa-tags" },
-            { label: "Leave Balances", route: "/leave-balance/list", icon: "fas fa-wallet" },
-          ]
-        },
-        { label: "Admin Invitations", route: "/admin-invitations", icon: "fas fa-envelope" },
-      ]
-    } else if (uRoleName?.toLowerCase() === 'jo') {
-      this.menuItems = [
-        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-        { label: "Logsheet Report", route: "/logsheet/logsheetlist", icon: "fas fa-chart-line" },
-      ]
-    } else if (uRoleName?.toLowerCase() === 'employee') {
-    
-      this.menuItems = [
-        { label: "Dashboard", route: "/dashboard", icon: "fas fa-tachometer-alt" },
-        {
-          label: "Leave",                            
-          icon: "fas fa-plane-departure",
-          expanded: false,
-          children: [
-            { label: "My Leaves", route: "/my-leaves", icon: "fas fa-list-alt" },
-          ]
-        },
-
-      ]
-    } else {
-      this.menuItems = this.navItems;
-    }
-  }
-
-  private updateExpandedStates() {
-    this.menuItems.forEach((item) => {
+  private updateExpandedStates(): void {
+    this.menuItems.forEach(item => {
       if (item.children) {
-        const hasActiveChild = item.children.some((child) => child.route && this.isActive(child.route));
-        item.expanded = hasActiveChild;
+        item.expanded = item.children.some(c => c.route && this.isActive(c.route));
       }
     });
   }
 
-  togglePin() {
-    this.isPinned = !this.isPinned;
-    this.isUserInteraction = this.isPinned;
-
-    if (this.isBrowser) {
-      localStorage.setItem('sidebarPinned', String(this.isPinned));
-    }
-
-    if (this.isPinned) {
-      this.sidebarService.expand();
-    } else {
-      if (!this.isExpanded) {
-        this.sidebarService.collapse();
-      }
-    }
-  }
-
-  toggleSidebar() {
-    this.isUserInteraction = true
-    this.sidebarService.toggle()
-  }
-
-  onSidebarPointerEnter() {
-    if (this.isMobile) return;
-
-    if (this.hoverTimeout) {
-      clearTimeout(this.hoverTimeout)
-    }
-
-    if (!this.isExpanded && !this.isPinned) {
-      this.sidebarService.expand()
-    }
-  }
-
-  onSidebarPointerLeave() {
-    if (this.isMobile) return;
-
-    if (this.isExpanded && !this.isPinned) {
-      this.hoverTimeout = setTimeout(() => {
-        this.sidebarService.collapse()
-      }, 300)
-    }
-  }
-
-  toggleSubmenu(item: NavItem) {
-    if (item.children) {
-      item.expanded = !item.expanded
-    }
-  }
-
   isActive(route: string): boolean {
-    const currentRoute = this.activeRoute.replace(/\/$/, '');
-    const compareRoute = route.replace(/\/$/, '');
-    return currentRoute === compareRoute;
+    const curr    = this.activeRoute.replace(/\/$/, '');
+    const compare = route.replace(/\/$/, '');
+    return curr === compare;
   }
 
   isParentActive(item: NavItem): boolean {
     if (item.children) {
-      return item.children.some((child) => child.route && this.isActive(child.route))
+      return item.children.some(c => c.route && this.isActive(c.route));
     }
-    return false
+    return false;
   }
 
-  navigateTo(route: string) {
-    this.router.navigateByUrl(route)
+  navigateTo(route: string): void {
+    this.router.navigateByUrl(route);
   }
 
-  trackByRoute(index: number, item: NavItem): string {
-    return item.route || item.label
+  toggleSubmenu(item: NavItem): void {
+    if (item.children) item.expanded = !item.expanded;
   }
 
-  onImageError(event: any) {
-    event.target.src =
-      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMiAxMkM5Ljc5IDEyIDggMTAuMjEgOCA4UzkuNzkgNDEyIDRTMTQuMjEgNiAxNiA4UzEyIDEwLjIxIDEyIDEyWk0xMiAxNEM5LjMzIDE0IDQgMTUuMzQgNCAyMFYyMkgyMFYyMEMxNiAxNS4zNCAxNC42NyAxNCAxMiAxNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo8L3N2Zz4K"
+  trackByRoute(_index: number, item: NavItem): string {
+    return item.route || item.label;
   }
 
-  openSettings() {
-   this.router.navigate(['/settings']);
+  // ── Sidebar expand / collapse ─────────────────────────────────
+
+  togglePin(): void {
+    this.isPinned          = !this.isPinned;
+    this.isUserInteraction = this.isPinned;
+    if (this.isBrowser) localStorage.setItem('sidebarPinned', String(this.isPinned));
+    if (this.isPinned) {
+      this.sidebarService.expand();
+    } else if (!this.isExpanded) {
+      this.sidebarService.collapse();
+    }
   }
 
-  logout() {
-    sessionStorage.removeItem("UserId")
-    sessionStorage.removeItem("SiteName")
-    sessionStorage.removeItem("RoleName")
-    sessionStorage.removeItem("token")
+  toggleSidebar(): void {
+    this.isUserInteraction = true;
+    this.sidebarService.toggle();
+  }
+
+  onSidebarPointerEnter(): void {
+    if (this.isMobile) return;
+    if (this.hoverTimeout) clearTimeout(this.hoverTimeout);
+    if (!this.isExpanded && !this.isPinned) this.sidebarService.expand();
+  }
+
+  onSidebarPointerLeave(): void {
+    if (this.isMobile) return;
+    if (this.isExpanded && !this.isPinned) {
+      this.hoverTimeout = setTimeout(() => this.sidebarService.collapse(), 300);
+    }
+  }
+
+  // ── Misc ──────────────────────────────────────────────────────
+
+  onImageError(event: any): void {
+    event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMiAxMkM5Ljc5IDEyIDggMTAuMjEgOCA4UzkuNzkgNDEyIDRTMTQuMjEgNiAxNiA4UzEyIDEwLjIxIDEyIDEyWk0xMiAxNEM5LjMzIDE0IDQgMTUuMzQgNCAyMFYyMkgyMFYyMEMxNiAxNS4zNCAxNC42NyAxNCAxMiAxNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo8L3N2Zz4K';
+  }
+
+  openSettings(): void {
+    this.router.navigate(['/settings']);
+  }
+
+  logout(): void {
+    sessionStorage.removeItem('UserId');
+    sessionStorage.removeItem('EmployeeId');
+    sessionStorage.removeItem('SiteName');
+    sessionStorage.removeItem('RoleName');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('deviceId');
     sessionStorage.removeItem('username');
+    sessionStorage.removeItem('Email');
+    sessionStorage.removeItem('FirstName');
+    sessionStorage.removeItem('LastName');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     this.router.navigate(['/login']);
   }
 }

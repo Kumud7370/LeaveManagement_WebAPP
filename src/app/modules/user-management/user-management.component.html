@@ -1,0 +1,473 @@
+<div class="um-page">
+
+  <h1 class="um-page-title">User Management</h1>
+
+  <!-- ── Stats ─────────────────────────────────────────────────── -->
+  <div class="um-stats-row">
+    <div class="um-stat um-stat-blue">
+      <p class="um-stat-label">Total Users</p>
+      <p class="um-stat-value">{{ stats.total }}</p>
+    </div>
+    <div class="um-stat um-stat-green">
+      <p class="um-stat-label">Active</p>
+      <p class="um-stat-value">{{ stats.active }}</p>
+    </div>
+    <div class="um-stat um-stat-red">
+      <p class="um-stat-label">Inactive</p>
+      <p class="um-stat-value">{{ stats.inactive }}</p>
+    </div>
+    <div class="um-stat um-stat-purple">
+      <p class="um-stat-label">Tehsildar / Nayab</p>
+      <p class="um-stat-value">{{ stats.tehsildar }}</p>
+    </div>
+  </div>
+
+  <!-- ── Toolbar ────────────────────────────────────────────────── -->
+  <div class="um-toolbar">
+    <input
+      type="text"
+      class="um-search"
+      placeholder="Search by username, name, email, role..."
+      [(ngModel)]="searchTerm"
+      (input)="onSearch()"
+    />
+    <div class="um-toolbar-btns">
+      <button class="um-btn um-btn-clear"   (click)="clearFilters()">Clear</button>
+      <button class="um-btn um-btn-refresh" (click)="loadUsers()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+      <div class="um-toolbar-divider"></div>
+      <button class="um-btn um-btn-secondary" (click)="openCreateSeniorModal()">
+        <i class="bi bi-person-badge"></i> Add Tehsildar / Nayab
+      </button>
+      <button class="um-btn um-btn-add" (click)="openCreateEmployeeUserModal()">
+        <i class="bi bi-plus-lg"></i> Create Employee Login
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Grid Card ──────────────────────────────────────────────── -->
+  <div class="um-card">
+
+    <div *ngIf="loading" class="um-loading">
+      <div class="um-spinner"></div>
+      <span>Loading users...</span>
+    </div>
+
+    <div *ngIf="error && !loading" class="um-error">
+      <i class="bi bi-exclamation-circle"></i>
+      <span>{{ error }}</span>
+      <button class="um-btn um-btn-refresh" (click)="loadUsers()">Try Again</button>
+    </div>
+
+    <div *ngIf="!loading && !error && users.length === 0" class="um-empty">
+      <i class="bi bi-people"></i>
+      <span>No users found. Create the first user account.</span>
+      <button class="um-btn um-btn-add" (click)="openCreateEmployeeUserModal()">
+        <i class="bi bi-plus-circle"></i> Create Employee Login
+      </button>
+    </div>
+
+    <!-- KEY FIX: class="ag-theme-quartz"
+      [theme]="'legacy'" instead of [theme]="gridTheme" -->
+    <ag-grid-angular
+      *ngIf="!loading && !error && rowData.length > 0"
+      class="ag-theme-quartz"
+      [theme]="'legacy'"
+      style="width:100%;"
+      [rowData]="rowData"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      (gridReady)="onGridReady($event)"
+      [rowHeight]="52"
+      [headerHeight]="44"
+      [domLayout]="'autoHeight'"
+      [context]="context"
+      [suppressPaginationPanel]="true">
+    </ag-grid-angular>
+
+    <!-- Pagination -->
+    <div class="um-pagination" *ngIf="!loading && users.length > 0">
+      <div class="um-pagination-inner">
+        <div class="um-ps-wrap">
+          <label>Show:</label>
+          <select class="um-ps-select" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+          </select>
+        </div>
+        <span class="um-pag-info">
+          {{ (currentPage - 1) * pageSize + 1 }} to
+          {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
+        </span>
+        <span class="um-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <div class="um-pag-btns">
+          <button class="um-pgbtn" [disabled]="currentPage === 1"          (click)="onPageChange(1)">«</button>
+          <button class="um-pgbtn" [disabled]="currentPage === 1"          (click)="onPageChange(currentPage - 1)">‹</button>
+          <button *ngFor="let page of pages" class="um-pgbtn"
+            [class.active]="page === currentPage"
+            (click)="onPageChange(page)">{{ page }}</button>
+          <button class="um-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">›</button>
+          <button class="um-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">»</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     MODAL: View User Details & Login Credentials
+═══════════════════════════════════════════════════ -->
+<div class="um-overlay" *ngIf="modalMode === 'viewDetails'" (click)="closeModal()">
+  <div class="um-modal um-modal-md" (click)="$event.stopPropagation()">
+
+    <div class="um-modal-head">
+      <h2 class="um-modal-title">
+        <i class="bi bi-person-circle"></i> User Details
+      </h2>
+      <button class="um-modal-close" (click)="closeModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="um-modal-body" *ngIf="targetUser">
+      <div class="um-details-section">
+        <div class="um-details-banner">
+          <div class="um-details-avatar">
+            {{ (targetUser.firstName?.charAt(0) || '') + (targetUser.lastName?.charAt(0) || '') }}
+          </div>
+          <div class="um-details-name-block">
+            <h3 class="um-details-fullname">{{ targetUser.firstName }} {{ targetUser.lastName }}</h3>
+            <span class="um-role-chip" [style]="getRoleBadgeStyle(targetUser.roles?.[0] || '')">
+              {{ targetUser.roles?.[0] || '—' }}
+            </span>
+            <span class="um-status-chip"
+              [class.um-status-active]="targetUser.isActive"
+              [class.um-status-inactive]="!targetUser.isActive">
+              {{ targetUser.isActive ? '● Active' : '● Inactive' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="um-detail-rows">
+          <div class="um-detail-row">
+            <span class="um-detail-label"><i class="bi bi-person"></i> Username</span>
+            <span class="um-detail-value um-mono">{{ targetUser.username }}</span>
+            <button class="um-copy-btn-sm" (click)="copyToClipboard(targetUser.username)" title="Copy">
+              <i class="bi bi-clipboard"></i>
+            </button>
+          </div>
+          <div class="um-detail-row">
+            <span class="um-detail-label"><i class="bi bi-envelope"></i> Email</span>
+            <span class="um-detail-value" style="color:#3b82f6;">{{ targetUser.email }}</span>
+          </div>
+          <div class="um-detail-row" *ngIf="targetUser.employeeId">
+            <span class="um-detail-label"><i class="bi bi-id-card"></i> Employee ID</span>
+            <span class="um-detail-value um-mono">{{ targetUser.employeeId }}</span>
+          </div>
+          <div class="um-detail-row">
+            <span class="um-detail-label"><i class="bi bi-calendar"></i> Created</span>
+            <span class="um-detail-value">{{ targetUser.createdAt | date:'d MMM yyyy' }}</span>
+          </div>
+        </div>
+
+        <div class="um-cred-section">
+          <div class="um-cred-section-title">
+            <i class="bi bi-key-fill"></i> Login Credentials
+          </div>
+          <p class="um-cred-section-note">
+            Share the username with the user. Use <strong>Reset Password</strong> to change their password.
+          </p>
+          <div class="um-cred-row">
+            <span class="um-cred-label">Username</span>
+            <span class="um-cred-value">{{ targetUser.username }}</span>
+            <button class="um-copy-btn" (click)="copyToClipboard(targetUser.username)">
+              <i class="bi bi-clipboard"></i> Copy
+            </button>
+          </div>
+          <div class="um-cred-row um-cred-row-muted">
+            <span class="um-cred-label">Password</span>
+            <span class="um-cred-value" style="color:#9ca3af;font-style:italic;">
+              Hidden — use Reset Password to change
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="um-modal-footer">
+      <button class="um-btn um-btn-secondary" (click)="closeModal()">Close</button>
+      <button class="um-btn um-btn-warning" (click)="openResetModal(targetUser!)">
+        <i class="bi bi-key"></i> Reset Password
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     MODAL: Create Employee Login
+═══════════════════════════════════════════════════ -->
+<div class="um-overlay" *ngIf="modalMode === 'createEmployee'" (click)="closeModal()">
+  <div class="um-modal um-modal-md" (click)="$event.stopPropagation()">
+
+    <div class="um-modal-head">
+      <h2 class="um-modal-title">
+        <i class="bi bi-person-plus-fill"></i>
+        {{ generatedCredentials ? 'Account Created' : 'Create Employee Login' }}
+      </h2>
+      <button class="um-modal-close" (click)="closeModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div *ngIf="generatedCredentials" class="um-modal-body">
+      <div class="um-cred-box">
+        <div class="um-cred-success"><i class="bi bi-check-circle-fill"></i> Account Created Successfully!</div>
+        <p class="um-cred-note">Share these credentials with the employee. The password will not be shown again.</p>
+        <div class="um-cred-row">
+          <span class="um-cred-label">Username</span>
+          <span class="um-cred-value">{{ generatedCredentials.username }}</span>
+          <button class="um-copy-btn" (click)="copyToClipboard(generatedCredentials.username)">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>
+        </div>
+        <div class="um-cred-row">
+          <span class="um-cred-label">Password</span>
+          <span class="um-cred-value">{{ generatedCredentials.password }}</span>
+          <button class="um-copy-btn" (click)="copyToClipboard(generatedCredentials.password)">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>
+        </div>
+        <div class="um-cred-row">
+          <span class="um-cred-label">Role</span>
+          <span class="um-cred-value">{{ generatedCredentials.role }}</span>
+        </div>
+      </div>
+      <div class="um-modal-footer">
+        <button class="um-btn um-btn-add" (click)="closeModal()">Done</button>
+      </div>
+    </div>
+
+    <div *ngIf="!generatedCredentials" class="um-modal-body" [formGroup]="employeeUserForm">
+      <div class="um-form-section">
+        <div class="um-fg">
+          <label>Select Employee <span class="um-req">*</span></label>
+          <select formControlName="employeeId" class="um-form-control"
+            [class.um-invalid]="employeeUserForm.get('employeeId')?.invalid && employeeUserForm.get('employeeId')?.touched">
+            <option value="">-- Select employee without login --</option>
+            <option *ngFor="let e of unlinkedEmployees" [value]="e.id">
+              {{ e.firstName }} {{ e.lastName }} ({{ e.employeeCode }})
+            </option>
+          </select>
+          <span class="um-hint">Only employees without a login account are shown</span>
+        </div>
+        <div class="um-form-row">
+          <div class="um-fg">
+            <label>Username <span class="um-req">*</span></label>
+            <input type="text" formControlName="username" class="um-form-control"
+              [class.um-invalid]="employeeUserForm.get('username')?.invalid && employeeUserForm.get('username')?.touched"
+              placeholder="e.g. john.doe" />
+          </div>
+          <div class="um-fg">
+            <label>Password <span class="um-req">*</span></label>
+            <input type="text" formControlName="password" class="um-form-control"
+              [class.um-invalid]="employeeUserForm.get('password')?.invalid && employeeUserForm.get('password')?.touched"
+              placeholder="Min. 6 characters" />
+            <span class="um-hint">Employee can change this after first login</span>
+          </div>
+        </div>
+        <div *ngIf="modalError" class="um-form-alert">
+          <i class="bi bi-exclamation-triangle-fill"></i> {{ modalError }}
+        </div>
+      </div>
+      <div class="um-modal-footer">
+        <button class="um-btn um-btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="um-btn um-btn-add" (click)="submitCreateEmployeeUser()"
+          [disabled]="submitting || employeeUserForm.invalid">
+          <ng-container *ngIf="!submitting"><i class="bi bi-check-circle"></i> Create Login Account</ng-container>
+          <ng-container *ngIf="submitting"><div class="um-btn-spinner"></div> Creating...</ng-container>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     MODAL: Add Tehsildar / NayabTehsildar
+═══════════════════════════════════════════════════ -->
+<div class="um-overlay" *ngIf="modalMode === 'createSenior'" (click)="closeModal()">
+  <div class="um-modal um-modal-md" (click)="$event.stopPropagation()">
+
+    <div class="um-modal-head">
+      <h2 class="um-modal-title">
+        <i class="bi bi-person-badge-fill"></i>
+        {{ generatedCredentials ? 'Account Created' : 'Add Senior Authority' }}
+      </h2>
+      <button class="um-modal-close" (click)="closeModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div *ngIf="generatedCredentials" class="um-modal-body">
+      <div class="um-cred-box">
+        <div class="um-cred-success"><i class="bi bi-check-circle-fill"></i> Account Created Successfully!</div>
+        <p class="um-cred-note">Share these credentials with the user.</p>
+        <div class="um-cred-row">
+          <span class="um-cred-label">Username</span>
+          <span class="um-cred-value">{{ generatedCredentials.username }}</span>
+          <button class="um-copy-btn" (click)="copyToClipboard(generatedCredentials.username)">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>
+        </div>
+        <div class="um-cred-row">
+          <span class="um-cred-label">Password</span>
+          <span class="um-cred-value">{{ generatedCredentials.password }}</span>
+          <button class="um-copy-btn" (click)="copyToClipboard(generatedCredentials.password)">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>
+        </div>
+        <div class="um-cred-row">
+          <span class="um-cred-label">Role</span>
+          <span class="um-cred-value">{{ generatedCredentials.role }}</span>
+        </div>
+      </div>
+      <div class="um-modal-footer">
+        <button class="um-btn um-btn-add" (click)="closeModal()">Done</button>
+      </div>
+    </div>
+
+    <div *ngIf="!generatedCredentials" class="um-modal-body" [formGroup]="seniorUserForm">
+      <div class="um-form-section">
+        <div class="um-fg">
+          <label>Role <span class="um-req">*</span></label>
+          <select formControlName="role" class="um-form-control">
+            <option value="Tehsildar">Tehsildar</option>
+            <option value="NayabTehsildar">Nayab Tehsildar</option>
+          </select>
+        </div>
+        <div class="um-form-row">
+          <div class="um-fg">
+            <label>First Name <span class="um-req">*</span></label>
+            <input type="text" formControlName="firstName" class="um-form-control"
+              [class.um-invalid]="seniorUserForm.get('firstName')?.invalid && seniorUserForm.get('firstName')?.touched"
+              placeholder="First name" />
+          </div>
+          <div class="um-fg">
+            <label>Last Name <span class="um-req">*</span></label>
+            <input type="text" formControlName="lastName" class="um-form-control"
+              [class.um-invalid]="seniorUserForm.get('lastName')?.invalid && seniorUserForm.get('lastName')?.touched"
+              placeholder="Last name" />
+          </div>
+        </div>
+        <div class="um-fg">
+          <label>Email <span class="um-req">*</span></label>
+          <input type="email" formControlName="email" class="um-form-control"
+            [class.um-invalid]="seniorUserForm.get('email')?.invalid && seniorUserForm.get('email')?.touched"
+            placeholder="email@example.com" />
+        </div>
+        <div class="um-form-row">
+          <div class="um-fg">
+            <label>Username <span class="um-req">*</span></label>
+            <input type="text" formControlName="username" class="um-form-control"
+              [class.um-invalid]="seniorUserForm.get('username')?.invalid && seniorUserForm.get('username')?.touched"
+              placeholder="e.g. tehsildar.ali" />
+          </div>
+          <div class="um-fg">
+            <label>Password <span class="um-req">*</span></label>
+            <input type="text" formControlName="password" class="um-form-control"
+              [class.um-invalid]="seniorUserForm.get('password')?.invalid && seniorUserForm.get('password')?.touched"
+              placeholder="Min. 6 characters" />
+          </div>
+        </div>
+        <div *ngIf="modalError" class="um-form-alert">
+          <i class="bi bi-exclamation-triangle-fill"></i> {{ modalError }}
+        </div>
+      </div>
+      <div class="um-modal-footer">
+        <button class="um-btn um-btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="um-btn um-btn-add" (click)="submitCreateSeniorUser()"
+          [disabled]="submitting || seniorUserForm.invalid">
+          <ng-container *ngIf="!submitting"><i class="bi bi-check-circle"></i> Create Account</ng-container>
+          <ng-container *ngIf="submitting"><div class="um-btn-spinner"></div> Creating...</ng-container>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     MODAL: Reset Password
+═══════════════════════════════════════════════════ -->
+<div class="um-overlay" *ngIf="modalMode === 'resetPassword'" (click)="closeModal()">
+  <div class="um-modal um-modal-sm" (click)="$event.stopPropagation()">
+
+    <div class="um-modal-head">
+      <h2 class="um-modal-title">
+        <i class="bi bi-key-fill"></i>
+        {{ generatedCredentials ? 'Password Reset' : 'Reset Password' }}
+      </h2>
+      <button class="um-modal-close" (click)="closeModal()" type="button">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div *ngIf="generatedCredentials" class="um-modal-body">
+      <div class="um-cred-box">
+        <div class="um-cred-success"><i class="bi bi-check-circle-fill"></i> Password Reset Successfully!</div>
+        <p class="um-cred-note">Share the new password with the user.</p>
+        <div class="um-cred-row">
+          <span class="um-cred-label">Username</span>
+          <span class="um-cred-value">{{ generatedCredentials.username }}</span>
+        </div>
+        <div class="um-cred-row">
+          <span class="um-cred-label">New Password</span>
+          <span class="um-cred-value">{{ generatedCredentials.password }}</span>
+          <button class="um-copy-btn" (click)="copyToClipboard(generatedCredentials.password)">
+            <i class="bi bi-clipboard"></i> Copy
+          </button>
+        </div>
+      </div>
+      <div class="um-modal-footer">
+        <button class="um-btn um-btn-add" (click)="closeModal()">Done</button>
+      </div>
+    </div>
+
+    <div *ngIf="!generatedCredentials" class="um-modal-body" [formGroup]="resetPasswordForm">
+      <div class="um-form-section">
+        <p class="um-reset-target">
+          Resetting password for <strong>{{ targetUser?.username }}</strong>
+          <span class="um-role-chip" [style]="getRoleBadgeStyle(targetUser?.roles?.[0] || '')">
+            {{ targetUser?.roles?.[0] }}
+          </span>
+        </p>
+        <div class="um-fg">
+          <label>New Password <span class="um-req">*</span></label>
+          <input type="text" formControlName="newPassword" class="um-form-control"
+            [class.um-invalid]="resetPasswordForm.get('newPassword')?.invalid && resetPasswordForm.get('newPassword')?.touched"
+            placeholder="Enter new password (min. 6 characters)" />
+        </div>
+        <div *ngIf="modalError" class="um-form-alert">
+          <i class="bi bi-exclamation-triangle-fill"></i> {{ modalError }}
+        </div>
+      </div>
+      <div class="um-modal-footer">
+        <button class="um-btn um-btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="um-btn um-btn-add" (click)="submitResetPassword()"
+          [disabled]="submitting || resetPasswordForm.invalid">
+          <ng-container *ngIf="!submitting"><i class="bi bi-key"></i> Reset Password</ng-container>
+          <ng-container *ngIf="submitting"><div class="um-btn-spinner"></div> Resetting...</ng-container>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
