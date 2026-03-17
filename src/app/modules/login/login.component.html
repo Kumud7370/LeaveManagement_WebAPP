@@ -9,15 +9,14 @@
 
   <!-- Split Screen Card -->
   <div class="login-card">
-    
+
     <!-- LEFT SIDE - Form Section -->
     <div class="login-form-section">
+
       <!-- Logo -->
       <div class="login-logo">
         <div class="logo-icon">
           <img src="assets/images/mcgmlogo.png" alt="ABEL Logo" />
-          <!-- Or use icon if no image -->
-          <!-- <i class="fas fa-bolt"></i> -->
         </div>
       </div>
 
@@ -35,16 +34,17 @@
 
       <!-- Login Form -->
       <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onLogin()">
-        <!-- Email/Username Field -->
+
+        <!-- Username Field -->
         <div class="form-group">
           <label for="username" class="form-label">Username</label>
           <div class="input-wrapper">
-            <input 
-              type="text" 
-              id="username" 
-              formControlName="username" 
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
               class="form-control"
-              placeholder="johndoe@gmail.com" 
+              placeholder="Enter your username"
               autocomplete="username"
               [disabled]="isLoading"
             />
@@ -59,18 +59,18 @@
         <div class="form-group">
           <label for="password" class="form-label">Password</label>
           <div class="input-wrapper">
-            <input 
-              [type]="showPassword ? 'text' : 'password'" 
-              id="password" 
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
               formControlName="password"
-              class="form-control" 
-              placeholder="••••••••" 
+              class="form-control"
+              placeholder="••••••••"
               autocomplete="current-password"
               [disabled]="isLoading"
             />
-            <button 
-              type="button" 
-              class="password-toggle" 
+            <button
+              type="button"
+              class="password-toggle"
               (click)="togglePasswordVisibility()"
               aria-label="Toggle password visibility"
             >
@@ -83,15 +83,15 @@
           </div>
         </div>
 
-        <!-- Form Options -->
+        <!-- Remember Me + Forgot Password -->
         <div class="form-options">
           <label class="remember-me">
             <input type="checkbox" />
             <span>Keep me logged in</span>
           </label>
-          <button 
-            type="button" 
-            class="forgot-password-link" 
+          <button
+            type="button"
+            class="forgot-password-link"
             (click)="navigateToForgotPassword()"
           >
             Forgot Password?
@@ -100,9 +100,7 @@
 
         <!-- Sign In Button -->
         <button type="submit" class="login-button" [disabled]="loginForm.invalid || isLoading">
-          <span *ngIf="!isLoading" class="button-content">
-            Sign in
-          </span>
+          <span *ngIf="!isLoading" class="button-content">Sign in</span>
           <span *ngIf="isLoading" class="button-loading">
             <i class="fas fa-spinner fa-spin"></i>
             Signing In...
@@ -114,50 +112,25 @@
           <i class="fas fa-exclamation-triangle"></i>
           {{ loginError }}
         </div>
+
       </form>
 
-      <!-- Social Login -->
-      <div class="social-login">
-        <div class="social-divider">
-          <span>Or continue with</span>
-        </div>
-        <div class="social-buttons">
-          <button type="button" class="social-btn" title="Continue with Google">
-            <i class="fab fa-google"></i>
-          </button>
-          <button type="button" class="social-btn" title="Continue with GitHub">
-            <i class="fab fa-github"></i>
-          </button>
-          <button type="button" class="social-btn" title="Continue with Facebook">
-            <i class="fab fa-facebook-f"></i>
-          </button>
-        </div>
-      </div>
+      <!-- Footer — registration removed; users are created by Admin -->
+      <div class="login-footer"></div>
 
-      <!-- Footer -->
-      <div class="login-footer">
-        <!-- <p>
-          Don't have an account?
-          <button type="button" (click)="navigateToRegister()">
-            Register
-          </button>
-        </p> -->
-      </div>
     </div>
 
     <!-- RIGHT SIDE - Welcome Section -->
     <div class="login-testimonial-section">
-      <!-- Welcome Content -->
       <div class="welcome-content">
         <div class="welcome-icon">
           <img src="assets/images/mcgmlogo.png" alt="ABEL" />
-          <!-- Or use an icon: <i class="fas fa-user-check"></i> -->
         </div>
 
         <h2 class="welcome-title">Welcome to ABEL</h2>
-        
+
         <p class="welcome-description">
-          Your comprehensive solution for attendance management and workforce tracking. 
+          Your comprehensive solution for attendance management and workforce tracking.
           Streamline your operations with our intuitive and reliable platform.
         </p>
 
