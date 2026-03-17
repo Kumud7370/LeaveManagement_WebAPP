@@ -122,6 +122,29 @@ export interface EmployeeFilterDto {
   sortDescending: boolean;
 }
 
+export interface ReassignEmployeeDto {
+  toDepartmentId: string;
+  toDesignationId: string;
+  reason?: string;
+}
+
+export interface AssignmentHistoryResponseDto {
+  id: string;
+  employeeId: string;
+  fromDepartmentId?: string;
+  fromDepartmentName?: string;
+  toDepartmentId: string;
+  toDepartmentName: string;
+  fromDesignationId?: string;
+  fromDesignationName?: string;
+  toDesignationId: string;
+  toDesignationName: string;
+  changedBy: string;
+  changedByName?: string;
+  changedAt: Date;
+  reason?: string;
+}
+
 export interface PagedResultDto<T> {
   items: T[];
   totalCount: number;

@@ -24,15 +24,10 @@
 
   <!-- ── Toolbar ────────────────────────────────────────────────── -->
   <div class="um-toolbar">
-    <input
-      type="text"
-      class="um-search"
-      placeholder="Search by username, name, email, role..."
-      [(ngModel)]="searchTerm"
-      (input)="onSearch()"
-    />
+    <input type="text" class="um-search" placeholder="Search by username, name, email, role..." [(ngModel)]="searchTerm"
+      (input)="onSearch()" />
     <div class="um-toolbar-btns">
-      <button class="um-btn um-btn-clear"   (click)="clearFilters()">Clear</button>
+      <button class="um-btn um-btn-clear" (click)="clearFilters()">Clear</button>
       <button class="um-btn um-btn-refresh" (click)="loadUsers()">
         <i class="bi bi-arrow-clockwise"></i> Refresh
       </button>
@@ -68,22 +63,10 @@
       </button>
     </div>
 
-    <!-- KEY FIX: class="ag-theme-quartz"
-      [theme]="'legacy'" instead of [theme]="gridTheme" -->
-    <ag-grid-angular
-      *ngIf="!loading && !error && rowData.length > 0"
-      class="ag-theme-quartz"
-      [theme]="'legacy'"
-      style="width:100%;"
-      [rowData]="rowData"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      (gridReady)="onGridReady($event)"
-      [rowHeight]="52"
-      [headerHeight]="44"
-      [domLayout]="'autoHeight'"
-      [context]="context"
-      [suppressPaginationPanel]="true">
+    <ag-grid-angular *ngIf="!loading && !error && rowData.length > 0" class="ag-theme-quartz" [theme]="'legacy'"
+      style="width:100%;" [rowData]="rowData" [columnDefs]="columnDefs" [defaultColDef]="defaultColDef"
+      (gridReady)="onGridReady($event)" [rowHeight]="52" [headerHeight]="44" [domLayout]="'autoHeight'"
+      [context]="context" [suppressPaginationPanel]="true">
     </ag-grid-angular>
 
     <!-- Pagination -->
@@ -103,12 +86,12 @@
         </span>
         <span class="um-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
         <div class="um-pag-btns">
-          <button class="um-pgbtn" [disabled]="currentPage === 1"          (click)="onPageChange(1)">«</button>
-          <button class="um-pgbtn" [disabled]="currentPage === 1"          (click)="onPageChange(currentPage - 1)">‹</button>
-          <button *ngFor="let page of pages" class="um-pgbtn"
-            [class.active]="page === currentPage"
+          <button class="um-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">«</button>
+          <button class="um-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">‹</button>
+          <button *ngFor="let page of pages" class="um-pgbtn" [class.active]="page === currentPage"
             (click)="onPageChange(page)">{{ page }}</button>
-          <button class="um-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">›</button>
+          <button class="um-pgbtn" [disabled]="currentPage === totalPages"
+            (click)="onPageChange(currentPage + 1)">›</button>
           <button class="um-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">»</button>
         </div>
       </div>
@@ -117,10 +100,6 @@
   </div>
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════
-     MODAL: View User Details & Login Credentials
-═══════════════════════════════════════════════════ -->
 <div class="um-overlay" *ngIf="modalMode === 'viewDetails'" (click)="closeModal()">
   <div class="um-modal um-modal-md" (click)="$event.stopPropagation()">
 
@@ -144,8 +123,7 @@
             <span class="um-role-chip" [style]="getRoleBadgeStyle(targetUser.roles?.[0] || '')">
               {{ targetUser.roles?.[0] || '—' }}
             </span>
-            <span class="um-status-chip"
-              [class.um-status-active]="targetUser.isActive"
+            <span class="um-status-chip" [class.um-status-active]="targetUser.isActive"
               [class.um-status-inactive]="!targetUser.isActive">
               {{ targetUser.isActive ? '● Active' : '● Inactive' }}
             </span>
@@ -208,10 +186,6 @@
   </div>
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════
-     MODAL: Create Employee Login
-═══════════════════════════════════════════════════ -->
 <div class="um-overlay" *ngIf="modalMode === 'createEmployee'" (click)="closeModal()">
   <div class="um-modal um-modal-md" (click)="$event.stopPropagation()">
 
@@ -290,7 +264,9 @@
         <button class="um-btn um-btn-add" (click)="submitCreateEmployeeUser()"
           [disabled]="submitting || employeeUserForm.invalid">
           <ng-container *ngIf="!submitting"><i class="bi bi-check-circle"></i> Create Login Account</ng-container>
-          <ng-container *ngIf="submitting"><div class="um-btn-spinner"></div> Creating...</ng-container>
+          <ng-container *ngIf="submitting">
+            <div class="um-btn-spinner"></div> Creating...
+          </ng-container>
         </button>
       </div>
     </div>
@@ -298,10 +274,6 @@
   </div>
 </div>
 
-
-<!-- ═══════════════════════════════════════════════════
-     MODAL: Add Tehsildar / NayabTehsildar
-═══════════════════════════════════════════════════ -->
 <div class="um-overlay" *ngIf="modalMode === 'createSenior'" (click)="closeModal()">
   <div class="um-modal um-modal-md" (click)="$event.stopPropagation()">
 
@@ -350,6 +322,16 @@
           <select formControlName="role" class="um-form-control">
             <option value="Tehsildar">Tehsildar</option>
             <option value="NayabTehsildar">Nayab Tehsildar</option>
+            <option value="HR">HR</option>
+          </select>
+        </div>
+        <div class="um-fg" *ngIf="seniorUserForm.get('role')?.value === 'HR'">
+          <label>Department <span class="um-req">*</span></label>
+          <select formControlName="departmentId" class="um-form-control">
+            <option value="">-- Select Department --</option>
+            <option *ngFor="let d of activeDepartments" [value]="d.departmentId">
+              {{ d.departmentName }}
+            </option>
           </select>
         </div>
         <div class="um-form-row">
@@ -395,7 +377,9 @@
         <button class="um-btn um-btn-add" (click)="submitCreateSeniorUser()"
           [disabled]="submitting || seniorUserForm.invalid">
           <ng-container *ngIf="!submitting"><i class="bi bi-check-circle"></i> Create Account</ng-container>
-          <ng-container *ngIf="submitting"><div class="um-btn-spinner"></div> Creating...</ng-container>
+          <ng-container *ngIf="submitting">
+            <div class="um-btn-spinner"></div> Creating...
+          </ng-container>
         </button>
       </div>
     </div>
@@ -464,7 +448,9 @@
         <button class="um-btn um-btn-add" (click)="submitResetPassword()"
           [disabled]="submitting || resetPasswordForm.invalid">
           <ng-container *ngIf="!submitting"><i class="bi bi-key"></i> Reset Password</ng-container>
-          <ng-container *ngIf="submitting"><div class="um-btn-spinner"></div> Resetting...</ng-container>
+          <ng-container *ngIf="submitting">
+            <div class="um-btn-spinner"></div> Resetting...
+          </ng-container>
         </button>
       </div>
     </div>

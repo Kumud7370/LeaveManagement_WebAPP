@@ -91,7 +91,7 @@
         <div class="info-card">
           <h4 class="card-title"><i class="bi bi-person-check"></i> Approval Details</h4>
 
-          <ng-container *ngIf="leave.leaveStatus === LeaveStatus.Approved">
+          <ng-container *ngIf="leave.leaveStatus === LeaveStatus.FullyApproved">
             <div class="detail-row">
               <span class="detail-label">Approved By</span>
               <span class="detail-value">{{ leave.approvedByName || '—' }}</span>

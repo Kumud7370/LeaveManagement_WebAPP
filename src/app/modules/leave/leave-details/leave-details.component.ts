@@ -23,7 +23,7 @@ export class LeaveDetailsComponent implements OnInit {
   // Expose enum to template
   LeaveStatus = LeaveStatus;
 
-  constructor(private leaveService: LeaveService) {}
+  constructor(private leaveService: LeaveService) { }
 
   ngOnInit(): void {
     if (this.leaveId) this.loadLeave(this.leaveId);
@@ -42,9 +42,11 @@ export class LeaveDetailsComponent implements OnInit {
 
   getStatusClass(status: LeaveStatus): string {
     const map: Record<number, string> = {
-      [LeaveStatus.Pending]:   'pending',
-      [LeaveStatus.Approved]:  'approved',
-      [LeaveStatus.Rejected]:  'rejected',
+      [LeaveStatus.Pending]: 'pending',
+      [LeaveStatus.AdminApproved]: 'admin-approved',
+      [LeaveStatus.NayabApproved]: 'nayab-approved',
+      [LeaveStatus.FullyApproved]: 'approved',
+      [LeaveStatus.Rejected]: 'rejected',
       [LeaveStatus.Cancelled]: 'cancelled'
     };
     return map[status] ?? 'pending';
@@ -52,9 +54,9 @@ export class LeaveDetailsComponent implements OnInit {
 
   getStatusIcon(status: LeaveStatus): string {
     const map: Record<number, string> = {
-      [LeaveStatus.Pending]:   'bi-clock-history',
-      [LeaveStatus.Approved]:  'bi-check-circle',
-      [LeaveStatus.Rejected]:  'bi-x-circle',
+      [LeaveStatus.AdminApproved]: 'bi-check-circle-fill',
+      [LeaveStatus.NayabApproved]: 'bi-check2-circle',
+      [LeaveStatus.FullyApproved]: 'bi-check-circle',
       [LeaveStatus.Cancelled]: 'bi-slash-circle'
     };
     return map[status] ?? 'bi-clock-history';

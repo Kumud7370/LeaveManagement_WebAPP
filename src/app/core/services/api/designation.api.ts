@@ -95,4 +95,17 @@ export class DesignationService {
   getDesignationStatistics(): Observable<ApiResponse<any>> {
     return this.apiClient.get<ApiResponse<any>>('Designation/statistics/by-level');
   }
+
+  // Add this method to DesignationService:
+getDesignationsByDepartment(departmentId: string): Observable<ApiResponse<DesignationResponseDto[]>> {
+  return this.apiClient.get<ApiResponse<DesignationResponseDto[]>>(
+    `Designation/by-department/${departmentId}`
+  ).pipe(
+    map(response => ({
+      ...response,
+      data: (response.data || []).map(mapId)
+    }))
+  );
 }
+}
+

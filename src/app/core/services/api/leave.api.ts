@@ -78,12 +78,28 @@ export class LeaveService {
     );
   }
 
-  approveLeave(id: string): Observable<ApiResponse<boolean>> {
-    return this.apiClient.patch<ApiResponse<boolean>>(
-      `${this.endpoint}/${id}/approve`,
-      {}
-    );
-  }
+ approveLeave(id: string): Observable<ApiResponse<boolean>> {
+  return this.apiClient.patch<ApiResponse<boolean>>(`${this.endpoint}/${id}/approve`, {});
+}
+
+// ADD these three:
+adminApproveLeave(id: string): Observable<ApiResponse<boolean>> {
+  return this.apiClient.patch<ApiResponse<boolean>>(
+    `${this.endpoint}/${id}/admin-approve`, {}
+  );
+}
+
+nayabApproveLeave(id: string): Observable<ApiResponse<boolean>> {
+  return this.apiClient.patch<ApiResponse<boolean>>(
+    `${this.endpoint}/${id}/nayab-approve`, {}
+  );
+}
+
+tehsildarApproveLeave(id: string): Observable<ApiResponse<boolean>> {
+  return this.apiClient.patch<ApiResponse<boolean>>(
+    `${this.endpoint}/${id}/tehsildar-approve`, {}
+  );
+}
 
   rejectLeave(id: string, rejectionReason: string): Observable<ApiResponse<boolean>> {
     return this.apiClient.patch<ApiResponse<boolean>>(
