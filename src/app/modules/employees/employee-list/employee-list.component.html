@@ -140,6 +140,8 @@
   </div>
 
 </div>
+
+<!-- ── Add / Edit Employee Modal ──────────────────────────────────────────── -->
 <div *ngIf="showFormModal" class="el-modal-overlay" (click)="onOverlayClick($event, 'form')">
   <div class="el-modal-container el-modal-xlarge" (click)="$event.stopPropagation()">
     <button class="el-modal-close" (click)="closeFormModal()" type="button">
@@ -155,6 +157,7 @@
   </div>
 </div>
 
+<!-- ── Employee Details Modal ─────────────────────────────────────────────── -->
 <div *ngIf="showDetailsModal" class="el-modal-overlay" (click)="onOverlayClick($event, 'details')">
   <div class="el-modal-container el-modal-xlarge" (click)="$event.stopPropagation()">
     <button class="el-modal-close" (click)="closeDetailsModal()" type="button">
@@ -167,5 +170,165 @@
       (editRequested)="onEditFromDetails($event)"
       (deleteRequested)="onDeleteFromDetails($event)">
     </app-employee-details>
+  </div>
+</div>
+
+<!-- ── Reassign Employee Modal ────────────────────────────────────────────── -->
+<div *ngIf="showReassignModal" class="el-modal-overlay" (click)="closeReassignModal()">
+  <div class="el-modal-container" style="max-width:520px;" (click)="$event.stopPropagation()">
+
+    <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <h2 style="margin:0;font-size:16px;font-weight:600;color:#111827;">Reassign Employee</h2>
+        <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">
+          {{ reassignEmployee?.fullName }} · {{ reassignEmployee?.employeeCode }}
+        </p>
+      </div>
+      <button class="el-modal-close" style="position:static;float:none;margin:0;" (click)="closeReassignModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <form [formGroup]="reassignForm" (ngSubmit)="submitReassign()" style="padding:20px 24px;">
+
+      <!-- Department -->
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">
+          Current Department
+          <span style="color:#6b7280;font-weight:400;">→ {{ reassignEmployee?.departmentName || '—' }}</span>
+        </label>
+        <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">
+          New Department *
+        </label>
+        <select
+          formControlName="toDepartmentId"
+          (change)="onDepartmentChange(asSelect($event.target).value)"
+          style="width:100%;height:36px;padding:0 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;box-sizing:border-box;">
+          <option value="">Select Department</option>
+          <option *ngFor="let d of departments" [value]="d.id">{{ d.name }}</option>
+        </select>
+      </div>
+
+      <!-- Designation -->
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">
+          Current Designation
+          <span style="color:#6b7280;font-weight:400;">→ {{ reassignEmployee?.designationName || '—' }}</span>
+        </label>
+        <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">
+          New Designation *
+        </label>
+        <select
+          formControlName="toDesignationId"
+          style="width:100%;height:36px;padding:0 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;box-sizing:border-box;"
+          [attr.disabled]="!reassignForm.get('toDepartmentId')?.value ? '' : null">
+          <option value="">{{ designationsLoading ? 'Loading...' : 'Select Designation' }}</option>
+          <option *ngFor="let d of designations" [value]="d.id">{{ d.name }}</option>
+        </select>
+      </div>
+
+      <!-- Reason -->
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">
+          Reason (optional)
+        </label>
+        <textarea
+          formControlName="reason"
+          rows="3"
+          placeholder="Enter reason for reassignment..."
+          style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;resize:vertical;font-family:inherit;box-sizing:border-box;">
+        </textarea>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid #e5e7eb;">
+        <button type="button" class="el-btn el-btn-secondary" (click)="closeReassignModal()">Cancel</button>
+        <button type="submit" class="el-btn el-btn-primary" [disabled]="reassignForm.invalid">
+          <i class="bi bi-arrow-left-right"></i> Reassign
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- ── Assignment History Modal ───────────────────────────────────────────── -->
+<div *ngIf="showHistoryModal" class="el-modal-overlay" (click)="closeHistoryModal()">
+  <div class="el-modal-container" style="max-width:700px;" (click)="$event.stopPropagation()">
+
+    <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <h2 style="margin:0;font-size:16px;font-weight:600;color:#111827;">Assignment History</h2>
+        <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">
+          {{ reassignEmployee?.fullName }} · {{ reassignEmployee?.employeeCode }}
+        </p>
+      </div>
+      <button class="el-modal-close" style="position:static;float:none;margin:0;" (click)="closeHistoryModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div style="padding:20px 24px;max-height:60vh;overflow-y:auto;">
+
+      <!-- Loading -->
+      <div *ngIf="historyLoading" style="text-align:center;padding:3rem;color:#6b7280;">
+        <div style="width:32px;height:32px;border:3px solid #e5e7eb;border-top-color:#3b82f6;border-radius:50%;margin:0 auto 12px;animation:elSpin .75s linear infinite;"></div>
+        Loading history...
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!historyLoading && assignmentHistory.length === 0"
+        style="text-align:center;padding:3rem;color:#9ca3af;">
+        <i class="bi bi-clock-history" style="font-size:2.5rem;display:block;margin-bottom:12px;"></i>
+        No assignment history found
+      </div>
+
+      <!-- History items -->
+      <div
+        *ngFor="let h of assignmentHistory; let i = index"
+        style="display:flex;gap:14px;padding-bottom:20px;margin-bottom:20px;"
+        [style.border-bottom]="i < assignmentHistory.length - 1 ? '1px solid #f1f5f9' : 'none'">
+
+        <!-- Icon + connector line -->
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;">
+            <i class="bi bi-arrow-left-right" style="font-size:12px;color:#1e40af;"></i>
+          </div>
+          <div *ngIf="i < assignmentHistory.length - 1"
+            style="width:1px;flex:1;background:#e5e7eb;min-height:20px;"></div>
+        </div>
+
+        <!-- Content -->
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <span style="font-size:11px;color:#6b7280;">{{ h.changedAt | date: 'd MMM yyyy, h:mm a' }}</span>
+            <span *ngIf="h.changedByName" style="font-size:11px;color:#9ca3af;">by {{ h.changedByName }}</span>
+          </div>
+
+          <!-- From → To grid -->
+          <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:8px;">
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">From</div>
+              <div style="font-size:12px;font-weight:600;color:#374151;">{{ h.fromDepartmentName || '—' }}</div>
+              <div style="font-size:11px;color:#6b7280;">{{ h.fromDesignationName || '—' }}</div>
+            </div>
+            <i class="bi bi-arrow-right" style="color:#9ca3af;font-size:14px;"></i>
+            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 10px;">
+              <div style="font-size:9px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">To</div>
+              <div style="font-size:12px;font-weight:600;color:#1e40af;">{{ h.toDepartmentName }}</div>
+              <div style="font-size:11px;color:#3b82f6;">{{ h.toDesignationName }}</div>
+            </div>
+          </div>
+
+          <!-- Reason -->
+          <div *ngIf="h.reason"
+            style="font-size:11px;color:#6b7280;font-style:italic;background:#f9fafb;padding:6px 10px;border-radius:4px;">
+            "{{ h.reason }}"
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 </div>

@@ -46,7 +46,7 @@
   &--red   { background: #fef2f2; border-color: #fecaca; .stat-value { color: #dc2626; } }
 }
 
-// ── Search & Action Bar
+// ── Search & Action Bar ──────────────────────────────────────────────────────
 .search-action-section {
   display: flex;
   align-items: center;
@@ -80,14 +80,85 @@
   }
 }
 
-// ── Toolbar secondary group 
+// ── Department filter dropdown ───────────────────────────────────────────────
+.dept-filter-wrapper {
+  flex-shrink: 0;
+}
+
+.dept-filter-select {
+  height: 38px;
+  padding: 0 32px 0 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #374151;
+  background: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 10px;
+  appearance: none;
+  cursor: pointer;
+  min-width: 180px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+}
+
+// ── Active filter badge ──────────────────────────────────────────────────────
+.active-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.active-filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.active-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 10px;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+
+  .active-filter-clear {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #1e40af;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    line-height: 1;
+    border-radius: 50%;
+    transition: background 0.15s;
+
+    &:hover { background: rgba(30, 64, 175, 0.15); }
+  }
+}
+
+// ── Toolbar secondary group ──────────────────────────────────────────────────
 .toolbar-secondary-btns {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-// ── Toolbar divider
+// ── Toolbar divider ──────────────────────────────────────────────────────────
 .toolbar-divider {
   width: 1px;
   height: 28px;
@@ -96,7 +167,7 @@
   border-radius: 1px;
 }
 
-// ── Buttons
+// ── Buttons ──────────────────────────────────────────────────────────────────
 .btn {
   display: inline-flex;
   align-items: center;
@@ -123,7 +194,7 @@
   &:disabled    { opacity: 0.5; cursor: not-allowed; }
 }
 
-// ── Grid wrapper
+// ── Grid wrapper ─────────────────────────────────────────────────────────────
 .grid-wrapper {
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -132,10 +203,11 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
 }
 
-// ── Loading
+// ── Loading ───────────────────────────────────────────────────────────────────
 .loading-state {
   text-align: center;
   padding: 4rem 2rem;
+
   .spinner {
     width: 2.5rem; height: 2.5rem;
     border: 3px solid #e5e7eb; border-top-color: #3b82f6;
@@ -147,7 +219,7 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-// ── Empty
+// ── Empty ─────────────────────────────────────────────────────────────────────
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
@@ -155,7 +227,7 @@
   font-size: 0.9rem;
 }
 
-// ── Pagination
+// ── Pagination ────────────────────────────────────────────────────────────────
 .pagination-bar {
   display: flex;
   align-items: center;
@@ -223,7 +295,7 @@
   &:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 
-// ── Modal
+// ── Modal ─────────────────────────────────────────────────────────────────────
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -238,9 +310,8 @@
   overflow-y: auto;
 }
 
-@keyframes fadeIn  { from { opacity: 0; }              to { opacity: 1; }             }
-@keyframes slideUp { from { opacity: 0; transform: translateY(16px); }
-                     to   { opacity: 1; transform: translateY(0); }                    }
+@keyframes fadeIn  { from { opacity: 0; }                              to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
 .modal-container {
   background: white;
@@ -299,7 +370,7 @@
 
 .modal-body { padding: 24px; }
 
-// ── Form
+// ── Form ──────────────────────────────────────────────────────────────────────
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -334,6 +405,16 @@
     &.is-invalid { border-color: #ef4444; background: #fef2f2; }
   }
 
+  select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px;
+    padding-right: 30px;
+    cursor: pointer;
+  }
+
   textarea.form-control { resize: vertical; min-height: 90px; font-family: inherit; }
 
   .form-hint  { display: block; margin-top: 4px; font-size: 12px; color: #9ca3af; }
@@ -345,7 +426,7 @@
   }
 }
 
-// ── Toggle
+// ── Toggle ────────────────────────────────────────────────────────────────────
 .toggle-container { display: flex; align-items: center; gap: 0.75rem; padding-top: 6px; }
 
 .toggle-switch {
@@ -372,7 +453,7 @@
 
 .toggle-label { font-weight: 600; color: #374151; font-size: 13px; }
 
-// ── Form actions
+// ── Form actions ──────────────────────────────────────────────────────────────
 .form-actions {
   display: flex; gap: 10px; justify-content: flex-end;
   padding-top: 20px; border-top: 1px solid #e5e7eb; margin-top: 20px;
@@ -397,7 +478,7 @@
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
-// ── Responsive
+// ── Responsive ────────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
   .page-title  { font-size: 22px; }
   .stat-cards  { grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -420,23 +501,18 @@
       .toolbar-secondary-btns {
         display: flex;
         gap: 6px;
-
-        .btn-clear,
-        .btn-refresh,
-        .btn-export {
-          flex: 1;
-          justify-content: center;
-        }
+        .btn-clear, .btn-refresh, .btn-export { flex: 1; justify-content: center; }
       }
 
       .toolbar-divider { display: none; }
 
-      .toolbar-primary-btn {
-        width: 100%;
-        justify-content: center;
-      }
+      .toolbar-primary-btn { width: 100%; justify-content: center; }
     }
   }
+
+  // Department filter full-width on mobile
+  .dept-filter-wrapper { width: 100%; }
+  .dept-filter-select  { width: 100%; min-width: unset; }
 
   .grid-wrapper { border-radius: 8px; overflow-x: auto; }
   .pagination-bar { flex-wrap: wrap; justify-content: center; gap: 6px; padding: 10px; }

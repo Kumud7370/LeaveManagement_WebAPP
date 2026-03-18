@@ -176,7 +176,7 @@
   overflow-x: auto;
 }
 
-/* ── Actions column — right border (matches holiday) ─── */
+/* ── Actions column ─── */
 .el-grid-container .ag-cell.actions-cell {
   border-right: 1px solid #e5e7eb !important;
   overflow: visible !important;
@@ -285,19 +285,27 @@
   display:         flex !important;
   align-items:     center !important;
   justify-content: center !important;
-  font-size:       15px !important;
+  font-size:       14px !important;
   transition:      background 0.15s !important;
   padding:         0 !important;
   border-radius:   4px !important;
 }
-.el-grid-container .btn-view   { color: #10b981 !important; }
+
+/* Existing buttons */
+.el-grid-container .btn-view         { color: #10b981 !important; }
 .el-grid-container .btn-view:hover   { background: #ecfdf5 !important; }
-.el-grid-container .btn-edit   { color: #3b82f6 !important; }
+.el-grid-container .btn-edit         { color: #3b82f6 !important; }
 .el-grid-container .btn-edit:hover   { background: #eff6ff !important; }
-.el-grid-container .btn-toggle { color: #10b981 !important; }
-.el-grid-container .btn-toggle:hover { background: #ecfdf5 !important; }
-.el-grid-container .btn-delete { color: #ef4444 !important; }
+.el-grid-container .btn-toggle       { color: #6366f1 !important; }
+.el-grid-container .btn-toggle:hover { background: #eef2ff !important; }
+.el-grid-container .btn-delete       { color: #ef4444 !important; }
 .el-grid-container .btn-delete:hover { background: #fef2f2 !important; }
+
+/* New buttons */
+.el-grid-container .btn-reassign         { color: #8b5cf6 !important; }
+.el-grid-container .btn-reassign:hover   { background: #ede9fe !important; }
+.el-grid-container .btn-history          { color: #f59e0b !important; }
+.el-grid-container .btn-history:hover    { background: #fef3c7 !important; }
 
 
 .el-pagination {
@@ -391,6 +399,7 @@
 
 @keyframes elFadeIn  { from { opacity: 0; }                              to { opacity: 1; } }
 @keyframes elSlideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes elSpin    { to { transform: rotate(360deg); } }
 
 .el-modal-container {
   background: #ffffff;
@@ -446,7 +455,6 @@
 @media (max-width: 768px) {
   .el-stats-grid    { grid-template-columns: 1fr 1fr; }
 
-  /* ── Toolbar: search on row 1, secondary buttons on row 2, Add Employee full-width on row 3 ── */
   .el-toolbar {
     flex-wrap: wrap;
     align-items: center;
@@ -454,35 +462,31 @@
   }
 
   .el-search-wrapper {
-    flex: 1 1 100%;   /* full width — own row */
+    flex: 1 1 100%;
     min-width: 0;
   }
 
   .el-toolbar-actions {
-    flex: 1 1 100%;   /* full width — own row */
+    flex: 1 1 100%;
     display: flex;
     flex-wrap: nowrap;
     gap: 8px;
     align-items: center;
   }
 
-  /* Clear, Refresh, Export share the first actions row equally */
   .el-toolbar-actions .el-btn-clear,
   .el-toolbar-actions .el-btn-refresh,
   .el-toolbar-actions .el-btn-export {
     flex: 1 1 0;
   }
 
-  /* Divider hidden on mobile */
   .el-toolbar-divider { display: none; }
 
-  /* Add Employee: full width, own row */
   .el-toolbar-actions .el-btn-primary {
     flex: 1 1 100%;
     width: 100%;
   }
 
-  /* Force the primary button onto its own row */
   .el-toolbar-actions {
     flex-wrap: wrap;
   }
