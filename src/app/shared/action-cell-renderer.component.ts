@@ -9,18 +9,10 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <div class="action-buttons">
-      <button
-        class="btn-icon btn-view"
-        (click)="onView()"
-        title="View"
-      >
+      <button class="btn-icon btn-view" (click)="onView()" title="View">
         <i class="bi bi-eye"></i>
       </button>
-      <button
-        class="btn-icon btn-edit"
-        (click)="onEdit()"
-        title="Edit"
-      >
+      <button class="btn-icon btn-edit" (click)="onEdit()" title="Edit">
         <i class="bi bi-pencil"></i>
       </button>
       <button
@@ -30,11 +22,13 @@ import { CommonModule } from '@angular/common';
       >
         <i class="bi bi-power"></i>
       </button>
-      <button
-        class="btn-icon btn-delete"
-        (click)="onDelete()"
-        title="Delete"
-      >
+      <button class="btn-icon btn-reassign" (click)="onReassign()" title="Reassign">
+        <i class="bi bi-arrow-left-right"></i>
+      </button>
+      <button class="btn-icon btn-history" (click)="onHistory()" title="Assignment History">
+        <i class="bi bi-clock-history"></i>
+      </button>
+      <button class="btn-icon btn-delete" (click)="onDelete()" title="Delete">
         <i class="bi bi-trash"></i>
       </button>
     </div>
@@ -42,68 +36,45 @@ import { CommonModule } from '@angular/common';
   styles: [`
     .action-buttons {
       display: flex;
-      gap: 0.5rem;
-      justify-content: center;
+      gap: 4px;
+      justify-content: flex-start;
       align-items: center;
       height: 100%;
+      padding: 0 4px;
     }
 
     .btn-icon {
-      width: 2rem;
-      height: 2rem;
+      width: 28px;
+      height: 28px;
       border: none;
-      border-radius: 0.375rem;
+      border-radius: 4px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s;
-      font-size: 0.9rem;
+      transition: all 0.15s;
+      font-size: 14px;
+      flex-shrink: 0;
+      background: transparent;
     }
 
-    .btn-view {
-      background: #dbeafe;
-      color: #1e40af;
+    .btn-view         { color: #10b981; }
+    .btn-view:hover   { background: #ecfdf5; }
 
-      &:hover {
-        background: #3b82f6;
-        color: white;
-        transform: scale(1.1);
-      }
-    }
+    .btn-edit         { color: #3b82f6; }
+    .btn-edit:hover   { background: #eff6ff; }
 
-    .btn-edit {
-      background: #fef3c7;
-      color: #92400e;
+    .btn-toggle       { color: #6366f1; }
+    .btn-toggle:hover { background: #eef2ff; }
 
-      &:hover {
-        background: #f59e0b;
-        color: white;
-        transform: scale(1.1);
-      }
-    }
+    .btn-reassign         { color: #8b5cf6; }
+    .btn-reassign:hover   { background: #ede9fe; }
 
-    .btn-toggle {
-      background: #e0e7ff;
-      color: #4338ca;
+    .btn-history         { color: #f59e0b; }
+    .btn-history:hover   { background: #fef3c7; }
 
-      &:hover {
-        background: #6366f1;
-        color: white;
-        transform: scale(1.1);
-      }
-    }
-
-    .btn-delete {
-      background: #fee2e2;
-      color: #991b1b;
-
-      &:hover {
-        background: #ef4444;
-        color: white;
-        transform: scale(1.1);
-      }
-    }
+    .btn-delete       { color: #ef4444; }
+    .btn-delete:hover { background: #fef2f2; }
   `]
 })
 export class ActionCellRendererComponent implements ICellRendererAngularComp {
@@ -133,6 +104,18 @@ export class ActionCellRendererComponent implements ICellRendererAngularComp {
   onToggleStatus(): void {
     if (this.params.context?.componentParent?.toggleStatus) {
       this.params.context.componentParent.toggleStatus(this.params.data);
+    }
+  }
+
+  onReassign(): void {
+    if (this.params.context?.componentParent?.openReassignModal) {
+      this.params.context.componentParent.openReassignModal(this.params.data);
+    }
+  }
+
+  onHistory(): void {
+    if (this.params.context?.componentParent?.openHistoryModal) {
+      this.params.context.componentParent.openHistoryModal(this.params.data);
     }
   }
 

@@ -26,7 +26,7 @@ export class LeaveDetailsComponent implements OnInit {
 
   constructor(private leaveService: LeaveService, private authService: AuthService) { }
 
-  private getStatusNum(): number {
+  getStatusNum(): number {
     const map: Record<string, number> = {
       'Pending': 0, 'AdminApproved': 1, 'NayabApproved': 2,
       'FullyApproved': 3, 'Rejected': 4, 'Cancelled': 5
@@ -47,65 +47,71 @@ export class LeaveDetailsComponent implements OnInit {
     if (this.leaveId) this.loadLeave(this.leaveId);
   }
 
-  loadLeave(id: string): void {
-    this.loading = true;
-    this.leaveService.getLeaveById(id).subscribe({
-      next: (r) => {
-        if (r.success) this.leave = r.data;
-        this.loading = false;
-      },
-      error: () => { this.loading = false; }
-    });
+loadLeave(id: string): void {
+  this.loading = true;
+  this.leaveService.getLeaveById(id).subscribe({
+    next: (r) => {
+      if (r.success) {
+        this.leave = r.data;
+        console.log('canBeCancelled:', this.leave.canBeCancelled);
+        console.log('leaveStatus:', this.leave.leaveStatus);
+        console.log('startDate:', this.leave.startDate);
+      }
+      this.loading = false;
+    },
+    error: () => { this.loading = false; }
+  });
+}
+
+
+  getStatusClass(status: LeaveStatus): string {
+    const map: Record<number, string> = {
+      [LeaveStatus.Pending]: 'pending',
+      [LeaveStatus.AdminApproved]: 'admin-approved',
+      [LeaveStatus.NayabApproved]: 'nayab-approved',
+      [LeaveStatus.FullyApproved]: 'approved',
+      [LeaveStatus.Rejected]: 'rejected',
+      [LeaveStatus.Cancelled]: 'cancelled',
+    };
+    const statusMap: Record<string, number> = {
+      'Pending': 0, 'AdminApproved': 1, 'NayabApproved': 2,
+      'FullyApproved': 3, 'Rejected': 4, 'Cancelled': 5
+    };
+    const num = typeof status === 'number' ? status : (statusMap[status as any] ?? -1);
+    return map[num] ?? 'pending';
   }
 
- getStatusClass(status: LeaveStatus): string {
-  const map: Record<number, string> = {
-    [LeaveStatus.Pending]:       'pending',
-    [LeaveStatus.AdminApproved]: 'admin-approved',
-    [LeaveStatus.NayabApproved]: 'nayab-approved',
-    [LeaveStatus.FullyApproved]: 'approved',
-    [LeaveStatus.Rejected]:      'rejected',
-    [LeaveStatus.Cancelled]:     'cancelled',
-  };
-  const statusMap: Record<string, number> = {
-    'Pending': 0, 'AdminApproved': 1, 'NayabApproved': 2,
-    'FullyApproved': 3, 'Rejected': 4, 'Cancelled': 5
-  };
-  const num = typeof status === 'number' ? status : (statusMap[status as any] ?? -1);
-  return map[num] ?? 'pending';
-}
+  getStatusIcon(status: LeaveStatus): string {
+    const map: Record<number, string> = {
+      [LeaveStatus.Pending]: 'bi-clock-history',
+      [LeaveStatus.AdminApproved]: 'bi-check-circle-fill',
+      [LeaveStatus.NayabApproved]: 'bi-check2-circle',
+      [LeaveStatus.FullyApproved]: 'bi-check-circle-fill',
+      [LeaveStatus.Rejected]: 'bi-x-circle-fill',
+      [LeaveStatus.Cancelled]: 'bi-slash-circle',
+    };
 
-getStatusIcon(status: LeaveStatus): string {
-  const map: Record<number, string> = {
-    [LeaveStatus.Pending]:       'bi-clock-history',
-    [LeaveStatus.AdminApproved]: 'bi-check-circle-fill',
-    [LeaveStatus.NayabApproved]: 'bi-check2-circle',
-    [LeaveStatus.FullyApproved]: 'bi-check-circle-fill',
-    [LeaveStatus.Rejected]:      'bi-x-circle-fill',
-    [LeaveStatus.Cancelled]:     'bi-slash-circle',
-  };
-
-  // Handle string status from backend
-  const statusMap: Record<string, number> = {
-    'Pending': 0, 'AdminApproved': 1, 'NayabApproved': 2,
-    'FullyApproved': 3, 'Rejected': 4, 'Cancelled': 5
-  };
-  const num = typeof status === 'number' ? status : (statusMap[status as any] ?? -1);
-  return map[num] ?? 'bi-clock-history';
-}
+    // Handle string status from backend
+    const statusMap: Record<string, number> = {
+      'Pending': 0, 'AdminApproved': 1, 'NayabApproved': 2,
+      'FullyApproved': 3, 'Rejected': 4, 'Cancelled': 5
+    };
+    const num = typeof status === 'number' ? status : (statusMap[status as any] ?? -1);
+    return map[num] ?? 'bi-clock-history';
+  }
 
   getStatusDisplayName(): string {
-  const map: Record<string, string> = {
-    'Pending':       'Pending',
-    'AdminApproved': 'Admin Approved',
-    'NayabApproved': 'Nayab Approved',
-    'FullyApproved': 'Fully Approved',
-    'Rejected':      'Rejected',
-    'Cancelled':     'Cancelled',
-  };
-  const raw = String(this.leave?.leaveStatus ?? this.leave?.leaveStatusName ?? '');
-  return map[raw] ?? raw;
-}
+    const map: Record<string, string> = {
+      'Pending': 'Pending',
+      'AdminApproved': 'Admin Approved',
+      'NayabApproved': 'Nayab Approved',
+      'FullyApproved': 'Fully Approved',
+      'Rejected': 'Rejected',
+      'Cancelled': 'Cancelled',
+    };
+    const raw = String(this.leave?.leaveStatus ?? this.leave?.leaveStatusName ?? '');
+    return map[raw] ?? raw;
+  }
 
   async onAdminApprove(): Promise<void> {
     if (!this.leave) return;
