@@ -43,6 +43,15 @@ export class AuthService {
     return this.getRole() === 'Employee';
   }
 
+  isHR(): boolean {
+  return this.getRole() === 'HR';
+}
+
+getDepartmentId(): string {
+  if (!this.isBrowser) return '';
+  return sessionStorage.getItem('DepartmentId') || '';
+}
+
   departmentId?: string;  
   departmentName?: string;
 

@@ -21,23 +21,23 @@ import { LeaveActionCellRendererComponent } from '../leave-action-cell-renderer.
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const myLeavesGridTheme = themeQuartz.withParams({
-  backgroundColor:               '#ffffff',
-  foregroundColor:               '#1f2937',
-  borderColor:                   '#e5e7eb',
-  headerBackgroundColor:         '#f9fafb',
-  headerTextColor:               '#374151',
-  oddRowBackgroundColor:         '#ffffff',
-  rowHoverColor:                 '#f8faff',
-  selectedRowBackgroundColor:    '#dbeafe',
-  fontFamily:                    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-  fontSize:                      13,
-  columnBorder:                  true,
-  headerColumnBorder:            true,
-  headerColumnBorderHeight:      '50%',
+  backgroundColor: '#ffffff',
+  foregroundColor: '#1f2937',
+  borderColor: '#e5e7eb',
+  headerBackgroundColor: '#f9fafb',
+  headerTextColor: '#374151',
+  oddRowBackgroundColor: '#ffffff',
+  rowHoverColor: '#f8faff',
+  selectedRowBackgroundColor: '#dbeafe',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontSize: 13,
+  columnBorder: true,
+  headerColumnBorder: true,
+  headerColumnBorderHeight: '50%',
   headerColumnResizeHandleColor: '#9ca3af',
   headerColumnResizeHandleHeight: '50%',
   headerColumnResizeHandleWidth: 2,
-  cellHorizontalPaddingScale:    0.8,
+  cellHorizontalPaddingScale: 0.8,
 });
 
 @Component({
@@ -61,25 +61,25 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
   gridApi!: GridApi;
   context = { componentParent: this, isEmployee: true };
 
-  loading         = false;
+  loading = false;
   balancesLoading = false;
   error: string | null = null;
-  searchTerm      = '';
-  showFilters     = false;
+  searchTerm = '';
+  showFilters = false;
   activeStatusFilter: string | null = null;
-  
+
 
   // Modals
-  showFormModal    = false;
+  showFormModal = false;
   showDetailsModal = false;
   formMode: 'create' | 'edit' = 'create';
   selectedLeaveId: string | null = null;
 
   // Pagination
   currentPage = 1;
-  pageSize    = 10;
-  totalPages  = 0;
-  totalCount  = 0;
+  pageSize = 10;
+  totalPages = 0;
+  totalCount = 0;
 
   filters: LeaveFilterDto = {
     pageNumber: 1, pageSize: 10,
@@ -91,10 +91,15 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
   private resizeObserver!: ResizeObserver;
   private sidebarResizeTimer: any = null;
 
-  get statTotal():     number { return this.allLeaves.length; }
-  get statPending():   number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Pending').length; }
-  get statApproved():  number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Approved').length; }
-  get statRejected():  number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Rejected').length; }
+  get statTotal(): number { return this.allLeaves.length; }
+  get statPending(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Pending').length; }
+  get statInProgress(): number {
+    return this.allLeaves.filter(l => this.statusLabel(l) === 'In Progress').length;
+  }
+  get statApproved(): number {
+    return this.allLeaves.filter(l => this.statusLabel(l) === 'Approved').length;
+  }
+  get statRejected(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Rejected').length; }
   get statCancelled(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Cancelled').length; }
 
   get activeFilterCount(): number {
@@ -174,14 +179,15 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
       cellRenderer: (p: any) => {
         const lbl = this.statusLabel(p.data);
         const map: Record<string, [string, string]> = {
-          'Pending':   ['#fef9c3', '#92400e'],
-          'Approved':  ['#dcfce7', '#166534'],
-          'Rejected':  ['#fee2e2', '#991b1b'],
+          'Pending': ['#fef9c3', '#92400e'],
+          'In Progress': ['#dbeafe', '#1d4ed8'],
+          'Approved': ['#dcfce7', '#166534'],
+          'Rejected': ['#fee2e2', '#991b1b'],
           'Cancelled': ['#f1f5f9', '#475569'],
         };
         const [bg, color] = map[lbl] ?? ['#fef9c3', '#92400e'];
         return `<span style="display:inline-flex;padding:2px 12px;border-radius:9999px;
-          font-size:12px;font-weight:600;background:${bg};color:${color};">${lbl}</span>`;
+    font-size:12px;font-weight:600;background:${bg};color:${color};">${lbl}</span>`;
       }
     },
     {
@@ -198,7 +204,7 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
     private leaveService: LeaveService,
     private leaveBalanceService: LeaveBalanceService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.employeeId = sessionStorage.getItem('EmployeeId')
@@ -239,20 +245,20 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
     this.loading = true; this.error = null;
     const filter: LeaveFilterDto = {
       ...this.filters,
-      searchTerm:  this.searchTerm || undefined,
-      pageNumber:  this.currentPage,
-      pageSize:    this.pageSize,
+      searchTerm: this.searchTerm || undefined,
+      pageNumber: this.currentPage,
+      pageSize: this.pageSize,
       leaveStatus: this.selectedStatus !== '' ? Number(this.selectedStatus) : undefined,
-      employeeId:  this.employeeId || undefined
+      employeeId: this.employeeId || undefined
     };
     this.leaveService.getMyLeaves(filter).subscribe({
       next: (r) => {
         this.loading = false;
         if (r.success) {
-          this.allLeaves     = r.data.items;
+          this.allLeaves = r.data.items;
           this.filteredLeaves = r.data.items;
-          this.totalPages    = r.data.totalPages;
-          this.totalCount    = r.data.totalCount;
+          this.totalPages = r.data.totalPages;
+          this.totalCount = r.data.totalCount;
           if (this.gridApi) {
             this.gridApi.setGridOption('rowData', this.filteredLeaves);
             setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
@@ -303,8 +309,8 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
 
   clearFilters(): void {
     clearTimeout(this.searchDebounceTimer);
-    this.searchTerm        = '';
-    this.selectedStatus    = '';
+    this.searchTerm = '';
+    this.selectedStatus = '';
     this.activeStatusFilter = null;
     this.filters = { pageNumber: 1, pageSize: 10, sortBy: 'AppliedDate', sortDescending: true };
     this.currentPage = 1;
@@ -358,11 +364,22 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
   }
 
   statusLabel(leave: Leave): string {
+    const raw = String(leave.leaveStatus ?? '');
     const map: Record<string, string> = {
-      '0': 'Pending', '1': 'Approved', '2': 'Rejected', '3': 'Cancelled',
-      'pending': 'Pending', 'approved': 'Approved', 'rejected': 'Rejected', 'cancelled': 'Cancelled'
+      '0': 'Pending',
+      '1': 'In Progress',
+      '2': 'In Progress',
+      '3': 'Approved',
+      '4': 'Rejected',
+      '5': 'Cancelled',
+      'Pending': 'Pending',
+      'AdminApproved': 'In Progress',
+      'NayabApproved': 'In Progress',
+      'FullyApproved': 'Approved',
+      'Rejected': 'Rejected',
+      'Cancelled': 'Cancelled',
     };
-    return map[String(leave.leaveStatus)] ?? map[(leave as any).leaveStatusName?.toLowerCase() ?? ''] ?? 'Pending';
+    return map[raw] ?? 'Pending';
   }
 
   utilizationColor(pct: number): string {
