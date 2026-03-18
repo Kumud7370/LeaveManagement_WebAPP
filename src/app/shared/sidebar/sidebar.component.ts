@@ -45,23 +45,23 @@ interface UserProfile {
   ],
 })
 export class SidebarComponent implements OnInit, OnDestroy {
-  public router  = inject(Router);
+  public router = inject(Router);
   private sidebarService = inject(SidebarService);
   private isBrowser: boolean;
 
   isExpanded = false;
-  isMobile   = false;
+  isMobile = false;
   activeRoute = '';
-  isPinned    = false;
+  isPinned = false;
   @Input() isBlurred = false;
 
   private isUserInteraction = false;
   private hoverTimeout: any;
 
   userProfile: UserProfile = {
-    name:     sessionStorage.getItem('username') || 'Guest User',
-    role:     sessionStorage.getItem('RoleName') || 'Guest',
-    avatar:   'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMiAxMkM5Ljc5IDEyIDggMTAuMjEgOCA4UzkuNzkgNDEyIDRTMTQuMjEgNiAxNiA4UzEyIDEwLjIxIDEyIDEyWk0xMiAxNEM5LjMzIDE0IDQgMTUuMzQgNCAyMFYyMkgyMFYyMEMxNiAxNS4zNCAxNC42NyAxNCAxMiAxNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo8L3N2Zz4K',
+    name: sessionStorage.getItem('username') || 'Guest User',
+    role: sessionStorage.getItem('RoleName') || 'Guest',
+    avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMiAxMkM5Ljc5IDEyIDggMTAuMjEgOCA4UzkuNzkgNDEyIDRTMTQuMjEgNiAxNiA4UzEyIDEwLjIxIDEyIDEyWk0xMiAxNEM5LjMzIDE0IDQgMTUuMzQgNCAyMFYyMkgyMFYyMEMxNiAxNS4zNCAxNC42NyAxNCAxMiAxNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo8L3N2Zz4K',
     isOnline: true,
   };
 
@@ -126,7 +126,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private checkScreenSize(): void {
     if (!this.isBrowser || typeof window === 'undefined') return;
     const wasMobile = this.isMobile;
-    this.isMobile   = window.innerWidth < 768;
+    this.isMobile = window.innerWidth < 768;
 
     if (wasMobile !== this.isMobile) {
       if (this.isMobile) {
@@ -147,9 +147,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   private setupUserProfile(): void {
     const storedUsername = sessionStorage.getItem('username');
-    const storedRole     = sessionStorage.getItem('RoleName');
+    const storedRole = sessionStorage.getItem('RoleName');
     if (storedUsername) this.userProfile.name = storedUsername;
-    if (storedRole)     this.userProfile.role = storedRole;
+    if (storedRole) this.userProfile.role = storedRole;
   }
 
   // ── Menu items per role ───────────────────────────────────────
@@ -162,57 +162,49 @@ export class SidebarComponent implements OnInit, OnDestroy {
       // ── Admin: full access ──────────────────────────────────
       case 'Admin':
         this.menuItems = [
-          { label: 'Dashboard',       route: '/dashboard',       icon: 'fas fa-tachometer-alt' },
+          { label: 'Dashboard', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
           { label: 'User Management', route: '/user-management', icon: 'fas fa-user-shield' },
-          { label: 'Employees',       route: '/employees',       icon: 'fas fa-users' },
-          { label: 'Departments',     route: '/departments',     icon: 'fas fa-sitemap' },
-          { label: 'Designations',    route: '/designations',    icon: 'fas fa-award' },
+          { label: 'Employees', route: '/employees', icon: 'fas fa-users' },
+          { label: 'Departments', route: '/departments', icon: 'fas fa-sitemap' },
+          { label: 'Designations', route: '/designations', icon: 'fas fa-award' },
           {
             label: 'Leave',
             icon: 'fas fa-plane-departure',
             expanded: false,
             children: [
-              { label: 'Leave Management', route: '/leave/list',         icon: 'fas fa-list-alt' },
-              { label: 'Leave Types',      route: '/leave-types',        icon: 'fas fa-tags' },
-              { label: 'Leave Balances',   route: '/leave-balance/list', icon: 'fas fa-wallet' },
+              { label: 'Leave Management', route: '/leave/list', icon: 'fas fa-list-alt' },
+              { label: 'Leave Types', route: '/leave-types', icon: 'fas fa-tags' },
+              { label: 'Leave Balances', route: '/leave-balance/list', icon: 'fas fa-wallet' },
             ]
           },
         ];
         break;
 
-      // ── Tehsildar: read-only senior authority ───────────────
       case 'Tehsildar':
         this.menuItems = [
-          { label: 'Dashboard',    route: '/dashboard',    icon: 'fas fa-tachometer-alt' },
-          { label: 'Employees',    route: '/employees',    icon: 'fas fa-users' },
-          { label: 'Departments',  route: '/departments',  icon: 'fas fa-sitemap' },
-          { label: 'Designations', route: '/designations', icon: 'fas fa-award' },
+          { label: 'Dashboard', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
+          { label: 'Employees', route: '/employees', icon: 'fas fa-users' },
           {
             label: 'Leave',
             icon: 'fas fa-plane-departure',
             expanded: false,
             children: [
-              { label: 'Leave Management', route: '/leave/list',         icon: 'fas fa-list-alt' },
-              { label: 'Leave Balances',   route: '/leave-balance/list', icon: 'fas fa-wallet' },
+              { label: 'Leave Management', route: '/leave/list', icon: 'fas fa-list-alt' },
             ]
           },
         ];
         break;
 
-      // ── NayabTehsildar: same as Tehsildar ───────────────────
       case 'NayabTehsildar':
         this.menuItems = [
-          { label: 'Dashboard',    route: '/dashboard',    icon: 'fas fa-tachometer-alt' },
-          { label: 'Employees',    route: '/employees',    icon: 'fas fa-users' },
-          { label: 'Departments',  route: '/departments',  icon: 'fas fa-sitemap' },
-          { label: 'Designations', route: '/designations', icon: 'fas fa-award' },
+          { label: 'Dashboard', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
+          { label: 'Employees', route: '/employees', icon: 'fas fa-users' },
           {
             label: 'Leave',
             icon: 'fas fa-plane-departure',
             expanded: false,
             children: [
-              { label: 'Leave Management', route: '/leave/list',         icon: 'fas fa-list-alt' },
-              { label: 'Leave Balances',   route: '/leave-balance/list', icon: 'fas fa-wallet' },
+              { label: 'Leave Management', route: '/leave/list', icon: 'fas fa-list-alt' },
             ]
           },
         ];
@@ -253,7 +245,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   isActive(route: string): boolean {
-    const curr    = this.activeRoute.replace(/\/$/, '');
+    const curr = this.activeRoute.replace(/\/$/, '');
     const compare = route.replace(/\/$/, '');
     return curr === compare;
   }
@@ -280,7 +272,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   // ── Sidebar expand / collapse ─────────────────────────────────
 
   togglePin(): void {
-    this.isPinned          = !this.isPinned;
+    this.isPinned = !this.isPinned;
     this.isUserInteraction = this.isPinned;
     if (this.isBrowser) localStorage.setItem('sidebarPinned', String(this.isPinned));
     if (this.isPinned) {

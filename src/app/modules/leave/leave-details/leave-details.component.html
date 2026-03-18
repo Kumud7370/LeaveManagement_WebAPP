@@ -21,10 +21,10 @@
       <div class="header-right">
         <span class="status-badge" [ngClass]="getStatusClass(leave.leaveStatus)">
           <i class="bi" [ngClass]="getStatusIcon(leave.leaveStatus)"></i>
-          {{ leave.leaveStatusName }}
+          {{ getStatusDisplayName() }}
         </span>
         <span class="emergency-badge" *ngIf="leave.isEmergencyLeave">
-          🚨 Emergency
+          Emergency
         </span>
         <span class="active-badge" *ngIf="leave.isActiveLeave">
           ● Active Now
@@ -149,26 +149,75 @@
         </div>
       </div>
 
+      <!-- Approval Chain Timeline -->
+      <div class="info-card" *ngIf="leave.leaveStatus !== LeaveStatus.Pending &&
+                               leave.leaveStatus !== LeaveStatus.Cancelled &&
+                               leave.leaveStatus !== LeaveStatus.Rejected">
+        <h4 class="card-title"><i class="bi bi-diagram-3"></i> Approval Chain</h4>
+        <div class="approval-chain">
+          <!-- Step 1: Admin -->
+          <div class="chain-step" [ngClass]="leave.adminApprovedBy ? 'done' : 'pending'">
+            <div class="chain-dot"></div>
+            <div class="chain-info">
+              <span class="chain-role">Admin Approval</span>
+              <span class="chain-meta" *ngIf="leave.adminApprovedDate">
+                {{ leave.adminApprovedDate | date: 'd MMM yyyy, h:mm a' }}
+              </span>
+              <span class="chain-meta pending-text" *ngIf="!leave.adminApprovedBy">Awaiting</span>
+            </div>
+          </div>
+          <!-- Step 2: Nayab -->
+          <div class="chain-line"></div>
+          <div class="chain-step" [ngClass]="leave.nayabApprovedBy ? 'done' : 'pending'">
+            <div class="chain-dot"></div>
+            <div class="chain-info">
+              <span class="chain-role">Nayab Tehsildar Approval</span>
+              <span class="chain-meta" *ngIf="leave.nayabApprovedDate">
+                {{ leave.nayabApprovedDate | date: 'd MMM yyyy, h:mm a' }}
+              </span>
+              <span class="chain-meta pending-text" *ngIf="!leave.nayabApprovedBy">Awaiting</span>
+            </div>
+          </div>
+          <!-- Step 3: Tehsildar -->
+          <div class="chain-line"></div>
+          <div class="chain-step" [ngClass]="leave.tehsildarApprovedBy ? 'done' : 'pending'">
+            <div class="chain-dot"></div>
+            <div class="chain-info">
+              <span class="chain-role">Tehsildar Final Approval</span>
+              <span class="chain-meta" *ngIf="leave.tehsildarApprovedDate">
+                {{ leave.tehsildarApprovedDate | date: 'd MMM yyyy, h:mm a' }}
+              </span>
+              <span class="chain-meta pending-text" *ngIf="!leave.tehsildarApprovedBy">Awaiting</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Action Buttons -->
-      <div class="details-actions" *ngIf="leave.leaveStatus === LeaveStatus.Pending || leave.canBeCancelled">
-        <button *ngIf="leave.leaveStatus === LeaveStatus.Pending" class="btn btn-approve" (click)="onApprove()">
-          <i class="bi bi-check-lg"></i> Approve
+      <div class="details-actions"
+        *ngIf="canAdminApprove || canNayabApprove || canTehsildarApprove || canReject || leave.canBeCancelled">
+
+        <button *ngIf="canAdminApprove" class="btn btn-approve" (click)="onAdminApprove()">
+          <i class="bi bi-check-lg"></i> Admin Approve
         </button>
-        <button *ngIf="leave.leaveStatus === LeaveStatus.Pending" class="btn btn-reject" (click)="onReject()">
+        <button *ngIf="canNayabApprove" class="btn btn-approve" (click)="onNayabApprove()">
+          <i class="bi bi-check-lg"></i> Nayab Approve
+        </button>
+        <button *ngIf="canTehsildarApprove" class="btn btn-approve" (click)="onTehsildarApprove()">
+          <i class="bi bi-check-circle"></i> Final Approve
+        </button>
+        <button *ngIf="canReject" class="btn btn-reject" (click)="onReject()">
           <i class="bi bi-x-lg"></i> Reject
         </button>
-        <button *ngIf="leave.canBeCancelled" class="btn btn-cancel" (click)="onCancel()">
+        <button *ngIf="leave.canBeCancelled && !isEmployee" class="btn btn-cancel" (click)="onCancel()">
           <i class="bi bi-slash-circle"></i> Cancel Leave
         </button>
       </div>
 
+      <!-- Error -->
+      <div *ngIf="!loading && !leave" class="details-error">
+        <i class="bi bi-exclamation-circle"></i>
+        <p>Failed to load leave details.</p>
+      </div>
+
     </div>
-  </ng-container>
-
-  <!-- Error -->
-  <div *ngIf="!loading && !leave" class="details-error">
-    <i class="bi bi-exclamation-circle"></i>
-    <p>Failed to load leave details.</p>
-  </div>
-
-</div>

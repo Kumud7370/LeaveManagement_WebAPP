@@ -39,7 +39,6 @@ export class LeaveService {
     );
   }
 
-  /** Employee-facing: backend resolves the employee from JWT — no employeeId needed in filter */
   getMyLeaves(filter: LeaveFilterDto): Observable<ApiResponse<PagedResultDto<Leave>>> {
     return this.apiClient.post<ApiResponse<PagedResultDto<Leave>>>(
       `${this.endpoint}/my-leaves`,
@@ -77,10 +76,6 @@ export class LeaveService {
       `${this.endpoint}/${id}`
     );
   }
-
- approveLeave(id: string): Observable<ApiResponse<boolean>> {
-  return this.apiClient.patch<ApiResponse<boolean>>(`${this.endpoint}/${id}/approve`, {});
-}
 
 // ADD these three:
 adminApproveLeave(id: string): Observable<ApiResponse<boolean>> {
@@ -130,6 +125,13 @@ tehsildarApproveLeave(id: string): Observable<ApiResponse<boolean>> {
       `${this.endpoint}/balance/${employeeId}/${leaveTypeId}/${year}`
     );
   }
+
+  getDepartmentLeaves(filter: LeaveFilterDto): Observable<ApiResponse<PagedResultDto<Leave>>> {
+  return this.apiClient.post<ApiResponse<PagedResultDto<Leave>>>(
+    `${this.endpoint}/department-leaves`,
+    filter
+  );
+}
 
   validateLeaveRequest(request: ValidateLeaveRequestDto): Observable<ApiResponse<boolean>> {
     return this.apiClient.post<ApiResponse<boolean>>(

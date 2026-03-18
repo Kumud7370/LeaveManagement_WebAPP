@@ -18,11 +18,11 @@ import { ICellRendererParams } from 'ag-grid-community';
         <i class="bi bi-pencil"></i>
       </button>
 
-      <button *ngIf="isPending && !isEmployee" class="btn-icon btn-approve" title="Approve" (click)="onApprove()">
+      <button *ngIf="canApprove" class="btn-icon btn-approve" title="Approve" (click)="onApprove()">
         <i class="bi bi-check-lg"></i>
       </button>
 
-      <button *ngIf="isPending && !isEmployee" class="btn-icon btn-reject" title="Reject" (click)="onReject()">
+      <button *ngIf="canReject && !isEmployee" class="btn-icon btn-reject" title="Reject" (click)="onReject()">
         <i class="bi bi-x-lg"></i>
       </button>
 
@@ -64,16 +64,34 @@ import { ICellRendererParams } from 'ag-grid-community';
 export class LeaveActionCellRendererComponent implements ICellRendererAngularComp {
   private params: any;
 
-  get isPending(): boolean {
-    const s = String(this.params?.data?.leaveStatus ?? '');
-    return s === '0' || s.toLowerCase() === 'pending';
-  }
+ private getStatusNumber(): number {
+  const raw = this.params?.data?.leaveStatus;
+  if (typeof raw === 'number') return raw;
+  const map: Record<string, number> = {
+    'Pending': 0, 'AdminApproved': 1, 'NayabApproved': 2,
+    'FullyApproved': 3, 'Rejected': 4, 'Cancelled': 5
+  };
+  return map[raw] ?? -1;
+}
+
+get canApprove(): boolean {
+  const role = sessionStorage.getItem('RoleName') || '';
+  const s = this.getStatusNumber();
+  return (role === 'Admin' && s === 0) ||
+         (role === 'NayabTehsildar' && s === 1) ||
+         (role === 'Tehsildar' && s === 2);
+}
+
+get canReject(): boolean {
+  const role = sessionStorage.getItem('RoleName') || '';
+  const s = this.getStatusNumber();
+  return ['Admin', 'NayabTehsildar', 'Tehsildar'].includes(role) && [0, 1, 2].includes(s);
+}
+
+get isPending(): boolean { return this.getStatusNumber() === 0; }
 
   get isCancellable(): boolean {
-    const s = String(this.params?.data?.leaveStatus ?? '');
-    return s === '0' || s === '1'
-      || s.toLowerCase() === 'pending'
-      || s.toLowerCase() === 'approved';
+    return !!this.params?.data?.canBeCancelled;
   }
 
   get isEmployee(): boolean {
@@ -85,10 +103,13 @@ export class LeaveActionCellRendererComponent implements ICellRendererAngularCom
 
   private get parent(): any { return this.params?.context?.componentParent; }
 
-  onView():    void { this.parent?.viewDetails(this.params.data); }
-  onEdit():    void { this.parent?.editLeave(this.params.data); }
+  onView(): void {
+    console.log('leaveStatus raw value:', this.params?.data?.leaveStatus, typeof this.params?.data?.leaveStatus);
+    this.parent?.viewDetails(this.params.data);
+  }
+  onEdit(): void { this.parent?.editLeave(this.params.data); }
   onApprove(): void { this.parent?.approveLeave(this.params.data); }
-  onReject():  void { this.parent?.rejectLeave(this.params.data); }
-  onCancel():  void { this.parent?.cancelLeave(this.params.data); }
-  onDelete():  void { this.parent?.deleteLeave(this.params.data); }
+  onReject(): void { this.parent?.rejectLeave(this.params.data); }
+  onCancel(): void { this.parent?.cancelLeave(this.params.data); }
+  onDelete(): void { this.parent?.deleteLeave(this.params.data); }
 }

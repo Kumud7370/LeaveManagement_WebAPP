@@ -75,6 +75,8 @@ export interface LeaveFilterDto {
   startDateTo?: Date;
   endDateFrom?: Date;
   endDateTo?: Date;
+  departmentId?: string;       
+  employeeIds?: string[];
   appliedDateFrom?: Date;
   appliedDateTo?: Date;
   isEmergencyLeave?: boolean;

@@ -21,36 +21,39 @@ import {
 import Swal from 'sweetalert2';
 import { LeaveService } from '../../../core/services/api/leave.api';
 import { LeaveTypeService } from '../../../core/services/api/leave-type.api';
-import { Leave, LeaveFilterDto } from '../../../core/Models/leave.model';
+import { Leave, LeaveFilterDto, LeaveStatus } from '../../../core/Models/leave.model';
 import { LeaveType } from '../../../core/Models/leave-type.model';
 import { LeaveActionCellRendererComponent } from '../leave-action-cell-renderer.component';
 import { LeaveFormComponent } from '../leave-form/leave-form.component';
 import { LeaveDetailsComponent } from '../leave-details/leave-details.component';
+import { AuthService } from '../../../core/services/api/auth.api'
+
 import * as XLSX from 'xlsx';
+
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const leaveGridTheme = themeQuartz.withParams({
-  backgroundColor:                '#ffffff',
-  foregroundColor:                '#374151',
-  borderColor:                    '#e5e7eb',
-  headerBackgroundColor:          '#ffffff',
-  headerTextColor:                '#374151',
-  oddRowBackgroundColor:          '#ffffff',
-  rowHoverColor:                  '#f8faff',
-  selectedRowBackgroundColor:     '#dbeafe',
-  fontFamily:                     '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-  fontSize:                       13,
-  columnBorder:                   true,
-  headerColumnBorder:             true,
-  headerColumnBorderHeight:       '50%',
-  headerColumnResizeHandleColor:  '#d1d5db',
+  backgroundColor: '#ffffff',
+  foregroundColor: '#374151',
+  borderColor: '#e5e7eb',
+  headerBackgroundColor: '#ffffff',
+  headerTextColor: '#374151',
+  oddRowBackgroundColor: '#ffffff',
+  rowHoverColor: '#f8faff',
+  selectedRowBackgroundColor: '#dbeafe',
+  fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  fontSize: 13,
+  columnBorder: true,
+  headerColumnBorder: true,
+  headerColumnBorderHeight: '50%',
+  headerColumnResizeHandleColor: '#d1d5db',
   headerColumnResizeHandleHeight: '50%',
-  headerColumnResizeHandleWidth:  2,
-  cellHorizontalPaddingScale:     0.75,
-  headerFontWeight:               500,
-  headerFontSize:                 13,
-  rowBorder:                      true,
+  headerColumnResizeHandleWidth: 2,
+  cellHorizontalPaddingScale: 0.75,
+  headerFontWeight: 500,
+  headerFontSize: 13,
+  rowBorder: true,
 });
 
 @Component({
@@ -71,13 +74,13 @@ export class LeaveListComponent implements OnInit, OnDestroy {
   searchTerm = '';
   context = { componentParent: this };
 
-  showFormModal    = false;
+  showFormModal = false;
   showDetailsModal = false;
   formMode: 'create' | 'edit' = 'create';
   selectedLeaveId: string | null = null;
 
   leaveTypes: LeaveType[] = [];
-  loading      = false;
+  loading = false;
   statsLoading = false;
   error: string | null = null;
   statistics: { [key: string]: number } = {};
@@ -93,14 +96,14 @@ export class LeaveListComponent implements OnInit, OnDestroy {
   };
 
   currentPage = 1;
-  pageSize    = 10;
-  totalPages  = 0;
-  totalCount  = 0;
+  pageSize = 10;
+  totalPages = 0;
+  totalCount = 0;
   Math = Math;
   private searchDebounceTimer: any = null;
   private resizeObserver!: ResizeObserver;
   private sidebarResizeTimer: any = null;
-  
+
 
   defaultColDef: ColDef = {
     sortable: true, filter: true, floatingFilter: true,
@@ -192,16 +195,20 @@ export class LeaveListComponent implements OnInit, OnDestroy {
       cellStyle: { display: 'flex', alignItems: 'center' },
       cellRenderer: (p: any) => {
         const map: Record<string, [string, string, string]> = {
-          '0':         ['#fef9c3','#92400e','Pending'],
-          '1':         ['#dcfce7','#166534','Approved'],
-          '2':         ['#fee2e2','#991b1b','Rejected'],
-          '3':         ['#f1f5f9','#475569','Cancelled'],
-          'Pending':   ['#fef9c3','#92400e','Pending'],
-          'Approved':  ['#dcfce7','#166534','Approved'],
-          'Rejected':  ['#fee2e2','#991b1b','Rejected'],
-          'Cancelled': ['#f1f5f9','#475569','Cancelled'],
+          '0': ['#fef9c3', '#92400e', 'Pending'],
+          '1': ['#dbeafe', '#1d4ed8', 'Admin Approved'],
+          '2': ['#e0e7ff', '#4338ca', 'Nayab Approved'],
+          '3': ['#dcfce7', '#166534', 'Fully Approved'],
+          '4': ['#fee2e2', '#991b1b', 'Rejected'],
+          '5': ['#f1f5f9', '#475569', 'Cancelled'],
+          'Pending': ['#fef9c3', '#92400e', 'Pending'],
+          'AdminApproved': ['#dbeafe', '#1d4ed8', 'Admin Approved'],
+          'NayabApproved': ['#e0e7ff', '#4338ca', 'Nayab Approved'],
+          'FullyApproved': ['#dcfce7', '#166534', 'Fully Approved'],
+          'Rejected': ['#fee2e2', '#991b1b', 'Rejected'],
+          'Cancelled': ['#f1f5f9', '#475569', 'Cancelled'],
         };
-        const [bg, color, lbl] = map[String(p.value)] ?? ['#fef9c3','#92400e','Pending'];
+        const [bg, color, lbl] = map[String(p.value)] ?? ['#fef9c3', '#92400e', 'Pending'];
         return `<span style="display:inline-flex;padding:2px 12px;border-radius:9999px;
           font-size:12px;font-weight:600;background:${bg};color:${color};
           font-family:'Inter',-apple-system,sans-serif;">${lbl}</span>`;
@@ -229,10 +236,22 @@ export class LeaveListComponent implements OnInit, OnDestroy {
   constructor(
     private leaveService: LeaveService,
     private leaveTypeService: LeaveTypeService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
+
+  get currentRole(): string { return this.authService.getRole(); }
+  get isAdmin(): boolean { return this.authService.isAdmin(); }
+  get isNayab(): boolean { return this.authService.isNayabTehsildar(); }
+  get isTehsildar(): boolean { return this.authService.isTehsildar(); }
+  get isHR(): boolean { return this.authService.isHR(); }
 
   ngOnInit(): void {
+
+    if (this.authService.isHR()) {
+      this.filters.departmentId = this.authService.getDepartmentId();
+    }
+
     this.loadLeaveTypes();
     this.loadLeaves();
     this.loadStatistics();
@@ -282,13 +301,18 @@ export class LeaveListComponent implements OnInit, OnDestroy {
       ...this.filters,
       searchTerm: this.searchTerm || undefined,
       pageNumber: this.currentPage,
-      pageSize:   this.pageSize
+      pageSize: this.pageSize
     };
-    this.leaveService.getFilteredLeaves(filter).subscribe({
+
+    const request$ = this.authService.isHR()
+      ? this.leaveService.getDepartmentLeaves(filter)
+      : this.leaveService.getFilteredLeaves(filter);
+
+    request$.subscribe({
       next: (r) => {
         this.loading = false;
         if (r.success) {
-          this.leaves     = r.data.items;
+          this.leaves = r.data.items;
           this.totalPages = r.data.totalPages;
           this.totalCount = r.data.totalCount;
           if (this.gridApi) {
@@ -362,27 +386,56 @@ export class LeaveListComponent implements OnInit, OnDestroy {
   createLeave(): void { this.formMode = 'create'; this.selectedLeaveId = null; this.showFormModal = true; }
   editLeave(leave: Leave): void { this.formMode = 'edit'; this.selectedLeaveId = leave.id; this.showFormModal = true; }
   viewDetails(leave: Leave): void { this.selectedLeaveId = leave.id; this.showDetailsModal = true; }
-  closeFormModal():    void { this.showFormModal    = false; this.selectedLeaveId = null; }
+  closeFormModal(): void { this.showFormModal = false; this.selectedLeaveId = null; }
   closeDetailsModal(): void { this.showDetailsModal = false; this.selectedLeaveId = null; }
-  onFormSuccess():  void { this.closeFormModal(); this.loadLeaves(); this.loadStatistics(); }
+  onFormSuccess(): void { this.closeFormModal(); this.loadLeaves(); this.loadStatistics(); }
   onLeaveUpdated(): void { this.loadLeaves(); this.loadStatistics(); }
 
   approveLeave(leave: Leave): void { this._doApprove(leave); }
-  rejectLeave(leave: Leave):  void { this._doReject(leave); }
-  cancelLeave(leave: Leave):  void { this._doCancel(leave); }
-  deleteLeave(leave: Leave):  void { this._doDelete(leave); }
+  rejectLeave(leave: Leave): void { this._doReject(leave); }
+  cancelLeave(leave: Leave): void { this._doCancel(leave); }
+  deleteLeave(leave: Leave): void { this._doDelete(leave); }
 
   private async _doApprove(leave: Leave): Promise<void> {
-    console.log('ID value:', leave.id);      // is this undefined?
-  console.log('Full object:', leave);       
+    const role = this.currentRole;
+    const statusMap: Record<string, number> = {
+      'Pending': 0, 'AdminApproved': 1, 'NayabApproved': 2
+    };
+    const s = typeof leave.leaveStatus === 'number'
+      ? leave.leaveStatus
+      : statusMap[leave.leaveStatus as any] ?? -1;
+
+    const canApprove =
+      (role === 'Admin' && s === 0) ||
+      (role === 'NayabTehsildar' && s === 1) ||
+      (role === 'Tehsildar' && s === 2);
+
+    if (!canApprove) {
+      Swal.fire('Cannot Approve',
+        'This leave is not at the correct stage for your role to approve.', 'warning');
+      return;
+    }
+
+    const stageLabel =
+      role === 'Admin' ? 'Admin Approve (forward to Nayab Tehsildar)' :
+        role === 'NayabTehsildar' ? 'Nayab Approve (forward to Tehsildar)' :
+          'Final Approve';
+
     const r = await Swal.fire({
-      title: 'Approve Leave?',
+      title: `${stageLabel}?`,
       html: `Approve <strong>${leave.employeeName}</strong>'s leave (${leave.totalDays} days)?`,
       icon: 'question', showCancelButton: true,
-      confirmButtonColor: '#10b981', cancelButtonColor: '#6b7280', confirmButtonText: 'Yes, Approve'
+      confirmButtonColor: '#10b981', cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Approve'
     });
     if (!r.isConfirmed) return;
-    this.leaveService.approveLeave(leave.id).subscribe({
+
+    const approve$ =
+      role === 'Admin' ? this.leaveService.adminApproveLeave(leave.id) :
+        role === 'NayabTehsildar' ? this.leaveService.nayabApproveLeave(leave.id) :
+          this.leaveService.tehsildarApproveLeave(leave.id);
+
+    approve$.subscribe({
       next: (res) => {
         if (res.success) {
           Swal.fire({ title: 'Approved!', icon: 'success', timer: 2000, showConfirmButton: false });
@@ -464,7 +517,7 @@ export class LeaveListComponent implements OnInit, OnDestroy {
       'Approved By': l.approvedByName || '', 'Rejection Reason': l.rejectionReason || ''
     }));
     const ws = XLSX.utils.json_to_sheet(data);
-    ws['!cols'] = [10,20,15,12,12,10,30,12,10,12,18,20].map(w => ({ wch: w }));
+    ws['!cols'] = [10, 20, 15, 12, 12, 10, 30, 12, 10, 12, 18, 20].map(w => ({ wch: w }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Leaves');
     const fn = `Leaves_${new Date().toISOString().slice(0, 10)}.xlsx`;
