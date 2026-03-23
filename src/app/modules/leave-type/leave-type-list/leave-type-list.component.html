@@ -1,48 +1,50 @@
 <div class="lt-page">
 
-  <h1 class="lt-page-title">Leave Types</h1>
+  <h1 class="lt-page-title">{{ langService.t('lt.title') }}</h1>
 
   <!-- Stats -->
   <div class="lt-stats-row">
     <div class="lt-stat lt-stat-blue" [class.lt-stat-loading]="loading">
-      <p class="lt-stat-label">Total Types</p>
+      <p class="lt-stat-label">{{ langService.t('lt.stats.total') }}</p>
       <p class="lt-stat-value"><ng-container *ngIf="!loading; else sk">{{ totalCount }}</ng-container></p>
     </div>
     <div class="lt-stat lt-stat-green" [class.lt-stat-loading]="loading">
-      <p class="lt-stat-label">Active</p>
+      <p class="lt-stat-label">{{ langService.t('lt.stats.active') }}</p>
       <p class="lt-stat-value"><ng-container *ngIf="!loading; else sk">{{ activeCount }}</ng-container></p>
     </div>
     <div class="lt-stat lt-stat-yellow" [class.lt-stat-loading]="loading">
-      <p class="lt-stat-label">Carry Forward</p>
+      <p class="lt-stat-label">{{ langService.t('lt.stats.carryForward') }}</p>
       <p class="lt-stat-value"><ng-container *ngIf="!loading; else sk">{{ carryForwardCount }}</ng-container></p>
     </div>
     <div class="lt-stat lt-stat-red" [class.lt-stat-loading]="loading">
-      <p class="lt-stat-label">Requires Document</p>
+      <p class="lt-stat-label">{{ langService.t('lt.stats.requiresDoc') }}</p>
       <p class="lt-stat-value"><ng-container *ngIf="!loading; else sk">{{ requiresDocCount }}</ng-container></p>
     </div>
   </div>
   <ng-template #sk><span class="lt-skeleton"></span></ng-template>
 
-  <!-- ── Toolbar (outside card, matches Holiday) ───────────────────── -->
+  <!-- ── Toolbar ───────────────────────────────────────────────────── -->
   <div class="lt-toolbar">
     <input
       type="text"
       class="lt-search"
-      placeholder="Search by name or code..."
+      [placeholder]="langService.t('lt.search')"
       [(ngModel)]="searchTerm"
       (input)="onSearch()" />
 
     <div class="lt-toolbar-btns">
-      <button class="lt-btn lt-btn-clear" (click)="clearFilters()">Clear</button>
+      <button class="lt-btn lt-btn-clear" (click)="clearFilters()">
+        {{ langService.t('common.clear') }}
+      </button>
       <button class="lt-btn lt-btn-refresh" (click)="loadLeaveTypes()">
-        <i class="bi bi-arrow-clockwise"></i> Refresh
+        <i class="bi bi-arrow-clockwise"></i> {{ langService.t('common.refresh') }}
       </button>
       <button class="lt-btn lt-btn-export" (click)="exportToExcel()">
-        <i class="bi bi-download"></i> Export
+        <i class="bi bi-download"></i> {{ langService.t('common.export') }}
       </button>
       <div class="lt-toolbar-divider"></div>
       <button class="lt-btn lt-btn-add" (click)="createLeaveType()">
-        <i class="bi bi-plus-lg"></i> Add Leave Type
+        <i class="bi bi-plus-lg"></i> {{ langService.t('lt.btn.add') }}
       </button>
     </div>
   </div>
@@ -50,23 +52,24 @@
   <!-- ── Grid Card ─────────────────────────────────────────────────── -->
   <div class="lt-card">
 
-    <!-- Grid -->
     <div *ngIf="loading" class="lt-loading">
       <div class="lt-spinner"></div>
-      <span>Loading leave types...</span>
+      <span>{{ langService.t('lt.loading') }}</span>
     </div>
 
     <div *ngIf="error && !loading" class="lt-error">
       <i class="bi bi-exclamation-circle"></i>
       <span>{{ error }}</span>
-      <button class="lt-btn lt-btn-refresh" (click)="loadLeaveTypes()">Try Again</button>
+      <button class="lt-btn lt-btn-refresh" (click)="loadLeaveTypes()">
+        {{ langService.t('common.tryAgain') }}
+      </button>
     </div>
 
     <div *ngIf="!loading && !error && leaveTypes.length === 0" class="lt-empty">
       <i class="bi bi-calendar2-x"></i>
-      <span>No leave types found.</span>
+      <span>{{ langService.t('lt.empty') }}</span>
       <button class="lt-btn lt-btn-add" (click)="createLeaveType()">
-        <i class="bi bi-plus-circle"></i> Add Leave Type
+        <i class="bi bi-plus-circle"></i> {{ langService.t('lt.btn.add') }}
       </button>
     </div>
 
@@ -90,13 +93,17 @@
     <div class="lt-pagination" *ngIf="!loading && leaveTypes.length > 0">
       <div class="lt-pagination-inner">
         <div class="lt-ps-wrap">
-          <label>Show:</label>
+          <label>{{ langService.t('common.show') }}:</label>
           <select class="lt-ps-select" [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)">
             <option *ngFor="let o of pageSizeOptions" [value]="o">{{ o }}</option>
           </select>
         </div>
-        <span class="lt-pag-info">{{ showingFrom }} to {{ showingTo }} of {{ totalCount }}</span>
-        <span class="lt-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <span class="lt-pag-info">
+          {{ showingFrom }} {{ langService.t('common.to') }} {{ showingTo }} {{ langService.t('common.of') }} {{ totalCount }}
+        </span>
+        <span class="lt-pag-info">
+          {{ langService.t('common.page') }} {{ currentPage }} {{ langService.t('common.of') }} {{ totalPages || 1 }}
+        </span>
         <div class="lt-pag-btns">
           <button class="lt-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(1)">«</button>
           <button class="lt-pgbtn" [disabled]="!hasPrevPage" (click)="onPageChange(currentPage - 1)">‹</button>
@@ -109,12 +116,13 @@
   </div><!-- /lt-card -->
 </div><!-- /lt-page -->
 
+<!-- ── Form Modal ─────────────────────────────────────────────────── -->
 <div class="lt-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
   <div class="lt-modal" (click)="$event.stopPropagation()">
     <div class="lt-modal-head">
       <h2 class="lt-modal-title">
         <i class="bi" [ngClass]="formMode === 'create' ? 'bi-plus-circle-dotted' : 'bi-pencil-square'"></i>
-        {{ formMode === 'create' ? 'Add Leave Type' : 'Edit Leave Type' }}
+        {{ formMode === 'create' ? langService.t('lt.modal.add') : langService.t('lt.modal.edit') }}
       </h2>
       <button class="lt-modal-close" (click)="closeFormModal()" type="button">
         <i class="bi bi-x-lg"></i>

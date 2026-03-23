@@ -7,11 +7,7 @@
         {{ isEditMode ? "Edit Designation" : "Create New Designation" }}
       </h1>
       <p class="form-subtitle">
-        {{
-          isEditMode
-            ? "Update designation information"
-            : "Add a new designation to the system"
-        }}
+        {{ isEditMode ? "Update designation information" : "Add a new designation to the system" }}
       </p>
     </div>
     <button class="btn-back" (click)="onCancel()">
@@ -27,75 +23,113 @@
   </div>
 
   <!-- Form -->
-  <form
-    *ngIf="!isLoading"
-    [formGroup]="designationForm"
-    (ngSubmit)="onSubmit()"
-    class="designation-form"
-  >
+  <form *ngIf="!isLoading" [formGroup]="designationForm" (ngSubmit)="onSubmit()" class="designation-form">
+
+    <!-- ── Basic Info Card ─────────────────────────────────────────────── -->
     <div class="form-card">
       <h2 class="section-title">
         <i class="bi bi-info-circle"></i>
         Basic Information
       </h2>
 
-      <div class="form-grid">
+      <div class="form-grid form-grid-2">
+
         <!-- Designation Code -->
         <div class="form-group">
           <label for="designationCode" class="required">Designation Code</label>
-          <input
-            type="text"
-            id="designationCode"
-            class="form-control"
+          <input type="text" id="designationCode" class="form-control"
             formControlName="designationCode"
             placeholder="e.g., MGR-001"
-            [class.is-invalid]="isFieldInvalid('designationCode')"
-          />
-          <small class="form-hint"
-            >Use uppercase letters, numbers, hyphens, and underscores
-            only</small
-          >
+            [class.is-invalid]="isFieldInvalid('designationCode')" />
+          <small class="form-hint">Use uppercase letters, numbers, hyphens, and underscores only</small>
           <div *ngIf="isFieldInvalid('designationCode')" class="error-message">
-            {{ getErrorMessage("designationCode") }}
+            {{ getErrorMessage('designationCode') }}
           </div>
         </div>
 
-        <!-- Designation Name -->
-        <div class="form-group">
-          <label for="designationName" class="required">Designation Name</label>
-          <input
-            type="text"
-            id="designationName"
-            class="form-control"
-            formControlName="designationName"
-            placeholder="e.g., Senior Manager"
-            [class.is-invalid]="isFieldInvalid('designationName')"
-          />
-          <div *ngIf="isFieldInvalid('designationName')" class="error-message">
-            {{ getErrorMessage("designationName") }}
-          </div>
-        </div>
-
-        <!-- Level -->
+        <!-- Hierarchy Level -->
         <div class="form-group">
           <label for="level" class="required">Hierarchy Level</label>
-          <input
-            type="number"
-            id="level"
-            class="form-control"
-            formControlName="level"
-            min="1"
-            max="100"
-            placeholder="1-100"
-            [class.is-invalid]="isFieldInvalid('level')"
-          />
-          <small class="form-hint"
-            >Lower numbers indicate higher positions</small
-          >
+          <input type="number" id="level" class="form-control"
+            formControlName="level" min="1" max="100" placeholder="1-100"
+            [class.is-invalid]="isFieldInvalid('level')" />
+          <small class="form-hint">Lower numbers indicate higher positions</small>
           <div *ngIf="isFieldInvalid('level')" class="error-message">
-            {{ getErrorMessage("level") }}
+            {{ getErrorMessage('level') }}
           </div>
         </div>
+
+      </div>
+    </div>
+
+    <!-- ── Names Card ──────────────────────────────────────────────────── -->
+    <div class="form-card">
+      <h2 class="section-title">
+        <i class="bi bi-translate"></i>
+        Designation Names
+      </h2>
+
+      <!-- Row 1: Marathi (required) | English (required) -->
+      <div class="form-grid form-grid-2">
+
+        <!-- Marathi Name -->
+        <div class="form-group">
+          <label for="designationNameMr" class="required">
+            Designation Name (Marathi) <span class="lang-tag">मराठी</span>
+          </label>
+          <input type="text" id="designationNameMr" class="form-control"
+            formControlName="designationNameMr"
+            placeholder="उदा. वरिष्ठ व्यवस्थापक"
+            [class.is-invalid]="isFieldInvalid('designationNameMr')" />
+          <div *ngIf="isFieldInvalid('designationNameMr')" class="error-message">
+            {{ getErrorMessage('designationNameMr') }}
+          </div>
+        </div>
+
+        <!-- English Name -->
+        <div class="form-group">
+          <label for="designationNameEn" class="required">
+            Designation Name (English) <span class="lang-tag">EN</span>
+          </label>
+          <input type="text" id="designationNameEn" class="form-control"
+            formControlName="designationNameEn"
+            placeholder="e.g., Senior Manager"
+            [class.is-invalid]="isFieldInvalid('designationNameEn')" />
+          <div *ngIf="isFieldInvalid('designationNameEn')" class="error-message">
+            {{ getErrorMessage('designationNameEn') }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Row 2: Hindi (required) -->
+      <div class="form-grid form-grid-2">
+
+        <!-- Hindi Name -->
+        <div class="form-group">
+          <label for="designationNameHi" class="required">
+            Designation Name (Hindi) <span class="lang-tag">हिंदी</span>
+          </label>
+          <input type="text" id="designationNameHi" class="form-control"
+            formControlName="designationNameHi"
+            placeholder="उदा. वरिष्ठ प्रबंधक"
+            [class.is-invalid]="isFieldInvalid('designationNameHi')" />
+          <div *ngIf="isFieldInvalid('designationNameHi')" class="error-message">
+            {{ getErrorMessage('designationNameHi') }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Status & Description Card ──────────────────────────────────── -->
+    <div class="form-card">
+      <h2 class="section-title">
+        <i class="bi bi-sliders"></i>
+        Status &amp; Description
+      </h2>
+
+      <div class="form-grid form-grid-2">
 
         <!-- Status -->
         <div class="form-group">
@@ -106,56 +140,43 @@
               <span class="toggle-slider"></span>
             </label>
             <span class="toggle-label">
-              {{
-                designationForm.get("isActive")?.value ? "Active" : "Inactive"
-              }}
+              {{ designationForm.get('isActive')?.value ? 'Active' : 'Inactive' }}
             </span>
           </div>
         </div>
+
       </div>
 
       <!-- Description -->
       <div class="form-group full-width">
         <label for="description">Description</label>
-        <textarea
-          id="description"
-          class="form-control"
-          formControlName="description"
-          rows="4"
+        <textarea id="description" class="form-control"
+          formControlName="description" rows="4"
           placeholder="Enter designation description (optional)..."
-          [class.is-invalid]="isFieldInvalid('description')"
-        ></textarea>
+          [class.is-invalid]="isFieldInvalid('description')"></textarea>
         <div *ngIf="isFieldInvalid('description')" class="error-message">
-          {{ getErrorMessage("description") }}
+          {{ getErrorMessage('description') }}
         </div>
       </div>
     </div>
 
     <!-- Form Actions -->
     <div class="form-actions">
-      <button
-        type="button"
-        class="btn-secondary"
-        (click)="onCancel()"
-        [disabled]="isSubmitting"
-      >
+      <button type="button" class="btn-secondary" (click)="onCancel()" [disabled]="isSubmitting">
         <i class="bi bi-x-circle"></i>
         Cancel
       </button>
-      <button
-        type="submit"
-        class="btn-primary"
-        [disabled]="designationForm.invalid || isSubmitting"
-      >
+      <button type="submit" class="btn-primary" [disabled]="designationForm.invalid || isSubmitting">
         <span *ngIf="!isSubmitting">
           <i class="bi bi-check-circle"></i>
-          {{ isEditMode ? "Update Designation" : "Create Designation" }}
+          {{ isEditMode ? 'Update Designation' : 'Create Designation' }}
         </span>
         <span *ngIf="isSubmitting">
           <i class="bi bi-arrow-repeat spin"></i>
-          {{ isEditMode ? "Updating..." : "Creating..." }}
+          {{ isEditMode ? 'Updating...' : 'Creating...' }}
         </span>
       </button>
     </div>
+
   </form>
 </div>

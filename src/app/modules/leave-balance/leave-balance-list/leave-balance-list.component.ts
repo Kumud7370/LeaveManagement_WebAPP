@@ -6,6 +6,7 @@ import {
   GridApi, GridReadyEvent, ColDef,
   ModuleRegistry, AllCommunityModule, themeQuartz
 } from 'ag-grid-community';
+import { Subject, takeUntil, skip } from 'rxjs';
 import Swal from 'sweetalert2';
 import { LeaveBalanceService } from '../../../core/services/api/leave-balance.api';
 import { LeaveTypeService } from '../../../core/services/api/leave-type.api';
@@ -14,6 +15,7 @@ import { LeaveType } from '../../../core/Models/leave-type.model';
 import { LeaveBalanceActionCellRendererComponent } from '../leave-balance-action-cell-renderer.component';
 import { LeaveBalanceFormComponent } from '../leave-balance-form/leave-balance-form.component';
 import { CollectiveLeaveBalanceFormComponent } from '../collective-leave-balance/collective-leave-balance-form.component';
+import { LanguageService } from '../../../core/services/api/language.api';
 
 import * as XLSX from 'xlsx';
 
@@ -53,16 +55,16 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
 
   readonly gridTheme = balanceGridTheme;
 
-  balances: LeaveBalance[] = [];
-  leaveTypes: LeaveType[] = [];
-  gridApi!: GridApi;
+  balances:   LeaveBalance[] = [];
+  leaveTypes: LeaveType[]    = [];
+  gridApi!:   GridApi;
   context = { componentParent: this };
 
   loading = false;
-  error: string | null = null;
+  error:  string | null = null;
 
   // Form modal
-  showFormModal    = false;
+  showFormModal     = false;
   formMode: 'create' | 'edit' = 'create';
   selectedBalanceId: string | null = null;
 
@@ -70,11 +72,11 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
   showCollectiveModal = false;
 
   // ── Adjust Balance modal ──────────────────────────────────────────
-  showAdjustModal      = false;
-  adjustingBalance:    LeaveBalance | null = null;
-  adjustDays:          number = 0;
-  adjustReason:        string = '';
-  adjustLoading        = false;
+  showAdjustModal       = false;
+  adjustingBalance:     LeaveBalance | null = null;
+  adjustDays:           number = 0;
+  adjustReason:         string = '';
+  adjustLoading         = false;
   adjustValidationError: string | null = null;
 
   // Pagination
@@ -97,7 +99,10 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
     pageNumber: 1, pageSize: 10, sortBy: 'year', sortDescending: true
   };
 
-  private resizeObserver!: ResizeObserver;
+  columnDefs: ColDef[] = [];
+
+  private destroy$          = new Subject<void>();
+  private resizeObserver!:  ResizeObserver;
   private sidebarResizeTimer: any = null;
 
   defaultColDef: ColDef = {
@@ -106,129 +111,148 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
     cellStyle: { display: 'flex', alignItems: 'center' }
   };
 
-  columnDefs: ColDef[] = [
-    {
-      headerName: 'Actions',
-      width: 160, minWidth: 160, maxWidth: 160,
-      sortable: false, filter: false, floatingFilter: false,
-      suppressFloatingFilterButton: true,
-      headerClass: 'lb-action-col',
-      cellClass: 'lb-action-cell lb-action-col',
-      cellStyle: { display: 'flex', alignItems: 'center', padding: '0', overflow: 'visible' },
-      cellRenderer: LeaveBalanceActionCellRendererComponent,
-      suppressSizeToFit: true
-    },
-    {
-      headerName: 'Employee',
-      field: 'employeeName',
-      width: 200, minWidth: 160,
-      cellRenderer: (p: any) => p.value
-        ? `<div style="display:flex;flex-direction:column;gap:2px;justify-content:center;height:100%;">
-             <span style="font-weight:600;color:#111827;font-size:13px;">${p.value}</span>
-             <span style="font-size:11px;color:#9ca3af;font-family:monospace;">${p.data?.employeeCode || ''}</span>
-           </div>` : ''
-    },
-    {
-      headerName: 'Leave Type',
-      field: 'leaveTypeName',
-      width: 160, minWidth: 130,
-      cellRenderer: (p: any) => {
-        if (!p.value) return '';
-        const c = p.data?.leaveTypeColor || '#3b82f6';
-        return `<span style="display:inline-flex;align-items:center;padding:3px 10px;
-          background:${c}18;color:${c};border:1px solid ${c}40;
-          border-radius:5px;font-size:12px;font-weight:600;">${p.value}</span>`;
-      }
-    },
-    {
-      headerName: 'Year',
-      field: 'year',
-      width: 90, minWidth: 80,
-      cellRenderer: (p: any) => p.data?.isCurrentYear
-        ? `<span style="display:inline-flex;padding:2px 10px;border-radius:9999px;
-            font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;">${p.value}</span>`
-        : `<span style="font-size:13px;color:#6b7280;">${p.value}</span>`
-    },
-    {
-      headerName: 'Allocated',
-      field: 'totalAllocated',
-      width: 115, minWidth: 100,
-      cellRenderer: (p: any) => {
-        const total = (p.value || 0) + (p.data?.carriedForward || 0);
-        return `<span style="display:inline-flex;padding:2px 10px;border-radius:9999px;
-          font-size:12px;font-weight:600;background:#f1f5f9;color:#374151;">${total} days</span>`;
-      }
-    },
-    {
-      headerName: 'Consumed',
-      field: 'consumed',
-      width: 115, minWidth: 100,
-      cellRenderer: (p: any) =>
-        `<span style="display:inline-flex;padding:2px 10px;border-radius:9999px;
-          font-size:12px;font-weight:600;background:#fef3c7;color:#92400e;">${p.value ?? 0} days</span>`
-    },
-    {
-      headerName: 'Carry Fwd',
-      field: 'carriedForward',
-      width: 110, minWidth: 100,
-      cellRenderer: (p: any) => p.value > 0
-        ? `<span style="display:inline-flex;padding:2px 10px;border-radius:9999px;
-            font-size:12px;font-weight:600;background:#f0fdf4;color:#15803d;">${p.value} days</span>`
-        : `<span style="color:#d1d5db;font-size:13px;">—</span>`
-    },
-    {
-      headerName: 'Available',
-      field: 'available',
-      width: 115, minWidth: 100,
-      cellRenderer: (p: any) => {
-        const low = p.data?.isLowBalance;
-        const bg = low ? '#fee2e2' : '#dcfce7';
-        const color = low ? '#991b1b' : '#166534';
-        const icon = low ? ` <i class="bi bi-exclamation-triangle-fill" style="font-size:10px;"></i>` : '';
-        return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;
-          border-radius:9999px;font-size:12px;font-weight:600;background:${bg};color:${color};">
-          ${p.value ?? 0} days${icon}</span>`;
-      }
-    },
-    {
-      headerName: 'Utilization',
-      field: 'utilizationPercentage',
-      width: 160, minWidth: 140,
-      cellRenderer: (p: any) => {
-        const pct = Math.round(p.value ?? 0);
-        const color = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#10b981';
-        return `<div style="display:flex;align-items:center;gap:8px;width:100%;">
-          <div style="flex:1;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;">
-            <div style="width:${Math.min(pct,100)}%;height:100%;background:${color};border-radius:3px;"></div>
-          </div>
-          <span style="font-size:12px;font-weight:700;color:${color};min-width:36px;text-align:right;">${pct}%</span>
-        </div>`;
-      }
-    },
-    {
-      headerName: 'Last Updated',
-      field: 'lastUpdated',
-      width: 140, minWidth: 120,
-      valueFormatter: (p: any) => p.value
-        ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
-      cellStyle: { color: '#6b7280', fontSize: '12px' }
-    }
-  ];
-
   constructor(
     private leaveBalanceService: LeaveBalanceService,
-    private leaveTypeService: LeaveTypeService,
-    private cdr: ChangeDetectorRef
+    private leaveTypeService:    LeaveTypeService,
+    private cdr:                 ChangeDetectorRef,
+    public  langService:         LanguageService
   ) {
     const cur = new Date().getFullYear();
     for (let y = cur + 1; y >= cur - 3; y--) this.yearOptions.push(y);
   }
 
-  ngOnInit(): void { this.loadLeaveTypes(); this.loadBalances(); }
+  ngOnInit(): void {
+    this.buildColumnDefs();
+    this.loadLeaveTypes();
+    this.loadBalances();
+
+    this.langService.lang$.pipe(skip(1), takeUntil(this.destroy$)).subscribe(() => {
+      this.buildColumnDefs();
+      if (this.gridApi) this.gridApi.setGridOption('columnDefs', this.columnDefs);
+      this.cdr.detectChanges();
+    });
+  }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     if (this.resizeObserver) this.resizeObserver.disconnect();
     clearTimeout(this.sidebarResizeTimer);
+  }
+
+  buildColumnDefs(): void {
+    const t = (k: string) => this.langService.t(k);
+    const locale = this.langService.currentLang === 'mr' ? 'mr-IN'
+                 : this.langService.currentLang === 'hi' ? 'hi-IN' : 'en-GB';
+
+    this.columnDefs = [
+      {
+        headerName: t('lb.col.actions'),
+        width: 160, minWidth: 160, maxWidth: 160,
+        sortable: false, filter: false, floatingFilter: false,
+        suppressFloatingFilterButton: true,
+        headerClass: 'lb-action-col',
+        cellClass: 'lb-action-cell lb-action-col',
+        cellStyle: { display: 'flex', alignItems: 'center', padding: '0', overflow: 'visible' },
+        cellRenderer: LeaveBalanceActionCellRendererComponent,
+        suppressSizeToFit: true
+      },
+      {
+        headerName: t('lb.col.employee'),
+        field: 'employeeName',
+        width: 200, minWidth: 160,
+        cellRenderer: (p: any) => p.value
+          ? `<div style="display:flex;flex-direction:column;gap:2px;justify-content:center;height:100%;">
+               <span style="font-weight:600;color:#111827;font-size:13px;">${p.value}</span>
+               <span style="font-size:11px;color:#9ca3af;font-family:monospace;">${p.data?.employeeCode || ''}</span>
+             </div>` : ''
+      },
+      {
+        headerName: t('lb.col.leaveType'),
+        field: 'leaveTypeName',
+        width: 160, minWidth: 130,
+        cellRenderer: (p: any) => {
+          if (!p.value) return '';
+          const c = p.data?.leaveTypeColor || '#3b82f6';
+          return `<span style="display:inline-flex;align-items:center;padding:3px 10px;
+            background:${c}18;color:${c};border:1px solid ${c}40;
+            border-radius:5px;font-size:12px;font-weight:600;">${p.value}</span>`;
+        }
+      },
+      {
+        headerName: t('lb.col.year'),
+        field: 'year',
+        width: 90, minWidth: 80,
+        cellRenderer: (p: any) => p.data?.isCurrentYear
+          ? `<span style="display:inline-flex;padding:2px 10px;border-radius:9999px;
+              font-size:12px;font-weight:700;background:#dbeafe;color:#1d4ed8;">${p.value}</span>`
+          : `<span style="font-size:13px;color:#6b7280;">${p.value}</span>`
+      },
+      {
+        headerName: t('lb.col.allocated'),
+        field: 'totalAllocated',
+        width: 115, minWidth: 100,
+        cellRenderer: (p: any) => {
+          const total = (p.value || 0) + (p.data?.carriedForward || 0);
+          return `<span style="display:inline-flex;padding:2px 10px;border-radius:9999px;
+            font-size:12px;font-weight:600;background:#f1f5f9;color:#374151;">${total} ${t('lb.days')}</span>`;
+        }
+      },
+      {
+        headerName: t('lb.col.consumed'),
+        field: 'consumed',
+        width: 115, minWidth: 100,
+        cellRenderer: (p: any) =>
+          `<span style="display:inline-flex;padding:2px 10px;border-radius:9999px;
+            font-size:12px;font-weight:600;background:#fef3c7;color:#92400e;">${p.value ?? 0} ${t('lb.days')}</span>`
+      },
+      {
+        headerName: t('lb.col.carryFwd'),
+        field: 'carriedForward',
+        width: 110, minWidth: 100,
+        cellRenderer: (p: any) => p.value > 0
+          ? `<span style="display:inline-flex;padding:2px 10px;border-radius:9999px;
+              font-size:12px;font-weight:600;background:#f0fdf4;color:#15803d;">${p.value} ${t('lb.days')}</span>`
+          : `<span style="color:#d1d5db;font-size:13px;">—</span>`
+      },
+      {
+        headerName: t('lb.col.available'),
+        field: 'available',
+        width: 115, minWidth: 100,
+        cellRenderer: (p: any) => {
+          const low   = p.data?.isLowBalance;
+          const bg    = low ? '#fee2e2' : '#dcfce7';
+          const color = low ? '#991b1b' : '#166534';
+          const icon  = low ? ` <i class="bi bi-exclamation-triangle-fill" style="font-size:10px;"></i>` : '';
+          return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;
+            border-radius:9999px;font-size:12px;font-weight:600;background:${bg};color:${color};">
+            ${p.value ?? 0} ${t('lb.days')}${icon}</span>`;
+        }
+      },
+      {
+        headerName: t('lb.col.utilization'),
+        field: 'utilizationPercentage',
+        width: 160, minWidth: 140,
+        cellRenderer: (p: any) => {
+          const pct   = Math.round(p.value ?? 0);
+          const color = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#10b981';
+          return `<div style="display:flex;align-items:center;gap:8px;width:100%;">
+            <div style="flex:1;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;">
+              <div style="width:${Math.min(pct,100)}%;height:100%;background:${color};border-radius:3px;"></div>
+            </div>
+            <span style="font-size:12px;font-weight:700;color:${color};min-width:36px;text-align:right;">${pct}%</span>
+          </div>`;
+        }
+      },
+      {
+        headerName: t('lb.col.lastUpdated'),
+        field: 'lastUpdated',
+        width: 140, minWidth: 120,
+        valueFormatter: (p: any) => p.value
+          ? new Date(p.value).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
+        cellStyle: { color: '#6b7280', fontSize: '12px' }
+      }
+    ];
   }
 
   @HostListener('window:resize')
@@ -269,20 +293,20 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
       next: (r) => {
         this.loading = false;
         if (r.success) {
-          this.balances    = r.data.items;
-          this.totalPages  = r.data.totalPages;
-          this.totalCount  = r.data.totalCount;
+          this.balances   = r.data.items;
+          this.totalPages = r.data.totalPages;
+          this.totalCount = r.data.totalCount;
           this.computeStats();
           if (this.gridApi) {
             this.gridApi.setGridOption('rowData', this.balances);
             setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
           }
-        } else { this.error = r.message || 'Failed to load balances'; }
+        } else { this.error = r.message || this.langService.t('lb.msg.loadError'); }
         this.cdr.detectChanges();
       },
       error: (e) => {
         this.loading = false;
-        this.error = e.error?.message || 'Error loading balances';
+        this.error = e.error?.message || this.langService.t('lb.msg.loadError');
         this.cdr.detectChanges();
       }
     });
@@ -296,13 +320,13 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
     this.avgUtilization  = this.balances.length ? Math.round(totalUtil / this.balances.length) : 0;
   }
 
-  onYearChange(): void { this.currentPage = 1; this.loadBalances(); }
+  onYearChange():   void { this.currentPage = 1; this.loadBalances(); }
   onFilterChange(): void { this.currentPage = 1; this.loadBalances(); }
 
   clearFilters(): void {
-    this.filters     = { pageNumber: 1, pageSize: 10, sortBy: 'year', sortDescending: true };
+    this.filters      = { pageNumber: 1, pageSize: 10, sortBy: 'year', sortDescending: true };
     this.selectedYear = new Date().getFullYear();
-    this.currentPage = 1;
+    this.currentPage  = 1;
     this.loadBalances();
   }
 
@@ -321,7 +345,7 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
   }
 
   onPageSizeChange(e: Event): void {
-    this.pageSize = +(e.target as HTMLSelectElement).value;
+    this.pageSize    = +(e.target as HTMLSelectElement).value;
     this.currentPage = 1; this.loadBalances();
   }
 
@@ -340,40 +364,41 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
   onFormSuccess(): void { this.closeFormModal(); this.loadBalances(); }
 
   // ── Collective modal ──────────────────────────────────────────────
-  openCollectiveModal(): void  { this.showCollectiveModal = true; }
+  openCollectiveModal():  void { this.showCollectiveModal = true; }
   closeCollectiveModal(): void { this.showCollectiveModal = false; }
-  onCollectiveSuccess(): void  { this.closeCollectiveModal(); this.loadBalances(); }
+  onCollectiveSuccess():  void { this.closeCollectiveModal(); this.loadBalances(); }
 
   // ── Adjust Balance modal ──────────────────────────────────────────
   adjustBalance(balance: LeaveBalance): void {
-    this.adjustingBalance     = balance;
-    this.adjustDays           = 0;
-    this.adjustReason         = '';
-    this.adjustLoading        = false;
+    this.adjustingBalance      = balance;
+    this.adjustDays            = 0;
+    this.adjustReason          = '';
+    this.adjustLoading         = false;
     this.adjustValidationError = null;
-    this.showAdjustModal      = true;
+    this.showAdjustModal       = true;
   }
 
   closeAdjustModal(): void {
     if (this.adjustLoading) return;
-    this.showAdjustModal   = false;
-    this.adjustingBalance  = null;
+    this.showAdjustModal       = false;
+    this.adjustingBalance      = null;
     this.adjustValidationError = null;
   }
 
   submitAdjustBalance(): void {
     this.adjustValidationError = null;
+    const t = (k: string) => this.langService.t(k);
 
     if (!this.adjustDays || this.adjustDays === 0) {
-      this.adjustValidationError = 'Please enter the number of days to adjust (cannot be zero).';
+      this.adjustValidationError = t('lb.adjust.errorZero');
       return;
     }
     if (!this.adjustReason?.trim()) {
-      this.adjustValidationError = 'Please provide a reason for the adjustment.';
+      this.adjustValidationError = t('lb.adjust.errorReason');
       return;
     }
     if (this.adjustReason.trim().length < 5) {
-      this.adjustValidationError = 'Reason must be at least 5 characters.';
+      this.adjustValidationError = t('lb.adjust.errorReasonMin');
       return;
     }
 
@@ -381,25 +406,25 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
     const dto: AdjustLeaveBalanceDto = {
       adjustmentAmount: this.adjustDays,
       adjustmentReason: this.adjustReason.trim(),
-      adjustmentType: 'Manual'
+      adjustmentType:   'Manual'
     };
 
     this.leaveBalanceService.adjustLeaveBalance(this.adjustingBalance!.id, dto).subscribe({
       next: (r) => {
         this.adjustLoading = false;
         if (r.success) {
-          this.showAdjustModal = false;
+          this.showAdjustModal  = false;
           this.adjustingBalance = null;
-          Swal.fire({ title: 'Adjusted!', icon: 'success', timer: 2000, showConfirmButton: false });
+          Swal.fire({ title: t('lb.msg.adjusted'), icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadBalances();
         } else {
-          this.adjustValidationError = r.message || 'Failed to adjust balance.';
+          this.adjustValidationError = r.message || t('lb.msg.adjustFailed');
         }
         this.cdr.detectChanges();
       },
       error: (e) => {
         this.adjustLoading = false;
-        this.adjustValidationError = e.error?.message || 'An error occurred. Please try again.';
+        this.adjustValidationError = e.error?.message || t('common.error');
         this.cdr.detectChanges();
       }
     });
@@ -407,89 +432,102 @@ export class LeaveBalanceListComponent implements OnInit, OnDestroy {
 
   // ── Recalculate ───────────────────────────────────────────────────
   async recalculateBalance(balance: LeaveBalance): Promise<void> {
-    const r = await Swal.fire({
-      title: 'Recalculate Balance?',
-      html: `Recalculate <strong>${balance.employeeName}'s</strong> ${balance.leaveTypeName} for ${balance.year}?`,
-      icon: 'question', showCancelButton: true,
+    const t  = (k: string) => this.langService.t(k);
+    const r  = await Swal.fire({
+      title: t('lb.swal.recalcTitle'),
+      html:  `${t('lb.swal.recalcHtml')} <strong>${balance.employeeName}</strong> — ${balance.leaveTypeName} (${balance.year})?`,
+      icon:  'question', showCancelButton: true,
       confirmButtonColor: '#3b82f6', cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, Recalculate'
+      confirmButtonText: t('lb.swal.recalcBtn'),
+      cancelButtonText:  t('common.no')
     });
     if (!r.isConfirmed) return;
     this.leaveBalanceService.recalculateBalance(balance.id).subscribe({
       next: (res) => {
         if (res.success) {
-          Swal.fire({ title: 'Done!', icon: 'success', timer: 2000, showConfirmButton: false });
+          Swal.fire({ title: t('common.done'), icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadBalances();
-        } else { Swal.fire('Error!', res.message || 'Failed', 'error'); }
+        } else { Swal.fire(t('common.errorTitle'), res.message || t('lb.msg.recalcFailed'), 'error'); }
       },
-      error: (e) => Swal.fire('Error!', e.error?.message || 'Error occurred', 'error')
+      error: (e) => Swal.fire(t('common.errorTitle'), e.error?.message || t('common.error'), 'error')
     });
   }
 
   // ── Delete ────────────────────────────────────────────────────────
   async deleteBalance(balance: LeaveBalance): Promise<void> {
-    const r = await Swal.fire({
-      title: 'Delete Balance?',
-      html: `Delete <strong>${balance.employeeName}'s</strong> ${balance.leaveTypeName} balance for ${balance.year}?`,
-      icon: 'warning', showCancelButton: true,
+    const t  = (k: string) => this.langService.t(k);
+    const r  = await Swal.fire({
+      title: t('lb.swal.deleteTitle'),
+      html:  `${t('lb.swal.deleteHtml')} <strong>${balance.employeeName}</strong> — ${balance.leaveTypeName} (${balance.year})?`,
+      icon:  'warning', showCancelButton: true,
       confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, Delete'
+      confirmButtonText: t('common.yesDelete'),
+      cancelButtonText:  t('common.no')
     });
     if (!r.isConfirmed) return;
     this.leaveBalanceService.deleteLeaveBalance(balance.id).subscribe({
       next: (res) => {
         if (res.success) {
-          Swal.fire({ title: 'Deleted!', icon: 'success', timer: 2000, showConfirmButton: false });
+          Swal.fire({ title: t('common.deleted'), icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadBalances();
-        } else { Swal.fire('Error!', res.message || 'Failed', 'error'); }
+        } else { Swal.fire(t('common.errorTitle'), res.message || t('lb.msg.deleteFailed'), 'error'); }
       },
-      error: (e) => Swal.fire('Error!', e.error?.message || 'Error occurred', 'error')
+      error: (e) => Swal.fire(t('common.errorTitle'), e.error?.message || t('common.error'), 'error')
     });
   }
 
   // ── Init Employee ─────────────────────────────────────────────────
   async initializeEmployee(): Promise<void> {
+    const t = (k: string) => this.langService.t(k);
     const { value: employeeId } = await Swal.fire({
-      title: 'Initialize Employee Balances',
-      input: 'text', inputLabel: 'Employee ID', inputPlaceholder: 'Enter employee ID...',
-      showCancelButton: true, confirmButtonColor: '#10b981', cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Initialize', inputValidator: (v) => !v ? 'Employee ID is required!' : null
+      title:          t('lb.swal.initTitle'),
+      input:          'text',
+      inputLabel:     t('lb.swal.initInputLabel'),
+      inputPlaceholder: t('lb.swal.initPlaceholder'),
+      showCancelButton:  true,
+      confirmButtonColor: '#10b981', cancelButtonColor: '#6b7280',
+      confirmButtonText: t('lb.swal.initBtn'),
+      cancelButtonText:  t('common.no'),
+      inputValidator: (v) => !v ? t('lb.swal.initRequired') : null
     });
     if (!employeeId) return;
     this.leaveBalanceService.initializeBalanceForEmployee(employeeId, this.selectedYear).subscribe({
       next: (res) => {
         if (res.success) {
-          Swal.fire({ title: 'Done!', text: 'Balances initialized.', icon: 'success', timer: 2000, showConfirmButton: false });
+          Swal.fire({ title: t('common.done'), text: t('lb.msg.initialized'), icon: 'success', timer: 2000, showConfirmButton: false });
           this.loadBalances();
-        } else { Swal.fire('Error!', res.message || 'Failed to initialize', 'error'); }
+        } else { Swal.fire(t('common.errorTitle'), res.message || t('lb.msg.initFailed'), 'error'); }
       },
-      error: (e) => Swal.fire('Error!', e.error?.message || 'Error occurred', 'error')
+      error: (e) => Swal.fire(t('common.errorTitle'), e.error?.message || t('common.error'), 'error')
     });
   }
 
   // ── Export ────────────────────────────────────────────────────────
   exportToExcel(): void {
-    if (!this.balances.length) { Swal.fire('No Data', 'Nothing to export.', 'info'); return; }
-    Swal.fire({ title: 'Exporting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    const t = (k: string) => this.langService.t(k);
+    if (!this.balances.length) {
+      Swal.fire(t('lb.swal.noData'), t('lb.swal.nothingToExport'), 'info'); return;
+    }
+    Swal.fire({ title: t('lb.swal.exporting'), allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     const data = this.balances.map(b => ({
-      'Employee Code': b.employeeCode || '',
-      'Employee Name': b.employeeName || '',
-      'Leave Type':    b.leaveTypeName || '',
-      'Year':          b.year,
-      'Total Allocated': b.totalAllocated,
-      'Carried Forward': b.carriedForward,
-      'Consumed':        b.consumed,
-      'Available':       b.available,
-      'Utilization %':   Math.round(b.utilizationPercentage),
-      'Low Balance':     b.isLowBalance ? 'Yes' : 'No',
-      'Last Updated':    new Date(b.lastUpdated).toLocaleDateString()
+      [t('lb.export.code')]:        b.employeeCode  || '',
+      [t('lb.export.name')]:        b.employeeName  || '',
+      [t('lb.export.leaveType')]:   b.leaveTypeName || '',
+      [t('lb.export.year')]:        b.year,
+      [t('lb.export.allocated')]:   b.totalAllocated,
+      [t('lb.export.carried')]:     b.carriedForward,
+      [t('lb.export.consumed')]:    b.consumed,
+      [t('lb.export.available')]:   b.available,
+      [t('lb.export.utilization')]: Math.round(b.utilizationPercentage),
+      [t('lb.export.lowBalance')]:  b.isLowBalance ? t('common.yes') : t('common.no'),
+      [t('lb.export.lastUpdated')]: new Date(b.lastUpdated).toLocaleDateString()
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     ws['!cols'] = [12, 22, 16, 8, 14, 14, 12, 12, 14, 12, 14].map(w => ({ wch: w }));
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Leave Balances');
+    XLSX.utils.book_append_sheet(wb, ws, t('lb.export.sheetName'));
     const fn = `LeaveBalances_${this.selectedYear}_${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(wb, fn);
-    Swal.fire({ title: 'Done!', text: `${fn} downloaded.`, icon: 'success', timer: 2500, showConfirmButton: false });
+    Swal.fire({ title: t('common.done'), text: `${fn} downloaded.`, icon: 'success', timer: 2500, showConfirmButton: false });
   }
 }

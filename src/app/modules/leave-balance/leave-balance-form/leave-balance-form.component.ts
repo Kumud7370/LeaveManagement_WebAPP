@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { LeaveBalanceService } from '../../../core/services/api/leave-balance.api';
 import { LeaveTypeService }    from '../../../core/services/api/leave-type.api';
 import { EmployeeService }     from '../../../core/services/api/employee.api';
+import { LanguageService }     from '../../../core/services/api/language.api';
 import { LeaveBalance, CreateLeaveBalanceDto, UpdateLeaveBalanceDto } from '../../../core/Models/leave-balance.model';
 import { LeaveType } from '../../../core/Models/leave-type.model';
 
@@ -34,10 +35,11 @@ export class LeaveBalanceFormComponent implements OnInit {
   yearOptions:        number[]          = [];
 
   constructor(
-    private fb: FormBuilder,
+    private fb:                 FormBuilder,
     private leaveBalanceService: LeaveBalanceService,
-    private leaveTypeService: LeaveTypeService,
-    private employeeService: EmployeeService
+    private leaveTypeService:   LeaveTypeService,
+    private employeeService:    EmployeeService,
+    public  langService:        LanguageService
   ) {
     const cur = new Date().getFullYear();
     for (let y = cur + 1; y >= cur - 3; y--) this.yearOptions.push(y);
@@ -88,7 +90,6 @@ export class LeaveBalanceFormComponent implements OnInit {
             employeeId: b.employeeId, leaveTypeId: b.leaveTypeId,
             year: b.year, totalAllocated: b.totalAllocated, carriedForward: b.carriedForward
           });
-          // Lock natural key fields in edit mode
           this.balanceForm.get('employeeId')?.disable();
           this.balanceForm.get('leaveTypeId')?.disable();
           this.balanceForm.get('year')?.disable();
@@ -115,6 +116,7 @@ export class LeaveBalanceFormComponent implements OnInit {
     if (this.balanceForm.invalid) { this.markAllTouched(); return; }
     this.submitting = true; this.formError = null;
     const v = this.balanceForm.getRawValue();
+    const t = (k: string) => this.langService.t(k);
 
     if (this.isEditMode && this.balanceId) {
       const dto: UpdateLeaveBalanceDto = {
@@ -125,9 +127,9 @@ export class LeaveBalanceFormComponent implements OnInit {
         next: (r) => {
           this.submitting = false;
           if (r.success) this.formSubmitted.emit();
-          else this.formError = r.message || 'Failed to update balance';
+          else this.formError = r.message || t('lb.msg.updateFailed');
         },
-        error: (e) => { this.submitting = false; this.formError = e.error?.message || 'An error occurred'; }
+        error: (e) => { this.submitting = false; this.formError = e.error?.message || t('common.error'); }
       });
     } else {
       const dto: CreateLeaveBalanceDto = {
@@ -139,9 +141,9 @@ export class LeaveBalanceFormComponent implements OnInit {
         next: (r) => {
           this.submitting = false;
           if (r.success) this.formSubmitted.emit();
-          else this.formError = r.message || 'Failed to create balance. It may already exist.';
+          else this.formError = r.message || t('lb.msg.createFailed');
         },
-        error: (e) => { this.submitting = false; this.formError = e.error?.message || 'An error occurred'; }
+        error: (e) => { this.submitting = false; this.formError = e.error?.message || t('common.error'); }
       });
     }
   }
@@ -156,9 +158,10 @@ export class LeaveBalanceFormComponent implements OnInit {
   getError(field: string): string {
     const c = this.balanceForm.get(field);
     if (!c?.errors) return '';
-    if (c.errors['required']) return 'This field is required.';
-    if (c.errors['min'])      return `Minimum value is ${c.errors['min'].min}.`;
-    if (c.errors['max'])      return `Maximum value is ${c.errors['max'].max}.`;
+    const t = (k: string) => this.langService.t(k);
+    if (c.errors['required']) return t('common.fieldRequired');
+    if (c.errors['min'])      return `${t('common.minValue')} ${c.errors['min'].min}.`;
+    if (c.errors['max'])      return `${t('common.maxValue')} ${c.errors['max'].max}.`;
     return '';
   }
 

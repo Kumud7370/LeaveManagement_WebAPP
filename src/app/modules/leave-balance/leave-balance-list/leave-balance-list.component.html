@@ -1,29 +1,29 @@
 <div class="lb-page">
 
-  <h1 class="lb-page-title">Leave Balances</h1>
+  <h1 class="lb-page-title">{{ langService.t('lb.title') }}</h1>
 
   <!-- ── Stats ─────────────────────────────────────────────────────── -->
   <div class="lb-stats-row">
     <div class="lb-stat lb-stat-blue" [class.lb-stat-loading]="loading">
-      <p class="lb-stat-label">Total Employees</p>
+      <p class="lb-stat-label">{{ langService.t('lb.stats.totalEmployees') }}</p>
       <p class="lb-stat-value">
         <ng-container *ngIf="!loading; else sk">{{ totalEmployees }}</ng-container>
       </p>
     </div>
     <div class="lb-stat lb-stat-green" [class.lb-stat-loading]="loading">
-      <p class="lb-stat-label">Total Available Days</p>
+      <p class="lb-stat-label">{{ langService.t('lb.stats.availableDays') }}</p>
       <p class="lb-stat-value">
         <ng-container *ngIf="!loading; else sk">{{ totalAvailable }}</ng-container>
       </p>
     </div>
     <div class="lb-stat lb-stat-yellow" [class.lb-stat-loading]="loading">
-      <p class="lb-stat-label">Avg Utilization</p>
+      <p class="lb-stat-label">{{ langService.t('lb.stats.avgUtilization') }}</p>
       <p class="lb-stat-value">
         <ng-container *ngIf="!loading; else sk">{{ avgUtilization }}%</ng-container>
       </p>
     </div>
     <div class="lb-stat lb-stat-red" [class.lb-stat-loading]="loading">
-      <p class="lb-stat-label">Low Balance</p>
+      <p class="lb-stat-label">{{ langService.t('lb.stats.lowBalance') }}</p>
       <p class="lb-stat-value">
         <ng-container *ngIf="!loading; else sk">{{ lowBalanceCount }}</ng-container>
       </p>
@@ -31,52 +31,56 @@
   </div>
   <ng-template #sk><span class="lb-skeleton"></span></ng-template>
 
-<!-- ── Toolbar ───────────────────────────────────────────────────── -->
-<div class="lb-toolbar">
-  <select class="lb-year-select" [(ngModel)]="selectedYear" (change)="onYearChange()">
-    <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
-  </select>
-  <div class="lb-toolbar-btns">
-    <button class="lb-btn lb-btn-clear" (click)="clearFilters()">Clear</button>
-    <button class="lb-btn lb-btn-refresh" (click)="loadBalances()">
-      <i class="bi bi-arrow-clockwise"></i> Refresh
-    </button>
-    <div class="lb-toolbar-divider"></div>
-    <button class="lb-btn lb-btn-export" (click)="exportToExcel()">
-      <i class="bi bi-download"></i> Export
-    </button>
-    <button class="lb-btn lb-btn-init" (click)="initializeEmployee()">
-      <i class="bi bi-person-plus"></i> Init Employee
-    </button>
-    <button class="lb-btn lb-btn-collective" (click)="openCollectiveModal()">
-      <i class="bi bi-people-fill"></i> Collective Balance
-    </button>
-    <div class="lb-toolbar-divider"></div>
-    <button class="lb-btn lb-btn-add" (click)="createBalance()">
-      <i class="bi bi-plus-lg"></i> Add Balance
-    </button>
+  <!-- ── Toolbar ───────────────────────────────────────────────────── -->
+  <div class="lb-toolbar">
+    <select class="lb-year-select" [(ngModel)]="selectedYear" (change)="onYearChange()">
+      <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
+    </select>
+    <div class="lb-toolbar-btns">
+      <button class="lb-btn lb-btn-clear" (click)="clearFilters()">
+        {{ langService.t('common.clear') }}
+      </button>
+      <button class="lb-btn lb-btn-refresh" (click)="loadBalances()">
+        <i class="bi bi-arrow-clockwise"></i> {{ langService.t('common.refresh') }}
+      </button>
+      <div class="lb-toolbar-divider"></div>
+      <button class="lb-btn lb-btn-export" (click)="exportToExcel()">
+        <i class="bi bi-download"></i> {{ langService.t('common.export') }}
+      </button>
+      <button class="lb-btn lb-btn-init" (click)="initializeEmployee()">
+        <i class="bi bi-person-plus"></i> {{ langService.t('lb.btn.initEmployee') }}
+      </button>
+      <button class="lb-btn lb-btn-collective" (click)="openCollectiveModal()">
+        <i class="bi bi-people-fill"></i> {{ langService.t('lb.btn.collective') }}
+      </button>
+      <div class="lb-toolbar-divider"></div>
+      <button class="lb-btn lb-btn-add" (click)="createBalance()">
+        <i class="bi bi-plus-lg"></i> {{ langService.t('lb.btn.add') }}
+      </button>
+    </div>
   </div>
-</div>
 
   <!-- ── Grid Card ─────────────────────────────────────────────────── -->
   <div class="lb-card">
 
     <div *ngIf="loading" class="lb-loading">
       <div class="lb-spinner"></div>
-      <span>Loading leave balances...</span>
+      <span>{{ langService.t('lb.loading') }}</span>
     </div>
 
     <div *ngIf="error && !loading" class="lb-error">
       <i class="bi bi-exclamation-circle"></i>
       <span>{{ error }}</span>
-      <button class="lb-btn lb-btn-refresh" (click)="loadBalances()">Try Again</button>
+      <button class="lb-btn lb-btn-refresh" (click)="loadBalances()">
+        {{ langService.t('common.tryAgain') }}
+      </button>
     </div>
 
     <div *ngIf="!loading && !error && balances.length === 0" class="lb-empty">
       <i class="bi bi-bar-chart-line"></i>
-      <span>No leave balances found for {{ selectedYear }}. Adjust filters or initialize an employee.</span>
+      <span>{{ langService.t('lb.empty') }} {{ selectedYear }}.</span>
       <button class="lb-btn lb-btn-init" (click)="initializeEmployee()">
-        <i class="bi bi-person-plus"></i> Init Employee
+        <i class="bi bi-person-plus"></i> {{ langService.t('lb.btn.initEmployee') }}
       </button>
     </div>
 
@@ -99,7 +103,7 @@
     <div class="lb-pagination" *ngIf="!loading && balances.length > 0">
       <div class="lb-pagination-inner">
         <div class="lb-ps-wrap">
-          <label>Show:</label>
+          <label>{{ langService.t('common.show') }}:</label>
           <select class="lb-ps-select" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
             <option [value]="10">10</option>
             <option [value]="25">25</option>
@@ -108,9 +112,12 @@
           </select>
         </div>
         <span class="lb-pag-info">
-          {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
+          {{ (currentPage - 1) * pageSize + 1 }} {{ langService.t('common.to') }}
+          {{ Math.min(currentPage * pageSize, totalCount) }} {{ langService.t('common.of') }} {{ totalCount }}
         </span>
-        <span class="lb-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <span class="lb-pag-info">
+          {{ langService.t('common.page') }} {{ currentPage }} {{ langService.t('common.of') }} {{ totalPages || 1 }}
+        </span>
         <div class="lb-pag-btns">
           <button class="lb-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">«</button>
           <button class="lb-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">‹</button>
@@ -133,7 +140,7 @@
     <div class="lb-modal-head">
       <h2 class="lb-modal-title">
         <i class="bi" [ngClass]="formMode === 'create' ? 'bi-plus-circle-dotted' : 'bi-pencil-square'"></i>
-        {{ formMode === 'create' ? 'Add Leave Balance' : 'Edit Leave Balance' }}
+        {{ formMode === 'create' ? langService.t('lb.modal.addBalance') : langService.t('lb.modal.editBalance') }}
       </h2>
       <button class="lb-modal-close" (click)="closeFormModal()" type="button">
         <i class="bi bi-x-lg"></i>
@@ -156,7 +163,7 @@
   <div class="lb-modal lb-modal-xl" (click)="$event.stopPropagation()">
     <div class="lb-modal-head">
       <h2 class="lb-modal-title">
-        <i class="bi bi-people-fill"></i> Collective Leave Balance
+        <i class="bi bi-people-fill"></i> {{ langService.t('lb.modal.collective') }}
       </h2>
       <button class="lb-modal-close" (click)="closeCollectiveModal()" type="button">
         <i class="bi bi-x-lg"></i>
@@ -182,7 +189,7 @@
       <div class="ab-header-icon-wrap">
         <i class="bi bi-sliders2"></i>
       </div>
-      <h2 class="ab-title">Adjust Balance</h2>
+      <h2 class="ab-title">{{ langService.t('lb.adjust.title') }}</h2>
       <button class="ab-close" (click)="closeAdjustModal()" type="button">
         <i class="bi bi-x-lg"></i>
       </button>
@@ -195,15 +202,15 @@
       <div class="ab-section" *ngIf="adjustingBalance">
         <div class="ab-section-title">
           <span class="ab-section-bar"></span>
-          Employee & Leave Type
+          {{ langService.t('lb.adjust.sectionEmployee') }}
         </div>
         <div class="ab-info-row">
           <div class="ab-info-field">
-            <label class="ab-info-label">Employee</label>
+            <label class="ab-info-label">{{ langService.t('lb.col.employee') }}</label>
             <div class="ab-info-value">{{ adjustingBalance.employeeName }}</div>
           </div>
           <div class="ab-info-field">
-            <label class="ab-info-label">Leave Type</label>
+            <label class="ab-info-label">{{ langService.t('lb.col.leaveType') }}</label>
             <div class="ab-info-value">{{ adjustingBalance.leaveTypeName }}</div>
           </div>
         </div>
@@ -213,43 +220,43 @@
       <div class="ab-section">
         <div class="ab-section-title">
           <span class="ab-section-bar"></span>
-          Adjustment Details
+          {{ langService.t('lb.adjust.sectionDetails') }}
         </div>
 
         <!-- Info banner -->
         <div class="ab-info-banner">
           <i class="bi bi-info-circle-fill"></i>
-          <span>Enter a <strong>positive number</strong> to add days, or a <strong>negative number</strong> to deduct days.</span>
+          <span [innerHTML]="langService.t('lb.adjust.infoBanner')"></span>
         </div>
 
         <!-- Adjustment Days -->
         <div class="ab-field">
           <label class="ab-label">
-            Adjustment Days <span class="ab-required">*</span>
+            {{ langService.t('lb.adjust.daysLabel') }} <span class="ab-required">*</span>
           </label>
           <div class="ab-input-suffix-wrap">
             <input
               type="number"
               class="ab-input"
               [(ngModel)]="adjustDays"
-              placeholder="e.g. 5"
+              [placeholder]="langService.t('lb.adjust.daysPlaceholder')"
               [class.ab-input-positive]="adjustDays > 0"
               [class.ab-input-negative]="adjustDays < 0"
               (ngModelChange)="adjustValidationError = null"
             />
-            <span class="ab-input-suffix">days</span>
+            <span class="ab-input-suffix">{{ langService.t('lb.days') }}</span>
           </div>
         </div>
 
         <!-- Reason -->
         <div class="ab-field">
           <label class="ab-label">
-            Reason for Adjustment <span class="ab-required">*</span>
+            {{ langService.t('lb.adjust.reasonLabel') }} <span class="ab-required">*</span>
           </label>
           <textarea
             class="ab-textarea"
             [(ngModel)]="adjustReason"
-            placeholder="Briefly explain why this balance is being adjusted..."
+            [placeholder]="langService.t('lb.adjust.reasonPlaceholder')"
             rows="3"
             maxlength="500"
             (ngModelChange)="adjustValidationError = null">
@@ -269,12 +276,14 @@
     <!-- Footer -->
     <div class="ab-footer">
       <button class="ab-btn-cancel" (click)="closeAdjustModal()" type="button">
-        Cancel
+        {{ langService.t('common.cancel') }}
       </button>
       <button class="ab-btn-apply" (click)="submitAdjustBalance()" type="button" [disabled]="adjustLoading">
-        <span *ngIf="!adjustLoading"><i class="bi bi-check-circle"></i> Apply Adjustment</span>
+        <span *ngIf="!adjustLoading">
+          <i class="bi bi-check-circle"></i> {{ langService.t('lb.adjust.applyBtn') }}
+        </span>
         <span *ngIf="adjustLoading" class="ab-btn-loading">
-          <span class="ab-spinner-sm"></span> Applying...
+          <span class="ab-spinner-sm"></span> {{ langService.t('lb.adjust.applying') }}
         </span>
       </button>
     </div>

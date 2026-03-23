@@ -1,41 +1,41 @@
 export enum Gender {
-  Male = 0,
-  Female = 1,
-  Other = 2
+  Male = 0, Female = 1, Other = 2
 }
-
 export enum EmploymentType {
-  FullTime = 1,
-  PartTime = 2,
-  Contract = 3,
-  Intern = 4,
-  Temporary = 5
+  FullTime = 1, PartTime = 2, Contract = 3, Intern = 4, Temporary = 5
 }
-
 export enum EmployeeStatus {
-  Active = 1,
-  Inactive = 2,
-  OnLeave = 3,
-  Suspended = 4,
-  Terminated = 5,
-  Resigned = 6
+  Active = 1, Inactive = 2, OnLeave = 3, Suspended = 4, Terminated = 5, Resigned = 6
 }
 
 export interface Address {
-  street: string;
-  city: string;
-  state: string;
-  country: string;
-  postalCode: string;
+  street: string; city: string; state: string; country: string; postalCode: string;
 }
 
 export interface EmployeeResponseDto {
   id: string;
   employeeCode: string;
-  firstName: string;
+
+  // Marathi (primary)
+  firstNameMr: string;
+  middleNameMr?: string;
+  lastNameMr: string;
+
+  // English (optional)
+  firstName?: string;
   middleName?: string;
-  lastName: string;
-  fullName: string;
+  lastName?: string;
+
+  // Hindi (optional)
+  firstNameHi?: string;
+  middleNameHi?: string;
+  lastNameHi?: string;
+
+  // Computed full names
+  fullName: string;       // Marathi by default
+  fullNameEn?: string;
+  fullNameHi?: string;
+
   email: string;
   phoneNumber: string;
   alternatePhoneNumber?: string;
@@ -65,9 +65,22 @@ export interface EmployeeResponseDto {
 
 export interface CreateEmployeeDto {
   employeeCode: string;
-  firstName: string;
+
+  // Marathi (required)
+  firstNameMr: string;
+  middleNameMr?: string;
+  lastNameMr: string;
+
+  // English (optional)
+  firstName?: string;
   middleName?: string;
-  lastName: string;
+  lastName?: string;
+
+  // Hindi (optional)
+  firstNameHi?: string;
+  middleNameHi?: string;
+  lastNameHi?: string;
+
   email: string;
   phoneNumber: string;
   alternatePhoneNumber?: string;
@@ -86,9 +99,21 @@ export interface CreateEmployeeDto {
 }
 
 export interface UpdateEmployeeDto {
+  // Marathi
+  firstNameMr?: string;
+  middleNameMr?: string;
+  lastNameMr?: string;
+
+  // English
   firstName?: string;
   middleName?: string;
   lastName?: string;
+
+  // Hindi
+  firstNameHi?: string;
+  middleNameHi?: string;
+  lastNameHi?: string;
+
   email?: string;
   phoneNumber?: string;
   alternatePhoneNumber?: string;
@@ -128,6 +153,21 @@ export interface ReassignEmployeeDto {
   reason?: string;
 }
 
+export interface BulkReassignEmployeeDto {
+  employeeIds: string[];
+  toDepartmentId: string;
+  toDesignationId: string;
+  reason?: string;
+}
+
+export interface BulkReassignResultDto {
+  totalRequested: number;
+  succeeded: number;
+  failed: number;
+  failedIds: string[];
+  message: string;
+}
+
 export interface AssignmentHistoryResponseDto {
   id: string;
   employeeId: string;
@@ -159,49 +199,39 @@ export interface ApiResponseDto<T> {
   data: T;
 }
 
-// Helper functions
-export function getGenderName(gender: Gender): string {
-  return Gender[gender];
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-export function getEmploymentTypeName(type: EmploymentType): string {
-  return EmploymentType[type];
-}
-
-export function getEmployeeStatusName(status: EmployeeStatus): string {
-  return EmployeeStatus[status];
+/** Returns the display name for the active language */
+export function getEmployeeDisplayName(
+  emp: EmployeeResponseDto | CreateEmployeeDto,
+  lang: 'mr' | 'en' | 'hi' = 'mr'
+): string {
+  if (lang === 'en' && 'firstName' in emp && emp.firstName && emp.lastName)
+    return [emp.firstName, (emp as any).middleName, emp.lastName].filter(Boolean).join(' ');
+  if (lang === 'hi' && emp.firstNameHi && emp.lastNameHi)
+    return [emp.firstNameHi, emp.middleNameHi, emp.lastNameHi].filter(Boolean).join(' ');
+  // Default: Marathi
+  return [emp.firstNameMr, emp.middleNameMr, emp.lastNameMr].filter(Boolean).join(' ');
 }
 
 export function createEmptyAddress(): Address {
-  return {
-    street: '',
-    city: '',
-    state: '',
-    country: '',
-    postalCode: ''
-  };
+  return { street: '', city: '', state: '', country: '', postalCode: '' };
 }
 
 export function createEmptyEmployee(): CreateEmployeeDto {
   return {
     employeeCode: '',
-    firstName: '',
-    middleName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: '',
-    alternatePhoneNumber: '',
+    firstNameMr: '', middleNameMr: '', lastNameMr: '',
+    firstName: '',   middleName: '',   lastName: '',
+    firstNameHi: '', middleNameHi: '', lastNameHi: '',
+    email: '', phoneNumber: '', alternatePhoneNumber: '',
     dateOfBirth: new Date(),
     gender: Gender.Male,
     address: createEmptyAddress(),
-    departmentId: '',
-    designationId: '',
-    managerId: '',
-    dateOfJoining: new Date(),
-    dateOfLeaving: undefined,
+    departmentId: '', designationId: '', managerId: '',
+    dateOfJoining: new Date(), dateOfLeaving: undefined,
     employmentType: EmploymentType.FullTime,
     employeeStatus: EmployeeStatus.Active,
-    profileImageUrl: '',
-    biometricId: ''
+    profileImageUrl: '', biometricId: ''
   };
 }

@@ -2,6 +2,7 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { DepartmentService } from '../../../core/services/api/department.api';
+import { LanguageService } from '../../../core/services/api/language.api';
 import { Department } from '../../../../app/core/Models/department.model';
 import Swal from 'sweetalert2';
 
@@ -13,20 +14,21 @@ import Swal from 'sweetalert2';
   styleUrls: ['./department-form.component.scss']
 })
 export class DepartmentFormComponent implements OnInit {
-  @Input() isModal = false;
+  @Input() isModal      = false;
   @Input() departmentId: string | null = null;
-  @Input() isEditMode = false;
+  @Input() isEditMode   = false;
   @Output() formCancelled = new EventEmitter<void>();
   @Output() formSubmitted = new EventEmitter<Department>();
 
   departmentForm!: FormGroup;
-  loading = false;
+  loading    = false;
   submitting = false;
   error: string | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private departmentService: DepartmentService
+    private departmentService: DepartmentService,
+    public  langService: LanguageService
   ) {}
 
   ngOnInit(): void {
@@ -39,20 +41,25 @@ export class DepartmentFormComponent implements OnInit {
 
   initializeForm(): void {
     this.departmentForm = this.fb.group({
-      departmentCode: ['', [
+      departmentCode:   ['', [
         Validators.required,
         Validators.minLength(2),
         Validators.maxLength(20),
         Validators.pattern('^[A-Z0-9_-]+$')
       ]],
-      departmentName: ['', [
+      // Marathi name — primary / required
+      departmentNameMr: ['', [
         Validators.required,
         Validators.minLength(2),
         Validators.maxLength(100)
       ]],
-      description:  ['', [Validators.maxLength(500)]],
-      displayOrder: [0,  [Validators.min(0)]],
-      isActive:     [true]
+      // English name — optional fallback
+      departmentName:   ['', [Validators.maxLength(100)]],
+      // Hindi name — optional
+      departmentNameHi: ['', [Validators.maxLength(100)]],
+      description:      ['', [Validators.maxLength(500)]],
+      displayOrder:     [0,  [Validators.min(0)]],
+      isActive:         [true]
     });
   }
 
@@ -62,19 +69,21 @@ export class DepartmentFormComponent implements OnInit {
     this.departmentService.getDepartmentById(this.departmentId).subscribe({
       next: (response) => {
         if (response.success) {
-          const dept = response.data;
+          const dept = response.data as any;
           this.departmentForm.patchValue({
-            departmentCode: dept.departmentCode,
-            departmentName: dept.departmentName,
-            description:    dept.description,
-            displayOrder:   dept.displayOrder,
-            isActive:       dept.isActive
+            departmentCode:   dept.departmentCode,
+            departmentNameMr: dept.departmentNameMr || dept.departmentName || '',
+            departmentName:   dept.departmentName   || '',
+            departmentNameHi: dept.departmentNameHi || '',
+            description:      dept.description      || '',
+            displayOrder:     dept.displayOrder      ?? 0,
+            isActive:         dept.isActive
           });
         }
         this.loading = false;
       },
       error: (err) => {
-        this.error = err.error?.message || 'Failed to load department';
+        this.error   = err.error?.message || 'Failed to load department';
         this.loading = false;
       }
     });
@@ -87,92 +96,71 @@ export class DepartmentFormComponent implements OnInit {
     }
 
     this.submitting = true;
-    this.error = null;
+    this.error      = null;
 
     const v = this.departmentForm.value;
     const requestData = {
-      departmentCode: v.departmentCode,
-      departmentName: v.departmentName,
-      description:    v.description || undefined,
-      displayOrder:   v.displayOrder || 0,
-      isActive:       v.isActive
+      departmentCode:   v.departmentCode,
+      departmentNameMr: v.departmentNameMr,
+      // English falls back to Marathi if left blank
+      departmentName:   v.departmentName   || v.departmentNameMr,
+      departmentNameHi: v.departmentNameHi || undefined,
+      description:      v.description      || undefined,
+      displayOrder:     v.displayOrder      || 0,
+      isActive:         v.isActive
     };
 
     if (this.isEditMode && this.departmentId) {
-      this.departmentService.updateDepartment({ departmentId: this.departmentId, ...requestData }).subscribe({
-        next: (response) => {
-          this.submitting = false;
-          if (response.success) {
-            this.formSubmitted.emit(response.data);
-            Swal.fire({
-              title: 'Department Updated!',
-              text: `"${response.data.departmentName}" has been updated successfully.`,
-              icon: 'success',
-              confirmButtonColor: '#3b82f6',
-              confirmButtonText: 'OK'
-            });
-          } else {
-            this.error = response.message || 'Failed to update department';
-            Swal.fire({
-              title: 'Error!',
-              text: this.error!,
-              icon: 'error',
-              confirmButtonColor: '#ef4444'
-            });
+      this.departmentService.updateDepartment({ departmentId: this.departmentId, ...requestData })
+        .subscribe({
+          next: (response) => {
+            this.submitting = false;
+            if (response.success) {
+              this.formSubmitted.emit(response.data);
+              Swal.fire({
+                title: this.langService.t('dept.msg.updatedTitle') || 'Department Updated!',
+                text: `"${(response.data as any).departmentNameMr || response.data.departmentName}" ${this.langService.t('dept.msg.updatedText') || 'updated successfully.'}`,
+                icon: 'success', confirmButtonColor: '#3b82f6', confirmButtonText: 'OK'
+              });
+            } else {
+              this.error = response.message || 'Failed to update department';
+              Swal.fire({ title: 'Error!', text: this.error!, icon: 'error', confirmButtonColor: '#ef4444' });
+            }
+          },
+          error: (err) => {
+            this.submitting = false;
+            this.error = err.error?.message || 'An error occurred while updating department';
+            Swal.fire({ title: 'Error!', text: this.error!, icon: 'error', confirmButtonColor: '#ef4444' });
           }
-        },
-        error: (err) => {
-          this.submitting = false;
-          this.error = err.error?.message || 'An error occurred while updating department';
-          Swal.fire({
-            title: 'Error!',
-            text: this.error!,
-            icon: 'error',
-            confirmButtonColor: '#ef4444'
-          });
-        }
-      });
+        });
 
     } else {
-      this.departmentService.createDepartment(requestData).subscribe({
-        next: (response) => {
-          this.submitting = false;
-          if (response.success) {
-            this.formSubmitted.emit(response.data);
-            Swal.fire({
-              title: 'Department Created!',
-              text: `"${response.data.departmentName}" has been created successfully.`,
-              icon: 'success',
-              confirmButtonColor: '#3b82f6',
-              confirmButtonText: 'OK'
-            });
-          } else {
-            this.error = response.message || 'Failed to create department';
-            Swal.fire({
-              title: 'Error!',
-              text: this.error!,
-              icon: 'error',
-              confirmButtonColor: '#ef4444'
-            });
+      this.departmentService.createDepartment(requestData)
+        .subscribe({
+          next: (response) => {
+            this.submitting = false;
+            if (response.success) {
+              this.formSubmitted.emit(response.data);
+              Swal.fire({
+                title: this.langService.t('dept.msg.createdTitle') || 'Department Created!',
+                text: `"${(response.data as any).departmentNameMr || response.data.departmentName}" ${this.langService.t('dept.msg.createdText') || 'created successfully.'}`,
+                icon: 'success', confirmButtonColor: '#3b82f6', confirmButtonText: 'OK'
+              });
+            } else {
+              this.error = response.message || 'Failed to create department';
+              Swal.fire({ title: 'Error!', text: this.error!, icon: 'error', confirmButtonColor: '#ef4444' });
+            }
+          },
+          error: (err) => {
+            this.submitting = false;
+            this.error = err.error?.message || 'An error occurred while creating department';
+            Swal.fire({ title: 'Error!', text: this.error!, icon: 'error', confirmButtonColor: '#ef4444' });
           }
-        },
-        error: (err) => {
-          this.submitting = false;
-          this.error = err.error?.message || 'An error occurred while creating department';
-          Swal.fire({
-            title: 'Error!',
-            text: this.error!,
-            icon: 'error',
-            confirmButtonColor: '#ef4444'
-          });
-        }
-      });
+        });
     }
   }
 
-  onCancel(): void {
-    this.formCancelled.emit();
-  }
+  onCancel(): void { this.formCancelled.emit(); }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {

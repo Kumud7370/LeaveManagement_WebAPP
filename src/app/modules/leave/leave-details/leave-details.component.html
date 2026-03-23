@@ -1,10 +1,10 @@
 <div *ngIf="loading" class="ld-loading">
   <div class="ld-spinner"></div>
-  <p>Loading leave details...</p>
+  <p>{{ langService.t('leave.details.loading') }}</p>
 </div>
 
 <div *ngIf="!loading && !leave" class="ld-error">
-  <p>Failed to load leave details.</p>
+  <p>{{ langService.t('leave.details.loadError') }}</p>
 </div>
 
 <ng-container *ngIf="!loading && leave">
@@ -23,7 +23,7 @@
       <span class="ld-badge" [ngClass]="getStatusClass(leave.leaveStatus)">
         <span class="ld-dot"></span>{{ getStatusDisplayName() }}
       </span>
-      <span class="ld-applied">Applied {{ leave.appliedDate | date: 'd MMM yyyy' }}</span>
+      <span class="ld-applied">{{ langService.t('leave.details.applied') }} {{ leave.appliedDate | date: 'd MMM yyyy' }}</span>
     </div>
   </div>
 
@@ -31,18 +31,18 @@
   <div class="ld-dates">
     <div class="ld-days-bubble">
       <span class="ld-days-num">{{ leave.totalDays }}</span>
-      <span class="ld-days-lbl">{{ leave.totalDays === 1 ? 'Day' : 'Days' }}</span>
+      <span class="ld-days-lbl">{{ leave.totalDays === 1 ? langService.t('leave.details.day') : langService.t('leave.details.days') }}</span>
     </div>
     <div class="ld-date-block">
-      <div class="ld-date-lbl">From</div>
+      <div class="ld-date-lbl">{{ langService.t('leave.details.from') }}</div>
       <div class="ld-date-val">{{ leave.startDate | date: 'EEE, d MMM yyyy' }}</div>
     </div>
     <div class="ld-date-block">
-      <div class="ld-date-lbl">To</div>
+      <div class="ld-date-lbl">{{ langService.t('leave.details.to') }}</div>
       <div class="ld-date-val">{{ leave.endDate | date: 'EEE, d MMM yyyy' }}</div>
     </div>
     <div class="ld-date-block">
-      <div class="ld-date-lbl">Reason</div>
+      <div class="ld-date-lbl">{{ langService.t('leave.details.reason') }}</div>
       <div class="ld-date-val ld-reason-text">{{ leave.reason }}</div>
     </div>
   </div>
@@ -50,35 +50,34 @@
   <!-- Body -->
   <div class="ld-body">
 
-    <!-- Two column: leave info + approval info -->
     <div class="ld-row">
       <!-- Leave Details -->
       <div>
-        <div class="ld-section-title">Leave Details</div>
+        <div class="ld-section-title">{{ langService.t('leave.details.section.leaveDetails') }}</div>
         <div class="ld-fields">
           <div class="ld-field">
-            <span class="ld-key">Type</span>
+            <span class="ld-key">{{ langService.t('leave.details.type') }}</span>
             <span class="ld-leave-tag">
               <span class="ld-leave-dot" [style.background]="leave.leaveTypeColor"></span>
               {{ leave.leaveTypeName }} ({{ leave.leaveTypeCode }})
             </span>
           </div>
           <div class="ld-field">
-            <span class="ld-key">Emergency</span>
-            <span class="ld-val">{{ leave.isEmergencyLeave ? 'Yes' : 'No' }}</span>
+            <span class="ld-key">{{ langService.t('leave.details.emergency') }}</span>
+            <span class="ld-val">{{ leave.isEmergencyLeave ? langService.t('common.yes') : langService.t('common.no') }}</span>
           </div>
           <div class="ld-field">
-            <span class="ld-key">Created</span>
+            <span class="ld-key">{{ langService.t('leave.details.created') }}</span>
             <span class="ld-val">{{ leave.createdAt | date: 'd MMM yyyy' }}</span>
           </div>
           <div class="ld-field">
-            <span class="ld-key">Last updated</span>
+            <span class="ld-key">{{ langService.t('leave.details.lastUpdated') }}</span>
             <span class="ld-val">{{ leave.updatedAt | date: 'd MMM yyyy' }}</span>
           </div>
           <div class="ld-field" *ngIf="leave.attachmentUrl">
-            <span class="ld-key">Attachment</span>
+            <span class="ld-key">{{ langService.t('leave.details.attachment') }}</span>
             <a [href]="leave.attachmentUrl" target="_blank" class="ld-link">
-              View Document
+              {{ langService.t('leave.details.viewDocument') }}
             </a>
           </div>
         </div>
@@ -87,44 +86,46 @@
       <!-- Approval / Status Details -->
       <div>
         <div class="ld-section-title">
-          {{ getStatusNum() === 3 ? 'Final Approval' : getStatusNum() === 4 ? 'Rejection Info' : getStatusNum() === 5 ? 'Cancellation Info' : 'Status' }}
+          {{ getStatusNum() === 3 ? langService.t('leave.details.section.finalApproval')
+           : getStatusNum() === 4 ? langService.t('leave.details.section.rejectionInfo')
+           : getStatusNum() === 5 ? langService.t('leave.details.section.cancellationInfo')
+           : langService.t('leave.details.section.status') }}
         </div>
         <div class="ld-fields">
           <!-- Fully Approved -->
-    <ng-container *ngIf="getStatusNum() === 3">
-  <div class="ld-field">
-    <span class="ld-key">Approved by</span>
-    <span class="ld-val">
-      {{ leave.approvedByName || leave.tehsildarApprovedBy || '—' }}
-    </span>
-  </div>
-  <div class="ld-field">
-    <span class="ld-key">Date</span>
-    <span class="ld-val">
-      {{ (leave.approvedDate || leave.tehsildarApprovedDate) ? 
-         ((leave.approvedDate || leave.tehsildarApprovedDate) | date: 'd MMM yyyy, h:mm a') : '—' }}
-    </span>
-  </div>
-</ng-container>
+          <ng-container *ngIf="getStatusNum() === 3">
+            <div class="ld-field">
+              <span class="ld-key">{{ langService.t('leave.details.approvedBy') }}</span>
+              <span class="ld-val">{{ leave.approvedByName || leave.tehsildarApprovedBy || '—' }}</span>
+            </div>
+            <div class="ld-field">
+              <span class="ld-key">{{ langService.t('leave.details.date') }}</span>
+              <span class="ld-val">
+                {{ (leave.approvedDate || leave.tehsildarApprovedDate)
+                    ? ((leave.approvedDate || leave.tehsildarApprovedDate) | date: 'd MMM yyyy, h:mm a')
+                    : '—' }}
+              </span>
+            </div>
+          </ng-container>
           <!-- Rejected -->
           <ng-container *ngIf="getStatusNum() === 4">
             <div class="ld-field">
-              <span class="ld-key">Rejected by</span>
+              <span class="ld-key">{{ langService.t('leave.details.rejectedBy') }}</span>
               <span class="ld-val">{{ leave.rejectedByName || '—' }}</span>
             </div>
             <div class="ld-field">
-              <span class="ld-key">Date</span>
+              <span class="ld-key">{{ langService.t('leave.details.date') }}</span>
               <span class="ld-val">{{ leave.rejectedDate ? (leave.rejectedDate | date: 'd MMM yyyy, h:mm a') : '—' }}</span>
             </div>
           </ng-container>
           <!-- Cancelled -->
           <ng-container *ngIf="getStatusNum() === 5">
             <div class="ld-field">
-              <span class="ld-key">Cancelled on</span>
+              <span class="ld-key">{{ langService.t('leave.details.cancelledOn') }}</span>
               <span class="ld-val">{{ leave.cancelledDate ? (leave.cancelledDate | date: 'd MMM yyyy, h:mm a') : '—' }}</span>
             </div>
             <div class="ld-field" *ngIf="leave.cancellationReason">
-              <span class="ld-key">Reason</span>
+              <span class="ld-key">{{ langService.t('leave.details.reason') }}</span>
               <span class="ld-val">{{ leave.cancellationReason }}</span>
             </div>
           </ng-container>
@@ -132,60 +133,73 @@
           <ng-container *ngIf="getStatusNum() === 0">
             <div class="ld-pending-note">
               <i class="bi bi-hourglass-split"></i>
-              Awaiting admin approval
+              {{ langService.t('leave.details.awaitingAdmin') }}
             </div>
           </ng-container>
           <!-- In Progress -->
           <ng-container *ngIf="getStatusNum() === 1 || getStatusNum() === 2">
             <div class="ld-pending-note ld-progress-note">
               <i class="bi bi-arrow-right-circle"></i>
-              Approval in progress
+              {{ langService.t('leave.details.inProgress') }}
             </div>
           </ng-container>
         </div>
       </div>
     </div>
 
-    <!-- Approval Chain — show for all except Pending and Cancelled -->
+    <!-- Approval Chain -->
     <div *ngIf="getStatusNum() !== 0 && getStatusNum() !== 5">
-      <div class="ld-section-title">Approval Chain</div>
+      <div class="ld-section-title">{{ langService.t('leave.details.section.approvalChain') }}</div>
       <div class="ld-chain">
 
         <!-- Admin -->
         <div class="ld-chain-step">
-          <div class="ld-chain-connector" [ngClass]="leave.adminApprovedBy ? 'done' : (getStatusNum() === 4 && !leave.adminApprovedBy) ? 'rejected' : ''"></div>
-          <div class="ld-chain-node" [ngClass]="leave.adminApprovedBy ? 'done' : (getStatusNum() === 4 && !leave.adminApprovedBy) ? 'rejected' : 'pending'">
+          <div class="ld-chain-connector"
+            [ngClass]="leave.adminApprovedBy ? 'done' : (getStatusNum() === 4 && !leave.adminApprovedBy) ? 'rejected' : ''">
+          </div>
+          <div class="ld-chain-node"
+            [ngClass]="leave.adminApprovedBy ? 'done' : (getStatusNum() === 4 && !leave.adminApprovedBy) ? 'rejected' : 'pending'">
             <i *ngIf="leave.adminApprovedBy" class="bi bi-check"></i>
             <i *ngIf="!leave.adminApprovedBy && getStatusNum() === 4" class="bi bi-x"></i>
           </div>
-          <div class="ld-chain-label" [ngClass]="leave.adminApprovedBy ? 'done' : (getStatusNum() === 4 && !leave.adminApprovedBy) ? 'rejected' : ''">Admin</div>
+          <div class="ld-chain-label" [ngClass]="leave.adminApprovedBy ? 'done' : (getStatusNum() === 4 && !leave.adminApprovedBy) ? 'rejected' : ''">
+            {{ langService.t('leave.details.chain.admin') }}
+          </div>
           <div class="ld-chain-date" *ngIf="leave.adminApprovedDate">{{ leave.adminApprovedDate | date: 'd MMM, h:mm a' }}</div>
-          <div class="ld-chain-date ld-rejected-date" *ngIf="!leave.adminApprovedBy && getStatusNum() === 4">Rejected</div>
+          <div class="ld-chain-date ld-rejected-date" *ngIf="!leave.adminApprovedBy && getStatusNum() === 4">{{ langService.t('leave.status.rejected') }}</div>
           <div class="ld-chain-date" *ngIf="!leave.adminApprovedBy && getStatusNum() !== 4">—</div>
         </div>
 
         <!-- Nayab -->
         <div class="ld-chain-step">
-          <div class="ld-chain-connector" [ngClass]="leave.nayabApprovedBy ? 'done' : (getStatusNum() === 4 && leave.adminApprovedBy && !leave.nayabApprovedBy) ? 'rejected' : ''"></div>
-          <div class="ld-chain-node" [ngClass]="leave.nayabApprovedBy ? 'done' : (getStatusNum() === 4 && leave.adminApprovedBy && !leave.nayabApprovedBy) ? 'rejected' : 'pending'">
+          <div class="ld-chain-connector"
+            [ngClass]="leave.nayabApprovedBy ? 'done' : (getStatusNum() === 4 && leave.adminApprovedBy && !leave.nayabApprovedBy) ? 'rejected' : ''">
+          </div>
+          <div class="ld-chain-node"
+            [ngClass]="leave.nayabApprovedBy ? 'done' : (getStatusNum() === 4 && leave.adminApprovedBy && !leave.nayabApprovedBy) ? 'rejected' : 'pending'">
             <i *ngIf="leave.nayabApprovedBy" class="bi bi-check"></i>
             <i *ngIf="!leave.nayabApprovedBy && getStatusNum() === 4 && leave.adminApprovedBy" class="bi bi-x"></i>
           </div>
-          <div class="ld-chain-label" [ngClass]="leave.nayabApprovedBy ? 'done' : (getStatusNum() === 4 && leave.adminApprovedBy && !leave.nayabApprovedBy) ? 'rejected' : ''">Nayab Tehsildar</div>
+          <div class="ld-chain-label" [ngClass]="leave.nayabApprovedBy ? 'done' : (getStatusNum() === 4 && leave.adminApprovedBy && !leave.nayabApprovedBy) ? 'rejected' : ''">
+            {{ langService.t('leave.details.chain.nayab') }}
+          </div>
           <div class="ld-chain-date" *ngIf="leave.nayabApprovedDate">{{ leave.nayabApprovedDate | date: 'd MMM, h:mm a' }}</div>
-          <div class="ld-chain-date ld-rejected-date" *ngIf="!leave.nayabApprovedBy && getStatusNum() === 4 && leave.adminApprovedBy">Rejected</div>
+          <div class="ld-chain-date ld-rejected-date" *ngIf="!leave.nayabApprovedBy && getStatusNum() === 4 && leave.adminApprovedBy">{{ langService.t('leave.status.rejected') }}</div>
           <div class="ld-chain-date" *ngIf="!leave.nayabApprovedBy && !(getStatusNum() === 4 && leave.adminApprovedBy)">—</div>
         </div>
 
         <!-- Tehsildar -->
         <div class="ld-chain-step">
-          <div class="ld-chain-node" [ngClass]="leave.tehsildarApprovedBy ? 'done' : (getStatusNum() === 4 && leave.nayabApprovedBy && !leave.tehsildarApprovedBy) ? 'rejected' : 'pending'">
+          <div class="ld-chain-node"
+            [ngClass]="leave.tehsildarApprovedBy ? 'done' : (getStatusNum() === 4 && leave.nayabApprovedBy && !leave.tehsildarApprovedBy) ? 'rejected' : 'pending'">
             <i *ngIf="leave.tehsildarApprovedBy" class="bi bi-check"></i>
             <i *ngIf="!leave.tehsildarApprovedBy && getStatusNum() === 4 && leave.nayabApprovedBy" class="bi bi-x"></i>
           </div>
-          <div class="ld-chain-label" [ngClass]="leave.tehsildarApprovedBy ? 'done' : (getStatusNum() === 4 && leave.nayabApprovedBy && !leave.tehsildarApprovedBy) ? 'rejected' : ''">Tehsildar</div>
+          <div class="ld-chain-label" [ngClass]="leave.tehsildarApprovedBy ? 'done' : (getStatusNum() === 4 && leave.nayabApprovedBy && !leave.tehsildarApprovedBy) ? 'rejected' : ''">
+            {{ langService.t('leave.details.chain.tehsildar') }}
+          </div>
           <div class="ld-chain-date" *ngIf="leave.tehsildarApprovedDate">{{ leave.tehsildarApprovedDate | date: 'd MMM, h:mm a' }}</div>
-          <div class="ld-chain-date ld-rejected-date" *ngIf="!leave.tehsildarApprovedBy && getStatusNum() === 4 && leave.nayabApprovedBy">Rejected</div>
+          <div class="ld-chain-date ld-rejected-date" *ngIf="!leave.tehsildarApprovedBy && getStatusNum() === 4 && leave.nayabApprovedBy">{{ langService.t('leave.status.rejected') }}</div>
           <div class="ld-chain-date" *ngIf="!leave.tehsildarApprovedBy && !(getStatusNum() === 4 && leave.nayabApprovedBy)">—</div>
         </div>
 
@@ -195,7 +209,7 @@
       <div class="ld-rejection-box" *ngIf="getStatusNum() === 4 && leave.rejectionReason">
         <i class="bi bi-exclamation-circle"></i>
         <div>
-          <div class="ld-rej-label">Rejection Reason</div>
+          <div class="ld-rej-label">{{ langService.t('leave.details.rejectionReason') }}</div>
           <div class="ld-rej-text">{{ leave.rejectionReason }}</div>
         </div>
       </div>
@@ -206,19 +220,19 @@
   <!-- Actions -->
   <div class="ld-actions" *ngIf="canAdminApprove || canNayabApprove || canTehsildarApprove || canReject || leave.canBeCancelled">
     <button *ngIf="canAdminApprove" class="ld-btn ld-btn-approve" (click)="onAdminApprove()">
-      <i class="bi bi-check-lg"></i> Admin Approve
+      <i class="bi bi-check-lg"></i> {{ langService.t('leave.details.action.adminApprove') }}
     </button>
     <button *ngIf="canNayabApprove" class="ld-btn ld-btn-approve" (click)="onNayabApprove()">
-      <i class="bi bi-check-lg"></i> Nayab Approve
+      <i class="bi bi-check-lg"></i> {{ langService.t('leave.details.action.nayabApprove') }}
     </button>
     <button *ngIf="canTehsildarApprove" class="ld-btn ld-btn-approve" (click)="onTehsildarApprove()">
-      <i class="bi bi-check-circle"></i> Final Approve
+      <i class="bi bi-check-circle"></i> {{ langService.t('leave.details.action.finalApprove') }}
     </button>
     <button *ngIf="canReject" class="ld-btn ld-btn-reject" (click)="onReject()">
-      <i class="bi bi-x-lg"></i> Reject
+      <i class="bi bi-x-lg"></i> {{ langService.t('leave.details.action.reject') }}
     </button>
     <button *ngIf="leave.canBeCancelled && !isEmployee" class="ld-btn ld-btn-cancel" (click)="onCancel()">
-      <i class="bi bi-slash-circle"></i> Cancel Leave
+      <i class="bi bi-slash-circle"></i> {{ langService.t('leave.details.action.cancel') }}
     </button>
   </div>
 

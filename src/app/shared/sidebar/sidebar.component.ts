@@ -1,15 +1,18 @@
 import {
-  Component, HostListener, inject, type OnDestroy, type OnInit,
-  Inject, PLATFORM_ID, Input
+  Component, HostListener, inject, OnDestroy, OnInit,
+  Inject, PLATFORM_ID, Input, ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, NavigationEnd, RouterModule } from '@angular/router';
 import { SidebarService } from '../sidebar/sidebar.service';
-import type { Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { LanguageService } from '../../core/services/api/language.api';
+import { ApiClientService } from '../../core/services/api/apiClient';
 
 interface NavItem {
+  labelKey: string;
   label: string;
   route?: string;
   icon: string;
@@ -47,7 +50,10 @@ interface UserProfile {
 export class SidebarComponent implements OnInit, OnDestroy {
   public router = inject(Router);
   private sidebarService = inject(SidebarService);
+  private langService = inject(LanguageService);
+  private cdr = inject(ChangeDetectorRef);
   private isBrowser: boolean;
+  private apiClient = inject(ApiClientService);
 
   isExpanded = false;
   isMobile = false;
@@ -55,8 +61,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   isPinned = false;
   @Input() isBlurred = false;
 
-  private isUserInteraction = false;
   private hoverTimeout: any;
+  private subscriptions: Subscription[] = [];
 
   userProfile: UserProfile = {
     name: sessionStorage.getItem('username') || 'Guest User',
@@ -67,11 +73,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   menuItems: NavItem[] = [];
 
-  private subscriptions: Subscription[] = [];
-
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-
     if (this.isBrowser) {
       const savedPinState = localStorage.getItem('sidebarPinned');
       this.isPinned = savedPinState === 'true';
@@ -82,16 +85,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
     if (this.isBrowser) {
       this.checkScreenSize();
       this.setupUserProfile();
-      this.setupMenuItems();
-
-      if (this.isPinned && !this.isMobile) {
-        this.sidebarService.expand();
-      }
+      if (this.isPinned && !this.isMobile) this.sidebarService.expand();
     }
 
     this.subscriptions.push(
       this.sidebarService.sidebarState$.subscribe(state => {
         this.isExpanded = state;
+        this.cdr.detectChanges();
       })
     );
 
@@ -100,12 +100,24 @@ export class SidebarComponent implements OnInit, OnDestroy {
         if (event instanceof NavigationEnd) {
           this.activeRoute = event.urlAfterRedirects;
           this.updateExpandedStates();
-          if (this.isMobile && this.isExpanded) {
-            this.sidebarService.collapse();
-          }
+          if (this.isMobile && this.isExpanded) this.sidebarService.collapse();
         }
       })
     );
+
+    // Re-translate when language switches
+    this.subscriptions.push(
+      this.langService.lang$.subscribe(() => {
+        this.translateMenuItems();
+        this.cdr.detectChanges();
+      })
+    );
+
+    // Build menu AFTER lang$ subscription is registered,
+    // then ensure translations are loaded before resolving labels
+    if (this.isBrowser) {
+      this.setupMenuItems();
+    }
 
     this.activeRoute = this.router.url;
     this.updateExpandedStates();
@@ -121,29 +133,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
     if (this.isBrowser) this.checkScreenSize();
   }
 
-  // ── Screen size ───────────────────────────────────────────────
-
   private checkScreenSize(): void {
     if (!this.isBrowser || typeof window === 'undefined') return;
     const wasMobile = this.isMobile;
     this.isMobile = window.innerWidth < 768;
-
     if (wasMobile !== this.isMobile) {
       if (this.isMobile) {
         this.sidebarService.collapse();
-        this.isUserInteraction = false;
       } else {
-        if (this.isPinned) {
-          this.sidebarService.expand();
-        } else {
-          this.sidebarService.collapse();
-          this.isUserInteraction = false;
-        }
+        if (this.isPinned) { this.sidebarService.expand(); }
+        else { this.sidebarService.collapse(); }
       }
     }
   }
-
-  // ── User profile ──────────────────────────────────────────────
 
   private setupUserProfile(): void {
     const storedUsername = sessionStorage.getItem('username');
@@ -152,140 +154,134 @@ export class SidebarComponent implements OnInit, OnDestroy {
     if (storedRole) this.userProfile.role = storedRole;
   }
 
-  // ── Menu items per role ───────────────────────────────────────
-
   private setupMenuItems(): void {
     const role = sessionStorage.getItem('RoleName') || '';
+    this.menuItems = this.getRawMenuForRole(role);
 
-    switch (role) {
+    console.log('=== SIDEBAR DEBUG ===');
+    console.log('1. Menu items built:', this.menuItems.length);
+    console.log('2. Lang service cache:', (this.langService as any).cache);
+    console.log('3. Lang service loaded:', (this.langService as any).loaded);
+    console.log('4. t(menu.dashboard):', this.langService.t('menu.dashboard'));
 
-      // ── Admin: full access ──────────────────────────────────
-      case 'Admin':
-        this.menuItems = [
-          { label: 'Dashboard', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
-          { label: 'User Management', route: '/user-management', icon: 'fas fa-user-shield' },
-          { label: 'Employees', route: '/employees', icon: 'fas fa-users' },
-          { label: 'Departments', route: '/departments', icon: 'fas fa-sitemap' },
-          { label: 'Designations', route: '/designations', icon: 'fas fa-award' },
-          {
-            label: 'Leave',
-            icon: 'fas fa-plane-departure',
-            expanded: false,
-            children: [
-              { label: 'Leave Management', route: '/leave/list', icon: 'fas fa-list-alt' },
-              { label: 'Leave Types', route: '/leave-types', icon: 'fas fa-tags' },
-              { label: 'Leave Balances', route: '/leave-balance/list', icon: 'fas fa-wallet' },
-            ]
-          },
-        ];
-        break;
-
-      case 'Tehsildar':
-        this.menuItems = [
-          { label: 'Dashboard', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
-          { label: 'Employees', route: '/employees', icon: 'fas fa-users' },
-          {
-            label: 'Leave',
-            icon: 'fas fa-plane-departure',
-            expanded: false,
-            children: [
-              { label: 'Leave Management', route: '/leave/list', icon: 'fas fa-list-alt' },
-            ]
-          },
-        ];
-        break;
-
-      case 'NayabTehsildar':
-        this.menuItems = [
-          { label: 'Dashboard', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
-          { label: 'Employees', route: '/employees', icon: 'fas fa-users' },
-          {
-            label: 'Leave',
-            icon: 'fas fa-plane-departure',
-            expanded: false,
-            children: [
-              { label: 'Leave Management', route: '/leave/list', icon: 'fas fa-list-alt' },
-            ]
-          },
-        ];
-        break;
-
-      // ── Employee: minimal access ────────────────────────────
-      case 'Employee':
-        this.menuItems = [
-          { label: 'Dashboard', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
-          {
-            label: 'Leave',
-            icon: 'fas fa-plane-departure',
-            expanded: false,
-            children: [
-              { label: 'My Leaves', route: '/my-leaves', icon: 'fas fa-list-alt' },
-            ]
-          },
-        ];
-        break;
-
-      // ── Fallback ────────────────────────────────────────────
-      default:
-        this.menuItems = [
-          { label: 'Dashboard', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
-        ];
-        break;
-    }
-  }
-
-  // ── Navigation helpers ────────────────────────────────────────
-
-  private updateExpandedStates(): void {
-    this.menuItems.forEach(item => {
-      if (item.children) {
-        item.expanded = item.children.some(c => c.route && this.isActive(c.route));
+    this.apiClient.get<Record<string, string>>('Translation/flat?lang=mr').subscribe({
+      next: (flat) => {
+        console.log('5. API response keys:', Object.keys(flat).length);
+        console.log('6. Sample key:', flat['menu.dashboard']);
+        (this.langService as any).cache['mr'] = flat;
+        (this.langService as any).loaded['mr'] = true;
+        this.translateMenuItems();
+        console.log('7. After translate, first label:', this.menuItems[0]?.label);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('5. API FAILED:', err.status, err.message, err.url);
       }
     });
   }
 
+  private getRawMenuForRole(role: string): NavItem[] {
+    switch (role) {
+      case 'Admin':
+        return [
+          { labelKey: 'menu.dashboard', label: '', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
+          { labelKey: 'menu.userManagement', label: '', route: '/user-management', icon: 'fas fa-user-shield' },
+          { labelKey: 'menu.employees', label: '', route: '/employees', icon: 'fas fa-users' },
+          { labelKey: 'menu.departments', label: '', route: '/departments', icon: 'fas fa-sitemap' },
+          { labelKey: 'menu.designations', label: '', route: '/designations', icon: 'fas fa-award' },
+          {
+            labelKey: 'menu.leave', label: '', icon: 'fas fa-plane-departure', expanded: false,
+            children: [
+              { labelKey: 'menu.leaveManagement', label: '', route: '/leave/list', icon: 'fas fa-list-alt' },
+              { labelKey: 'menu.leaveTypes', label: '', route: '/leave-types', icon: 'fas fa-tags' },
+              { labelKey: 'menu.leaveBalances', label: '', route: '/leave-balance/list', icon: 'fas fa-wallet' },
+            ]
+          },
+        ];
+
+      case 'Tehsildar':
+      case 'NayabTehsildar':
+        return [
+          { labelKey: 'menu.dashboard', label: '', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
+          { labelKey: 'menu.employees', label: '', route: '/employees', icon: 'fas fa-users' },
+          {
+            labelKey: 'menu.leave', label: '', icon: 'fas fa-plane-departure', expanded: false,
+            children: [
+              { labelKey: 'menu.leaveManagement', label: '', route: '/leave/list', icon: 'fas fa-list-alt' },
+            ]
+          },
+        ];
+
+      case 'Employee':
+        return [
+          { labelKey: 'menu.dashboard', label: '', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
+          {
+            labelKey: 'menu.leave', label: '', icon: 'fas fa-plane-departure', expanded: false,
+            children: [
+              { labelKey: 'menu.myLeaves', label: '', route: '/my-leaves', icon: 'fas fa-list-alt' },
+            ]
+          },
+        ];
+
+      default:
+        return [
+          { labelKey: 'menu.dashboard', label: '', route: '/dashboard', icon: 'fas fa-tachometer-alt' },
+        ];
+    }
+  }
+
+private translateMenuItems(): void {
+  const resolve = (items: NavItem[]): NavItem[] => {
+    return items.map(item => ({
+      ...item,
+      label: this.langService.t(item.labelKey),
+      children: item.children ? resolve(item.children) : undefined
+    }));
+  };
+  this.menuItems = resolve(this.menuItems);
+}
+
+  // ── Computed labels for footer buttons ───────────────────────────
+  get settingsLabel(): string { return this.langService.t('menu.settings'); }
+  get pinLabel(): string {
+    return this.isPinned
+      ? this.langService.t('menu.unpinSidebar')
+      : this.langService.t('menu.pinSidebar');
+  }
+  get logoutLabel(): string { return this.langService.t('menu.logout'); }
+
+  // ── Navigation helpers ────────────────────────────────────────────
+  private updateExpandedStates(): void {
+    this.menuItems.forEach(item => {
+      if (item.children) item.expanded = item.children.some(c => c.route && this.isActive(c.route));
+    });
+  }
+
   isActive(route: string): boolean {
-    const curr = this.activeRoute.replace(/\/$/, '');
-    const compare = route.replace(/\/$/, '');
-    return curr === compare;
+    return this.activeRoute.replace(/\/$/, '') === route.replace(/\/$/, '');
   }
 
   isParentActive(item: NavItem): boolean {
-    if (item.children) {
-      return item.children.some(c => c.route && this.isActive(c.route));
-    }
-    return false;
+    return item.children ? item.children.some(c => c.route && this.isActive(c.route)) : false;
   }
 
-  navigateTo(route: string): void {
-    this.router.navigateByUrl(route);
-  }
+  navigateTo(route: string): void { this.router.navigateByUrl(route); }
 
   toggleSubmenu(item: NavItem): void {
     if (item.children) item.expanded = !item.expanded;
   }
 
-  trackByRoute(_index: number, item: NavItem): string {
-    return item.route || item.label;
-  }
+  trackByRoute(_index: number, item: NavItem): string { return item.route || item.labelKey; }
 
-  // ── Sidebar expand / collapse ─────────────────────────────────
-
+  // ── Sidebar expand / collapse ─────────────────────────────────────
   togglePin(): void {
     this.isPinned = !this.isPinned;
-    this.isUserInteraction = this.isPinned;
     if (this.isBrowser) localStorage.setItem('sidebarPinned', String(this.isPinned));
-    if (this.isPinned) {
-      this.sidebarService.expand();
-    } else if (!this.isExpanded) {
-      this.sidebarService.collapse();
-    }
+    if (this.isPinned) { this.sidebarService.expand(); }
+    else if (!this.isExpanded) { this.sidebarService.collapse(); }
   }
 
-  toggleSidebar(): void {
-    this.isUserInteraction = true;
-    this.sidebarService.toggle();
-  }
+  toggleSidebar(): void { this.sidebarService.toggle(); }
 
   onSidebarPointerEnter(): void {
     if (this.isMobile) return;
@@ -300,28 +296,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── Misc ──────────────────────────────────────────────────────
-
   onImageError(event: any): void {
     event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiM2NjdlZWEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0xMiAxMkM5Ljc5IDEyIDggMTAuMjEgOCA4UzkuNzkgNDEyIDRTMTQuMjEgNiAxNiA4UzEyIDEwLjIxIDEyIDEyWk0xMiAxNEM5LjMzIDE0IDQgMTUuMzQgNCAyMFYyMkgyMFYyMEMxNiAxNS4zNCAxNC42NyAxNCAxMiAxNFoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo8L3N2Zz4K';
   }
 
-  openSettings(): void {
-    this.router.navigate(['/settings']);
-  }
+  openSettings(): void { this.router.navigate(['/settings']); }
 
   logout(): void {
-    sessionStorage.removeItem('UserId');
-    sessionStorage.removeItem('EmployeeId');
-    sessionStorage.removeItem('SiteName');
-    sessionStorage.removeItem('RoleName');
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('refreshToken');
-    sessionStorage.removeItem('deviceId');
-    sessionStorage.removeItem('username');
-    sessionStorage.removeItem('Email');
-    sessionStorage.removeItem('FirstName');
-    sessionStorage.removeItem('LastName');
+    ['UserId', 'EmployeeId', 'SiteName', 'RoleName', 'token', 'refreshToken',
+      'deviceId', 'username', 'Email', 'FirstName', 'LastName'].forEach(k => sessionStorage.removeItem(k));
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     this.router.navigate(['/login']);
