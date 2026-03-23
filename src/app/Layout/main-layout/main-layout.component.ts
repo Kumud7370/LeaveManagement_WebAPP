@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { SidebarComponent } from 'src/app/shared/sidebar/sidebar.component';
 import { SidebarService } from '../../shared/sidebar/sidebar.service';
-import { ThemeService } from '../../shared/services/theme.service';  
+import { ThemeService } from '../../shared/services/theme.service';
+import { LanguageSwitcherComponent } from '../../shared/language-switcher.component';
 import { filter, map, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import {
@@ -20,10 +21,11 @@ import {
   styleUrls: ['./main-layout.component.scss'],
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     FormsModule,
-    RouterModule, 
+    RouterModule,
     SidebarComponent,
+    LanguageSwitcherComponent,   // ← added
     OffcanvasComponent,
     OffcanvasHeaderComponent,
     OffcanvasTitleDirective,
@@ -34,7 +36,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   private sidebarService = inject(SidebarService);
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
-  private themeService = inject(ThemeService);  
+  private themeService = inject(ThemeService);
 
   private destroy$ = new Subject<void>();
 
@@ -113,18 +115,15 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       wasteType: ''
     };
     this.initializeDefaultDates();
-    console.log('Filters reset');
   }
 
   applyFilters(): void {
-    console.log('Applying filters:', this.filterData);
     this.closeOffcanvas();
   }
 
   private initializeDefaultDates(): void {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    
     this.filterData.fromDate = this.formatDateForInput(firstDayOfMonth);
     this.filterData.toDate = this.formatDateForInput(today);
   }

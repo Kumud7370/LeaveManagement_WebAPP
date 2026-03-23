@@ -33,22 +33,14 @@ export class DesignationFormComponent implements OnInit {
 
   initializeForm(): void {
     this.designationForm = this.fb.group({
-      designationCode: ['', [
-        Validators.required,
-        Validators.maxLength(50),
-        Validators.pattern(/^[A-Z0-9-_]+$/)
-      ]],
-      designationName: ['', [
-        Validators.required,
-        Validators.maxLength(100)
-      ]],
-      description: ['', [Validators.maxLength(500)]],
-      level: [1, [
-        Validators.required,
-        Validators.min(1),
-        Validators.max(100)
-      ]],
-      isActive: [true]
+      designationCode:   ['', [Validators.required, Validators.maxLength(50), Validators.pattern(/^[A-Z0-9-_]+$/)]],
+      // Trilingual name fields — all required
+      designationNameMr: ['', [Validators.required, Validators.maxLength(100)]],
+      designationNameEn: ['', [Validators.required, Validators.maxLength(100)]],
+      designationNameHi: ['', [Validators.required, Validators.maxLength(100)]],
+      description:       ['', [Validators.maxLength(500)]],
+      level:             [1,  [Validators.required, Validators.min(1), Validators.max(100)]],
+      isActive:          [true]
     });
   }
 
@@ -62,17 +54,20 @@ export class DesignationFormComponent implements OnInit {
 
   loadDesignation(): void {
     if (!this.designationId) return;
-
     this.isLoading = true;
     this.designationService.getDesignationById(this.designationId).subscribe({
       next: (response) => {
-        const designation = response.data;
+        const d = response.data;
         this.designationForm.patchValue({
-          designationCode: designation.designationCode,
-          designationName: designation.designationName,
-          description: designation.description,
-          level: designation.level,
-          isActive: designation.isActive
+          designationCode:   d.designationCode,
+          // Populate trilingual fields; fall back to the single field if the
+          // API has not yet been updated to return them separately.
+          designationNameMr: (d as any).designationNameMr || d.designationName || '',
+          designationNameEn: (d as any).designationNameEn || d.designationName || '',
+          designationNameHi: (d as any).designationNameHi || '',
+          description:       d.description || '',
+          level:             d.level,
+          isActive:          d.isActive
         });
         this.isLoading = false;
       },
@@ -88,47 +83,42 @@ export class DesignationFormComponent implements OnInit {
   onSubmit(): void {
     if (this.designationForm.invalid) {
       this.markFormGroupTouched(this.designationForm);
+      Swal.fire('Validation Error', 'Please fill all required fields correctly.', 'warning');
       return;
     }
 
     this.isSubmitting = true;
-    const formValue = this.designationForm.value;
+    const v = this.designationForm.value;
+
+    // Build the payload:
+    // – keep `designationName` as the Marathi name for backward-compat with the API
+    // – add the three explicit language fields for the updated API
+    const payload = {
+      ...v,
+      designationName: v.designationNameMr,
+    };
 
     if (this.isEditMode && this.designationId) {
-      this.designationService.updateDesignation(this.designationId, formValue).subscribe({
+      this.designationService.updateDesignation(this.designationId, payload).subscribe({
         next: () => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: 'Designation updated successfully',
-            timer: 1500,
-            showConfirmButton: false
-          });
+          Swal.fire({ icon: 'success', title: 'Success!', text: 'Designation updated successfully', timer: 1500, showConfirmButton: false });
           this.router.navigate(['/designations']);
         },
         error: (error) => {
           console.error('Error updating designation:', error);
-          const errorMsg = error.error?.message || 'Failed to update designation';
-          Swal.fire('Error', errorMsg, 'error');
+          Swal.fire('Error', error.error?.message || 'Failed to update designation', 'error');
           this.isSubmitting = false;
         }
       });
     } else {
-      this.designationService.createDesignation(formValue).subscribe({
+      this.designationService.createDesignation(payload).subscribe({
         next: () => {
-          Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: 'Designation created successfully',
-            timer: 1500,
-            showConfirmButton: false
-          });
+          Swal.fire({ icon: 'success', title: 'Success!', text: 'Designation created successfully', timer: 1500, showConfirmButton: false });
           this.router.navigate(['/designations']);
         },
         error: (error) => {
           console.error('Error creating designation:', error);
-          const errorMsg = error.error?.message || 'Failed to create designation';
-          Swal.fire('Error', errorMsg, 'error');
+          Swal.fire('Error', error.error?.message || 'Failed to create designation', 'error');
           this.isSubmitting = false;
         }
       });
@@ -141,8 +131,7 @@ export class DesignationFormComponent implements OnInit {
 
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
+      formGroup.get(key)?.markAsTouched();
     });
   }
 
@@ -153,31 +142,22 @@ export class DesignationFormComponent implements OnInit {
 
   getErrorMessage(fieldName: string): string {
     const control = this.designationForm.get(fieldName);
-    if (control?.hasError('required')) {
-      return `${this.getFieldLabel(fieldName)} is required`;
-    }
-    if (control?.hasError('maxlength')) {
-      const maxLength = control.errors?.['maxlength'].requiredLength;
-      return `Maximum ${maxLength} characters allowed`;
-    }
-    if (control?.hasError('pattern')) {
-      return 'Only uppercase letters, numbers, hyphens, and underscores are allowed';
-    }
-    if (control?.hasError('min')) {
-      return 'Minimum value is 1';
-    }
-    if (control?.hasError('max')) {
-      return 'Maximum value is 100';
-    }
+    if (control?.hasError('required'))  return `${this.getFieldLabel(fieldName)} is required`;
+    if (control?.hasError('maxlength')) return `Maximum ${control.errors?.['maxlength'].requiredLength} characters allowed`;
+    if (control?.hasError('pattern'))   return 'Only uppercase letters, numbers, hyphens, and underscores are allowed';
+    if (control?.hasError('min'))       return 'Minimum value is 1';
+    if (control?.hasError('max'))       return 'Maximum value is 100';
     return '';
   }
 
   private getFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
-      designationCode: 'Designation Code',
-      designationName: 'Designation Name',
-      description: 'Description',
-      level: 'Level'
+      designationCode:   'Designation Code',
+      designationNameMr: 'Name (Marathi)',
+      designationNameEn: 'Name (English)',
+      designationNameHi: 'Name (Hindi)',
+      description:       'Description',
+      level:             'Level',
     };
     return labels[fieldName] || fieldName;
   }

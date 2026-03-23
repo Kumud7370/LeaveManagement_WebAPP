@@ -1,9 +1,10 @@
 <div class="dept-page">
   <div class="dept-page-header">
-    <h1 class="dept-page-title">Department Management</h1>
+    <h1 class="dept-page-title">{{ langService.t('dept.title') }}</h1>
   </div>
 
-  <div class="stats-row" *ngIf="statCards.length > 0">
+<div class="stats-row" *ngIf="statCards.length > 0">
+    <!-- statCards labels now come from recalcStats() which uses langService -->
     <div class="stat-card {{ card.colorClass }}" *ngFor="let card of statCards">
       <div class="stat-label">{{ card.label }}</div>
       <div class="stat-value">{{ card.value }}</div>
@@ -27,21 +28,21 @@
   </div>
 
   <div class="toolbar-card">
-    <input
-      type="text"
-      class="search-input"
-      placeholder="Search departments..."
-      [(ngModel)]="searchTerm"
-      (input)="onSearch()"
-    />
+   <input
+    type="text"
+    class="search-input"
+    [placeholder]="langService.t('dept.search')"
+    [(ngModel)]="searchTerm"
+    (input)="onSearch()"
+  />
     <div class="toolbar-actions">
       <div class="toolbar-secondary-btns">
-        <button class="btn btn-clear" (click)="clearSearch()">Clear</button>
+        <button class="btn btn-clear" (click)="clearSearch()">{{ langService.t('common.clear') }}</button>
         <button class="btn btn-refresh" (click)="loadDepartments()">
-          Refresh
+         {{ langService.t('common.refresh') }}
         </button>
         <button class="btn btn-export" (click)="exportDepartments()">
-          <i class="bi bi-download"></i> Export
+          <i class="bi bi-download"></i> {{ langService.t('common.export') }}
         </button>
       </div>
       <div class="toolbar-divider"></div>
@@ -49,7 +50,7 @@
         class="btn btn-primary toolbar-primary-btn"
         (click)="createDepartment()"
       >
-        <i class="bi bi-plus-lg"></i> Add Department
+        <i class="bi bi-plus-lg"></i> {{ langService.t('dept.addBtn') }}
       </button>
     </div>
   </div>
@@ -75,9 +76,9 @@
       <i class="bi bi-inbox"></i>
       <h3>No departments found</h3>
       <p>Adjust your search or create a new department</p>
-      <button class="btn btn-primary" (click)="createDepartment()">
-        Create Department
-      </button>
+     <button class="btn btn-primary toolbar-primary-btn" (click)="createDepartment()">
+    <i class="bi bi-plus-lg"></i> {{ langService.t('dept.addBtn') }}
+  </button>
     </div>
 
     <ag-grid-angular

@@ -370,14 +370,37 @@
 
 .modal-body { padding: 24px; }
 
-// ── Form ──────────────────────────────────────────────────────────────────────
-.form-grid {
+// ── Form grids ────────────────────────────────────────────────────────────────
+
+// 2-column grid (Code+Level, Marathi+English)
+.form-grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 1.25rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
+// 3-column grid (Hindi + Department + Status)
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+// ── Language section dividers ─────────────────────────────────────────────────
+.lang-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+// ── Form group ────────────────────────────────────────────────────────────────
 .form-group {
   margin-bottom: 14px;
   &:last-child { margin-bottom: 0; }
@@ -415,7 +438,7 @@
     cursor: pointer;
   }
 
-  textarea.form-control { resize: vertical; min-height: 90px; font-family: inherit; }
+  textarea.form-control { resize: vertical; min-height: 80px; font-family: inherit; }
 
   .form-hint  { display: block; margin-top: 4px; font-size: 12px; color: #9ca3af; }
 
@@ -510,7 +533,6 @@
     }
   }
 
-  // Department filter full-width on mobile
   .dept-filter-wrapper { width: 100%; }
   .dept-filter-select  { width: 100%; min-width: unset; }
 
@@ -525,7 +547,10 @@
     .modal-body   { padding: 16px; }
   }
 
-  .form-grid { grid-template-columns: 1fr; }
+  // Stack all form grids to single column on mobile
+  .form-grid-2,
+  .form-grid-3 { grid-template-columns: 1fr; }
+
   .form-actions {
     flex-direction: column-reverse;
     button { width: 100%; justify-content: center; }

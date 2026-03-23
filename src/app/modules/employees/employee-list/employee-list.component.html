@@ -1,72 +1,82 @@
 <div class="el-page-container">
 
-  <!-- ── Page Title  -->
+  <!-- ── Page Title -->
   <div class="el-page-header">
-    <h1 class="el-page-title">Employee Management</h1>
+    <h1 class="el-page-title">{{ langService.t('employee.title') }}</h1>
   </div>
 
-  <!-- ── Stats Cards  -->
+  <!-- ── Stats Cards -->
   <div class="el-stats-grid">
     <div class="el-stat-card el-stat-total">
-      <p class="el-stat-label">Total Employees</p>
+      <p class="el-stat-label">{{ langService.t('employee.stats.total') }}</p>
       <p class="el-stat-value">{{ stats.total }}</p>
     </div>
     <div class="el-stat-card el-stat-active">
-      <p class="el-stat-label">Active</p>
+      <p class="el-stat-label">{{ langService.t('employee.stats.active') }}</p>
       <p class="el-stat-value">{{ stats.active }}</p>
     </div>
     <div class="el-stat-card el-stat-inactive">
-      <p class="el-stat-label">Inactive</p>
+      <p class="el-stat-label">{{ langService.t('employee.stats.inactive') }}</p>
       <p class="el-stat-value">{{ stats.inactive }}</p>
     </div>
     <div class="el-stat-card el-stat-leave">
-      <p class="el-stat-label">On Leave</p>
+      <p class="el-stat-label">{{ langService.t('employee.stats.onLeave') }}</p>
       <p class="el-stat-value">{{ stats.onLeave }}</p>
     </div>
   </div>
 
-  <!-- ── Toolbar Row  -->
+  <!-- ── Toolbar Row -->
   <div class="el-toolbar">
-
-    <!-- Search Input -->
     <div class="el-search-wrapper">
-      <input
-        type="text"
-        placeholder="Search employees..."
+      <input type="text"
+        [placeholder]="langService.t('employee.search')"
         [(ngModel)]="searchTerm"
         (input)="onSearchChange()"
-        class="el-search-input"
-      />
+        class="el-search-input" />
     </div>
-
-    <!-- Action Buttons -->
     <div class="el-toolbar-actions">
       <button (click)="handleClearFilters()" class="el-btn el-btn-clear">
-        Clear
+        {{ langService.t('common.clear') }}
       </button>
       <button (click)="loadEmployees()" class="el-btn el-btn-refresh">
-        Refresh
+        {{ langService.t('common.refresh') }}
       </button>
       <button (click)="exportData()" class="el-btn el-btn-export">
-        <i class="bi bi-download"></i> Export
+        <i class="bi bi-download"></i> {{ langService.t('common.export') }}
       </button>
+
+      <button *ngIf="selectedEmployees.length > 0"
+        (click)="openBulkReassignModal()"
+        class="el-btn el-btn-bulk-reassign">
+        <i class="bi bi-arrow-left-right"></i>
+        {{ langService.t('employee.bulkReassignBtn') }} ({{ selectedEmployees.length }})
+      </button>
+
       <div class="el-toolbar-divider"></div>
       <button (click)="addNewEmployee()" class="el-btn el-btn-primary">
-        <i class="bi bi-plus-lg"></i> Add Employee
+        <i class="bi bi-plus-lg"></i> {{ langService.t('employee.addBtn') }}
       </button>
     </div>
   </div>
 
-  <!-- ── Active Filters  -->
+  <!-- ── Active Filters -->
   <div *ngIf="activeFilters.hasActiveFilters" class="el-active-filters">
-    <span class="el-filter-label">Active Filters:</span>
+    <span class="el-filter-label">{{ langService.t('employee.activeFilters') }}:</span>
     <span *ngFor="let f of activeFilters.filters" class="el-filter-badge">{{ f }}</span>
   </div>
 
-  <!-- ── Grid Card  -->
+  <!-- ── Selection info bar -->
+  <div *ngIf="selectedEmployees.length > 0" class="el-selection-bar">
+    <i class="bi bi-check2-square"></i>
+    <span><strong>{{ selectedEmployees.length }}</strong> {{ langService.t('employee.selected') }}</span>
+    <button class="el-selection-clear" (click)="gridApi.deselectAll(); selectedEmployees = []">
+      {{ langService.t('employee.clearSelection') }}
+    </button>
+  </div>
+
+  <!-- ── Grid Card -->
   <div class="el-grid-card">
     <div class="el-grid-container">
-
       <ag-grid-angular
         #agGrid
         style="width: 100%"
@@ -78,8 +88,8 @@
         [pagination]="false"
         [animateRows]="true"
         [rowSelection]="'multiple'"
-        [enableCellTextSelection]="true"
         [suppressRowClickSelection]="true"
+        [enableCellTextSelection]="true"
         [rowHeight]="56"
         [headerHeight]="44"
         [floatingFiltersHeight]="36"
@@ -93,242 +103,247 @@
         (gridReady)="onGridReady($event)"
         [context]="context">
       </ag-grid-angular>
-
     </div>
 
-    <!-- ── Pagination (inside card, at bottom)  -->
+    <!-- ── Pagination -->
     <div class="el-pagination">
       <div class="el-pagination-inner">
-
-        <!-- Page Size -->
         <div class="el-page-size">
-          <label for="elPageSize">Show:</label>
-          <select
-            id="elPageSize"
-            [(ngModel)]="pageSize"
-            (change)="onPageSizeChanged(pageSize)"
-            class="el-page-size-select">
+          <label for="elPageSize">{{ langService.t('common.show') }}:</label>
+          <select id="elPageSize" [(ngModel)]="pageSize" (change)="onPageSizeChanged(pageSize)" class="el-page-size-select">
             <option [value]="10">10</option>
             <option [value]="20">20</option>
             <option [value]="50">50</option>
             <option [value]="100">100</option>
           </select>
         </div>
-
-        <!-- Record Range -->
         <span class="el-pagination-text">
           {{ rowData.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0 }}
-          to {{ Math.min(currentPage * pageSize, totalItems) }}
-          of {{ totalItems }}
+          {{ langService.t('common.to') }} {{ Math.min(currentPage * pageSize, totalItems) }}
+          {{ langService.t('common.of') }} {{ totalItems }}
         </span>
-
-        <!-- Page Number -->
         <span class="el-pagination-text">
-          Page {{ currentPage }} of {{ totalPages || 1 }}
+          {{ langService.t('common.page') }} {{ currentPage }} {{ langService.t('common.of') }} {{ totalPages || 1 }}
         </span>
-
-        <!-- Nav Buttons -->
         <div class="el-pagination-btns">
           <button (click)="goToPage(1)"          [disabled]="currentPage === 1"                              class="el-pgbtn">«</button>
           <button (click)="previousPage()"       [disabled]="currentPage === 1"                              class="el-pgbtn">‹</button>
           <button (click)="nextPage()"           [disabled]="currentPage === totalPages || totalPages === 0" class="el-pgbtn">›</button>
           <button (click)="goToPage(totalPages)" [disabled]="currentPage === totalPages || totalPages === 0" class="el-pgbtn">»</button>
         </div>
-
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- ── Add / Edit Employee Modal ──────────────────────────────────────────── -->
+<!-- ── Add / Edit Employee Modal -->
 <div *ngIf="showFormModal" class="el-modal-overlay" (click)="onOverlayClick($event, 'form')">
   <div class="el-modal-container el-modal-xlarge" (click)="$event.stopPropagation()">
-    <button class="el-modal-close" (click)="closeFormModal()" type="button">
-      <i class="bi bi-x-lg"></i>
-    </button>
-    <app-employee-form
-      [isModal]="true"
-      [employeeId]="selectedEmployeeId"
-      [isEditMode]="formMode === 'edit'"
-      (formCancelled)="closeFormModal()"
-      (formSubmitted)="onFormSuccess()">
+    <button class="el-modal-close" (click)="closeFormModal()" type="button"><i class="bi bi-x-lg"></i></button>
+    <app-employee-form [isModal]="true" [employeeId]="selectedEmployeeId" [isEditMode]="formMode === 'edit'"
+      (formCancelled)="closeFormModal()" (formSubmitted)="onFormSuccess()">
     </app-employee-form>
   </div>
 </div>
 
-<!-- ── Employee Details Modal ─────────────────────────────────────────────── -->
+<!-- ── Employee Details Modal -->
 <div *ngIf="showDetailsModal" class="el-modal-overlay" (click)="onOverlayClick($event, 'details')">
   <div class="el-modal-container el-modal-xlarge" (click)="$event.stopPropagation()">
-    <button class="el-modal-close" (click)="closeDetailsModal()" type="button">
-      <i class="bi bi-x-lg"></i>
-    </button>
-    <app-employee-details
-      [isModal]="true"
-      [employeeId]="selectedEmployeeId"
-      (modalClosed)="closeDetailsModal()"
-      (editRequested)="onEditFromDetails($event)"
+    <button class="el-modal-close" (click)="closeDetailsModal()" type="button"><i class="bi bi-x-lg"></i></button>
+    <app-employee-details [isModal]="true" [employeeId]="selectedEmployeeId"
+      (modalClosed)="closeDetailsModal()" (editRequested)="onEditFromDetails($event)"
       (deleteRequested)="onDeleteFromDetails($event)">
     </app-employee-details>
   </div>
 </div>
 
-<!-- ── Reassign Employee Modal ────────────────────────────────────────────── -->
+<!-- ── Single Reassign Modal -->
 <div *ngIf="showReassignModal" class="el-modal-overlay" (click)="closeReassignModal()">
   <div class="el-modal-container" style="max-width:520px;" (click)="$event.stopPropagation()">
-
     <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <h2 style="margin:0;font-size:16px;font-weight:600;color:#111827;">Reassign Employee</h2>
-        <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">
-          {{ reassignEmployee?.fullName }} · {{ reassignEmployee?.employeeCode }}
-        </p>
+        <h2 style="margin:0;font-size:16px;font-weight:600;color:#111827;">{{ langService.t('employee.reassign.title') }}</h2>
+        <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">{{ reassignEmployee?.fullName }} · {{ reassignEmployee?.employeeCode }}</p>
       </div>
       <button class="el-modal-close" style="position:static;float:none;margin:0;" (click)="closeReassignModal()">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
-
     <form [formGroup]="reassignForm" (ngSubmit)="submitReassign()" style="padding:20px 24px;">
-
-      <!-- Department -->
       <div style="margin-bottom:16px;">
         <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">
-          Current Department
+          {{ langService.t('employee.reassign.currentDept') }}
           <span style="color:#6b7280;font-weight:400;">→ {{ reassignEmployee?.departmentName || '—' }}</span>
         </label>
         <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">
-          New Department *
+          {{ langService.t('employee.reassign.newDept') }} *
         </label>
-        <select
-          formControlName="toDepartmentId"
-          (change)="onDepartmentChange(asSelect($event.target).value)"
+        <select formControlName="toDepartmentId" (change)="onDepartmentChange(asSelect($event.target).value)"
           style="width:100%;height:36px;padding:0 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;box-sizing:border-box;">
-          <option value="">Select Department</option>
+          <option value="">{{ langService.t('employee.reassign.selectDept') }}</option>
           <option *ngFor="let d of departments" [value]="d.id">{{ d.name }}</option>
         </select>
       </div>
-
-      <!-- Designation -->
       <div style="margin-bottom:16px;">
         <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;">
-          Current Designation
+          {{ langService.t('employee.reassign.currentDesig') }}
           <span style="color:#6b7280;font-weight:400;">→ {{ reassignEmployee?.designationName || '—' }}</span>
         </label>
         <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">
-          New Designation *
+          {{ langService.t('employee.reassign.newDesig') }} *
         </label>
-        <select
-          formControlName="toDesignationId"
+        <select formControlName="toDesignationId"
           style="width:100%;height:36px;padding:0 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;box-sizing:border-box;"
           [attr.disabled]="!reassignForm.get('toDepartmentId')?.value ? '' : null">
-          <option value="">{{ designationsLoading ? 'Loading...' : 'Select Designation' }}</option>
+          <option value="">{{ designationsLoading ? langService.t('common.loading') : langService.t('employee.reassign.selectDesig') }}</option>
           <option *ngFor="let d of designations" [value]="d.id">{{ d.name }}</option>
         </select>
       </div>
-
-      <!-- Reason -->
       <div style="margin-bottom:20px;">
         <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">
-          Reason (optional)
+          {{ langService.t('employee.reassign.reason') }} ({{ langService.t('common.optional') }})
         </label>
-        <textarea
-          formControlName="reason"
-          rows="3"
-          placeholder="Enter reason for reassignment..."
-          style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;resize:vertical;font-family:inherit;box-sizing:border-box;">
-        </textarea>
+        <textarea formControlName="reason" rows="3" [placeholder]="langService.t('employee.reassign.reasonPlaceholder')"
+          style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;resize:vertical;font-family:inherit;box-sizing:border-box;"></textarea>
       </div>
-
-      <!-- Actions -->
       <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid #e5e7eb;">
-        <button type="button" class="el-btn el-btn-secondary" (click)="closeReassignModal()">Cancel</button>
+        <button type="button" class="el-btn el-btn-secondary" (click)="closeReassignModal()">{{ langService.t('common.cancel') }}</button>
         <button type="submit" class="el-btn el-btn-primary" [disabled]="reassignForm.invalid">
-          <i class="bi bi-arrow-left-right"></i> Reassign
+          <i class="bi bi-arrow-left-right"></i> {{ langService.t('employee.reassign.submitBtn') }}
         </button>
       </div>
-
     </form>
   </div>
 </div>
 
-<!-- ── Assignment History Modal ───────────────────────────────────────────── -->
+<!-- ── Assignment History Modal -->
 <div *ngIf="showHistoryModal" class="el-modal-overlay" (click)="closeHistoryModal()">
   <div class="el-modal-container" style="max-width:700px;" (click)="$event.stopPropagation()">
-
     <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <h2 style="margin:0;font-size:16px;font-weight:600;color:#111827;">Assignment History</h2>
-        <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">
-          {{ reassignEmployee?.fullName }} · {{ reassignEmployee?.employeeCode }}
-        </p>
+        <h2 style="margin:0;font-size:16px;font-weight:600;color:#111827;">{{ langService.t('employee.history.title') }}</h2>
+        <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">{{ reassignEmployee?.fullName }} · {{ reassignEmployee?.employeeCode }}</p>
       </div>
       <button class="el-modal-close" style="position:static;float:none;margin:0;" (click)="closeHistoryModal()">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
-
     <div style="padding:20px 24px;max-height:60vh;overflow-y:auto;">
-
-      <!-- Loading -->
       <div *ngIf="historyLoading" style="text-align:center;padding:3rem;color:#6b7280;">
         <div style="width:32px;height:32px;border:3px solid #e5e7eb;border-top-color:#3b82f6;border-radius:50%;margin:0 auto 12px;animation:elSpin .75s linear infinite;"></div>
-        Loading history...
+        {{ langService.t('common.loading') }}
       </div>
-
-      <!-- Empty -->
-      <div *ngIf="!historyLoading && assignmentHistory.length === 0"
-        style="text-align:center;padding:3rem;color:#9ca3af;">
+      <div *ngIf="!historyLoading && assignmentHistory.length === 0" style="text-align:center;padding:3rem;color:#9ca3af;">
         <i class="bi bi-clock-history" style="font-size:2.5rem;display:block;margin-bottom:12px;"></i>
-        No assignment history found
+        {{ langService.t('employee.history.empty') }}
       </div>
-
-      <!-- History items -->
-      <div
-        *ngFor="let h of assignmentHistory; let i = index"
+      <div *ngFor="let h of assignmentHistory; let i = index"
         style="display:flex;gap:14px;padding-bottom:20px;margin-bottom:20px;"
         [style.border-bottom]="i < assignmentHistory.length - 1 ? '1px solid #f1f5f9' : 'none'">
-
-        <!-- Icon + connector line -->
         <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;">
           <div style="width:32px;height:32px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;">
             <i class="bi bi-arrow-left-right" style="font-size:12px;color:#1e40af;"></i>
           </div>
-          <div *ngIf="i < assignmentHistory.length - 1"
-            style="width:1px;flex:1;background:#e5e7eb;min-height:20px;"></div>
+          <div *ngIf="i < assignmentHistory.length - 1" style="width:1px;flex:1;background:#e5e7eb;min-height:20px;"></div>
         </div>
-
-        <!-- Content -->
         <div style="flex:1;min-width:0;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
             <span style="font-size:11px;color:#6b7280;">{{ h.changedAt | date: 'd MMM yyyy, h:mm a' }}</span>
-            <span *ngIf="h.changedByName" style="font-size:11px;color:#9ca3af;">by {{ h.changedByName }}</span>
+            <span *ngIf="h.changedByName" style="font-size:11px;color:#9ca3af;">{{ langService.t('employee.history.by') }} {{ h.changedByName }}</span>
           </div>
-
-          <!-- From → To grid -->
           <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:8px;">
             <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:8px 10px;">
-              <div style="font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">From</div>
+              <div style="font-size:9px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">{{ langService.t('employee.history.from') }}</div>
               <div style="font-size:12px;font-weight:600;color:#374151;">{{ h.fromDepartmentName || '—' }}</div>
               <div style="font-size:11px;color:#6b7280;">{{ h.fromDesignationName || '—' }}</div>
             </div>
             <i class="bi bi-arrow-right" style="color:#9ca3af;font-size:14px;"></i>
             <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 10px;">
-              <div style="font-size:9px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">To</div>
+              <div style="font-size:9px;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">{{ langService.t('employee.history.to') }}</div>
               <div style="font-size:12px;font-weight:600;color:#1e40af;">{{ h.toDepartmentName }}</div>
               <div style="font-size:11px;color:#3b82f6;">{{ h.toDesignationName }}</div>
             </div>
           </div>
-
-          <!-- Reason -->
-          <div *ngIf="h.reason"
-            style="font-size:11px;color:#6b7280;font-style:italic;background:#f9fafb;padding:6px 10px;border-radius:4px;">
+          <div *ngIf="h.reason" style="font-size:11px;color:#6b7280;font-style:italic;background:#f9fafb;padding:6px 10px;border-radius:4px;">
             "{{ h.reason }}"
           </div>
         </div>
-
       </div>
     </div>
+  </div>
+</div>
 
+<!-- ── Bulk Reassign Modal -->
+<div *ngIf="showBulkReassignModal" class="el-modal-overlay" (click)="closeBulkReassignModal()">
+  <div class="el-modal-container" style="max-width:560px;" (click)="$event.stopPropagation()">
+    <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <h2 style="margin:0;font-size:16px;font-weight:600;color:#111827;">{{ langService.t('employee.bulkReassign.title') }}</h2>
+        <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">
+          <strong style="color:#7c3aed;">{{ selectedEmployees.length }} {{ langService.t('employee.bulkReassign.employees') }}</strong>
+          {{ langService.t('employee.bulkReassign.reassigning') }}
+        </p>
+      </div>
+      <button class="el-modal-close" style="position:static;float:none;margin:0;" (click)="closeBulkReassignModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div style="padding:12px 24px;background:#faf5ff;border-bottom:1px solid #e5e7eb;max-height:130px;overflow-y:auto;">
+      <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;">
+        {{ langService.t('employee.bulkReassign.selectedEmployees') }}
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        <span *ngFor="let emp of selectedEmployees"
+          style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:#ede9fe;color:#6d28d9;border-radius:9999px;font-size:12px;font-weight:500;">
+          {{ emp.fullName }}
+          <span style="color:#a78bfa;font-size:10px;font-family:monospace;">{{ emp.employeeCode }}</span>
+        </span>
+      </div>
+    </div>
+    <form [formGroup]="bulkReassignForm" (ngSubmit)="submitBulkReassign()" style="padding:20px 24px;">
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">
+          {{ langService.t('employee.reassign.newDept') }} *
+        </label>
+        <select formControlName="toDepartmentId"
+          (change)="onBulkDepartmentChange(asSelect($event.target).value)"
+          style="width:100%;height:36px;padding:0 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;box-sizing:border-box;">
+          <option value="">{{ langService.t('employee.reassign.selectDept') }}</option>
+          <option *ngFor="let d of departments" [value]="d.id">{{ d.name }}</option>
+        </select>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">
+          {{ langService.t('employee.reassign.newDesig') }} *
+        </label>
+        <select formControlName="toDesignationId"
+          style="width:100%;height:36px;padding:0 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;background:#fff;box-sizing:border-box;"
+          [attr.disabled]="!bulkReassignForm.get('toDepartmentId')?.value ? '' : null">
+          <option value="">{{ bulkDesignationsLoading ? langService.t('common.loading') : langService.t('employee.reassign.selectDesig') }}</option>
+          <option *ngFor="let d of bulkDesignations" [value]="d.id">{{ d.name }}</option>
+        </select>
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;">
+          {{ langService.t('employee.reassign.reason') }} ({{ langService.t('common.optional') }})
+        </label>
+        <textarea formControlName="reason" rows="3" [placeholder]="langService.t('employee.bulkReassign.reasonPlaceholder')"
+          style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;color:#374151;resize:vertical;font-family:inherit;box-sizing:border-box;"></textarea>
+      </div>
+      <div *ngIf="bulkReassigning"
+        style="margin-bottom:16px;padding:10px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;display:flex;align-items:center;gap:10px;font-size:13px;color:#1e40af;">
+        <div style="width:16px;height:16px;border:2px solid #bfdbfe;border-top-color:#3b82f6;border-radius:50%;animation:elSpin .75s linear infinite;flex-shrink:0;"></div>
+        {{ selectedEmployees.length }} {{ langService.t('employee.bulkReassign.inProgress') }}
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:16px;border-top:1px solid #e5e7eb;">
+        <button type="button" class="el-btn el-btn-secondary" (click)="closeBulkReassignModal()" [disabled]="bulkReassigning">
+          {{ langService.t('common.cancel') }}
+        </button>
+        <button type="submit" class="el-btn el-btn-primary" [disabled]="bulkReassignForm.invalid || bulkReassigning">
+          <i class="bi bi-arrow-left-right"></i>
+          {{ langService.t('employee.bulkReassign.submitBtn') }} {{ selectedEmployees.length }} {{ langService.t('employee.bulkReassign.employees') }}
+        </button>
+      </div>
+    </form>
   </div>
 </div>

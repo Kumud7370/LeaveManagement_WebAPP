@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
 import { ICellRendererParams } from 'ag-grid-community';
 import { CommonModule } from '@angular/common';
+import { LanguageService } from '../../core/services/api/language.api';
 
 @Component({
   selector: 'app-leave-type-action-cell-renderer',
@@ -10,7 +11,8 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="action-buttons">
 
-      <button class="btn-icon btn-edit" (click)="onEdit()" title="Edit">
+      <button class="btn-icon btn-edit" (click)="onEdit()"
+        [title]="langService.t('lt.action.edit')">
         <i class="bi bi-pencil"></i>
       </button>
 
@@ -18,11 +20,12 @@ import { CommonModule } from '@angular/common';
         class="pill-toggle"
         [class.pill-on]="params?.data?.isActive"
         (click)="onToggle()"
-        [title]="params?.data?.isActive ? 'Deactivate' : 'Activate'">
+        [title]="params?.data?.isActive ? langService.t('lt.action.deactivate') : langService.t('lt.action.activate')">
         <span class="pill-thumb"></span>
       </button>
 
-      <button class="btn-icon btn-delete" (click)="onDelete()" title="Delete">
+      <button class="btn-icon btn-delete" (click)="onDelete()"
+        [title]="langService.t('lt.action.delete')">
         <i class="bi bi-trash"></i>
       </button>
 
@@ -63,6 +66,8 @@ import { CommonModule } from '@angular/common';
 })
 export class LeaveTypeActionCellRendererComponent implements ICellRendererAngularComp {
   params!: ICellRendererParams;
+
+  constructor(public langService: LanguageService) {}
 
   agInit(params: ICellRendererParams): void { this.params = params; }
   refresh(params: ICellRendererParams): boolean { this.params = params; return true; }

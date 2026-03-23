@@ -2,22 +2,24 @@
 
 <div *ngIf="loadingBalance" class="hl-form-loading">
   <div class="hl-loading-spinner"></div>
-  <p>Loading balance details...</p>
+  <p>{{ langService.t('lb.form.loading') }}</p>
 </div>
 
 <form *ngIf="!loadingBalance" [formGroup]="balanceForm" (ngSubmit)="onSubmit()" class="hl-leave-form">
 
   <!-- ── Section 1: Employee & Leave Type ───────────────────────────── -->
   <div class="hl-form-section">
-    <h3 class="hl-section-title">Employee & Leave Type</h3>
+    <h3 class="hl-section-title">{{ langService.t('lb.form.section.employeeType') }}</h3>
 
     <div class="hl-form-row">
       <!-- Employee -->
       <div class="hl-form-group">
-        <label for="bfEmployee">Employee <span class="hl-required">*</span></label>
+        <label for="bfEmployee">
+          {{ langService.t('lb.form.employee') }} <span class="hl-required">*</span>
+        </label>
         <select id="bfEmployee" formControlName="employeeId" class="hl-form-control"
           [class.hl-invalid]="isInvalid('employeeId')">
-          <option value="">Select employee...</option>
+          <option value="">{{ langService.t('lb.form.selectEmployee') }}</option>
           <option *ngFor="let emp of employees" [value]="emp.id">
             {{ emp.employeeCode }} — {{ emp.fullName }}
           </option>
@@ -26,36 +28,41 @@
           <i class="bi bi-exclamation-circle"></i> {{ getError('employeeId') }}
         </span>
         <span class="hl-form-hint" *ngIf="isEditMode" style="color:#9ca3af;font-style:italic;">
-          Locked — part of natural key
+          {{ langService.t('lb.form.lockedKey') }}
         </span>
       </div>
 
       <!-- Leave Type -->
       <div class="hl-form-group">
-        <label for="bfLeaveType">Leave Type <span class="hl-required">*</span></label>
+        <label for="bfLeaveType">
+          {{ langService.t('lb.form.leaveType') }} <span class="hl-required">*</span>
+        </label>
         <select id="bfLeaveType" formControlName="leaveTypeId" class="hl-form-control"
           [class.hl-invalid]="isInvalid('leaveTypeId')" (change)="onLeaveTypeChange()">
-          <option value="">Select leave type...</option>
+          <option value="">{{ langService.t('lb.form.selectLeaveType') }}</option>
           <option *ngFor="let lt of leaveTypes" [value]="lt.id">
-            {{ lt.name }} ({{ lt.maxDaysPerYear }} days/yr)
+            {{ lt.name }} ({{ lt.maxDaysPerYear }} {{ langService.t('lb.form.daysPerYear') }})
           </option>
         </select>
         <span class="hl-error-msg" *ngIf="isInvalid('leaveTypeId')">
           <i class="bi bi-exclamation-circle"></i> {{ getError('leaveTypeId') }}
         </span>
         <span class="hl-form-hint" *ngIf="isEditMode" style="color:#9ca3af;font-style:italic;">
-          Locked — part of natural key
+          {{ langService.t('lb.form.lockedKey') }}
         </span>
 
         <!-- Leave type info panel -->
         <div class="hl-balance-info" *ngIf="selectedLeaveType">
           <span class="hl-type-dot" [style.background]="selectedLeaveType.color"></span>
-          <span><strong>{{ selectedLeaveType.name }}</strong> — max {{ selectedLeaveType.maxDaysPerYear }} days/year</span>
+          <span>
+            <strong>{{ selectedLeaveType.name }}</strong> —
+            {{ langService.t('lb.form.maxDays') }} {{ selectedLeaveType.maxDaysPerYear }} {{ langService.t('lb.form.daysPerYear') }}
+          </span>
           <span *ngIf="selectedLeaveType.isCarryForward" style="color:#15803d;">
-            &nbsp;· Carry-forward allowed (max {{ selectedLeaveType.maxCarryForwardDays }} days)
+            &nbsp;· {{ langService.t('lb.form.carryAllowed') }} ({{ langService.t('lb.form.max') }} {{ selectedLeaveType.maxCarryForwardDays }} {{ langService.t('lb.days') }})
           </span>
           <span *ngIf="!selectedLeaveType.isCarryForward" style="color:#b45309;">
-            &nbsp;· No carry-forward
+            &nbsp;· {{ langService.t('lb.form.noCarry') }}
           </span>
         </div>
       </div>
@@ -64,12 +71,14 @@
 
   <!-- ── Section 2: Allocation Details ─────────────────────────────── -->
   <div class="hl-form-section">
-    <h3 class="hl-section-title">Allocation Details</h3>
+    <h3 class="hl-section-title">{{ langService.t('lb.form.section.allocation') }}</h3>
 
     <div class="hl-form-row">
       <!-- Year -->
       <div class="hl-form-group">
-        <label for="bfYear">Year <span class="hl-required">*</span></label>
+        <label for="bfYear">
+          {{ langService.t('lb.form.year') }} <span class="hl-required">*</span>
+        </label>
         <select id="bfYear" formControlName="year" class="hl-form-control"
           [class.hl-invalid]="isInvalid('year')">
           <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
@@ -78,24 +87,27 @@
           <i class="bi bi-exclamation-circle"></i> {{ getError('year') }}
         </span>
         <span class="hl-form-hint" *ngIf="isEditMode" style="color:#9ca3af;font-style:italic;">
-          Locked — part of natural key
+          {{ langService.t('lb.form.lockedKey') }}
         </span>
       </div>
 
       <!-- Total Allocated -->
       <div class="hl-form-group">
-        <label for="bfAllocated">Total Allocated Days <span class="hl-required">*</span></label>
+        <label for="bfAllocated">
+          {{ langService.t('lb.form.totalAllocated') }} <span class="hl-required">*</span>
+        </label>
         <div class="hl-days-wrapper">
           <input type="number" id="bfAllocated" formControlName="totalAllocated"
             class="hl-form-control" [class.hl-invalid]="isInvalid('totalAllocated')"
-            min="0" max="365" step="0.5" placeholder="e.g. 12" />
-          <span class="hl-days-unit">days</span>
+            min="0" max="365" step="0.5" [placeholder]="langService.t('lb.form.allocatedPlaceholder')" />
+          <span class="hl-days-unit">{{ langService.t('lb.days') }}</span>
         </div>
         <span class="hl-error-msg" *ngIf="isInvalid('totalAllocated')">
           <i class="bi bi-exclamation-circle"></i> {{ getError('totalAllocated') }}
         </span>
         <span class="hl-form-hint" *ngIf="selectedLeaveType && !isInvalid('totalAllocated')">
-          <i class="bi bi-info-circle"></i> Default: {{ selectedLeaveType.maxDaysPerYear }} days
+          <i class="bi bi-info-circle"></i>
+          {{ langService.t('lb.form.defaultDays') }}: {{ selectedLeaveType.maxDaysPerYear }} {{ langService.t('lb.days') }}
         </span>
       </div>
     </div>
@@ -104,22 +116,24 @@
     <div class="hl-form-row">
       <div class="hl-form-group"
         [style.opacity]="selectedLeaveType && !selectedLeaveType.isCarryForward ? '0.5' : '1'">
-        <label for="bfCarry">Carried Forward Days</label>
+        <label for="bfCarry">{{ langService.t('lb.form.carriedForward') }}</label>
         <div class="hl-days-wrapper">
           <input type="number" id="bfCarry" formControlName="carriedForward"
             class="hl-form-control" [class.hl-invalid]="isInvalid('carriedForward')"
             min="0" max="365" step="0.5" placeholder="0" />
-          <span class="hl-days-unit">days</span>
+          <span class="hl-days-unit">{{ langService.t('lb.days') }}</span>
         </div>
         <span class="hl-error-msg" *ngIf="isInvalid('carriedForward')">
           <i class="bi bi-exclamation-circle"></i> {{ getError('carriedForward') }}
         </span>
         <span class="hl-form-hint" *ngIf="selectedLeaveType?.isCarryForward">
-          <i class="bi bi-info-circle"></i> Max {{ selectedLeaveType?.maxCarryForwardDays }} days allowed
+          <i class="bi bi-info-circle"></i>
+          {{ langService.t('lb.form.max') }} {{ selectedLeaveType?.maxCarryForwardDays }} {{ langService.t('lb.days') }} {{ langService.t('lb.form.allowed') }}
         </span>
         <span class="hl-form-hint" style="color:#b45309;"
           *ngIf="selectedLeaveType && !selectedLeaveType.isCarryForward">
-          <i class="bi bi-exclamation-triangle"></i> Not applicable — this leave type does not allow carry-forward
+          <i class="bi bi-exclamation-triangle"></i>
+          {{ langService.t('lb.form.noCarryHint') }}
         </span>
       </div>
       <!-- spacer -->
@@ -136,17 +150,17 @@
   <!-- ── Footer ────────────────────────────────────────────────────── -->
   <div class="hl-modal-footer">
     <button type="button" class="hl-btn hl-btn-secondary" (click)="onCancel()" [disabled]="submitting">
-      Cancel
+      {{ langService.t('common.cancel') }}
     </button>
     <button type="submit" class="hl-btn hl-btn-primary"
       [disabled]="submitting || balanceForm.invalid">
       <ng-container *ngIf="!submitting">
         <i class="bi bi-check-circle"></i>
-        {{ isEditMode ? 'Update Balance' : 'Create Balance' }}
+        {{ isEditMode ? langService.t('lb.form.updateBtn') : langService.t('lb.form.createBtn') }}
       </ng-container>
       <ng-container *ngIf="submitting">
         <div class="hl-btn-spinner"></div>
-        {{ isEditMode ? 'Updating...' : 'Creating...' }}
+        {{ isEditMode ? langService.t('common.updating') : langService.t('common.creating') }}
       </ng-container>
     </button>
   </div>

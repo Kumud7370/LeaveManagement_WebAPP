@@ -2,6 +2,7 @@ import { Component, OnInit, Input, Output, EventEmitter, ViewEncapsulation } fro
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { LeaveTypeService } from '../../../core/services/api/leave-type.api';
+import { LanguageService }  from '../../../core/services/api/language.api';
 import { LeaveType, CreateLeaveTypeDto, UpdateLeaveTypeDto } from '../../../core/Models/leave-type.model';
 
 @Component({
@@ -13,18 +14,22 @@ import { LeaveType, CreateLeaveTypeDto, UpdateLeaveTypeDto } from '../../../core
   encapsulation: ViewEncapsulation.None
 })
 export class LeaveTypeFormComponent implements OnInit {
-  @Input() isModal = false;
-  @Input() isEditMode = false;
+  @Input() isModal      = false;
+  @Input() isEditMode   = false;
   @Input() leaveTypeId: string | null = null;
-  @Output() formSubmitted  = new EventEmitter<void>();
-  @Output() formCancelled  = new EventEmitter<void>();
+  @Output() formSubmitted = new EventEmitter<void>();
+  @Output() formCancelled = new EventEmitter<void>();
 
-  leaveTypeForm!: FormGroup;
-  submitting      = false;
-  loadingLeaveType = false;
-  formError: string | null = null;
+  leaveTypeForm!:   FormGroup;
+  submitting        = false;
+  loadingLeaveType  = false;
+  formError:        string | null = null;
 
-  constructor(private fb: FormBuilder, private leaveTypeService: LeaveTypeService) {}
+  constructor(
+    private fb:               FormBuilder,
+    private leaveTypeService: LeaveTypeService,
+    public  langService:      LanguageService
+  ) {}
 
   ngOnInit(): void {
     this.buildForm();
@@ -108,7 +113,8 @@ export class LeaveTypeFormComponent implements OnInit {
     if (this.leaveTypeForm.invalid) { this.markAllTouched(); return; }
     this.submitting = true;
     this.formError  = null;
-    const v = this.leaveTypeForm.value;
+    const v              = this.leaveTypeForm.value;
+    const t              = (k: string) => this.langService.t(k);
     const isCarryForward = v.isCarryForward as boolean;
 
     const basePayload = {
@@ -132,7 +138,7 @@ export class LeaveTypeFormComponent implements OnInit {
         next: (r) => {
           this.submitting = false;
           if (r.success) { this.formSubmitted.emit(); }
-          else { this.formError = r.message || 'Failed to update leave type'; }
+          else { this.formError = r.message || t('lt.msg.updateFailed'); }
         },
         error: (e) => { this.submitting = false; this.formError = this.extractError(e); }
       });
@@ -142,7 +148,7 @@ export class LeaveTypeFormComponent implements OnInit {
         next: (r) => {
           this.submitting = false;
           if (r.success) { this.formSubmitted.emit(); }
-          else { this.formError = r.message || 'Failed to create leave type. Code may already exist.'; }
+          else { this.formError = r.message || t('lt.msg.createFailed'); }
         },
         error: (e) => { this.submitting = false; this.formError = this.extractError(e); }
       });
@@ -159,12 +165,13 @@ export class LeaveTypeFormComponent implements OnInit {
   getError(field: string): string {
     const c = this.leaveTypeForm.get(field);
     if (!c?.errors) return '';
-    if (c.errors['required'])  return 'This field is required.';
-    if (c.errors['minlength']) return `Minimum ${c.errors['minlength'].requiredLength} characters.`;
-    if (c.errors['maxlength']) return `Maximum ${c.errors['maxlength'].requiredLength} characters.`;
-    if (c.errors['min'])       return `Minimum value is ${c.errors['min'].min}.`;
-    if (c.errors['max'])       return `Maximum value is ${c.errors['max'].max}.`;
-    if (c.errors['pattern'])   return 'Only uppercase letters allowed (A–Z).';
+    const t = (k: string) => this.langService.t(k);
+    if (c.errors['required'])  return t('common.fieldRequired');
+    if (c.errors['minlength']) return `${t('common.minLength')} ${c.errors['minlength'].requiredLength}.`;
+    if (c.errors['maxlength']) return `${t('common.maxLength')} ${c.errors['maxlength'].requiredLength}.`;
+    if (c.errors['min'])       return `${t('common.minValue')} ${c.errors['min'].min}.`;
+    if (c.errors['max'])       return `${t('common.maxValue')} ${c.errors['max'].max}.`;
+    if (c.errors['pattern'])   return t('lt.form.error.pattern');
     return '';
   }
 
@@ -174,7 +181,7 @@ export class LeaveTypeFormComponent implements OnInit {
 
   private extractError(e: { error?: { errors?: Record<string, string[]>; message?: string; title?: string } }): string {
     const body = e.error;
-    if (!body) return 'An unexpected error occurred.';
+    if (!body) return this.langService.t('common.error');
     if (body.errors && typeof body.errors === 'object') {
       const messages = Object.entries(body.errors)
         .map(([field, msgs]) => `${field}: ${(Array.isArray(msgs) ? msgs : [msgs]).join(', ')}`);
@@ -182,6 +189,6 @@ export class LeaveTypeFormComponent implements OnInit {
     }
     if (body.message) return body.message;
     if (body.title)   return body.title;
-    return 'An error occurred. Please check all fields and try again.';
+    return this.langService.t('lt.msg.checkFields');
   }
 }

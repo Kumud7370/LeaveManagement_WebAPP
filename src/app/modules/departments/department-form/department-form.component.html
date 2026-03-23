@@ -1,20 +1,16 @@
 <div class="department-form-container" [class.modal-form]="isModal">
+
   <!-- Header -->
   <div class="page-header" *ngIf="!isModal">
     <button class="btn-back" (click)="onCancel()">
-      <i class="bi bi-arrow-left"></i>
-      Back
+      <i class="bi bi-arrow-left"></i> {{ langService.t('common.back') }}
     </button>
     <div class="header-content">
       <h1 class="page-title">
-        {{ isEditMode ? "Edit Department" : "Create Department" }}
+        {{ isEditMode ? langService.t('dept.form.edit') : langService.t('dept.form.create') }}
       </h1>
       <p class="page-subtitle">
-        {{
-          isEditMode
-            ? "Update department information"
-            : "Add a new department to your organization"
-        }}
+        {{ isEditMode ? langService.t('dept.form.subtitle.edit') : langService.t('dept.form.subtitle.create') }}
       </p>
     </div>
   </div>
@@ -22,14 +18,10 @@
   <div class="page-header" *ngIf="isModal">
     <div class="header-content">
       <h1 class="page-title">
-        {{ isEditMode ? "Edit Department" : "Create Department" }}
+        {{ isEditMode ? langService.t('dept.form.edit') : langService.t('dept.form.create') }}
       </h1>
       <p class="page-subtitle">
-        {{
-          isEditMode
-            ? "Update department information"
-            : "Add a new department to your organization"
-        }}
+        {{ isEditMode ? langService.t('dept.form.subtitle.edit') : langService.t('dept.form.subtitle.create') }}
       </p>
     </div>
   </div>
@@ -37,29 +29,23 @@
   <!-- Loading State -->
   <div *ngIf="loading" class="loading-state">
     <div class="spinner"></div>
-    <p>Loading department...</p>
+    <p>{{ langService.t('common.loading') }}</p>
   </div>
 
   <!-- Error Alert -->
   <div *ngIf="error && !loading" class="alert alert-error">
     <i class="bi bi-exclamation-circle"></i>
     <span>{{ error }}</span>
-    <button class="close-btn" (click)="error = null">
-      <i class="bi bi-x"></i>
-    </button>
+    <button class="close-btn" (click)="error = null"><i class="bi bi-x"></i></button>
   </div>
 
   <!-- Form -->
-  <form
-    *ngIf="!loading"
-    [formGroup]="departmentForm"
-    (ngSubmit)="onSubmit()"
-    class="department-form"
-  >
+  <form *ngIf="!loading" [formGroup]="departmentForm" (ngSubmit)="onSubmit()" class="department-form">
     <div class="form-grid">
+
       <!-- Department Code -->
       <div class="form-group">
-        <label for="departmentCode" class="required">Department Code</label>
+        <label for="departmentCode" class="required">{{ langService.t('dept.form.code') }}</label>
         <input
           id="departmentCode"
           type="text"
@@ -68,33 +54,15 @@
           class="form-control"
           [class.error]="isFieldInvalid('departmentCode')"
         />
-        <small class="hint"
-          >Use uppercase letters, numbers, underscores, and hyphens only</small
-        >
+        <small class="hint">Use uppercase letters, numbers, underscores, and hyphens only</small>
         <div *ngIf="isFieldInvalid('departmentCode')" class="error-message">
-          {{ getErrorMessage("departmentCode") }}
-        </div>
-      </div>
-
-      <!-- Department Name -->
-      <div class="form-group">
-        <label for="departmentName" class="required">Department Name</label>
-        <input
-          id="departmentName"
-          type="text"
-          formControlName="departmentName"
-          placeholder="e.g., Information Technology"
-          class="form-control"
-          [class.error]="isFieldInvalid('departmentName')"
-        />
-        <div *ngIf="isFieldInvalid('departmentName')" class="error-message">
-          {{ getErrorMessage("departmentName") }}
+          {{ getErrorMessage('departmentCode') }}
         </div>
       </div>
 
       <!-- Display Order -->
       <div class="form-group">
-        <label for="displayOrder">Display Order</label>
+        <label for="displayOrder">{{ langService.t('dept.form.displayOrder') }}</label>
         <input
           id="displayOrder"
           type="number"
@@ -106,28 +74,72 @@
         />
         <small class="hint">Lower numbers appear first</small>
         <div *ngIf="isFieldInvalid('displayOrder')" class="error-message">
-          {{ getErrorMessage("displayOrder") }}
+          {{ getErrorMessage('displayOrder') }}
+        </div>
+      </div>
+
+      <!-- Department Name — Marathi (PRIMARY, required) -->
+      <div class="form-group">
+        <label for="departmentNameMr" class="required">{{ langService.t('dept.form.name') }}</label>
+        <input
+          id="departmentNameMr"
+          type="text"
+          formControlName="departmentNameMr"
+          placeholder="उदा. माहिती तंत्रज्ञान"
+          class="form-control"
+          [class.error]="isFieldInvalid('departmentNameMr')"
+        />
+        <div *ngIf="isFieldInvalid('departmentNameMr')" class="error-message">
+          {{ getErrorMessage('departmentNameMr') }}
+        </div>
+      </div>
+
+      <!-- Department Name — English (optional) -->
+      <div class="form-group">
+        <label for="departmentName">{{ langService.t('dept.form.nameEn') }}</label>
+        <input
+          id="departmentName"
+          type="text"
+          formControlName="departmentName"
+          placeholder="e.g., Information Technology"
+          class="form-control"
+          [class.error]="isFieldInvalid('departmentName')"
+        />
+        <small class="hint">Optional — defaults to Marathi name if blank</small>
+        <div *ngIf="isFieldInvalid('departmentName')" class="error-message">
+          {{ getErrorMessage('departmentName') }}
+        </div>
+      </div>
+
+      <!-- Department Name — Hindi (optional) -->
+      <div class="form-group">
+        <label for="departmentNameHi">{{ langService.t('dept.form.nameHi') }}</label>
+        <input
+          id="departmentNameHi"
+          type="text"
+          formControlName="departmentNameHi"
+          placeholder="उदा. सूचना प्रौद्योगिकी"
+          class="form-control"
+          [class.error]="isFieldInvalid('departmentNameHi')"
+        />
+        <small class="hint">Optional</small>
+        <div *ngIf="isFieldInvalid('departmentNameHi')" class="error-message">
+          {{ getErrorMessage('departmentNameHi') }}
         </div>
       </div>
 
       <!-- Status -->
       <div class="form-group">
         <label class="checkbox-label">
-          <input
-            type="checkbox"
-            formControlName="isActive"
-            class="checkbox-input"
-          />
-          <span class="checkbox-text">Active</span>
+          <input type="checkbox" formControlName="isActive" class="checkbox-input" />
+          <span class="checkbox-text">{{ langService.t('dept.form.isActive') }}</span>
         </label>
-        <small class="hint"
-          >Inactive departments are hidden from selection</small
-        >
+        <small class="hint">Inactive departments are hidden from selection</small>
       </div>
 
       <!-- Description (Full Width) -->
       <div class="form-group full-width">
-        <label for="description">Description</label>
+        <label for="description">{{ langService.t('dept.form.description') }}</label>
         <textarea
           id="description"
           formControlName="description"
@@ -137,35 +149,27 @@
           [class.error]="isFieldInvalid('description')"
         ></textarea>
         <div class="char-count">
-          {{ departmentForm.get("description")?.value?.length || 0 }} / 500
+          {{ departmentForm.get('description')?.value?.length || 0 }} / 500
         </div>
         <div *ngIf="isFieldInvalid('description')" class="error-message">
-          {{ getErrorMessage("description") }}
+          {{ getErrorMessage('description') }}
         </div>
       </div>
+
     </div>
 
     <!-- Form Actions -->
     <div class="form-actions">
-      <button
-        type="button"
-        class="btn btn-secondary"
-        (click)="onCancel()"
-        [disabled]="submitting"
-      >
-        Cancel
+      <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="submitting">
+        {{ langService.t('common.cancel') }}
       </button>
-      <button
-        type="submit"
-        class="btn btn-primary"
-        [disabled]="submitting || departmentForm.invalid"
-      >
-        <span *ngIf="!submitting">{{
-          isEditMode ? "Update Department" : "Create Department"
-        }}</span>
+      <button type="submit" class="btn btn-primary" [disabled]="submitting || departmentForm.invalid">
+        <span *ngIf="!submitting">
+          {{ isEditMode ? langService.t('dept.form.updateBtn') : langService.t('dept.form.createBtn') }}
+        </span>
         <span *ngIf="submitting" class="btn-loading">
           <span class="spinner-small"></span>
-          {{ isEditMode ? "Updating..." : "Creating..." }}
+          {{ isEditMode ? langService.t('common.updating') : langService.t('common.creating') }}
         </span>
       </button>
     </div>
@@ -179,17 +183,10 @@
     </div>
     <ul class="info-list">
       <li>Department codes must be unique and cannot be changed later</li>
-      <li>
-        Use descriptive names that clearly identify the department's purpose
-      </li>
-      <li>
-        Display order controls how departments appear in lists (lower = higher
-        priority)
-      </li>
-      <li>
-        Inactive departments won't appear in dropdowns but preserve historical
-        data
-      </li>
+      <li>Marathi name is required — English and Hindi names are optional</li>
+      <li>Display order controls how departments appear in lists (lower = higher priority)</li>
+      <li>Inactive departments won't appear in dropdowns but preserve historical data</li>
     </ul>
   </div>
+
 </div>

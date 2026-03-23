@@ -1,7 +1,9 @@
 export interface Department {
   departmentId: string;
   departmentCode: string;
-  departmentName: string;
+  departmentName: string;       
+  departmentNameMr?: string;     
+  departmentNameHi?: string;
   description?: string;
   isActive: boolean;
   displayOrder: number;

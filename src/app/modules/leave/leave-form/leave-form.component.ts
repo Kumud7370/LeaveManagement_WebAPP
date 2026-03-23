@@ -1,16 +1,14 @@
-// leave-form.component.ts — all business logic preserved, UI tokens updated to hl- system
-
 import { Component, OnInit, Input, Output, EventEmitter, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { LeaveService } from '../../../core/services/api/leave.api';
 import { LeaveTypeService } from '../../../core/services/api/leave-type.api';
 import { EmployeeService } from '../../../core/services/api/employee.api';
+import { LanguageService } from '../../../core/services/api/language.api';
 import { Leave, CreateLeaveDto, UpdateLeaveDto } from '../../../core/Models/leave.model';
 import { LeaveType } from '../../../core/Models/leave-type.model';
 
-interface EmployeeResponseDto { id: string; employeeCode: string; firstName: string; lastName: string; }
-interface EmployeeSummary { id: string; employeeCode: string; fullName: string; }
+interface EmployeeSummary { id: string; employeeCode: string; fullName: string; userId?: string; }
 
 @Component({
   selector: 'app-leave-form',
@@ -46,13 +44,14 @@ export class LeaveFormComponent implements OnInit {
     private fb: FormBuilder,
     private leaveService: LeaveService,
     private leaveTypeService: LeaveTypeService,
-    private employeeService: EmployeeService
+    private employeeService: EmployeeService,
+    public  langService: LanguageService
   ) { }
 
   ngOnInit(): void {
     this.buildForm();
     this.loadLeaveTypes();
-    this.loadEmployees(); this.loadEmployees().then(() => {
+    this.loadEmployees().then(() => {
       if (this.isEditMode && this.leaveId) this.loadLeave(this.leaveId);
     });
   }
@@ -60,14 +59,14 @@ export class LeaveFormComponent implements OnInit {
   buildForm(): void {
     this.leaveForm = this.fb.group(
       {
-        employeeId: ['', Validators.required],
-        leaveTypeId: ['', Validators.required],
-        startDate: ['', Validators.required],
-        endDate: ['', Validators.required],
-        totalDays: [1, [Validators.required, Validators.min(0.5)]],
-        reason: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
+        employeeId:       ['', Validators.required],
+        leaveTypeId:      ['', Validators.required],
+        startDate:        ['', Validators.required],
+        endDate:          ['', Validators.required],
+        totalDays:        [1, [Validators.required, Validators.min(0.5)]],
+        reason:           ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
         isEmergencyLeave: [false],
-        attachmentUrl: ['']
+        attachmentUrl:    ['']
       },
       { validators: this.dateRangeValidator }
     );
@@ -86,42 +85,40 @@ export class LeaveFormComponent implements OnInit {
     });
   }
 
-loadEmployees(): Promise<void> {
-  return new Promise((resolve) => {
-    this.employeeService.getActiveEmployees().subscribe({
-      next: (employees: EmployeeResponseDto[]) => {
-        const all = employees.map(e => ({
-          id: e.id,
-          employeeCode: (e as any).employeeCode,
-          fullName: `${e.firstName} ${e.lastName}`,
-          userId: (e as any).userId  
-        }));
+  loadEmployees(): Promise<void> {
+    return new Promise((resolve) => {
+      this.employeeService.getActiveEmployees().subscribe({
+        next: (employees: any[]) => {
+          const all = employees.map(e => ({
+            id: e.id,
+            employeeCode: e.employeeCode,
+            fullName: `${e.firstName} ${e.lastName}`,
+            userId: e.userId
+          }));
 
-        if (this.restrictToEmployeeId) {
-          const rid = this.restrictToEmployeeId.trim().toLowerCase();
-
-          this.employees = all.filter(e =>
-            e.id?.trim().toLowerCase() === rid ||
-            e.userId?.trim().toLowerCase() === rid 
-          );
-
-          if (this.employees.length === 1 && !this.isEditMode) {
-            setTimeout(() => {
-              this.leaveForm.patchValue({ employeeId: this.employees[0].id });
-              this.onLeaveTypeChange();
-            }, 0);
-          } else if (this.employees.length === 0) {
+          if (this.restrictToEmployeeId) {
+            const rid = this.restrictToEmployeeId.trim().toLowerCase();
+            this.employees = all.filter(e =>
+              e.id?.trim().toLowerCase() === rid ||
+              e.userId?.trim().toLowerCase() === rid
+            );
+            if (this.employees.length === 1 && !this.isEditMode) {
+              setTimeout(() => {
+                this.leaveForm.patchValue({ employeeId: this.employees[0].id });
+                this.onLeaveTypeChange();
+              }, 0);
+            } else if (this.employees.length === 0) {
+              this.employees = all;
+            }
+          } else {
             this.employees = all;
           }
-        } else {
-          this.employees = all;
-        }
-        resolve();
-      },
-      error: () => { this.employees = []; resolve(); }
+          resolve();
+        },
+        error: () => { this.employees = []; resolve(); }
+      });
     });
-  });
-}
+  }
 
   loadLeave(id: string): void {
     this.loadingLeave = true;
@@ -144,27 +141,26 @@ loadEmployees(): Promise<void> {
     });
   }
 
- onLeaveTypeChange(): void {
-  // Use getRawValue() so disabled employeeId is still readable
-  const raw    = this.leaveForm.getRawValue();
-  const typeId = raw.leaveTypeId as string;
-  const empId  = raw.employeeId  as string;
+  onLeaveTypeChange(): void {
+    const raw    = this.leaveForm.getRawValue();
+    const typeId = raw.leaveTypeId as string;
+    const empId  = raw.employeeId  as string;
 
-  this.selectedLeaveType = this.leaveTypes.find(lt => lt.id === typeId) ?? null;
-  this.remainingDays = null; this.balanceNotFound = false;
+    this.selectedLeaveType = this.leaveTypes.find(lt => lt.id === typeId) ?? null;
+    this.remainingDays = null; this.balanceNotFound = false;
 
-  if (typeId && empId) {
-    this.balanceLoading = true;
-    this.leaveService.getRemainingLeaveDays(empId, typeId, this.currentYear).subscribe({
-      next: (r) => {
-        this.balanceLoading = false;
-        if (r.success) { this.remainingDays = r.data; this.balanceNotFound = false; }
-        else            { this.remainingDays = null;   this.balanceNotFound = true;  }
-      },
-      error: () => { this.balanceLoading = false; this.remainingDays = null; this.balanceNotFound = true; }
-    });
+    if (typeId && empId) {
+      this.balanceLoading = true;
+      this.leaveService.getRemainingLeaveDays(empId, typeId, this.currentYear).subscribe({
+        next: (r) => {
+          this.balanceLoading = false;
+          if (r.success) { this.remainingDays = r.data; this.balanceNotFound = false; }
+          else            { this.remainingDays = null;   this.balanceNotFound = true;  }
+        },
+        error: () => { this.balanceLoading = false; this.remainingDays = null; this.balanceNotFound = true; }
+      });
+    }
   }
-}
 
   onDateChange(): void {
     const s = this.leaveForm.get('startDate')?.value as string;
@@ -180,14 +176,13 @@ loadEmployees(): Promise<void> {
     if (this.leaveForm.invalid) { this.markAllTouched(); return; }
 
     if (this.balanceNotFound && !this.isEditMode) {
-      this.formError = 'No leave balance found for this employee and leave type for the current year. '
-        + 'Please initialize the leave balance first via the Leave Balance module.';
+      this.formError = this.langService.t('leave.form.error.noBalance');
       return;
     }
     if (this.remainingDays !== null && !this.isEditMode) {
       const requested = Number(this.leaveForm.get('totalDays')?.value);
       if (requested > this.remainingDays) {
-        this.formError = `Insufficient balance. Requested: ${requested} days, Available: ${this.remainingDays} days.`;
+        this.formError = `${this.langService.t('leave.form.error.insufficientBalance')} ${requested} ${this.langService.t('leave.form.days')}, ${this.langService.t('leave.form.error.available')}: ${this.remainingDays} ${this.langService.t('leave.form.days')}.`;
         return;
       }
     }
@@ -203,10 +198,14 @@ loadEmployees(): Promise<void> {
         reason: (v.reason as string).trim(),
         isEmergencyLeave: v.isEmergencyLeave as boolean,
         attachmentUrl: (v.attachmentUrl as string) || undefined,
-        leaveTypeId:      v.leaveTypeId as string,
+        leaveTypeId: v.leaveTypeId as string,
       };
       this.leaveService.updateLeave(this.leaveId, dto).subscribe({
-        next: (r) => { this.submitting = false; if (r.success) this.formSubmitted.emit(); else this.formError = r.message || 'Failed to update leave.'; },
+        next: (r) => {
+          this.submitting = false;
+          if (r.success) this.formSubmitted.emit();
+          else this.formError = r.message || this.langService.t('leave.form.error.updateFailed');
+        },
         error: (e) => { this.submitting = false; this.formError = this.extractError(e); }
       });
     } else {
@@ -221,7 +220,11 @@ loadEmployees(): Promise<void> {
         attachmentUrl: (v.attachmentUrl as string) || undefined
       };
       this.leaveService.createLeave(dto).subscribe({
-        next: (r) => { this.submitting = false; if (r.success) this.formSubmitted.emit(); else this.formError = r.message || 'Failed to submit leave.'; },
+        next: (r) => {
+          this.submitting = false;
+          if (r.success) this.formSubmitted.emit();
+          else this.formError = r.message || this.langService.t('leave.form.error.submitFailed');
+        },
         error: (e) => { this.submitting = false; this.formError = this.extractError(e); }
       });
     }
@@ -238,13 +241,13 @@ loadEmployees(): Promise<void> {
     const c = this.leaveForm.get(field);
     if (!c?.errors) {
       if (this.leaveForm.errors?.['dateRange'] && field === 'endDate')
-        return 'End date must be on or after start date.';
+        return this.langService.t('leave.form.error.dateRange');
       return '';
     }
-    if (c.errors['required']) return 'This field is required.';
-    if (c.errors['minlength']) return `Minimum ${c.errors['minlength'].requiredLength} characters.`;
-    if (c.errors['maxlength']) return `Maximum ${c.errors['maxlength'].requiredLength} characters.`;
-    if (c.errors['min']) return `Minimum value is ${c.errors['min'].min}.`;
+    if (c.errors['required'])   return this.langService.t('common.fieldRequired');
+    if (c.errors['minlength'])  return `${this.langService.t('common.minLength')} ${c.errors['minlength'].requiredLength}.`;
+    if (c.errors['maxlength'])  return `${this.langService.t('common.maxLength')} ${c.errors['maxlength'].requiredLength}.`;
+    if (c.errors['min'])        return `${this.langService.t('common.minValue')} ${c.errors['min'].min}.`;
     return '';
   }
 
@@ -260,13 +263,11 @@ loadEmployees(): Promise<void> {
 
   private extractError(e: { error?: { errors?: Record<string, string[]>; message?: string; title?: string } }): string {
     const body = e?.error;
-    if (!body) return 'An unexpected error occurred.';
+    if (!body) return this.langService.t('common.error');
     if (body.errors && typeof body.errors === 'object') {
       const msgs = Object.entries(body.errors).map(([f, m]) => `${f}: ${(Array.isArray(m) ? m : [m]).join(', ')}`);
       if (msgs.length) return msgs.join(' | ');
     }
-    if (body.message) return body.message;
-    if (body.title) return body.title;
-    return 'An error occurred. Please try again.';
+    return body.message || body.title || this.langService.t('common.error');
   }
 }

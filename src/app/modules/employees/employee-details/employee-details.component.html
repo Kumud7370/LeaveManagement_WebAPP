@@ -1,335 +1,364 @@
-<div class="employee-details-container" [class.modal-details]="isModal">
-  <!-- Loading State -->
-  <div class="loading-overlay" *ngIf="isLoading">
-    <div class="spinner-container">
-      <div class="spinner"></div>
-      <p>Loading employee details...</p>
-    </div>
+<div class="ed-container" [class.ed-modal]="isModal">
+
+  <!-- Loading -->
+  <div class="ed-loading" *ngIf="isLoading">
+    <div class="ed-spinner"></div>
+    <p>{{ langService.t('empdetail.loading') }}</p>
   </div>
 
-  <!-- Employee Details Content -->
-  <div class="details-content" *ngIf="!isLoading && employee">
-    <!-- Header Section -->
-    <div class="details-header">
-      <div class="header-top">
-        <button class="btn-back" (click)="goBack()">
-          <i class="fas fa-arrow-left"></i>
-          <span>Back to List</span>
-        </button>
-        <div class="header-actions">
-          <button class="btn-action btn-print" (click)="printEmployeeDetails()" title="Print">
-            <i class="fas fa-print"></i>
-          </button>
-          <button class="btn-action btn-download" (click)="downloadEmployeeCard()" title="Download Card">
-            <i class="fas fa-download"></i>
-          </button>
-          <button class="btn-action btn-edit" (click)="editEmployee()" title="Edit">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn-action btn-delete" (click)="deleteEmployee()" title="Delete">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      </div>
+  <!-- Content -->
+  <div class="ed-content" *ngIf="!isLoading && employee">
 
-      <div class="header-main">
-        <div class="employee-avatar-section">
-          <div class="avatar-wrapper">
-            <img 
-              *ngIf="employee.profileImageUrl" 
-              [src]="employee.profileImageUrl" 
-              [alt]="employee.fullName"
-              class="employee-avatar"
-            />
-            <div class="avatar-placeholder" *ngIf="!employee.profileImageUrl">
-              {{ employee.firstName.charAt(0) }}{{ employee.lastName.charAt(0) }}
-            </div>
-            <div class="status-indicator" [class.online]="employee.isCurrentlyEmployed"></div>
+    <!-- HEADER -->
+    <div class="ed-header">
+      <div class="ed-identity">
+
+        <div class="ed-avatar-wrap">
+          <img *ngIf="employee.profileImageUrl" [src]="employee.profileImageUrl" [alt]="getDisplayName()" class="ed-avatar-img" />
+          <div *ngIf="!employee.profileImageUrl" class="ed-avatar-placeholder">
+            {{ employee.firstNameMr.charAt(0) }}{{ employee.lastNameMr.charAt(0) }}
           </div>
+          <span class="ed-status-dot" [class.ed-status-dot--online]="employee.isCurrentlyEmployed"></span>
         </div>
 
-        <div class="employee-info-section">
-          <h1 class="employee-name">{{ employee.fullName }}</h1>
-          <p class="employee-code"><i class="fas fa-id-badge"></i> {{ employee.employeeCode }}</p>
-          
-          <div class="employee-badges">
-            <span class="badge" [ngClass]="getStatusBadgeClass(employee.employeeStatus)">
+        <div class="ed-identity-info">
+          <h2 class="ed-name">{{ getDisplayName() }}</h2>
+
+          <!-- Language name badges — strip any accidental "EN: " / "HI: " prefixes -->
+          <div class="ed-name-langs" *ngIf="employee.fullNameEn || employee.fullNameHi">
+            <span *ngIf="employee.fullNameEn" class="ed-lang-badge ed-lang-en">
+              EN: {{ employee.fullNameEn | slice:4 }}
+            </span>
+            <span *ngIf="employee.fullNameHi" class="ed-lang-badge ed-lang-hi">
+              HI: {{ employee.fullNameHi | slice:4 }}
+            </span>
+          </div>
+
+          <p class="ed-code"><i class="fas fa-id-badge"></i> {{ employee.employeeCode }}</p>
+
+          <div class="ed-badges">
+            <span class="ed-badge" [ngClass]="getStatusBadgeClass(employee.employeeStatus)">
               {{ employee.employeeStatusName }}
             </span>
-            <span class="badge" [ngClass]="getEmploymentTypeBadgeClass(employee.employmentType)">
+            <span class="ed-badge" [ngClass]="getEmploymentTypeBadgeClass(employee.employmentType)">
               {{ employee.employmentTypeName }}
             </span>
           </div>
 
-          <div class="quick-info">
-            <div class="info-item">
-              <i class="fas fa-envelope"></i>
-              <a [href]="'mailto:' + employee.email">{{ employee.email }}</a>
-            </div>
-            <div class="info-item">
-              <i class="fas fa-phone"></i>
-              <a [href]="'tel:' + employee.phoneNumber">{{ employee.phoneNumber }}</a>
-            </div>
-            <div class="info-item">
-              <i [class]="getGenderIcon(employee.gender)"></i>
-              <span>{{ employee.genderName }}</span>
-            </div>
+          <div class="ed-quick-contact">
+            <span><i class="fas fa-envelope"></i> {{ employee.email }}</span>
+            <span><i class="fas fa-phone"></i> {{ employee.phoneNumber }}</span>
+            <span><i [class]="getGenderIcon(employee.gender)"></i> {{ employee.genderName }}</span>
           </div>
         </div>
+
+        <div class="ed-header-actions">
+          <button class="ed-icon-btn ed-icon-print"    (click)="printEmployeeDetails()" [title]="langService.t('empdetail.action.print')">    <i class="fas fa-print"></i>    </button>
+          <button class="ed-icon-btn ed-icon-download" (click)="downloadEmployeeCard()" [title]="langService.t('empdetail.action.download')"> <i class="fas fa-download"></i> </button>
+          <button class="ed-icon-btn ed-icon-edit"     (click)="editEmployee()"         [title]="langService.t('empdetail.action.edit')">     <i class="fas fa-edit"></i>     </button>
+          <button class="ed-icon-btn ed-icon-delete"   (click)="deleteEmployee()"       [title]="langService.t('empdetail.action.delete')">   <i class="fas fa-trash"></i>    </button>
+        </div>
+
+      </div>
+
+      <!-- Tab bar -->
+      <div class="ed-tabs">
+        <button class="ed-tab" [class.ed-tab--active]="activeTab === 'personal'"  (click)="setTab('personal')">
+          <i class="fas fa-user"></i> {{ langService.t('empdetail.tab.personal') }}
+        </button>
+        <button class="ed-tab" [class.ed-tab--active]="activeTab === 'contact'"   (click)="setTab('contact')">
+          <i class="fas fa-address-book"></i> {{ langService.t('empdetail.tab.contact') }}
+        </button>
+        <button class="ed-tab" [class.ed-tab--active]="activeTab === 'timeline'"  (click)="setTab('timeline')">
+          <i class="fas fa-calendar-alt"></i> {{ langService.t('empdetail.tab.timeline') }}
+        </button>
+        <button class="ed-tab" [class.ed-tab--active]="activeTab === 'actions'"   (click)="setTab('actions')">
+          <i class="fas fa-tasks"></i> {{ langService.t('empdetail.tab.actions') }}
+        </button>
       </div>
     </div>
 
-    <!-- Tab Navigation -->
-    <div class="details-tabs">
-      <button class="tab-button active">
-        <i class="fas fa-user"></i>
-        <span>Personal Info</span>
-      </button>
-      <button class="tab-button">
-        <i class="fas fa-briefcase"></i>
-        <span>Employment</span>
-      </button>
-      <button class="tab-button">
-        <i class="fas fa-map-marker-alt"></i>
-        <span>Contact & Address</span>
-      </button>
-      <button class="tab-button">
-        <i class="fas fa-history"></i>
-        <span>Activity Log</span>
-      </button>
-    </div>
+    <!-- BODY -->
+    <div class="ed-body">
 
-    <!-- Details Grid -->
-    <div class="details-grid">
-      <!-- Personal Information Card -->
-      <div class="info-card">
-        <div class="card-header">
-          <h3><i class="fas fa-user-circle"></i> Personal Information</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-row">
-            <div class="info-label">First Name:</div>
-            <div class="info-value">{{ employee.firstName }}</div>
-          </div>
-          <div class="info-row" *ngIf="employee.middleName">
-            <div class="info-label">Middle Name:</div>
-            <div class="info-value">{{ employee.middleName }}</div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">Last Name:</div>
-            <div class="info-value">{{ employee.lastName }}</div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">Date of Birth:</div>
-            <div class="info-value">{{ formatDate(employee.dateOfBirth) }}</div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">Age:</div>
-            <div class="info-value">{{ employee.age }} years</div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">Gender:</div>
-            <div class="info-value">
-              <i [class]="getGenderIcon(employee.gender)"></i>
-              {{ employee.genderName }}
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- ══════════════════════════════════════════════════════════
+           Tab 1 : Personal
+           ══════════════════════════════════════════════════════════ -->
+      <div *ngIf="activeTab === 'personal'" class="ed-tab-panel ed-tab-panel--two-col">
 
-      <!-- Employment Information Card -->
-      <div class="info-card">
-        <div class="card-header">
-          <h3><i class="fas fa-briefcase"></i> Employment Details</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-row">
-            <div class="info-label">Employee Code:</div>
-            <div class="info-value">
-              <span class="highlight">{{ employee.employeeCode }}</span>
+        <!-- Personal Information card -->
+        <div class="ed-card">
+          <div class="ed-card-header">
+            <i class="fas fa-user-circle"></i> {{ langService.t('empdetail.card.personal') }}
+          </div>
+          <div class="ed-card-body">
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.nameMr') }}</span>
+              <span class="ed-val">{{ employee.firstNameMr }} {{ employee.middleNameMr }} {{ employee.lastNameMr }}</span>
             </div>
+
+            <div class="ed-row" *ngIf="employee.firstName && employee.lastName">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.nameEn') }}</span>
+              <span class="ed-val">{{ employee.firstName }} {{ employee.middleName }} {{ employee.lastName }}</span>
+            </div>
+
+            <div class="ed-row" *ngIf="employee.firstNameHi && employee.lastNameHi">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.nameHi') }}</span>
+              <span class="ed-val">{{ employee.firstNameHi }} {{ employee.middleNameHi }} {{ employee.lastNameHi }}</span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.dob') }}</span>
+              <span class="ed-val">{{ formatDate(employee.dateOfBirth) }}</span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.age') }}</span>
+              <span class="ed-val">{{ employee.age }} {{ langService.t('empdetail.lbl.years') }}</span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.gender') }}</span>
+              <span class="ed-val"><i [class]="getGenderIcon(employee.gender)"></i>&nbsp;{{ employee.genderName }}</span>
+            </div>
+
           </div>
-          <div class="info-row">
-            <div class="info-label">Department:</div>
-            <div class="info-value">{{ employee.departmentName || 'N/A' }}</div>
+        </div>
+
+        <!-- Employment Details card -->
+        <div class="ed-card">
+          <div class="ed-card-header">
+            <i class="fas fa-briefcase"></i> {{ langService.t('empdetail.card.employment') }}
           </div>
-          <div class="info-row">
-            <div class="info-label">Designation:</div>
-            <div class="info-value">{{ employee.designationName || 'N/A' }}</div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">Manager:</div>
-            <div class="info-value">{{ employee.managerName || 'N/A' }}</div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">Employment Type:</div>
-            <div class="info-value">
-              <span class="badge" [ngClass]="getEmploymentTypeBadgeClass(employee.employmentType)">
-                {{ employee.employmentTypeName }}
+          <div class="ed-card-body">
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.empCode') }}</span>
+              <span class="ed-val"><span class="ed-highlight">{{ employee.employeeCode }}</span></span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.department') }}</span>
+              <span class="ed-val">{{ employee.departmentName || 'N/A' }}</span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.designation') }}</span>
+              <span class="ed-val">{{ employee.designationName || 'N/A' }}</span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.manager') }}</span>
+              <span class="ed-val">{{ employee.managerName || 'N/A' }}</span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.empType') }}</span>
+              <span class="ed-val">
+                <span class="ed-badge" [ngClass]="getEmploymentTypeBadgeClass(employee.employmentType)">
+                  {{ employee.employmentTypeName }}
+                </span>
               </span>
             </div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">Status:</div>
-            <div class="info-value">
-              <span class="badge" [ngClass]="getStatusBadgeClass(employee.employeeStatus)">
-                {{ employee.employeeStatusName }}
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.status') }}</span>
+              <span class="ed-val">
+                <span class="ed-badge" [ngClass]="getStatusBadgeClass(employee.employeeStatus)">
+                  {{ employee.employeeStatusName }}
+                </span>
               </span>
             </div>
+
           </div>
         </div>
+
       </div>
 
+      <!-- ══════════════════════════════════════════════════════════
+           Tab 2 : Contact
+           ══════════════════════════════════════════════════════════ -->
+      <div *ngIf="activeTab === 'contact'" class="ed-tab-panel ed-tab-panel--two-col">
 
-      <div class="info-card">
-        <div class="card-header">
-          <h3><i class="fas fa-phone-alt"></i> Contact Information</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-row">
-            <div class="info-label">Email:</div>
-            <div class="info-value">
-              <a [href]="'mailto:' + employee.email" class="link">{{ employee.email }}</a>
-            </div>
+        <!-- Contact card -->
+        <div class="ed-card">
+          <div class="ed-card-header">
+            <i class="fas fa-phone-alt"></i> {{ langService.t('empdetail.card.contact') }}
           </div>
-          <div class="info-row">
-            <div class="info-label">Phone Number:</div>
-            <div class="info-value">
-              <a [href]="'tel:' + employee.phoneNumber" class="link">{{ employee.phoneNumber }}</a>
-            </div>
-          </div>
-          <div class="info-row" *ngIf="employee.alternatePhoneNumber">
-            <div class="info-label">Alternate Phone:</div>
-            <div class="info-value">
-              <a [href]="'tel:' + employee.alternatePhoneNumber" class="link">{{ employee.alternatePhoneNumber }}</a>
-            </div>
-          </div>
-        </div>
-      </div>
+          <div class="ed-card-body">
 
-      <div class="info-card">
-        <div class="card-header">
-          <h3><i class="fas fa-map-marker-alt"></i> Address</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-row">
-            <div class="info-label">Street:</div>
-            <div class="info-value">{{ employee.address.street }}</div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">City:</div>
-            <div class="info-value">{{ employee.address.city }}</div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">State:</div>
-            <div class="info-value">{{ employee.address.state }}</div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">Country:</div>
-            <div class="info-value">{{ employee.address.country }}</div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">Postal Code:</div>
-            <div class="info-value">{{ employee.address.postalCode }}</div>
-          </div>
-          <div class="info-row full-width">
-            <div class="info-label">Full Address:</div>
-            <div class="info-value">{{ getFullAddress() }}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="info-card">
-        <div class="card-header">
-          <h3><i class="fas fa-calendar-alt"></i> Employment Timeline</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-row">
-            <div class="info-label">Date of Joining:</div>
-            <div class="info-value">
-              <i class="fas fa-calendar-check"></i>
-              {{ formatDate(employee.dateOfJoining) }}
-            </div>
-          </div>
-          <div class="info-row" *ngIf="employee.dateOfLeaving">
-            <div class="info-label">Date of Leaving:</div>
-            <div class="info-value">
-              <i class="fas fa-calendar-times"></i>
-              {{ formatDate(employee.dateOfLeaving) }}
-            </div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">Currently Employed:</div>
-            <div class="info-value">
-              <span class="badge" [ngClass]="employee.isCurrentlyEmployed ? 'badge-success' : 'badge-danger'">
-                {{ employee.isCurrentlyEmployed ? 'Yes' : 'No' }}
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.email') }}</span>
+              <span class="ed-val">
+                <a [href]="'mailto:' + employee.email" class="ed-link">{{ employee.email }}</a>
               </span>
             </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.phone') }}</span>
+              <span class="ed-val">
+                <a [href]="'tel:' + employee.phoneNumber" class="ed-link">{{ employee.phoneNumber }}</a>
+              </span>
+            </div>
+
+            <div class="ed-row" *ngIf="employee.alternatePhoneNumber">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.altPhone') }}</span>
+              <span class="ed-val">{{ employee.alternatePhoneNumber }}</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Address card -->
+        <div class="ed-card">
+          <div class="ed-card-header">
+            <i class="fas fa-map-marker-alt"></i> {{ langService.t('empdetail.card.address') }}
+          </div>
+          <div class="ed-card-body">
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.street') }}</span>
+              <span class="ed-val">{{ employee.address.street }}</span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.city') }}</span>
+              <span class="ed-val">{{ employee.address.city }}</span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.state') }}</span>
+              <span class="ed-val">{{ employee.address.state }}</span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.country') }}</span>
+              <span class="ed-val">{{ employee.address.country }}</span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.pinCode') }}</span>
+              <span class="ed-val">{{ employee.address.postalCode }}</span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════
+           Tab 3 : Timeline
+           ══════════════════════════════════════════════════════════ -->
+      <div *ngIf="activeTab === 'timeline'" class="ed-tab-panel ed-tab-panel--two-col">
+
+        <!-- Timeline card -->
+        <div class="ed-card">
+          <div class="ed-card-header">
+            <i class="fas fa-calendar-alt"></i> {{ langService.t('empdetail.card.timeline') }}
+          </div>
+          <div class="ed-card-body">
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.doj') }}</span>
+              <span class="ed-val">
+                <i class="fas fa-calendar-check" style="color:#10b981;margin-right:6px;"></i>
+                {{ formatDate(employee.dateOfJoining) }}
+              </span>
+            </div>
+
+            <div class="ed-row" *ngIf="employee.dateOfLeaving">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.dol') }}</span>
+              <span class="ed-val">
+                <i class="fas fa-calendar-times" style="color:#ef4444;margin-right:6px;"></i>
+                {{ formatDate(employee.dateOfLeaving) }}
+              </span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.currentlyEmployed') }}</span>
+              <span class="ed-val">
+                <span class="ed-badge" [ngClass]="employee.isCurrentlyEmployed ? 'badge-success' : 'badge-danger'">
+                  {{ employee.isCurrentlyEmployed ? langService.t('common.yes') : langService.t('common.no') }}
+                </span>
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Additional Info card -->
+        <div class="ed-card">
+          <div class="ed-card-header">
+            <i class="fas fa-info-circle"></i> {{ langService.t('empdetail.card.additional') }}
+          </div>
+          <div class="ed-card-body">
+
+            <div class="ed-row" *ngIf="employee.biometricId">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.biometricId') }}</span>
+              <span class="ed-val">{{ employee.biometricId }}</span>
+            </div>
+
+            <div class="ed-row">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.createdAt') }}</span>
+              <span class="ed-val">{{ formatDate(employee.createdAt) }}</span>
+            </div>
+
+            <div class="ed-row" *ngIf="employee.updatedAt">
+              <span class="ed-lbl">{{ langService.t('empdetail.lbl.updatedAt') }}</span>
+              <span class="ed-val">{{ formatDate(employee.updatedAt) }}</span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════════
+           Tab 4 : Actions
+           ══════════════════════════════════════════════════════════ -->
+      <div *ngIf="activeTab === 'actions'" class="ed-tab-panel">
+        <div class="ed-card ed-card--actions">
+          <div class="ed-card-header">
+            <i class="fas fa-tasks"></i> {{ langService.t('empdetail.card.quickActions') }}
+          </div>
+          <div class="ed-card-body">
+
+            <p class="ed-actions-hint">
+              <strong>{{ getDisplayName() }}</strong> {{ langService.t('empdetail.lbl.changeStatus') }}
+            </p>
+
+            <div class="ed-actions-grid">
+
+              <button class="ed-action-btn ed-action-btn--success"
+                (click)="changeStatus(EmployeeStatus.Active)"
+                [disabled]="employee.employeeStatus === EmployeeStatus.Active">
+                <i class="fas fa-check-circle"></i> {{ langService.t('empdetail.status.activate') }}
+              </button>
+
+              <button class="ed-action-btn ed-action-btn--info"
+                (click)="changeStatus(EmployeeStatus.OnLeave)"
+                [disabled]="employee.employeeStatus === EmployeeStatus.OnLeave">
+                <i class="fas fa-plane"></i> {{ langService.t('empdetail.status.onLeave') }}
+              </button>
+
+              <button class="ed-action-btn ed-action-btn--secondary"
+                (click)="changeStatus(EmployeeStatus.Inactive)"
+                [disabled]="employee.employeeStatus === EmployeeStatus.Inactive">
+                <i class="fas fa-pause-circle"></i> {{ langService.t('empdetail.status.inactive') }}
+              </button>
+
+              <button class="ed-action-btn ed-action-btn--danger"
+                (click)="changeStatus(EmployeeStatus.Suspended)"
+                [disabled]="employee.employeeStatus === EmployeeStatus.Suspended">
+                <i class="fas fa-ban"></i> {{ langService.t('empdetail.status.suspend') }}
+              </button>
+
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="info-card">
-        <div class="card-header">
-          <h3><i class="fas fa-info-circle"></i> Additional Information</h3>
-        </div>
-        <div class="card-body">
-          <div class="info-row" *ngIf="employee.biometricId">
-            <div class="info-label">Biometric ID:</div>
-            <div class="info-value">{{ employee.biometricId }}</div>
-          </div>
-          <div class="info-row">
-            <div class="info-label">Created At:</div>
-            <div class="info-value">{{ formatDate(employee.createdAt) }}</div>
-          </div>
-          <div class="info-row" *ngIf="employee.updatedAt">
-            <div class="info-label">Last Updated:</div>
-            <div class="info-value">{{ formatDate(employee.updatedAt) }}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="info-card action-card">
-        <div class="card-header">
-          <h3><i class="fas fa-tasks"></i> Quick Actions</h3>
-        </div>
-        <div class="card-body">
-          <div class="action-buttons-grid">
-            <button 
-              class="action-btn btn-success"
-              (click)="changeStatus(EmployeeStatus.Active)"
-              [disabled]="employee.employeeStatus === EmployeeStatus.Active"
-            >
-              <i class="fas fa-check-circle"></i>
-              Mark Active
-            </button>
-            <button 
-              class="action-btn btn-warning"
-              (click)="changeStatus(EmployeeStatus.OnLeave)"
-              [disabled]="employee.employeeStatus === EmployeeStatus.OnLeave"
-            >
-              <i class="fas fa-plane"></i>
-              On Leave
-            </button>
-            <button 
-              class="action-btn btn-secondary"
-              (click)="changeStatus(EmployeeStatus.Inactive)"
-              [disabled]="employee.employeeStatus === EmployeeStatus.Inactive"
-            >
-              <i class="fas fa-pause-circle"></i>
-              Inactive
-            </button>
-            <button 
-              class="action-btn btn-danger"
-              (click)="changeStatus(EmployeeStatus.Suspended)"
-              [disabled]="employee.employeeStatus === EmployeeStatus.Suspended"
-            >
-              <i class="fas fa-ban"></i>
-              Suspend
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </div>

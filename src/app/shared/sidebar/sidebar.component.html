@@ -100,23 +100,20 @@
     </ul>
   </nav>
 
-  <!-- Footer Section -->
+  <!-- Footer Section - Expanded -->
   <div *ngIf="isExpanded" [@fadeInOut]="'in'" class="sidebar-footer">
     <div class="footer-actions">
       <button class="footer-btn" (click)="openSettings()">
         <i class="fas fa-cog"></i>
-        <span>Settings</span>
+        <span>{{ settingsLabel }}</span>
       </button>
-      
-      <!-- NEW: Pin/Unpin Button -->
       <button class="footer-btn pin-btn" (click)="togglePin()" *ngIf="!isMobile">
         <i class="fas" [class.fa-chevron-left]="isPinned" [class.fa-chevron-right]="!isPinned"></i>
-        <span>{{ isPinned ? 'Unpin Sidebar' : 'Pin Sidebar' }}</span>
+        <span>{{ pinLabel }}</span>
       </button>
-      
       <button class="footer-btn logout-btn" (click)="logout()">
         <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
+        <span>{{ logoutLabel }}</span>
       </button>
     </div>
     <p class="copyright">&copy; 2025 AbelAttendanceWebAPP</p>
@@ -127,7 +124,7 @@
     <button 
       class="footer-btn-icon pin-btn-collapsed" 
       (click)="togglePin()"
-      [matTooltip]="isPinned ? 'Unpin Sidebar' : 'Pin Sidebar'"
+      [matTooltip]="pinLabel"
       matTooltipPosition="right">
       <i class="fas" [class.fa-chevron-right]="!isPinned" [class.fa-chevron-left]="isPinned"></i>
     </button>

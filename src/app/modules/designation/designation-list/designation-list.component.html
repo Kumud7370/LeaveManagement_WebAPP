@@ -2,21 +2,21 @@
 
   <!-- Page Title -->
   <div class="page-header">
-    <h1 class="page-title">Designation Management</h1>
+    <h1 class="page-title">{{ langService.t('designation.title') }}</h1>
   </div>
 
   <!-- Stat Cards -->
   <div class="stat-cards">
     <div class="stat-card stat-card--blue">
-      <span class="stat-label">Total Designations</span>
+      <span class="stat-label">{{ langService.t('designation.stats.total') }}</span>
       <span class="stat-value">{{ totalCount }}</span>
     </div>
     <div class="stat-card stat-card--green">
-      <span class="stat-label">Active</span>
+      <span class="stat-label">{{ langService.t('designation.stats.active') }}</span>
       <span class="stat-value">{{ activeCount }}</span>
     </div>
     <div class="stat-card stat-card--red">
-      <span class="stat-label">Inactive</span>
+      <span class="stat-label">{{ langService.t('designation.stats.inactive') }}</span>
       <span class="stat-value">{{ inactiveCount }}</span>
     </div>
   </div>
@@ -26,22 +26,19 @@
 
     <!-- Search -->
     <div class="search-bar">
-      <input
-        type="text"
-        placeholder="Search designations..."
+      <input type="text"
+        [placeholder]="langService.t('designation.search')"
         [(ngModel)]="searchTerm"
         (input)="onSearchChange()"
-        class="search-input"
-      />
+        class="search-input" />
     </div>
 
     <!-- Department Filter -->
     <div class="dept-filter-wrapper">
-      <select
-        class="dept-filter-select"
+      <select class="dept-filter-select"
         [value]="selectedDepartmentId"
         (change)="onDepartmentFilterChange(asSelect($event.target).value)">
-        <option value="">{{ departmentsLoading ? 'Loading...' : 'All Departments' }}</option>
+        <option value="">{{ departmentsLoading ? langService.t('common.loading') : langService.t('designation.allDepts') }}</option>
         <option *ngFor="let d of departments" [value]="d.id">{{ d.name }}</option>
       </select>
     </div>
@@ -49,15 +46,19 @@
     <!-- Action Buttons -->
     <div class="action-buttons">
       <div class="toolbar-secondary-btns">
-        <button class="btn btn-clear"   (click)="clearFilters()">Clear</button>
-        <button class="btn btn-refresh" (click)="refreshData()">Refresh</button>
-        <button class="btn btn-export"  (click)="exportData()">
-          <i class="bi bi-download"></i> Export
+        <button class="btn btn-clear" (click)="clearFilters()">
+          {{ langService.t('common.clear') }}
+        </button>
+        <button class="btn btn-refresh" (click)="refreshData()">
+          {{ langService.t('common.refresh') }}
+        </button>
+        <button class="btn btn-export" (click)="exportData()">
+          <i class="bi bi-download"></i> {{ langService.t('common.export') }}
         </button>
       </div>
       <div class="toolbar-divider"></div>
       <button class="btn btn-add toolbar-primary-btn" (click)="openCreateModal()">
-        <i class="bi bi-plus-lg"></i> Add Designation
+        <i class="bi bi-plus-lg"></i> {{ langService.t('designation.addBtn') }}
       </button>
     </div>
 
@@ -65,7 +66,7 @@
 
   <!-- Active department filter badge -->
   <div *ngIf="selectedDepartmentId" class="active-filter-bar">
-    <span class="active-filter-label">Filtered by:</span>
+    <span class="active-filter-label">{{ langService.t('designation.filteredBy') }}:</span>
     <span class="active-filter-badge">
       {{ getDepartmentName(selectedDepartmentId) }}
       <button class="active-filter-clear" (click)="onDepartmentFilterChange('')" title="Clear department filter">
@@ -80,13 +81,15 @@
     <!-- Loading -->
     <div *ngIf="isLoading" class="loading-state">
       <div class="spinner"></div>
-      <p>Loading designations...</p>
+      <p>{{ langService.t('designation.loading') }}</p>
     </div>
 
     <!-- Empty -->
     <div *ngIf="!isLoading && rowData.length === 0" class="empty-state">
-      <p>No designations found.</p>
-      <button class="btn btn-add" (click)="openCreateModal()">Add Designation</button>
+      <p>{{ langService.t('designation.empty') }}</p>
+      <button class="btn btn-add" (click)="openCreateModal()">
+        {{ langService.t('designation.addBtn') }}
+      </button>
     </div>
 
     <!-- AG Grid -->
@@ -112,18 +115,18 @@
 
     <!-- Pagination -->
     <div *ngIf="!isLoading && rowData.length > 0" class="pagination-bar">
-      <span class="pg-label">Show:</span>
+      <span class="pg-label">{{ langService.t('common.show') }}:</span>
       <select [value]="pageSize" (change)="onPageSizeChange($event)" class="page-size-select">
         <option [value]="10">10</option>
         <option [value]="20">20</option>
         <option [value]="50">50</option>
         <option [value]="100">100</option>
       </select>
-      <span class="pagination-info">{{ startRecord }} to {{ endRecord }} of {{ totalCount }}</span>
-      <span class="page-info">Page {{ currentPage }} of {{ totalPages }}</span>
+      <span class="pagination-info">{{ startRecord }} {{ langService.t('common.to') }} {{ endRecord }} {{ langService.t('common.of') }} {{ totalCount }}</span>
+      <span class="page-info">{{ langService.t('common.page') }} {{ currentPage }} {{ langService.t('common.of') }} {{ totalPages }}</span>
       <div class="pg-btns">
-        <button class="pg-btn" [disabled]="currentPage === 1"          (click)="onPageChange(1)">&#xAB;</button>
-        <button class="pg-btn" [disabled]="currentPage === 1"          (click)="onPageChange(currentPage - 1)">&#x2039;</button>
+        <button class="pg-btn" [disabled]="currentPage === 1" (click)="onPageChange(1)">&#xAB;</button>
+        <button class="pg-btn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">&#x2039;</button>
         <button class="pg-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">&#x203A;</button>
         <button class="pg-btn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">&#xBB;</button>
       </div>
@@ -140,8 +143,12 @@
       <div class="modal-title-group">
         <div class="modal-icon"><i class="bi bi-award"></i></div>
         <div>
-          <h2 class="modal-title">{{ isEditMode ? 'Edit Designation' : 'Create New Designation' }}</h2>
-          <p class="modal-subtitle">{{ isEditMode ? 'Update designation information' : 'Add a new designation to the system' }}</p>
+          <h2 class="modal-title">
+            {{ isEditMode ? langService.t('designation.form.edit') : langService.t('designation.form.create') }}
+          </h2>
+          <p class="modal-subtitle">
+            {{ isEditMode ? langService.t('designation.form.subtitle.edit') : langService.t('designation.form.subtitle.create') }}
+          </p>
         </div>
       </div>
       <button class="modal-close" (click)="closeModal()"><i class="bi bi-x-lg"></i></button>
@@ -151,56 +158,113 @@
 
       <div *ngIf="isLoadingForm" class="loading-state">
         <div class="spinner"></div>
-        <p>Loading designation details...</p>
+        <p>{{ langService.t('designation.form.loading') }}</p>
       </div>
 
       <form *ngIf="!isLoadingForm" [formGroup]="designationForm" (ngSubmit)="onSubmit()">
-        <div class="form-grid">
+
+        <!-- ── Row 1: Code + Level ── -->
+        <div class="form-grid form-grid-2">
 
           <!-- Designation Code -->
           <div class="form-group">
-            <label for="designationCode" class="required">Designation Code</label>
-            <input type="text" id="designationCode" class="form-control" formControlName="designationCode"
-              placeholder="e.g., MGR-001" [class.is-invalid]="isFieldInvalid('designationCode')" />
-            <small class="form-hint">Uppercase letters, numbers, hyphens and underscores only</small>
-            <div *ngIf="isFieldInvalid('designationCode')" class="error-message">{{ getErrorMessage('designationCode') }}</div>
-          </div>
-
-          <!-- Designation Name -->
-          <div class="form-group">
-            <label for="designationName" class="required">Designation Name</label>
-            <input type="text" id="designationName" class="form-control" formControlName="designationName"
-              placeholder="e.g., Senior Manager" [class.is-invalid]="isFieldInvalid('designationName')" />
-            <div *ngIf="isFieldInvalid('designationName')" class="error-message">{{ getErrorMessage('designationName') }}</div>
+            <label for="designationCode" class="required">{{ langService.t('designation.form.code') }}</label>
+            <input type="text" id="designationCode" class="form-control"
+              formControlName="designationCode"
+              [placeholder]="langService.t('designation.form.codePlaceholder')"
+              [class.is-invalid]="isFieldInvalid('designationCode')" />
+            <small class="form-hint">{{ langService.t('designation.form.codeHint') }}</small>
+            <div *ngIf="isFieldInvalid('designationCode')" class="error-message">
+              {{ getErrorMessage('designationCode') }}
+            </div>
           </div>
 
           <!-- Level -->
           <div class="form-group">
-            <label for="level" class="required">Hierarchy Level</label>
-            <input type="number" id="level" class="form-control" formControlName="level"
-              min="1" max="100" placeholder="1-100" [class.is-invalid]="isFieldInvalid('level')" />
-            <small class="form-hint">Lower numbers indicate higher positions</small>
-            <div *ngIf="isFieldInvalid('level')" class="error-message">{{ getErrorMessage('level') }}</div>
+            <label for="level" class="required">{{ langService.t('designation.form.level') }}</label>
+            <input type="number" id="level" class="form-control"
+              formControlName="level" min="1" max="100" placeholder="1-100"
+              [class.is-invalid]="isFieldInvalid('level')" />
+            <small class="form-hint">{{ langService.t('designation.form.levelHint') }}</small>
+            <div *ngIf="isFieldInvalid('level')" class="error-message">
+              {{ getErrorMessage('level') }}
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Row 2: Name fields (Marathi required | English required) ── -->
+        <div class="form-grid form-grid-2">
+
+          <!-- Designation Name (Marathi) -->
+          <div class="form-group">
+            <label for="designationNameMr" class="required">
+              {{ langService.t('designation.form.nameMr') }}
+            </label>
+            <input type="text" id="designationNameMr" class="form-control"
+              formControlName="designationNameMr"
+              placeholder="उदा. वरिष्ठ व्यवस्थापक"
+              [class.is-invalid]="isFieldInvalid('designationNameMr')" />
+            <div *ngIf="isFieldInvalid('designationNameMr')" class="error-message">
+              {{ getErrorMessage('designationNameMr') }}
+            </div>
+          </div>
+
+          <!-- Designation Name (English) -->
+          <div class="form-group">
+            <label for="designationNameEn" class="required">
+              {{ langService.t('designation.form.nameEn') }}
+            </label>
+            <input type="text" id="designationNameEn" class="form-control"
+              formControlName="designationNameEn"
+              placeholder="e.g., Senior Manager"
+              [class.is-invalid]="isFieldInvalid('designationNameEn')" />
+            <div *ngIf="isFieldInvalid('designationNameEn')" class="error-message">
+              {{ getErrorMessage('designationNameEn') }}
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Row 3: Hindi name + Department + Status ── -->
+        <div class="form-grid form-grid-3">
+
+          <!-- Designation Name (Hindi) -->
+          <div class="form-group">
+            <label for="designationNameHi" class="required">
+              {{ langService.t('designation.form.nameHi') }}
+            </label>
+            <input type="text" id="designationNameHi" class="form-control"
+              formControlName="designationNameHi"
+              placeholder="उदा. वरिष्ठ प्रबंधक"
+              [class.is-invalid]="isFieldInvalid('designationNameHi')" />
+            <div *ngIf="isFieldInvalid('designationNameHi')" class="error-message">
+              {{ getErrorMessage('designationNameHi') }}
+            </div>
           </div>
 
           <!-- Department (optional) -->
           <div class="form-group">
-            <label for="departmentId">Department</label>
+            <label for="departmentId">{{ langService.t('designation.form.department') }}</label>
             <select id="departmentId" class="form-control" formControlName="departmentId">
-              <option value="">{{ departmentsLoading ? 'Loading...' : 'Select Department (optional)' }}</option>
+              <option value="">{{ departmentsLoading ? langService.t('common.loading') : langService.t('designation.form.deptPlaceholder') }}</option>
               <option *ngFor="let d of departments" [value]="d.id">{{ d.name }}</option>
             </select>
           </div>
 
           <!-- Status -->
           <div class="form-group">
-            <label for="isActive">Status</label>
+            <label>{{ langService.t('designation.form.status') }}</label>
             <div class="toggle-container">
               <label class="toggle-switch">
                 <input type="checkbox" id="isActive" formControlName="isActive" />
                 <span class="toggle-slider"></span>
               </label>
-              <span class="toggle-label">{{ designationForm.get('isActive')?.value ? 'Active' : 'Inactive' }}</span>
+              <span class="toggle-label">
+                {{ designationForm.get('isActive')?.value
+                    ? langService.t('designation.status.active')
+                    : langService.t('designation.status.inactive') }}
+              </span>
             </div>
           </div>
 
@@ -208,26 +272,30 @@
 
         <!-- Description -->
         <div class="form-group">
-          <label for="description">Description</label>
-          <textarea id="description" class="form-control" formControlName="description" rows="4"
-            placeholder="Enter designation description (optional)..."
+          <label for="description">{{ langService.t('designation.form.description') }}</label>
+          <textarea id="description" class="form-control"
+            formControlName="description" rows="3"
+            [placeholder]="langService.t('designation.form.descriptionPlaceholder')"
             [class.is-invalid]="isFieldInvalid('description')"></textarea>
-          <div *ngIf="isFieldInvalid('description')" class="error-message">{{ getErrorMessage('description') }}</div>
+          <div *ngIf="isFieldInvalid('description')" class="error-message">
+            {{ getErrorMessage('description') }}
+          </div>
         </div>
 
         <!-- Actions -->
         <div class="form-actions">
           <button type="button" class="btn-secondary" (click)="closeModal()" [disabled]="isSubmitting">
-            <i class="bi bi-x-circle"></i> Cancel
+            <i class="bi bi-x-circle"></i> {{ langService.t('common.cancel') }}
           </button>
-          <button type="submit" class="btn-primary-modal" [disabled]="designationForm.invalid || isSubmitting">
+          <button type="submit" class="btn-primary-modal"
+            [disabled]="designationForm.invalid || isSubmitting">
             <span *ngIf="!isSubmitting">
               <i class="bi bi-check-circle"></i>
-              {{ isEditMode ? 'Update Designation' : 'Create Designation' }}
+              {{ isEditMode ? langService.t('designation.form.updateBtn') : langService.t('designation.form.createBtn') }}
             </span>
             <span *ngIf="isSubmitting">
               <i class="bi bi-arrow-repeat spin"></i>
-              {{ isEditMode ? 'Updating...' : 'Creating...' }}
+              {{ isEditMode ? langService.t('common.updating') : langService.t('common.creating') }}
             </span>
           </button>
         </div>

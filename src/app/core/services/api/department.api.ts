@@ -2,20 +2,12 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClientService } from './apiClient';
 import {
-  Department,
-  DepartmentDetail,
-  DepartmentHierarchy,
-  CreateDepartmentRequest,
-  UpdateDepartmentRequest,
-  DepartmentFilterRequest,
-  ApiResponse,
-  PaginatedResponse,
-  DepartmentStatistics
+  Department, DepartmentDetail, DepartmentHierarchy,
+  CreateDepartmentRequest, UpdateDepartmentRequest,
+  DepartmentFilterRequest, ApiResponse, PaginatedResponse, DepartmentStatistics
 } from '../../Models/department.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class DepartmentService {
   private endpoint = 'Department';
 

@@ -1,24 +1,26 @@
 <div *ngIf="isLoading" class="cb-loading">
   <div class="cb-loading-spinner"></div>
-  <p>Loading...</p>
+  <p>{{ langService.t('common.loading') }}</p>
 </div>
 
 <form *ngIf="!isLoading" [formGroup]="collectiveForm" (ngSubmit)="onSubmit()" class="cb-form">
 
   <!-- ── Section 1: Leave Type & Year ──────────────────────────────── -->
   <div class="cb-form-section">
-    <h3 class="cb-section-title">Leave Configuration</h3>
+    <h3 class="cb-section-title">{{ langService.t('lb.cb.section.config') }}</h3>
 
     <div class="cb-form-row">
 
       <!-- Leave Type -->
       <div class="cb-form-group">
-        <label for="cbLeaveType">Leave Type <span class="cb-required">*</span></label>
+        <label for="cbLeaveType">
+          {{ langService.t('lb.form.leaveType') }} <span class="cb-required">*</span>
+        </label>
         <select id="cbLeaveType" formControlName="leaveTypeId" class="cb-form-control"
           [class.cb-invalid]="isInvalid('leaveTypeId')" (change)="onLeaveTypeChange()">
-          <option value="">Select leave type...</option>
+          <option value="">{{ langService.t('lb.form.selectLeaveType') }}</option>
           <option *ngFor="let lt of leaveTypes" [value]="lt.id">
-            {{ lt.name }} ({{ lt.maxDaysPerYear }} days/yr)
+            {{ lt.name }} ({{ lt.maxDaysPerYear }} {{ langService.t('lb.form.daysPerYear') }})
           </option>
         </select>
         <span class="cb-error-msg" *ngIf="isInvalid('leaveTypeId')">
@@ -30,17 +32,20 @@
           <span class="cb-type-dot" [style.background]="selectedLeaveType.color"></span>
           <strong>{{ selectedLeaveType.name }}</strong>
           <span class="cb-tag cb-tag-green" *ngIf="selectedLeaveType.isCarryForward">
-            <i class="bi bi-arrow-return-right"></i> Carry-forward ✓ (max {{ selectedLeaveType.maxCarryForwardDays }} days)
+            <i class="bi bi-arrow-return-right"></i>
+            {{ langService.t('lb.cb.carryForwardAllowed') }} ({{ langService.t('lb.form.max') }} {{ selectedLeaveType.maxCarryForwardDays }} {{ langService.t('lb.days') }})
           </span>
           <span class="cb-tag cb-tag-amber" *ngIf="!selectedLeaveType.isCarryForward">
-            <i class="bi bi-x-circle"></i> No carry-forward
+            <i class="bi bi-x-circle"></i> {{ langService.t('lb.form.noCarry') }}
           </span>
         </div>
       </div>
 
       <!-- Year -->
       <div class="cb-form-group">
-        <label for="cbYear">Year <span class="cb-required">*</span></label>
+        <label for="cbYear">
+          {{ langService.t('lb.form.year') }} <span class="cb-required">*</span>
+        </label>
         <select id="cbYear" formControlName="year" class="cb-form-control"
           [class.cb-invalid]="isInvalid('year')">
           <option *ngFor="let y of yearOptions" [value]="y">{{ y }}</option>
@@ -56,43 +61,46 @@
 
       <!-- Total Allocated -->
       <div class="cb-form-group">
-        <label for="cbAllocated">Total Allocated Days <span class="cb-required">*</span></label>
+        <label for="cbAllocated">
+          {{ langService.t('lb.form.totalAllocated') }} <span class="cb-required">*</span>
+        </label>
         <div class="cb-days-wrapper">
           <input type="number" id="cbAllocated" formControlName="totalAllocated"
             class="cb-form-control" [class.cb-invalid]="isInvalid('totalAllocated')"
-            min="0" max="365" step="0.5" placeholder="e.g. 12" />
-          <span class="cb-days-unit">days</span>
+            min="0" max="365" step="0.5" [placeholder]="langService.t('lb.form.allocatedPlaceholder')" />
+          <span class="cb-days-unit">{{ langService.t('lb.days') }}</span>
         </div>
         <span class="cb-error-msg" *ngIf="isInvalid('totalAllocated')">
           <i class="bi bi-exclamation-circle"></i> {{ getError('totalAllocated') }}
         </span>
         <span class="cb-form-hint" *ngIf="selectedLeaveType && !isInvalid('totalAllocated')">
           <i class="bi bi-info-circle"></i>
-          Leave blank to use the leave type default ({{ selectedLeaveType.maxDaysPerYear }} days)
+          {{ langService.t('lb.cb.defaultHint') }} ({{ selectedLeaveType.maxDaysPerYear }} {{ langService.t('lb.days') }})
         </span>
       </div>
 
       <!-- Carried Forward -->
       <div class="cb-form-group"
         [style.opacity]="selectedLeaveType && !selectedLeaveType.isCarryForward ? '0.45' : '1'">
-        <label for="cbCarry">Carried Forward Days</label>
+        <label for="cbCarry">{{ langService.t('lb.form.carriedForward') }}</label>
         <div class="cb-days-wrapper">
           <input type="number" id="cbCarry" formControlName="carriedForward"
             class="cb-form-control" [class.cb-invalid]="isInvalid('carriedForward')"
-            min="0" max="365" step="0.5" placeholder="Auto (from prev. year)" />
-          <span class="cb-days-unit">days</span>
+            min="0" max="365" step="0.5" [placeholder]="langService.t('lb.cb.carryPlaceholder')" />
+          <span class="cb-days-unit">{{ langService.t('lb.days') }}</span>
         </div>
         <span class="cb-error-msg" *ngIf="isInvalid('carriedForward')">
           <i class="bi bi-exclamation-circle"></i> {{ getError('carriedForward') }}
         </span>
         <span class="cb-form-hint" *ngIf="selectedLeaveType?.isCarryForward">
           <i class="bi bi-info-circle"></i>
-          Leave blank to auto-calculate from {{ collectiveForm.get('year')?.value - 1 }}
-          (max {{ selectedLeaveType?.maxCarryForwardDays }} days)
+          {{ langService.t('lb.cb.carryAutoHint') }} {{ collectiveForm.get('year')?.value - 1 }}
+          ({{ langService.t('lb.form.max') }} {{ selectedLeaveType?.maxCarryForwardDays }} {{ langService.t('lb.days') }})
         </span>
         <span class="cb-form-hint cb-hint-warn"
           *ngIf="selectedLeaveType && !selectedLeaveType.isCarryForward">
-          <i class="bi bi-exclamation-triangle"></i> Not applicable — this leave type has no carry-forward
+          <i class="bi bi-exclamation-triangle"></i>
+          {{ langService.t('lb.form.noCarryHint') }}
         </span>
       </div>
 
@@ -101,20 +109,20 @@
 
   <!-- ── Section 2: Employee Scope ─────────────────────────────────── -->
   <div class="cb-form-section">
-    <h3 class="cb-section-title">Employee Scope</h3>
+    <h3 class="cb-section-title">{{ langService.t('lb.cb.section.scope') }}</h3>
 
     <!-- Mode toggle -->
     <div class="cb-scope-toggle">
       <button type="button" class="cb-scope-btn"
         [class.active]="scopeMode === 'all'" (click)="setScopeMode('all')">
         <i class="bi bi-people-fill"></i>
-        All Active Employees
+        {{ langService.t('lb.cb.allEmployees') }}
         <span class="cb-scope-count">{{ employees.length }}</span>
       </button>
       <button type="button" class="cb-scope-btn"
         [class.active]="scopeMode === 'select'" (click)="setScopeMode('select')">
         <i class="bi bi-person-check-fill"></i>
-        Select Employees
+        {{ langService.t('lb.cb.selectEmployees') }}
         <span class="cb-scope-count" *ngIf="scopeMode === 'select' && selectedEmployeeIds.size > 0">
           {{ selectedEmployeeIds.size }}
         </span>
@@ -125,9 +133,10 @@
     <div class="cb-all-preview" *ngIf="scopeMode === 'all'">
       <i class="bi bi-check-circle-fill"></i>
       <span>
-        Balances will be assigned to all <strong>{{ employees.length }} active employees</strong>.
-        Employees who already have a balance for this leave type and year will be
-        <strong>{{ collectiveForm.get('skipExisting')?.value ? 'skipped' : 'overwritten' }}</strong>.
+        {{ langService.t('lb.cb.allPreviewPrefix') }}
+        <strong>{{ employees.length }} {{ langService.t('lb.cb.activeEmployees') }}</strong>.
+        {{ langService.t('lb.cb.existingWill') }}
+        <strong>{{ collectiveForm.get('skipExisting')?.value ? langService.t('lb.cb.skipped') : langService.t('lb.cb.overwritten') }}</strong>.
       </span>
     </div>
 
@@ -138,16 +147,16 @@
         <i class="bi bi-search cb-search-icon"></i>
         <input type="text" class="cb-emp-search" [(ngModel)]="employeeSearch"
           [ngModelOptions]="{standalone: true}"
-          placeholder="Search by name or code..." />
+          [placeholder]="langService.t('lb.cb.searchPlaceholder')" />
         <button type="button" class="cb-select-all-btn"
           *ngIf="filteredEmployees.length > 0" (click)="toggleSelectAll()">
-          {{ allFilteredSelected ? 'Deselect All' : 'Select All' }}
+          {{ allFilteredSelected ? langService.t('lb.cb.deselectAll') : langService.t('lb.cb.selectAll') }}
         </button>
       </div>
 
       <div class="cb-emp-list">
         <div *ngIf="filteredEmployees.length === 0" class="cb-emp-empty">
-          <i class="bi bi-person-x"></i> No employees match your search.
+          <i class="bi bi-person-x"></i> {{ langService.t('lb.cb.noMatch') }}
         </div>
         <label *ngFor="let emp of filteredEmployees"
           class="cb-emp-item" [class.checked]="selectedEmployeeIds.has(emp.id)">
@@ -160,9 +169,11 @@
       </div>
 
       <div class="cb-emp-footer">
-        <span class="cb-emp-count">{{ selectedEmployeeIds.size }} of {{ employees.length }} selected</span>
+        <span class="cb-emp-count">
+          {{ selectedEmployeeIds.size }} {{ langService.t('common.of') }} {{ employees.length }} {{ langService.t('lb.cb.selected') }}
+        </span>
         <span class="cb-emp-warn" *ngIf="selectedEmployeeIds.size === 0">
-          <i class="bi bi-exclamation-triangle"></i> Select at least one employee
+          <i class="bi bi-exclamation-triangle"></i> {{ langService.t('lb.cb.selectAtLeastOne') }}
         </span>
       </div>
 
@@ -171,17 +182,15 @@
 
   <!-- ── Section 3: Options ─────────────────────────────────────────── -->
   <div class="cb-form-section">
-    <h3 class="cb-section-title">Options</h3>
+    <h3 class="cb-section-title">{{ langService.t('lb.cb.section.options') }}</h3>
 
     <div class="cb-option-card" [class.active]="collectiveForm.get('skipExisting')?.value">
       <label class="cb-check-row" for="cbSkip">
         <input type="checkbox" id="cbSkip" formControlName="skipExisting" />
         <div>
-          <span class="cb-check-label">Skip employees with existing balance</span>
+          <span class="cb-check-label">{{ langService.t('lb.cb.skipExisting') }}</span>
           <span class="cb-form-hint" style="margin: 3px 0 0 0;">
-            When enabled, employees who already have a balance for this leave type and year
-            are left untouched. When disabled, their <em>TotalAllocated</em>
-            (and carry-forward if supplied) will be overwritten.
+            {{ langService.t('lb.cb.skipExistingHint') }}
           </span>
         </div>
       </label>
@@ -192,17 +201,17 @@
   <div class="cb-summary" *ngIf="canShowSummary && !resultSummary">
     <div class="cb-summary-icon"><i class="bi bi-bar-chart-steps"></i></div>
     <div class="cb-summary-body">
-      <p class="cb-summary-title">Assignment Preview</p>
+      <p class="cb-summary-title">{{ langService.t('lb.cb.previewTitle') }}</p>
       <p class="cb-summary-text">
-        <strong>{{ effectiveEmployeeCount }}</strong> employee(s) ·
+        <strong>{{ effectiveEmployeeCount }}</strong> {{ langService.t('lb.cb.previewEmployees') }} ·
         <strong>{{ selectedLeaveType?.name }}</strong> ·
-        <strong>{{ collectiveForm.get('totalAllocated')?.value ?? selectedLeaveType?.maxDaysPerYear }} days</strong>
-        allocated for <strong>{{ collectiveForm.get('year')?.value }}</strong>.
+        <strong>{{ collectiveForm.get('totalAllocated')?.value ?? selectedLeaveType?.maxDaysPerYear }} {{ langService.t('lb.days') }}</strong>
+        {{ langService.t('lb.cb.previewAllocatedFor') }} <strong>{{ collectiveForm.get('year')?.value }}</strong>.
         <ng-container *ngIf="collectiveForm.get('carriedForward')?.value > 0">
-          Plus <strong>{{ collectiveForm.get('carriedForward')?.value }}</strong> carried-forward days.
+          {{ langService.t('lb.cb.previewPlus') }} <strong>{{ collectiveForm.get('carriedForward')?.value }}</strong> {{ langService.t('lb.cb.previewCarried') }}.
         </ng-container>
         <ng-container *ngIf="!collectiveForm.get('carriedForward')?.value && selectedLeaveType?.isCarryForward">
-          Carry-forward auto-calculated per employee.
+          {{ langService.t('lb.cb.previewAutoCarry') }}
         </ng-container>
       </p>
     </div>
@@ -220,26 +229,25 @@
       <div class="cb-result-stat cb-result-success">
         <i class="bi bi-check-circle-fill"></i>
         <span class="cb-result-num">{{ resultSummary.succeeded }}</span>
-        <span class="cb-result-label">Assigned</span>
+        <span class="cb-result-label">{{ langService.t('lb.cb.result.assigned') }}</span>
       </div>
       <div class="cb-result-stat cb-result-skip">
         <i class="bi bi-skip-forward-fill"></i>
         <span class="cb-result-num">{{ resultSummary.skipped }}</span>
-        <span class="cb-result-label">Skipped</span>
+        <span class="cb-result-label">{{ langService.t('lb.cb.result.skipped') }}</span>
       </div>
       <div class="cb-result-stat cb-result-fail" *ngIf="resultSummary.failed > 0">
         <i class="bi bi-x-circle-fill"></i>
         <span class="cb-result-num">{{ resultSummary.failed }}</span>
-        <span class="cb-result-label">Failed</span>
+        <span class="cb-result-label">{{ langService.t('lb.cb.result.failed') }}</span>
       </div>
     </div>
     <p class="cb-result-note" *ngIf="resultSummary.succeeded > 0">
-      <i class="bi bi-arrow-clockwise"></i> Refreshing list...
+      <i class="bi bi-arrow-clockwise"></i> {{ langService.t('lb.cb.result.refreshing') }}
     </p>
     <p class="cb-result-note cb-result-note-warn"
       *ngIf="resultSummary.succeeded === 0 && resultSummary.skipped > 0">
-      All employees already had a balance for this leave type and year.
-      Disable <em>Skip existing</em> to overwrite them.
+      {{ langService.t('lb.cb.result.allSkipped') }}
     </p>
   </div>
 
@@ -247,21 +255,21 @@
   <div class="cb-modal-footer">
     <button type="button" class="cb-btn cb-btn-secondary"
       (click)="onCancel()" [disabled]="submitting">
-      Cancel
+      {{ langService.t('common.cancel') }}
     </button>
     <button type="submit" class="cb-btn cb-btn-primary"
       [disabled]="submitting || collectiveForm.invalid || !canSubmit || !!resultSummary">
       <ng-container *ngIf="!submitting && !resultSummary">
         <i class="bi bi-lightning-charge-fill"></i>
-        Assign to {{ effectiveEmployeeCount }} Employee(s)
+        {{ langService.t('lb.cb.assignBtn') }} {{ effectiveEmployeeCount }} {{ langService.t('lb.cb.assignBtnSuffix') }}
       </ng-container>
       <ng-container *ngIf="submitting">
         <div class="cb-btn-spinner"></div>
-        Assigning...
+        {{ langService.t('lb.cb.assigning') }}
       </ng-container>
       <ng-container *ngIf="!submitting && resultSummary">
         <i class="bi bi-check-lg"></i>
-        Done
+        {{ langService.t('common.done') }}
       </ng-container>
     </button>
   </div>

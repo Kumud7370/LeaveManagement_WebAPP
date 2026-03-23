@@ -1,14 +1,18 @@
 <div class="hl-form-wrapper">
 
   <div class="hl-form-header">
-    <h2 class="hl-form-title">{{ isEditMode ? 'Edit Leave Type' : 'Create Leave Type' }}</h2>
-    <p class="hl-form-subtitle">{{ isEditMode ? 'Update the leave type configuration below' : 'Define a new leave type for your organization' }}</p>
+    <h2 class="hl-form-title">
+      {{ isEditMode ? langService.t('lt.form.titleEdit') : langService.t('lt.form.titleCreate') }}
+    </h2>
+    <p class="hl-form-subtitle">
+      {{ isEditMode ? langService.t('lt.form.subtitleEdit') : langService.t('lt.form.subtitleCreate') }}
+    </p>
   </div>
 
   <!-- Loading -->
   <div *ngIf="loadingLeaveType" class="hl-form-loading">
     <div class="hl-form-spinner"></div>
-    <p>Loading leave type...</p>
+    <p>{{ langService.t('lt.form.loading') }}</p>
   </div>
 
   <form *ngIf="!loadingLeaveType" [formGroup]="leaveTypeForm" (ngSubmit)="onSubmit()">
@@ -16,28 +20,32 @@
     <!-- Name + Code -->
     <div class="hl-form-row">
       <div class="hl-form-group">
-        <label class="hl-label">Name <span class="hl-required">*</span></label>
+        <label class="hl-label">
+          {{ langService.t('lt.form.name') }} <span class="hl-required">*</span>
+        </label>
         <input type="text" formControlName="name" class="hl-input"
-          placeholder="e.g. Annual Leave"
+          [placeholder]="langService.t('lt.form.namePlaceholder')"
           [class.hl-input-error]="isInvalid('name')" />
         <span class="hl-error-msg" *ngIf="isInvalid('name')">{{ getError('name') }}</span>
       </div>
       <div class="hl-form-group">
-        <label class="hl-label">Code <span class="hl-required">*</span></label>
+        <label class="hl-label">
+          {{ langService.t('lt.form.code') }} <span class="hl-required">*</span>
+        </label>
         <input type="text" formControlName="code" class="hl-input"
-          placeholder="e.g. AL"
+          [placeholder]="langService.t('lt.form.codePlaceholder')"
           [class.hl-input-error]="isInvalid('code')"
           (input)="onCodeInput($event)" />
         <span class="hl-error-msg" *ngIf="isInvalid('code')">{{ getError('code') }}</span>
-        <span class="hl-hint-msg">Uppercase letters only, max 10 characters</span>
+        <span class="hl-hint-msg">{{ langService.t('lt.form.codeHint') }}</span>
       </div>
     </div>
 
     <!-- Description -->
     <div class="hl-form-group">
-      <label class="hl-label">Description</label>
+      <label class="hl-label">{{ langService.t('lt.form.description') }}</label>
       <textarea formControlName="description" rows="3" class="hl-input hl-textarea"
-        placeholder="Brief description of this leave type..."
+        [placeholder]="langService.t('lt.form.descriptionPlaceholder')"
         [class.hl-input-error]="isInvalid('description')"></textarea>
       <div class="hl-textarea-footer">
         <span class="hl-error-msg" *ngIf="isInvalid('description')">{{ getError('description') }}</span>
@@ -51,27 +59,29 @@
     <!-- Max Days + Notice Days + Display Order -->
     <div class="hl-form-row hl-form-row-3">
       <div class="hl-form-group">
-        <label class="hl-label">Max Days / Year <span class="hl-required">*</span></label>
+        <label class="hl-label">
+          {{ langService.t('lt.form.maxDays') }} <span class="hl-required">*</span>
+        </label>
         <div class="hl-input-unit">
           <input type="number" formControlName="maxDaysPerYear" class="hl-input"
             min="1" max="365" placeholder="21"
             [class.hl-input-error]="isInvalid('maxDaysPerYear')" />
-          <span class="hl-unit">days</span>
+          <span class="hl-unit">{{ langService.t('lt.form.daysUnit') }}</span>
         </div>
         <span class="hl-error-msg" *ngIf="isInvalid('maxDaysPerYear')">{{ getError('maxDaysPerYear') }}</span>
       </div>
       <div class="hl-form-group">
-        <label class="hl-label">Min Notice Days</label>
+        <label class="hl-label">{{ langService.t('lt.form.minNotice') }}</label>
         <div class="hl-input-unit">
           <input type="number" formControlName="minimumNoticeDays" class="hl-input"
             min="0" placeholder="0"
             [class.hl-input-error]="isInvalid('minimumNoticeDays')" />
-          <span class="hl-unit">days</span>
+          <span class="hl-unit">{{ langService.t('lt.form.daysUnit') }}</span>
         </div>
         <span class="hl-error-msg" *ngIf="isInvalid('minimumNoticeDays')">{{ getError('minimumNoticeDays') }}</span>
       </div>
       <div class="hl-form-group">
-        <label class="hl-label">Display Order</label>
+        <label class="hl-label">{{ langService.t('lt.form.displayOrder') }}</label>
         <input type="number" formControlName="displayOrder" class="hl-input"
           min="0" placeholder="0"
           [class.hl-input-error]="isInvalid('displayOrder')" />
@@ -79,27 +89,9 @@
       </div>
     </div>
 
-    <!-- Color -->
-    <!-- <div class="hl-form-group">
-      <label class="hl-label">Color Label</label>
-      <div class="hl-color-row">
-        <input type="color" formControlName="colorPicker" class="hl-color-picker"
-          (input)="onColorPickerChange($event)" />
-        <input type="text" formControlName="colorHex" class="hl-input hl-color-hex"
-          placeholder="#3b82f6" maxlength="7"
-          (input)="onColorHexChange($event)" />
-        <div class="hl-color-preview">
-          <span class="hl-color-dot" [style.background]="leaveTypeForm.get('colorPicker')?.value"></span>
-          <span class="hl-color-preview-label" [style.color]="leaveTypeForm.get('colorPicker')?.value">
-            {{ leaveTypeForm.get('name')?.value || 'Preview' }}
-          </span>
-        </div>
-      </div>
-    </div> -->
-
     <!-- Toggle Flags -->
     <div class="hl-section">
-      <h4 class="hl-section-title">Leave Type Rules</h4>
+      <h4 class="hl-section-title">{{ langService.t('lt.form.rulesTitle') }}</h4>
       <div class="hl-toggles-grid">
 
         <!-- Requires Approval -->
@@ -112,8 +104,8 @@
             <div class="hl-toggle-content">
               <i class="bi bi-person-check hl-toggle-icon" style="color:#3b82f6;"></i>
               <div>
-                <span class="hl-toggle-title">Requires Approval</span>
-                <span class="hl-toggle-desc">Leave requests must be approved by a manager</span>
+                <span class="hl-toggle-title">{{ langService.t('lt.form.toggle.requiresApproval') }}</span>
+                <span class="hl-toggle-desc">{{ langService.t('lt.form.toggle.requiresApprovalDesc') }}</span>
               </div>
             </div>
           </label>
@@ -129,8 +121,8 @@
             <div class="hl-toggle-content">
               <i class="bi bi-file-earmark-check hl-toggle-icon" style="color:#7c3aed;"></i>
               <div>
-                <span class="hl-toggle-title">Requires Document</span>
-                <span class="hl-toggle-desc">Employee must submit supporting documentation</span>
+                <span class="hl-toggle-title">{{ langService.t('lt.form.toggle.requiresDocument') }}</span>
+                <span class="hl-toggle-desc">{{ langService.t('lt.form.toggle.requiresDocumentDesc') }}</span>
               </div>
             </div>
           </label>
@@ -147,16 +139,19 @@
             <div class="hl-toggle-content">
               <i class="bi bi-arrow-repeat hl-toggle-icon" style="color:#f59e0b;"></i>
               <div>
-                <span class="hl-toggle-title">Carry Forward</span>
-                <span class="hl-toggle-desc">Unused leave can be carried to next year</span>
+                <span class="hl-toggle-title">{{ langService.t('lt.form.toggle.carryForward') }}</span>
+                <span class="hl-toggle-desc">{{ langService.t('lt.form.toggle.carryForwardDesc') }}</span>
               </div>
             </div>
           </label>
           <div class="hl-carry-extra" *ngIf="leaveTypeForm.get('isCarryForward')?.value">
-            <label class="hl-label" style="font-size:12px; margin-bottom:6px;">Max Carry Forward Days</label>
+            <label class="hl-label" style="font-size:12px; margin-bottom:6px;">
+              {{ langService.t('lt.form.maxCarryForwardDays') }}
+            </label>
             <div class="hl-input-unit">
-              <input type="number" formControlName="maxCarryForwardDays" class="hl-input" min="0" placeholder="0" />
-              <span class="hl-unit">days</span>
+              <input type="number" formControlName="maxCarryForwardDays" class="hl-input"
+                min="0" placeholder="0" />
+              <span class="hl-unit">{{ langService.t('lt.form.daysUnit') }}</span>
             </div>
           </div>
         </div>
@@ -171,8 +166,8 @@
             <div class="hl-toggle-content">
               <i class="bi bi-power hl-toggle-icon" style="color:#10b981;"></i>
               <div>
-                <span class="hl-toggle-title">Active</span>
-                <span class="hl-toggle-desc">Make this leave type available for use</span>
+                <span class="hl-toggle-title">{{ langService.t('lt.form.toggle.active') }}</span>
+                <span class="hl-toggle-desc">{{ langService.t('lt.form.toggle.activeDesc') }}</span>
               </div>
             </div>
           </label>
@@ -191,17 +186,17 @@
     <div class="hl-form-actions">
       <button type="button" class="hl-form-btn hl-form-btn-cancel"
         (click)="onCancel()" [disabled]="submitting">
-        Cancel
+        {{ langService.t('common.cancel') }}
       </button>
       <button type="submit" class="hl-form-btn hl-form-btn-submit"
         [disabled]="submitting || leaveTypeForm.invalid">
         <ng-container *ngIf="!submitting">
           <i class="bi bi-check-circle"></i>
-          {{ isEditMode ? 'Update Leave Type' : 'Create Leave Type' }}
+          {{ isEditMode ? langService.t('lt.form.updateBtn') : langService.t('lt.form.createBtn') }}
         </ng-container>
         <ng-container *ngIf="submitting">
           <span class="hl-btn-spinner"></span>
-          {{ isEditMode ? 'Updating...' : 'Creating...' }}
+          {{ isEditMode ? langService.t('common.updating') : langService.t('common.creating') }}
         </ng-container>
       </button>
     </div>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ICellRendererAngularComp } from 'ag-grid-angular';
 import { ICellRendererParams } from 'ag-grid-community';
 import { LeaveBalance } from '../../core/Models/leave-balance.model';
+import { LanguageService } from '../../core/services/api/language.api';
 
 @Component({
   selector: 'app-leave-balance-action-cell-renderer',
@@ -10,16 +11,20 @@ import { LeaveBalance } from '../../core/Models/leave-balance.model';
   imports: [CommonModule],
   template: `
     <div class="action-buttons">
-      <button class="btn-icon btn-edit"   (click)="onEdit()"        title="Edit Balance">
+      <button class="btn-icon btn-edit"   (click)="onEdit()"
+        [title]="langService.t('lb.action.edit')">
         <i class="bi bi-pencil"></i>
       </button>
-      <button class="btn-icon btn-adjust" (click)="onAdjust()"      title="Adjust Days">
+      <button class="btn-icon btn-adjust" (click)="onAdjust()"
+        [title]="langService.t('lb.action.adjust')">
         <i class="bi bi-sliders"></i>
       </button>
-      <button class="btn-icon btn-recalc" (click)="onRecalculate()" title="Recalculate">
+      <button class="btn-icon btn-recalc" (click)="onRecalculate()"
+        [title]="langService.t('lb.action.recalculate')">
         <i class="bi bi-arrow-repeat"></i>
       </button>
-      <button class="btn-icon btn-delete" (click)="onDelete()"      title="Delete">
+      <button class="btn-icon btn-delete" (click)="onDelete()"
+        [title]="langService.t('lb.action.delete')">
         <i class="bi bi-trash"></i>
       </button>
     </div>
@@ -47,6 +52,8 @@ import { LeaveBalance } from '../../core/Models/leave-balance.model';
 export class LeaveBalanceActionCellRendererComponent implements ICellRendererAngularComp {
   private params!: ICellRendererParams;
   balance!: LeaveBalance;
+
+  constructor(public langService: LanguageService) {}
 
   agInit(params: ICellRendererParams): void {
     this.params  = params;

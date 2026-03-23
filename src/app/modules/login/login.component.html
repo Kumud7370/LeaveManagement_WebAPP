@@ -7,149 +7,117 @@
     <div class="shape shape-3"></div>
   </div>
 
+  <!-- ── Language Switcher ─────────────────────────────────────────────── -->
+  <div class="login-lang-switcher">
+    <button class="login-lang-btn" [class.active]="langService.currentLang === 'mr'" (click)="langService.setLang('mr')">म</button>
+    <button class="login-lang-btn" [class.active]="langService.currentLang === 'en'" (click)="langService.setLang('en')">EN</button>
+    <button class="login-lang-btn" [class.active]="langService.currentLang === 'hi'" (click)="langService.setLang('hi')">हि</button>
+  </div>
+
   <!-- Split Screen Card -->
   <div class="login-card">
 
-    <!-- LEFT SIDE - Form Section -->
+    <!-- LEFT SIDE -->
     <div class="login-form-section">
-
-      <!-- Logo -->
       <div class="login-logo">
         <div class="logo-icon">
           <img src="assets/images/mcgmlogo.png" alt="ABEL Logo" />
         </div>
       </div>
 
-      <!-- Header -->
       <div class="login-header">
-        <h1 class="welcome-title">Welcome Back</h1>
-        <p class="welcome-subtitle">Please log in to continue</p>
+        <h1 class="welcome-title">{{ langService.t('login.welcomeBack') }}</h1>
+        <p class="welcome-subtitle">{{ langService.t('login.subtitle') }}</p>
       </div>
 
-      <!-- Session Info -->
       <div *ngIf="loginInfo" class="login-info">
         <i class="fas fa-info-circle"></i>
         {{ loginInfo }}
       </div>
 
-      <!-- Login Form -->
       <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onLogin()">
 
-        <!-- Username Field -->
         <div class="form-group">
-          <label for="username" class="form-label">Username</label>
+          <label for="username" class="form-label">{{ langService.t('login.username') }}</label>
           <div class="input-wrapper">
-            <input
-              type="text"
-              id="username"
-              formControlName="username"
-              class="form-control"
-              placeholder="Enter your username"
-              autocomplete="username"
-              [disabled]="isLoading"
-            />
+            <input type="text" id="username" formControlName="username" class="form-control"
+              [placeholder]="langService.t('login.usernamePlaceholder')"
+              autocomplete="username" [disabled]="isLoading" />
           </div>
           <div *ngIf="f['username'].touched && f['username'].invalid" class="error-message">
             <i class="fas fa-exclamation-circle"></i>
-            <span *ngIf="f['username'].errors?.['required']">Username is required</span>
+            <span *ngIf="f['username'].errors?.['required']">{{ langService.t('login.usernameRequired') }}</span>
           </div>
         </div>
 
-        <!-- Password Field -->
         <div class="form-group">
-          <label for="password" class="form-label">Password</label>
+          <label for="password" class="form-label">{{ langService.t('login.password') }}</label>
           <div class="input-wrapper">
-            <input
-              [type]="showPassword ? 'text' : 'password'"
-              id="password"
-              formControlName="password"
-              class="form-control"
-              placeholder="••••••••"
-              autocomplete="current-password"
-              [disabled]="isLoading"
-            />
-            <button
-              type="button"
-              class="password-toggle"
-              (click)="togglePasswordVisibility()"
-              aria-label="Toggle password visibility"
-            >
+            <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password"
+              class="form-control" placeholder="••••••••"
+              autocomplete="current-password" [disabled]="isLoading" />
+            <button type="button" class="password-toggle" (click)="togglePasswordVisibility()"
+              [attr.aria-label]="langService.t('login.togglePassword')">
               <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
             </button>
           </div>
           <div *ngIf="f['password'].touched && f['password'].invalid" class="error-message">
             <i class="fas fa-exclamation-circle"></i>
-            <span *ngIf="f['password'].errors?.['required']">Password is required</span>
+            <span *ngIf="f['password'].errors?.['required']">{{ langService.t('login.passwordRequired') }}</span>
           </div>
         </div>
 
-        <!-- Remember Me + Forgot Password -->
         <div class="form-options">
           <label class="remember-me">
             <input type="checkbox" />
-            <span>Keep me logged in</span>
+            <span>{{ langService.t('login.keepLoggedIn') }}</span>
           </label>
-          <button
-            type="button"
-            class="forgot-password-link"
-            (click)="navigateToForgotPassword()"
-          >
-            Forgot Password?
+          <button type="button" class="forgot-password-link" (click)="navigateToForgotPassword()">
+            {{ langService.t('login.forgotPassword') }}
           </button>
         </div>
 
-        <!-- Sign In Button -->
         <button type="submit" class="login-button" [disabled]="loginForm.invalid || isLoading">
-          <span *ngIf="!isLoading" class="button-content">Sign in</span>
+          <span *ngIf="!isLoading" class="button-content">{{ langService.t('login.signIn') }}</span>
           <span *ngIf="isLoading" class="button-loading">
             <i class="fas fa-spinner fa-spin"></i>
-            Signing In...
+            {{ langService.t('login.signingIn') }}
           </span>
         </button>
 
-        <!-- Error Message -->
         <div *ngIf="loginError" class="login-error">
           <i class="fas fa-exclamation-triangle"></i>
           {{ loginError }}
         </div>
 
       </form>
-
-      <!-- Footer — registration removed; users are created by Admin -->
       <div class="login-footer"></div>
-
     </div>
 
-    <!-- RIGHT SIDE - Welcome Section -->
+    <!-- RIGHT SIDE -->
     <div class="login-testimonial-section">
       <div class="welcome-content">
         <div class="welcome-icon">
           <img src="assets/images/mcgmlogo.png" alt="ABEL" />
         </div>
-
-        <h2 class="welcome-title">Welcome to ABEL</h2>
-
-        <p class="welcome-description">
-          Your comprehensive solution for attendance management and workforce tracking.
-          Streamline your operations with our intuitive and reliable platform.
-        </p>
-
+        <h2 class="welcome-title">{{ langService.t('login.appName') }}</h2>
+        <p class="welcome-description">{{ langService.t('login.appDescription') }}</p>
         <div class="welcome-features">
           <div class="feature-item">
             <i class="fas fa-clock"></i>
-            <p class="feature-title">Real-time Tracking</p>
+            <p class="feature-title">{{ langService.t('login.feature.realTime') }}</p>
           </div>
           <div class="feature-item">
             <i class="fas fa-chart-line"></i>
-            <p class="feature-title">Analytics & Reports</p>
+            <p class="feature-title">{{ langService.t('login.feature.analytics') }}</p>
           </div>
           <div class="feature-item">
             <i class="fas fa-shield-alt"></i>
-            <p class="feature-title">Secure & Reliable</p>
+            <p class="feature-title">{{ langService.t('login.feature.secure') }}</p>
           </div>
           <div class="feature-item">
             <i class="fas fa-mobile-alt"></i>
-            <p class="feature-title">Mobile Access</p>
+            <p class="feature-title">{{ langService.t('login.feature.mobile') }}</p>
           </div>
         </div>
       </div>

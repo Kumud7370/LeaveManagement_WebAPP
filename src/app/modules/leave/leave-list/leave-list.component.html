@@ -1,32 +1,29 @@
 <div class="ll-page">
 
-  <h1 class="ll-page-title">Leave Management</h1>
+  <h1 class="ll-page-title">{{ langService.t('leave.title') }}</h1>
 
   <!-- ── Stats ─────────────────────────────────────────────────────── -->
   <div class="ll-stats-row">
     <div class="ll-stat ll-stat-blue" [class.ll-stat-loading]="statsLoading">
-      <p class="ll-stat-label">Total Leaves</p>
+      <p class="ll-stat-label">{{ langService.t('leave.stats.total') }}</p>
       <p class="ll-stat-value">
         <ng-container *ngIf="!statsLoading; else sk">{{ statsTotal }}</ng-container>
       </p>
     </div>
     <div class="ll-stat ll-stat-yellow" [class.ll-stat-loading]="statsLoading">
-      <p class="ll-stat-label">Pending</p>
+      <p class="ll-stat-label">{{ langService.t('leave.stats.pending') }}</p>
       <p class="ll-stat-value">
         <ng-container *ngIf="!statsLoading; else sk">{{ statistics['Pending'] ?? 0 }}</ng-container>
       </p>
     </div>
     <div class="ll-stat ll-stat-green" [class.ll-stat-loading]="statsLoading">
-      <p class="ll-stat-label">Approved</p>
+      <p class="ll-stat-label">{{ langService.t('leave.stats.approved') }}</p>
       <p class="ll-stat-value">
-        <ng-container *ngIf="!statsLoading; else sk">
-          {{ statistics['FullyApproved'] ?? 0 }}
-        </ng-container>
+        <ng-container *ngIf="!statsLoading; else sk">{{ statistics['FullyApproved'] ?? 0 }}</ng-container>
       </p>
-
     </div>
     <div class="ll-stat ll-stat-red" [class.ll-stat-loading]="statsLoading">
-      <p class="ll-stat-label">Rejected</p>
+      <p class="ll-stat-label">{{ langService.t('leave.stats.rejected') }}</p>
       <p class="ll-stat-value">
         <ng-container *ngIf="!statsLoading; else sk">{{ statistics['Rejected'] ?? 0 }}</ng-container>
       </p>
@@ -34,65 +31,70 @@
   </div>
   <ng-template #sk><span class="ll-skeleton"></span></ng-template>
 
-  <!-- ── Toolbar (outside card, matches Holiday) ───────────────────── -->
+  <!-- ── Toolbar ────────────────────────────────────────────────────── -->
   <div class="ll-toolbar">
-    <input type="text" class="ll-search" placeholder="Search leaves..." [(ngModel)]="searchTerm" (input)="onSearch()" />
-
+    <input type="text" class="ll-search"
+      [placeholder]="langService.t('leave.search')"
+      [(ngModel)]="searchTerm"
+      (input)="onSearch()" />
     <div class="ll-toolbar-btns">
-
-      <button class="ll-btn ll-btn-clear" (click)="clearFilters()">Clear</button>
+      <button class="ll-btn ll-btn-clear" (click)="clearFilters()">
+        {{ langService.t('common.clear') }}
+      </button>
       <button class="ll-btn ll-btn-refresh" (click)="loadLeaves()">
-        <i class="bi bi-arrow-clockwise"></i> Refresh
+        <i class="bi bi-arrow-clockwise"></i> {{ langService.t('common.refresh') }}
       </button>
       <button class="ll-btn ll-btn-export" (click)="exportToExcel()">
-        <i class="bi bi-download"></i> Export
+        <i class="bi bi-download"></i> {{ langService.t('common.export') }}
       </button>
       <div class="ll-toolbar-divider"></div>
-      <button class="ll-btn ll-btn-add" *ngIf="isAdmin || (!isNayab && !isTehsildar)" (click)="createLeave()">
-        <i class="bi bi-plus-lg"></i> Apply Leave
+      <button class="ll-btn ll-btn-add"
+        *ngIf="isAdmin || (!isNayab && !isTehsildar)"
+        (click)="createLeave()">
+        <i class="bi bi-plus-lg"></i> {{ langService.t('leave.applyBtn') }}
       </button>
     </div>
   </div>
 
-  <!-- ── Filter Panel (outside card, below toolbar) ────────────────── -->
+  <!-- ── Filter Panel ────────────────────────────────────────────────── -->
   <div class="ll-filter-panel" [class.open]="showFilters">
     <div class="ll-filter-inner">
       <div class="ll-fg">
-        <label>Leave Type</label>
+        <label>{{ langService.t('leave.filter.leaveType') }}</label>
         <select [(ngModel)]="filters.leaveTypeId" (change)="onFilterChange()">
-          <option [ngValue]="undefined">All Types</option>
+          <option [ngValue]="undefined">{{ langService.t('leave.filter.allTypes') }}</option>
           <option *ngFor="let t of leaveTypes" [value]="t.id">{{ t.name }}</option>
         </select>
       </div>
       <div class="ll-fg">
-        <label>Status</label>
+        <label>{{ langService.t('leave.filter.status') }}</label>
         <select [(ngModel)]="filters.leaveStatus" (change)="onFilterChange()">
-          <option [ngValue]="null">All Statuses</option>
-          <option [ngValue]="0">Pending</option>
-          <option [ngValue]="1">Admin Approved</option>
-          <option [ngValue]="2">Nayab Approved</option>
-          <option [ngValue]="3">Fully Approved</option>
-          <option [ngValue]="4">Rejected</option>
-          <option [ngValue]="5">Cancelled</option>
+          <option [ngValue]="null">{{ langService.t('leave.filter.allStatuses') }}</option>
+          <option [ngValue]="0">{{ langService.t('leave.status.pending') }}</option>
+          <option [ngValue]="1">{{ langService.t('leave.status.adminApproved') }}</option>
+          <option [ngValue]="2">{{ langService.t('leave.status.nayabApproved') }}</option>
+          <option [ngValue]="3">{{ langService.t('leave.status.fullyApproved') }}</option>
+          <option [ngValue]="4">{{ langService.t('leave.status.rejected') }}</option>
+          <option [ngValue]="5">{{ langService.t('leave.status.cancelled') }}</option>
         </select>
       </div>
       <div class="ll-fg">
-        <label>Start Date From</label>
+        <label>{{ langService.t('leave.filter.startDateFrom') }}</label>
         <input type="date" [(ngModel)]="filters.startDateFrom" (change)="onFilterChange()" class="ll-fg-input" />
       </div>
       <div class="ll-fg">
-        <label>Start Date To</label>
+        <label>{{ langService.t('leave.filter.startDateTo') }}</label>
         <input type="date" [(ngModel)]="filters.startDateTo" (change)="onFilterChange()" class="ll-fg-input" />
       </div>
       <div class="ll-fg">
-        <label>Applied From</label>
+        <label>{{ langService.t('leave.filter.appliedFrom') }}</label>
         <input type="date" [(ngModel)]="filters.appliedDateFrom" (change)="onFilterChange()" class="ll-fg-input" />
       </div>
       <div class="ll-fg ll-fg-check">
-        <label>Emergency</label>
+        <label>{{ langService.t('leave.filter.emergency') }}</label>
         <label class="ll-check-row">
           <input type="checkbox" [(ngModel)]="filters.isEmergencyLeave" (change)="onFilterChange()" />
-          <span>Emergency Only</span>
+          <span>{{ langService.t('leave.filter.emergencyOnly') }}</span>
         </label>
       </div>
     </div>
@@ -101,40 +103,42 @@
   <!-- ── Grid Card ─────────────────────────────────────────────────── -->
   <div class="ll-card">
 
-    <!-- Loading -->
     <div *ngIf="loading" class="ll-loading">
       <div class="ll-spinner"></div>
-      <span>Loading leaves...</span>
+      <span>{{ langService.t('leave.loading') }}</span>
     </div>
 
-    <!-- Error -->
     <div *ngIf="error && !loading" class="ll-error">
       <i class="bi bi-exclamation-circle"></i>
       <span>{{ error }}</span>
-      <button class="ll-btn ll-btn-refresh" (click)="loadLeaves()">Try Again</button>
+      <button class="ll-btn ll-btn-refresh" (click)="loadLeaves()">{{ langService.t('common.tryAgain') }}</button>
     </div>
 
-    <!-- Empty -->
     <div *ngIf="!loading && !error && leaves.length === 0" class="ll-empty">
       <i class="bi bi-calendar-x"></i>
-      <span>No leaves found. Adjust filters or apply for a new leave.</span>
+      <span>{{ langService.t('leave.empty') }}</span>
       <button *ngIf="isAdmin || (!isNayab && !isTehsildar)" class="ll-btn ll-btn-add" (click)="createLeave()">
-        <i class="bi bi-plus-circle"></i> Apply Leave
+        <i class="bi bi-plus-circle"></i> {{ langService.t('leave.applyBtn') }}
       </button>
     </div>
 
-    <!-- AG Grid -->
-    <ag-grid-angular *ngIf="!loading && !error && leaves.length > 0" style="width: 100%;" [theme]="gridTheme"
-      [rowData]="leaves" [columnDefs]="columnDefs" [defaultColDef]="defaultColDef" (gridReady)="onGridReady($event)"
-      [rowHeight]="52" [headerHeight]="44" [floatingFiltersHeight]="36" [domLayout]="'autoHeight'" [context]="context"
-      [suppressPaginationPanel]="true">
+    <ag-grid-angular
+      *ngIf="!loading && !error && leaves.length > 0"
+      style="width: 100%;"
+      [theme]="gridTheme"
+      [rowData]="leaves"
+      [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
+      (gridReady)="onGridReady($event)"
+      [rowHeight]="52" [headerHeight]="44" [floatingFiltersHeight]="36"
+      [domLayout]="'autoHeight'" [context]="context" [suppressPaginationPanel]="true">
     </ag-grid-angular>
 
     <!-- Pagination -->
     <div class="ll-pagination" *ngIf="!loading && leaves.length > 0">
       <div class="ll-pagination-inner">
         <div class="ll-ps-wrap">
-          <label>Show:</label>
+          <label>{{ langService.t('common.show') }}:</label>
           <select class="ll-ps-select" [(ngModel)]="pageSize" (change)="onPageSizeChange($event)">
             <option [value]="10">10</option>
             <option [value]="25">25</option>
@@ -142,28 +146,26 @@
           </select>
         </div>
         <span class="ll-pag-info">
-          {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount
-          }}
+          {{ (currentPage - 1) * pageSize + 1 }} {{ langService.t('common.to') }}
+          {{ Math.min(currentPage * pageSize, totalCount) }} {{ langService.t('common.of') }} {{ totalCount }}
         </span>
-        <span class="ll-pag-info">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <span class="ll-pag-info">
+          {{ langService.t('common.page') }} {{ currentPage }} {{ langService.t('common.of') }} {{ totalPages || 1 }}
+        </span>
         <div class="ll-pag-btns">
           <button class="ll-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">«</button>
           <button class="ll-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">‹</button>
-          <button *ngFor="let page of pages" class="ll-pgbtn" [class.active]="page === currentPage"
-            (click)="onPageChange(page)">
-            {{ page }}
-          </button>
-          <button class="ll-pgbtn" [disabled]="currentPage === totalPages"
-            (click)="onPageChange(currentPage + 1)">›</button>
+          <button *ngFor="let page of pages" class="ll-pgbtn"
+            [class.active]="page === currentPage" (click)="onPageChange(page)">{{ page }}</button>
+          <button class="ll-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(currentPage + 1)">›</button>
           <button class="ll-pgbtn" [disabled]="currentPage === totalPages" (click)="onPageChange(totalPages)">»</button>
         </div>
       </div>
     </div>
 
-  </div><!-- /ll-card -->
+  </div>
 
-</div><!-- /ll-page -->
-
+</div>
 
 <!-- ── Form Modal ─────────────────────────────────────────────────── -->
 <div class="ll-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
@@ -171,11 +173,9 @@
     <div class="ll-modal-head">
       <h2 class="ll-modal-title">
         <i class="bi" [ngClass]="formMode === 'create' ? 'bi-plus-circle-dotted' : 'bi-pencil-square'"></i>
-        {{ formMode === 'create' ? 'Apply for Leave' : 'Edit Leave Request' }}
+        {{ formMode === 'create' ? langService.t('leave.modal.apply') : langService.t('leave.modal.edit') }}
       </h2>
-      <button class="ll-modal-close" (click)="closeFormModal()" type="button">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <button class="ll-modal-close" (click)="closeFormModal()" type="button"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="ll-modal-body">
       <app-leave-form [isModal]="true" [leaveId]="selectedLeaveId" [isEditMode]="formMode === 'edit'"
@@ -190,11 +190,9 @@
   <div class="ll-modal ll-modal-xl" (click)="$event.stopPropagation()">
     <div class="ll-modal-head">
       <h2 class="ll-modal-title">
-        <i class="bi bi-eye"></i> Leave Details
+        <i class="bi bi-eye"></i> {{ langService.t('leave.modal.details') }}
       </h2>
-      <button class="ll-modal-close" (click)="closeDetailsModal()" type="button">
-        <i class="bi bi-x-lg"></i>
-      </button>
+      <button class="ll-modal-close" (click)="closeDetailsModal()" type="button"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="ll-modal-body">
       <app-leave-details [leaveId]="selectedLeaveId" (leaveUpdated)="onLeaveUpdated()"></app-leave-details>
