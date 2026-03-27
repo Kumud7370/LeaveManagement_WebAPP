@@ -8,7 +8,12 @@ import { LanguageService } from '../../../core/services/api/language.api';
 import { Leave, CreateLeaveDto, UpdateLeaveDto } from '../../../core/Models/leave.model';
 import { LeaveType } from '../../../core/Models/leave-type.model';
 
-interface EmployeeSummary { id: string; employeeCode: string; fullName: string; userId?: string; }
+interface EmployeeSummary {
+  id: string;
+  employeeCode: string;
+  fullName: string;
+  userId?: string;
+}
 
 @Component({
   selector: 'app-leave-form',
@@ -45,14 +50,16 @@ export class LeaveFormComponent implements OnInit {
     private leaveService: LeaveService,
     private leaveTypeService: LeaveTypeService,
     private employeeService: EmployeeService,
-    public  langService: LanguageService
-  ) { }
+    public langService: LanguageService
+  ) {}
 
   ngOnInit(): void {
     this.buildForm();
     this.loadLeaveTypes();
     this.loadEmployees().then(() => {
-      if (this.isEditMode && this.leaveId) this.loadLeave(this.leaveId);
+      if (this.isEditMode && this.leaveId) {
+        this.loadLeave(this.leaveId);
+      }
     });
   }
 
@@ -85,39 +92,95 @@ export class LeaveFormComponent implements OnInit {
     });
   }
 
-  loadEmployees(): Promise<void> {
-    return new Promise((resolve) => {
-      this.employeeService.getActiveEmployees().subscribe({
-        next: (employees: any[]) => {
-          const all = employees.map(e => ({
-            id: e.id,
-            employeeCode: e.employeeCode,
-            fullName: `${e.firstName} ${e.lastName}`,
-            userId: e.userId
-          }));
+loadEmployees(): Promise<void> {
+  return new Promise((resolve) => {
 
-          if (this.restrictToEmployeeId) {
-            const rid = this.restrictToEmployeeId.trim().toLowerCase();
-            this.employees = all.filter(e =>
-              e.id?.trim().toLowerCase() === rid ||
-              e.userId?.trim().toLowerCase() === rid
-            );
-            if (this.employees.length === 1 && !this.isEditMode) {
+    if (this.restrictToEmployeeId) {
+      this.employeeService.getMyProfile().subscribe({
+        next: (emp: any) => {
+          if (emp) {
+            const self: EmployeeSummary = {
+              id: emp.id,
+              employeeCode: emp.employeeCode,
+              fullName: emp.firstName
+                ? `${emp.firstName} ${emp.lastName ?? ''}`.trim()
+                : `${emp.firstNameMr ?? ''} ${emp.lastNameMr ?? ''}`.trim(),
+              userId: emp.userId
+            };
+            this.employees = [self];
+            if (!this.isEditMode) {
               setTimeout(() => {
-                this.leaveForm.patchValue({ employeeId: this.employees[0].id });
+                this.leaveForm.patchValue({ employeeId: self.id });
                 this.onLeaveTypeChange();
               }, 0);
-            } else if (this.employees.length === 0) {
-              this.employees = all;
             }
           } else {
-            this.employees = all;
+            this.employees = [];
+            this.formError = 'Could not load your employee profile. Please contact HR.';
           }
           resolve();
         },
-        error: () => { this.employees = []; resolve(); }
+        error: () => {
+          this.employees = [];
+          this.formError = 'Could not load your employee profile. Please contact HR.';
+          resolve();
+        }
       });
-    });
+
+    } else {
+      this.employeeService.getActiveEmployees().subscribe({
+        next: (employees: any[]) => {
+          this.employees = employees.map(e => ({
+            id: e.id,
+            employeeCode: e.employeeCode,
+            fullName: e.firstName
+              ? `${e.firstName} ${e.lastName ?? ''}`.trim()
+              : `${e.firstNameMr ?? ''} ${e.lastNameMr ?? ''}`.trim(),
+            userId: e.userId
+          }));
+          resolve();
+        },
+        error: () => {
+          this.employees = [];
+          resolve();
+        }
+      });
+    }
+  });
+}
+
+  private tryFetchEmployeeById(id: string, fallbackAll: EmployeeSummary[], resolve: () => void): void {
+    if (typeof (this.employeeService as any).getById === 'function') {
+      (this.employeeService as any).getById(id).subscribe({
+        next: (emp: any) => {
+          if (emp) {
+            const single: EmployeeSummary = {
+              id: emp.id,
+              employeeCode: emp.employeeCode,
+              fullName: `${emp.firstName} ${emp.lastName}`,
+              userId: emp.userId
+            };
+            this.employees = [single];
+            if (!this.isEditMode) {
+              setTimeout(() => {
+                this.leaveForm.patchValue({ employeeId: single.id });
+                this.onLeaveTypeChange();
+              }, 0);
+            }
+          } else {
+            this.employees = fallbackAll;
+          }
+          resolve();
+        },
+        error: () => {
+          this.employees = fallbackAll;
+          resolve();
+        }
+      });
+    } else {
+      this.employees = fallbackAll;
+      resolve();
+    }
   }
 
   loadLeave(id: string): void {
@@ -127,10 +190,14 @@ export class LeaveFormComponent implements OnInit {
         if (r.success) {
           const l: Leave = r.data;
           this.leaveForm.patchValue({
-            employeeId: l.employeeId, leaveTypeId: l.leaveTypeId,
-            startDate: this.toInputDate(l.startDate), endDate: this.toInputDate(l.endDate),
-            totalDays: l.totalDays, reason: l.reason,
-            isEmergencyLeave: l.isEmergencyLeave, attachmentUrl: l.attachmentUrl || ''
+            employeeId:       l.employeeId,
+            leaveTypeId:      l.leaveTypeId,
+            startDate:        this.toInputDate(l.startDate),
+            endDate:          this.toInputDate(l.endDate),
+            totalDays:        l.totalDays,
+            reason:           l.reason,
+            isEmergencyLeave: l.isEmergencyLeave,
+            attachmentUrl:    l.attachmentUrl || ''
           });
           this.onLeaveTypeChange();
           this.computedDays = l.totalDays;
@@ -147,7 +214,8 @@ export class LeaveFormComponent implements OnInit {
     const empId  = raw.employeeId  as string;
 
     this.selectedLeaveType = this.leaveTypes.find(lt => lt.id === typeId) ?? null;
-    this.remainingDays = null; this.balanceNotFound = false;
+    this.remainingDays = null;
+    this.balanceNotFound = false;
 
     if (typeId && empId) {
       this.balanceLoading = true;
@@ -157,7 +225,11 @@ export class LeaveFormComponent implements OnInit {
           if (r.success) { this.remainingDays = r.data; this.balanceNotFound = false; }
           else            { this.remainingDays = null;   this.balanceNotFound = true;  }
         },
-        error: () => { this.balanceLoading = false; this.remainingDays = null; this.balanceNotFound = true; }
+        error: () => {
+          this.balanceLoading = false;
+          this.remainingDays = null;
+          this.balanceNotFound = true;
+        }
       });
     }
   }
@@ -172,8 +244,11 @@ export class LeaveFormComponent implements OnInit {
     }
   }
 
-  onSubmit(): void {
-    if (this.leaveForm.invalid) { this.markAllTouched(); return; }
+onSubmit(): void {
+  if (this.restrictToEmployeeId && this.employees.length === 0) {
+    this.formError = 'Cannot submit: your employee profile could not be resolved.';
+    return;
+  }
 
     if (this.balanceNotFound && !this.isEditMode) {
       this.formError = this.langService.t('leave.form.error.noBalance');
@@ -187,18 +262,19 @@ export class LeaveFormComponent implements OnInit {
       }
     }
 
-    this.submitting = true; this.formError = null;
+    this.submitting = true;
+    this.formError = null;
     const v = this.leaveForm.value;
 
     if (this.isEditMode && this.leaveId) {
       const dto: UpdateLeaveDto = {
-        startDate: this.toISODateTime(v.startDate as string),
-        endDate: this.toISODateTime(v.endDate as string),
-        totalDays: Number(v.totalDays),
-        reason: (v.reason as string).trim(),
+        startDate:        this.toISODateTime(v.startDate as string),
+        endDate:          this.toISODateTime(v.endDate as string),
+        totalDays:        Number(v.totalDays),
+        reason:           (v.reason as string).trim(),
         isEmergencyLeave: v.isEmergencyLeave as boolean,
-        attachmentUrl: (v.attachmentUrl as string) || undefined,
-        leaveTypeId: v.leaveTypeId as string,
+        attachmentUrl:    (v.attachmentUrl as string) || undefined,
+        leaveTypeId:      v.leaveTypeId as string,
       };
       this.leaveService.updateLeave(this.leaveId, dto).subscribe({
         next: (r) => {
@@ -210,14 +286,14 @@ export class LeaveFormComponent implements OnInit {
       });
     } else {
       const dto: CreateLeaveDto = {
-        employeeId: v.employeeId as string,
-        leaveTypeId: v.leaveTypeId as string,
-        startDate: this.toISODateTime(v.startDate as string),
-        endDate: this.toISODateTime(v.endDate as string),
-        totalDays: Number(v.totalDays),
-        reason: (v.reason as string).trim(),
+        employeeId:       v.employeeId as string,
+        leaveTypeId:      v.leaveTypeId as string,
+        startDate:        this.toISODateTime(v.startDate as string),
+        endDate:          this.toISODateTime(v.endDate as string),
+        totalDays:        Number(v.totalDays),
+        reason:           (v.reason as string).trim(),
         isEmergencyLeave: v.isEmergencyLeave as boolean,
-        attachmentUrl: (v.attachmentUrl as string) || undefined
+        attachmentUrl:    (v.attachmentUrl as string) || undefined
       };
       this.leaveService.createLeave(dto).subscribe({
         next: (r) => {
@@ -244,14 +320,16 @@ export class LeaveFormComponent implements OnInit {
         return this.langService.t('leave.form.error.dateRange');
       return '';
     }
-    if (c.errors['required'])   return this.langService.t('common.fieldRequired');
-    if (c.errors['minlength'])  return `${this.langService.t('common.minLength')} ${c.errors['minlength'].requiredLength}.`;
-    if (c.errors['maxlength'])  return `${this.langService.t('common.maxLength')} ${c.errors['maxlength'].requiredLength}.`;
-    if (c.errors['min'])        return `${this.langService.t('common.minValue')} ${c.errors['min'].min}.`;
+    if (c.errors['required'])  return this.langService.t('common.fieldRequired');
+    if (c.errors['minlength']) return `${this.langService.t('common.minLength')} ${c.errors['minlength'].requiredLength}.`;
+    if (c.errors['maxlength']) return `${this.langService.t('common.maxLength')} ${c.errors['maxlength'].requiredLength}.`;
+    if (c.errors['min'])       return `${this.langService.t('common.minValue')} ${c.errors['min'].min}.`;
     return '';
   }
 
-  private markAllTouched(): void { Object.values(this.leaveForm.controls).forEach(c => c.markAsTouched()); }
+  private markAllTouched(): void {
+    Object.values(this.leaveForm.controls).forEach(c => c.markAsTouched());
+  }
 
   private toISODateTime(dateStr: string): string {
     if (!dateStr) return '';
@@ -259,13 +337,17 @@ export class LeaveFormComponent implements OnInit {
     return `${dateStr}T00:00:00.000Z`;
   }
 
-  private toInputDate(d: Date | string): string { return new Date(d).toISOString().slice(0, 10); }
+  private toInputDate(d: Date | string): string {
+    return new Date(d).toISOString().slice(0, 10);
+  }
 
   private extractError(e: { error?: { errors?: Record<string, string[]>; message?: string; title?: string } }): string {
     const body = e?.error;
     if (!body) return this.langService.t('common.error');
     if (body.errors && typeof body.errors === 'object') {
-      const msgs = Object.entries(body.errors).map(([f, m]) => `${f}: ${(Array.isArray(m) ? m : [m]).join(', ')}`);
+      const msgs = Object.entries(body.errors).map(
+        ([f, m]) => `${f}: ${(Array.isArray(m) ? m : [m]).join(', ')}`
+      );
       if (msgs.length) return msgs.join(' | ');
     }
     return body.message || body.title || this.langService.t('common.error');

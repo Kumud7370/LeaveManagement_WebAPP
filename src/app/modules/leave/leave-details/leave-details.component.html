@@ -218,7 +218,23 @@
   </div>
 
   <!-- Actions -->
-  <div class="ld-actions" *ngIf="canAdminApprove || canNayabApprove || canTehsildarApprove || canReject || leave.canBeCancelled">
+  <div class="ld-actions">
+
+    <!-- Print / Download — left-aligned group, always shown to authorised roles -->
+    <ng-container *ngIf="canPrint">
+      <button class="ld-btn ld-btn-print" (click)="onPrint()" [disabled]="printing" title="Print leave sanction order">
+        <i class="bi" [ngClass]="printing ? 'bi-hourglass-split' : 'bi-printer'"></i>
+        {{ printing ? 'Preparing…' : langService.t('leave.details.action.print') || 'Print' }}
+      </button>
+      <button class="ld-btn ld-btn-download" (click)="onDownload()" title="Download as HTML file">
+        <i class="bi bi-download"></i>
+        {{ langService.t('leave.details.action.download') || 'Download' }}
+      </button>
+      <!-- Spacer pushes approval buttons to the right -->
+      <span class="ld-actions-spacer"></span>
+    </ng-container>
+
+    <!-- Approval / Reject / Cancel buttons -->
     <button *ngIf="canAdminApprove" class="ld-btn ld-btn-approve" (click)="onAdminApprove()">
       <i class="bi bi-check-lg"></i> {{ langService.t('leave.details.action.adminApprove') }}
     </button>
@@ -234,6 +250,7 @@
     <button *ngIf="leave.canBeCancelled && !isEmployee" class="ld-btn ld-btn-cancel" (click)="onCancel()">
       <i class="bi bi-slash-circle"></i> {{ langService.t('leave.details.action.cancel') }}
     </button>
+
   </div>
 
 </div>

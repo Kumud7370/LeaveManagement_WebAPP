@@ -42,7 +42,7 @@ const leaveGridTheme = themeQuartz.withParams({
   templateUrl: './leave-list.component.html',
   styleUrls: ['./leave-list.component.scss'],
   encapsulation: ViewEncapsulation.None,
-  imports: [CommonModule, FormsModule, AgGridAngular, LeaveFormComponent, LeaveDetailsComponent],
+  imports: [CommonModule, FormsModule, AgGridAngular,  LeaveDetailsComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class LeaveListComponent implements OnInit, OnDestroy {
@@ -55,13 +55,13 @@ export class LeaveListComponent implements OnInit, OnDestroy {
   searchTerm = '';
   context = { componentParent: this };
 
-  showFormModal    = false;
+  showFormModal = false;
   showDetailsModal = false;
   formMode: 'create' | 'edit' = 'create';
   selectedLeaveId: string | null = null;
 
   leaveTypes: LeaveType[] = [];
-  loading      = false;
+  loading = false;
   statsLoading = false;
   error: string | null = null;
   statistics: { [key: string]: number } = {};
@@ -77,9 +77,9 @@ export class LeaveListComponent implements OnInit, OnDestroy {
   };
 
   currentPage = 1;
-  pageSize    = 10;
-  totalPages  = 0;
-  totalCount  = 0;
+  pageSize = 10;
+  totalPages = 0;
+  totalCount = 0;
   Math = Math;
   private searchDebounceTimer: any = null;
   private resizeObserver!: ResizeObserver;
@@ -98,14 +98,14 @@ export class LeaveListComponent implements OnInit, OnDestroy {
     private leaveTypeService: LeaveTypeService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
-    public  langService: LanguageService
+    public langService: LanguageService
   ) { }
 
   get currentRole(): string { return this.authService.getRole(); }
-  get isAdmin():     boolean { return this.authService.isAdmin(); }
-  get isNayab():     boolean { return this.authService.isNayabTehsildar(); }
+  get isAdmin(): boolean { return this.authService.isAdmin(); }
+  get isNayab(): boolean { return this.authService.isNayabTehsildar(); }
   get isTehsildar(): boolean { return this.authService.isTehsildar(); }
-  get isHR():        boolean { return this.authService.isHR(); }
+  get isHR(): boolean { return this.authService.isHR(); }
 
   ngOnInit(): void {
     if (this.authService.isHR()) {
@@ -154,7 +154,7 @@ export class LeaveListComponent implements OnInit, OnDestroy {
 
   buildColumnDefs(): void {
     const locale = this.langService.currentLang === 'mr' ? 'mr-IN'
-                 : this.langService.currentLang === 'hi' ? 'hi-IN' : 'en-GB';
+      : this.langService.currentLang === 'hi' ? 'hi-IN' : 'en-GB';
 
     this.columnDefs = [
       {
@@ -172,9 +172,17 @@ export class LeaveListComponent implements OnInit, OnDestroy {
         headerName: this.langService.t('leave.col.employee'),
         field: 'employeeName', width: 200, minWidth: 160,
         cellStyle: { display: 'flex', alignItems: 'center' },
-        cellRenderer: (p: any) => p.value
-          ? `<span style="font-weight:600;font-size:13px;color:#111827;">${p.value}</span>`
-          : ''
+        cellRenderer: (p: any) => {
+          const name =
+            p.data?.employeeName ||
+            [p.data?.firstName, p.data?.lastName].filter(Boolean).join(' ') ||
+            p.data?.employeeCode ||
+            '—';
+          const code = p.data?.employeeCode && p.value  // only show code separately if we have a real name
+            ? `<span style="font-size:10px;color:#9ca3af;margin-left:5px;">(${p.data.employeeCode})</span>`
+            : '';
+          return `<span style="font-weight:600;font-size:13px;color:#111827;">${name}</span>${code}`;
+        }
       },
       {
         headerName: this.langService.t('leave.col.leaveType'),
@@ -232,26 +240,26 @@ export class LeaveListComponent implements OnInit, OnDestroy {
         cellRenderer: (p: any) => {
           const statusKey = String(p.value);
           const colorMap: Record<string, [string, string]> = {
-            '0':             ['#fef9c3', '#92400e'],
-            'Pending':       ['#fef9c3', '#92400e'],
-            '1':             ['#dbeafe', '#1d4ed8'],
+            '0': ['#fef9c3', '#92400e'],
+            'Pending': ['#fef9c3', '#92400e'],
+            '1': ['#dbeafe', '#1d4ed8'],
             'AdminApproved': ['#dbeafe', '#1d4ed8'],
-            '2':             ['#e0e7ff', '#4338ca'],
+            '2': ['#e0e7ff', '#4338ca'],
             'NayabApproved': ['#e0e7ff', '#4338ca'],
-            '3':             ['#dcfce7', '#166534'],
+            '3': ['#dcfce7', '#166534'],
             'FullyApproved': ['#dcfce7', '#166534'],
-            '4':             ['#fee2e2', '#991b1b'],
-            'Rejected':      ['#fee2e2', '#991b1b'],
-            '5':             ['#f1f5f9', '#475569'],
-            'Cancelled':     ['#f1f5f9', '#475569'],
+            '4': ['#fee2e2', '#991b1b'],
+            'Rejected': ['#fee2e2', '#991b1b'],
+            '5': ['#f1f5f9', '#475569'],
+            'Cancelled': ['#f1f5f9', '#475569'],
           };
           const labelMap: Record<string, string> = {
-            '0': 'leave.status.pending',       'Pending':       'leave.status.pending',
+            '0': 'leave.status.pending', 'Pending': 'leave.status.pending',
             '1': 'leave.status.adminApproved', 'AdminApproved': 'leave.status.adminApproved',
             '2': 'leave.status.nayabApproved', 'NayabApproved': 'leave.status.nayabApproved',
             '3': 'leave.status.fullyApproved', 'FullyApproved': 'leave.status.fullyApproved',
-            '4': 'leave.status.rejected',      'Rejected':      'leave.status.rejected',
-            '5': 'leave.status.cancelled',     'Cancelled':     'leave.status.cancelled',
+            '4': 'leave.status.rejected', 'Rejected': 'leave.status.rejected',
+            '5': 'leave.status.cancelled', 'Cancelled': 'leave.status.cancelled',
           };
           const [bg, color] = colorMap[statusKey] ?? ['#fef9c3', '#92400e'];
           const lbl = this.langService.t(labelMap[statusKey] ?? 'leave.status.pending');
@@ -285,49 +293,62 @@ export class LeaveListComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadLeaves(): void {
-    this.loading = true; this.error = null;
-    const filter: LeaveFilterDto = {
-      ...this.filters,
-      searchTerm: this.searchTerm || undefined,
-      pageNumber: this.currentPage, pageSize: this.pageSize
-    };
-    const request$ = this.authService.isHR()
-      ? this.leaveService.getDepartmentLeaves(filter)
-      : this.leaveService.getFilteredLeaves(filter);
+loadLeaves(): void {
+  this.loading = true; this.error = null;
+  const filter: LeaveFilterDto = {
+    ...this.filters,
+    searchTerm: this.searchTerm || undefined,
+    pageNumber: this.currentPage, pageSize: this.pageSize
+  };
 
-    request$.pipe(takeUntil(this.destroy$)).subscribe({
-      next: (r) => {
-        this.loading = false;
-        if (r.success) {
-          this.leaves = r.data.items;
-          this.totalPages = r.data.totalPages;
-          this.totalCount = r.data.totalCount;
-          if (this.gridApi) {
-            this.gridApi.setGridOption('rowData', this.leaves);
-            setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
-          }
-        } else { this.error = r.message || this.langService.t('leave.loadError'); }
-        this.cdr.detectChanges();
-      },
-      error: (e) => {
-        this.loading = false;
-        this.error = e.error?.message || this.langService.t('leave.loadError');
-        this.cdr.detectChanges();
-      }
-    });
+  let request$;
+
+  if (this.authService.isHR()) {
+    // HR sees their department only
+    request$ = this.leaveService.getDepartmentLeaves(filter);
+  } else if (this.isAdmin || this.isNayab || this.isTehsildar) {
+    // Privileged roles see all leaves
+    request$ = this.leaveService.getFilteredLeaves(filter);
+  } else {
+    // ✅ Employee — call getMyLeaves so backend scopes by JWT email
+    request$ = this.leaveService.getMyLeaves(filter);
   }
 
-  loadStatistics(): void {
-    this.statsLoading = true;
-    this.leaveService.getLeaveStatisticsByStatus().pipe(takeUntil(this.destroy$)).subscribe({
-      next: (r) => {
-        this.statsLoading = false;
-        if (r.success) { this.statistics = r.data; this.cdr.detectChanges(); }
-      },
-      error: () => { this.statsLoading = false; this.cdr.detectChanges(); }
-    });
-  }
+  request$.pipe(takeUntil(this.destroy$)).subscribe({
+    next: (r) => {
+      this.loading = false;
+      if (r.success) {
+        this.leaves = r.data.items;
+        this.totalPages = r.data.totalPages;
+        this.totalCount = r.data.totalCount;
+        if (this.gridApi) {
+          this.gridApi.setGridOption('rowData', this.leaves);
+          setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
+        }
+      } else { this.error = r.message || this.langService.t('leave.loadError'); }
+      this.cdr.detectChanges();
+    },
+    error: (e) => {
+      this.loading = false;
+      this.error = e.error?.message || this.langService.t('leave.loadError');
+      this.cdr.detectChanges();
+    }
+  });
+}
+loadStatistics(): void {
+  this.statsLoading = true;
+  const stats$ = (this.isAdmin || this.isNayab || this.isTehsildar || this.isHR)
+    ? this.leaveService.getLeaveStatisticsByStatus()
+    : this.leaveService.getMyLeaveStatistics();
+
+  stats$.pipe(takeUntil(this.destroy$)).subscribe({
+    next: (r) => {
+      this.statsLoading = false;
+      if (r.success) { this.statistics = r.data; this.cdr.detectChanges(); }
+    },
+    error: () => { this.statsLoading = false; this.cdr.detectChanges(); }
+  });
+}
 
   onSearch(): void {
     clearTimeout(this.searchDebounceTimer);
@@ -370,18 +391,18 @@ export class LeaveListComponent implements OnInit, OnDestroy {
     return Array.from({ length: e - s + 1 }, (_, i) => s + i);
   }
 
-  createLeave():     void { this.formMode = 'create'; this.selectedLeaveId = null;      this.showFormModal = true; }
-  editLeave(l: Leave): void { this.formMode = 'edit';   this.selectedLeaveId = l.id;     this.showFormModal = true; }
-  viewDetails(l: Leave):void { this.selectedLeaveId = l.id; this.showDetailsModal = true; }
-  closeFormModal():    void { this.showFormModal = false;    this.selectedLeaveId = null; }
+  createLeave(): void { this.formMode = 'create'; this.selectedLeaveId = null; this.showFormModal = true; }
+  editLeave(l: Leave): void { this.formMode = 'edit'; this.selectedLeaveId = l.id; this.showFormModal = true; }
+  viewDetails(l: Leave): void { this.selectedLeaveId = l.id; this.showDetailsModal = true; }
+  closeFormModal(): void { this.showFormModal = false; this.selectedLeaveId = null; }
   closeDetailsModal(): void { this.showDetailsModal = false; this.selectedLeaveId = null; }
-  onFormSuccess():     void { this.closeFormModal();  this.loadLeaves(); this.loadStatistics(); }
-  onLeaveUpdated():    void { this.loadLeaves(); this.loadStatistics(); }
+  onFormSuccess(): void { this.closeFormModal(); this.loadLeaves(); this.loadStatistics(); }
+  onLeaveUpdated(): void { this.loadLeaves(); this.loadStatistics(); }
 
   approveLeave(l: Leave): void { this._doApprove(l); }
-  rejectLeave(l: Leave):  void { this._doReject(l); }
-  cancelLeave(l: Leave):  void { this._doCancel(l); }
-  deleteLeave(l: Leave):  void { this._doDelete(l); }
+  rejectLeave(l: Leave): void { this._doReject(l); }
+  cancelLeave(l: Leave): void { this._doCancel(l); }
+  deleteLeave(l: Leave): void { this._doDelete(l); }
 
   private async _doApprove(leave: Leave): Promise<void> {
     const role = this.currentRole;
@@ -397,9 +418,9 @@ export class LeaveListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const stageLabel = role === 'Admin'         ? this.langService.t('leave.swal.adminApproveLabel')
-                     : role === 'NayabTehsildar' ? this.langService.t('leave.swal.nayabApproveLabel')
-                                                 : this.langService.t('leave.swal.finalApproveLabel');
+    const stageLabel = role === 'Admin' ? this.langService.t('leave.swal.adminApproveLabel')
+      : role === 'NayabTehsildar' ? this.langService.t('leave.swal.nayabApproveLabel')
+        : this.langService.t('leave.swal.finalApproveLabel');
 
     const r = await Swal.fire({
       title: `${stageLabel}?`,
@@ -411,9 +432,9 @@ export class LeaveListComponent implements OnInit, OnDestroy {
     });
     if (!r.isConfirmed) return;
 
-    const approve$ = role === 'Admin'         ? this.leaveService.adminApproveLeave(leave.id)
-                   : role === 'NayabTehsildar' ? this.leaveService.nayabApproveLeave(leave.id)
-                                               : this.leaveService.tehsildarApproveLeave(leave.id);
+    const approve$ = role === 'Admin' ? this.leaveService.adminApproveLeave(leave.id)
+      : role === 'NayabTehsildar' ? this.leaveService.nayabApproveLeave(leave.id)
+        : this.leaveService.tehsildarApproveLeave(leave.id);
     approve$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         if (res.success) {

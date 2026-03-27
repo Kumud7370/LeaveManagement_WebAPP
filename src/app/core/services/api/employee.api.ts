@@ -89,6 +89,12 @@ export class EmployeeService {
       catchError(error => throwError(() => error))
     );
   }
+  getMyProfile(): Observable<EmployeeResponseDto> {
+  return this.apiClient.get<ApiResponseDto<EmployeeResponseDto>>('Employee/me').pipe(
+    map(response => response.data),
+    catchError(error => throwError(() => error))
+  );
+}
 
   getEmployeeStatisticsByStatus(): Observable<{ [key: string]: number }> {
     return this.apiClient.get<ApiResponseDto<{ [key: string]: number }>>('Employee/statistics/status').pipe(

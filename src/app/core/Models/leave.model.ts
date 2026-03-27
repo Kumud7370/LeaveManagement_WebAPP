@@ -29,6 +29,9 @@ export interface Leave {
   nayabApprovedDate?: Date;
   tehsildarApprovedBy?: string;
   tehsildarApprovedDate?: Date;
+  adminApprovedByName?: string | null;
+  nayabApprovedByName?: string | null;
+  tehsildarApprovedByName?: string | null;
   approvedBy?: string;
   approvedByName?: string;
   approvedDate?: Date;
@@ -49,8 +52,8 @@ export interface Leave {
 export interface CreateLeaveDto {
   employeeId: string;
   leaveTypeId: string;
- startDate: string; 
-  endDate: string; 
+  startDate: string;
+  endDate: string;
   totalDays: number;
   reason: string;
   isEmergencyLeave?: boolean;
@@ -58,13 +61,13 @@ export interface CreateLeaveDto {
 }
 
 export interface UpdateLeaveDto {
-  startDate?: string;  
-  endDate?: string; 
+  startDate?: string;
+  endDate?: string;
   totalDays?: number;
   reason?: string;
   isEmergencyLeave?: boolean;
   attachmentUrl?: string;
-  leaveTypeId?:     string;
+  leaveTypeId?: string;
 }
 
 export interface LeaveFilterDto {
@@ -75,7 +78,7 @@ export interface LeaveFilterDto {
   startDateTo?: Date;
   endDateFrom?: Date;
   endDateTo?: Date;
-  departmentId?: string;       
+  departmentId?: string;
   employeeIds?: string[];
   appliedDateFrom?: Date;
   appliedDateTo?: Date;
@@ -254,7 +257,6 @@ export interface EmployeeLeaveBalanceSummaryDto {
   overallUtilizationPercentage: number;
 }
 
-// Common API Response
 export interface ApiResponse<T> {
   data: T;
   message: string;

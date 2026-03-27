@@ -25,7 +25,7 @@
     <div class="ll-stat ll-stat-red" [class.ll-stat-loading]="statsLoading">
       <p class="ll-stat-label">{{ langService.t('leave.stats.rejected') }}</p>
       <p class="ll-stat-value">
-        <ng-container *ngIf="!statsLoading; else sk">{{ statistics['Rejected'] ?? 0 }}</ng-container>
+        <ng-container *ngIf="!statsLoading; else sk">{{  0 }}</ng-container>
       </p>
     </div>
   </div>

@@ -144,18 +144,38 @@
 
 // Actions
 .ld-actions {
-  display: flex; gap: 8px; flex-wrap: wrap;
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
   padding: 12px 20px; border-top: 0.5px solid #e5e7eb;
 }
+
+.ld-actions-spacer { flex: 1; }
+
+// Base button
 .ld-btn {
   padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
   cursor: pointer; border: 0.5px solid; display: inline-flex; align-items: center;
   gap: 5px; transition: all .15s;
   i { font-size: 11px; }
-  &.ld-btn-approve { background: #f0fdf4; color: #15803d; border-color: #86efac;
-    &:hover { background: #dcfce7; } }
-  &.ld-btn-reject  { background: #fef2f2; color: #dc2626; border-color: #fca5a5;
-    &:hover { background: #fee2e2; } }
-  &.ld-btn-cancel  { background: #f9fafb; color: #6b7280; border-color: #d1d5db;
-    &:hover { background: #f3f4f6; } }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  // Approval actions (existing)
+  &.ld-btn-approve  { background: #f0fdf4; color: #15803d; border-color: #86efac;
+    &:hover:not(:disabled) { background: #dcfce7; } }
+  &.ld-btn-reject   { background: #fef2f2; color: #dc2626; border-color: #fca5a5;
+    &:hover:not(:disabled) { background: #fee2e2; } }
+  &.ld-btn-cancel   { background: #f9fafb; color: #6b7280; border-color: #d1d5db;
+    &:hover:not(:disabled) { background: #f3f4f6; } }
+
+  // Print button — neutral ink style
+  &.ld-btn-print {
+    background: #f8fafc; color: #374151; border-color: #d1d5db;
+    &:hover:not(:disabled) { background: #f1f5f9; border-color: #9ca3af; }
+    i { color: #6b7280; }
+  }
+
+  // Download button — blue tint
+  &.ld-btn-download {
+    background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe;
+    &:hover:not(:disabled) { background: #dbeafe; border-color: #3b82f6; }
+  }
 }

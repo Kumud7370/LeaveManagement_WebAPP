@@ -32,7 +32,7 @@ export interface EmployeeResponseDto {
   lastNameHi?: string;
 
   // Computed full names
-  fullName: string;       // Marathi by default
+  fullName: string;       
   fullNameEn?: string;
   fullNameHi?: string;
 
@@ -201,7 +201,6 @@ export interface ApiResponseDto<T> {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Returns the display name for the active language */
 export function getEmployeeDisplayName(
   emp: EmployeeResponseDto | CreateEmployeeDto,
   lang: 'mr' | 'en' | 'hi' = 'mr'
@@ -210,7 +209,6 @@ export function getEmployeeDisplayName(
     return [emp.firstName, (emp as any).middleName, emp.lastName].filter(Boolean).join(' ');
   if (lang === 'hi' && emp.firstNameHi && emp.lastNameHi)
     return [emp.firstNameHi, emp.middleNameHi, emp.lastNameHi].filter(Boolean).join(' ');
-  // Default: Marathi
   return [emp.firstNameMr, emp.middleNameMr, emp.lastNameMr].filter(Boolean).join(' ');
 }
 
