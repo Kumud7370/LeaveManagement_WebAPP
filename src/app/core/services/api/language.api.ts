@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -9,10 +10,9 @@ export type Lang = 'mr' | 'en' | 'hi';
 export class LanguageService {
 
   private readonly STORAGE_KEY = 'appLang';
-  private readonly API_BASE    = environment.apiUrl; 
+  private readonly API_BASE    = environment.apiUrl;
 
-  /** In-memory flat translation cache per language */
-  private cache: Partial<Record<Lang, Record<string, string>>> = {};
+  private cache:  Partial<Record<Lang, Record<string, string>>> = {};
   private loaded: Partial<Record<Lang, boolean>> = {};
 
   private langSubject = new BehaviorSubject<Lang>(this.getInitialLang());
@@ -20,27 +20,25 @@ export class LanguageService {
 
   get currentLang(): Lang { return this.langSubject.value; }
 
-  constructor(private http: HttpClient) {
-    // Kick off load for the initial language silently
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object  
+  ) {
     this.loadTranslations(this.currentLang);
   }
 
-  /** Call in APP_INITIALIZER to block render until first language is ready */
   async initialize(): Promise<void> {
     await this.loadTranslations(this.currentLang);
   }
 
-  /** Switch language — loads from API if not cached yet */
   async setLang(lang: Lang): Promise<void> {
-    localStorage.setItem(this.STORAGE_KEY, lang);
+    if (isPlatformBrowser(this.platformId)) {          
+      localStorage.setItem(this.STORAGE_KEY, lang);
+    }
     await this.loadTranslations(lang);
     this.langSubject.next(lang);
   }
 
-  /**
-   * Translate a UI key.
-   * Falls back: active lang → Marathi → English → raw key.
-   */
   t(key: string): string {
     return this.cache[this.currentLang]?.[key]
         ?? this.cache['mr']?.[key]
@@ -48,14 +46,9 @@ export class LanguageService {
         ?? key;
   }
 
-  /**
-   * Returns the correct name from a multilingual object.
-   * e.g. getLocalizedName(employee, 'firstName')
-   *   tries firstNameMr / firstName / firstNameHi based on active language
-   */
   getLocalizedName(obj: any, baseField: string): string {
     if (!obj) return '';
-    const lang = this.currentLang;
+    const lang    = this.currentLang;
     const mrField = baseField + 'Mr';
     const enField = baseField;
     const hiField = baseField + 'Hi';
@@ -65,7 +58,6 @@ export class LanguageService {
     return obj[enField] || '';
   }
 
-  /** Returns the correct full name from an employee object */
   getEmployeeFullName(emp: any): string {
     if (!emp) return '';
     const lang   = this.currentLang;
@@ -83,8 +75,6 @@ export class LanguageService {
     return this.getLocalizedName(dept, 'departmentName');
   }
 
-  // ── Internal ────────────────────────────────────────────────────────────
-
   private async loadTranslations(lang: Lang): Promise<void> {
     if (this.loaded[lang]) return;
     try {
@@ -97,13 +87,11 @@ export class LanguageService {
       this.loaded[lang] = true;
     } catch (err) {
       console.warn(`[LanguageService] Could not load translations for "${lang}":`, err);
-      // Mark as loaded with empty map so we don't keep retrying
       this.cache[lang]  = {};
       this.loaded[lang] = true;
     }
   }
 
-  /** Force-reload a language (call after admin edits translations) */
   async reloadLang(lang: Lang): Promise<void> {
     this.loaded[lang] = false;
     await this.loadTranslations(lang);
@@ -111,6 +99,7 @@ export class LanguageService {
   }
 
   private getInitialLang(): Lang {
+    if (typeof localStorage === 'undefined') return 'mr';
     const stored = localStorage.getItem(this.STORAGE_KEY) as Lang | null;
     return (stored === 'mr' || stored === 'en' || stored === 'hi') ? stored : 'mr';
   }

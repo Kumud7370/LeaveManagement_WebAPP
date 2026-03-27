@@ -4,6 +4,7 @@ import { LeaveService } from '../../../core/services/api/leave.api';
 import { Leave, LeaveStatus } from '../../../core/Models/leave.model';
 import { AuthService } from '../../../core/services/api/auth.api';
 import { LanguageService } from '../../../core/services/api/language.api';
+import { LeaveDocumentService } from '../../../core/services/api/leave-document.api';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -21,11 +22,13 @@ export class LeaveDetailsComponent implements OnInit {
 
   leave: Leave | null = null;
   loading = false;
+  printing = false;
   LeaveStatus = LeaveStatus;
 
   constructor(
     private leaveService: LeaveService,
     private authService: AuthService,
+    private leaveDocService: LeaveDocumentService,
     public  langService: LanguageService
   ) { }
 
@@ -47,6 +50,16 @@ export class LeaveDetailsComponent implements OnInit {
       [0, 1, 2].includes(this.getStatusNum());
   }
 
+  /** Print is available to Admin, Nayab, Tehsildar, HR — and for the employee's own leave */
+  get canPrint(): boolean {
+    return this.leave != null && (
+      this.authService.isAdmin() ||
+      this.authService.isNayabTehsildar() ||
+      this.authService.isTehsildar() ||
+      this.authService.isHR()
+    );
+  }
+
   ngOnInit(): void {
     if (this.leaveId) this.loadLeave(this.leaveId);
   }
@@ -61,6 +74,25 @@ export class LeaveDetailsComponent implements OnInit {
       error: () => { this.loading = false; }
     });
   }
+
+  // ── Print / Download ─────────────────────────────────────────────
+
+  onPrint(): void {
+    if (!this.leave) return;
+    this.printing = true;
+    try {
+      this.leaveDocService.printLeave(this.leave);
+    } finally {
+      setTimeout(() => { this.printing = false; }, 600);
+    }
+  }
+
+  onDownload(): void {
+    if (!this.leave) return;
+    this.leaveDocService.downloadLeave(this.leave);
+  }
+
+  // ── Status helpers ───────────────────────────────────────────────
 
   getStatusClass(status: LeaveStatus): string {
     const map: Record<number, string> = {
@@ -79,24 +111,6 @@ export class LeaveDetailsComponent implements OnInit {
     return map[num] ?? 'pending';
   }
 
-  getStatusIcon(status: LeaveStatus): string {
-    const map: Record<number, string> = {
-      [LeaveStatus.Pending]:       'bi-clock-history',
-      [LeaveStatus.AdminApproved]: 'bi-check-circle-fill',
-      [LeaveStatus.NayabApproved]: 'bi-check2-circle',
-      [LeaveStatus.FullyApproved]: 'bi-check-circle-fill',
-      [LeaveStatus.Rejected]:      'bi-x-circle-fill',
-      [LeaveStatus.Cancelled]:     'bi-slash-circle',
-    };
-    const statusMap: Record<string, number> = {
-      'Pending': 0, 'AdminApproved': 1, 'NayabApproved': 2,
-      'FullyApproved': 3, 'Rejected': 4, 'Cancelled': 5
-    };
-    const num = typeof status === 'number' ? status : (statusMap[status as any] ?? -1);
-    return map[num] ?? 'bi-clock-history';
-  }
-
-  /** Returns translated status display name */
   getStatusDisplayName(): string {
     const keyMap: Record<string, string> = {
       'Pending':       'leave.status.pending',
@@ -120,6 +134,8 @@ export class LeaveDetailsComponent implements OnInit {
       : (keyMap[String(raw)] ?? 'leave.status.pending');
     return this.langService.t(key);
   }
+
+  // ── Approval actions ─────────────────────────────────────────────
 
   async onAdminApprove(): Promise<void> {
     if (!this.leave) return;

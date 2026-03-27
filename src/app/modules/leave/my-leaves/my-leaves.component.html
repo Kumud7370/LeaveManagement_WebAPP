@@ -2,13 +2,15 @@
 
   <!-- ── Page Header ──────────────────────────────────────────────── -->
   <div class="ml-page-header">
-    <h1 class="ml-page-title">My Leaves</h1>
+   <h1 class="ml-page-title">{{ langService.t('leave.title') }}</h1>
   </div>
 
   <!-- ── Leave Balance Strip ──────────────────────────────────────── -->
   <div class="ml-balance-section" *ngIf="!balancesLoading && balances.length > 0">
     <div class="ml-balance-header">
-      <span class="ml-balance-title"><i class="bi bi-wallet2"></i> Leave Balance — {{ currentYear }}</span>
+  <span class="ml-balance-title">
+  <i class="bi bi-wallet2"></i> {{ langService.t('leave.balance.title') }} — {{ currentYear }}
+</span>
     </div>
     <div class="ml-balance-cards">
       <div class="ml-balance-card" *ngFor="let b of balances">
@@ -20,17 +22,17 @@
         <div class="ml-balance-numbers">
           <div class="ml-bal-item">
             <span class="ml-bal-val">{{ b.available ?? 0 }}</span>
-            <span class="ml-bal-lbl">Available</span>
+           <span class="ml-bal-lbl">{{ langService.t('leave.balance.available') }}</span>
           </div>
           <div class="ml-bal-divider"></div>
           <div class="ml-bal-item">
             <span class="ml-bal-val ml-bal-used">{{ b.consumed ?? 0 }}</span>
-            <span class="ml-bal-lbl">Used</span>
+            <span class="ml-bal-lbl">{{ langService.t('leave.balance.used') }}</span>
           </div>
           <div class="ml-bal-divider"></div>
           <div class="ml-bal-item">
             <span class="ml-bal-val ml-bal-total">{{ b.totalAllocated ?? 0 }}</span>
-            <span class="ml-bal-lbl">Total</span>
+            <span class="ml-bal-lbl">{{ langService.t('leave.balance.total') }}</span>
           </div>
         </div>
         <div class="ml-progress-wrap">
@@ -44,9 +46,7 @@
             {{ Math.round(b.utilizationPercentage ?? 0) }}%
           </span>
         </div>
-        <div class="ml-low-badge" *ngIf="b.isLowBalance">
-          <i class="bi bi-exclamation-triangle-fill"></i> Low Balance
-        </div>
+        <div class="ml-low-badge">{{ langService.t('leave.balance.low') }}</div>
       </div>
     </div>
   </div>
@@ -61,91 +61,92 @@
     <div class="ml-stat-card ml-stat-total"
       [class.ml-stat-active]="activeStatusFilter === null"
       (click)="filterByStat(null)">
-      <p class="ml-stat-label">My Requests</p>
+      <p class="ml-stat-label">{{ langService.t('leave.stats.myRequests') }}</p>
       <p class="ml-stat-value">{{ totalCount }}</p>
     </div>
     <div class="ml-stat-card ml-stat-pending"
       [class.ml-stat-active]="activeStatusFilter === 'Pending'"
       (click)="filterByStat('Pending')">
-      <p class="ml-stat-label">Pending</p>
+   <p class="ml-stat-label">{{ langService.t('leave.stats.pending') }}</p>
       <p class="ml-stat-value">{{ statPending }}</p>
     </div>
     <div class="ml-stat-card ml-stat-approved"
       [class.ml-stat-active]="activeStatusFilter === 'Approved'"
       (click)="filterByStat('Approved')">
-      <p class="ml-stat-label">Approved</p>
+      <p class="ml-stat-label">{{ langService.t('leave.stats.approved') }}</p>
       <p class="ml-stat-value">{{ statApproved }}</p>
     </div>
     <div class="ml-stat-card ml-stat-rejected"
       [class.ml-stat-active]="activeStatusFilter === 'Rejected'"
       (click)="filterByStat('Rejected')">
-      <p class="ml-stat-label">Rejected</p>
+      <p class="ml-stat-label">{{ langService.t('leave.stats.rejected') }}</p>
       <p class="ml-stat-value">{{ statRejected }}</p>
     </div>
     <div class="ml-stat-card ml-stat-cancelled"
       [class.ml-stat-active]="activeStatusFilter === 'Cancelled'"
       (click)="filterByStat('Cancelled')">
-      <p class="ml-stat-label">Cancelled</p>
+     <p class="ml-stat-label">{{ langService.t('leave.stats.cancelled') }}</p>
       <p class="ml-stat-value">{{ statCancelled }}</p>
     </div>
   </div>
 
-  <!-- ── Toolbar ───────────────────────────────────────────────────── -->
-  <div class="ml-toolbar">
-    <div class="ml-search-wrapper">
-      <input
-        type="text"
-        placeholder="Search my leave requests..."
-        [(ngModel)]="searchTerm"
-        (input)="onSearch()"
-        class="ml-search-input"
-      />
-    </div>
-    <div class="ml-toolbar-actions">
-      <button (click)="clearFilters()" class="ml-btn ml-btn-clear">Clear</button>
-      <button (click)="loadLeaves()" class="ml-btn ml-btn-refresh">
-        <i class="bi bi-arrow-clockwise"></i> Refresh
-      </button>
-      <div class="ml-toolbar-divider"></div>
-      <button (click)="applyLeave()" class="ml-btn ml-btn-primary">
-        <i class="bi bi-plus-lg"></i> Apply Leave
-      </button>
-    </div>
+ <!-- ── Toolbar ───────────────────────────────────────────────────── -->
+<div class="ml-toolbar">
+  <div class="ml-search-wrapper">
+    <input [placeholder]="langService.t('leave.search')"
+      [(ngModel)]="searchTerm"
+      (input)="onSearch()"
+      class="ml-search-input" />
   </div>
+  <div class="ml-toolbar-actions">
+    <button (click)="clearFilters()" class="ml-btn ml-btn-clear">
+      {{ langService.t('common.clear') }}
+    </button>
+    <button (click)="loadLeaves()" class="ml-btn ml-btn-refresh">
+      <i class="bi bi-arrow-clockwise"></i> {{ langService.t('common.refresh') }}
+    </button>
+    <div class="ml-toolbar-divider"></div>
+    <button (click)="applyLeave()" class="ml-btn ml-btn-primary">
+      <i class="bi bi-plus-lg"></i> {{ langService.t('leave.applyBtn') }}
+    </button>
+  </div>
+</div>  
 
-  <!-- ── Filter Panel ──────────────────────────────────────────────── -->
-  <div class="ml-filter-panel" [class.open]="showFilters">
-    <div class="ml-filter-inner">
-      <div class="ml-fg">
-        <label>Status</label>
-        <select [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()" class="ml-fg-control">
-          <option value="">All Statuses</option>
-          <option value="0">Pending</option>
-          <option value="1">Approved</option>
-          <option value="2">Rejected</option>
-          <option value="3">Cancelled</option>
-        </select>
-      </div>
-      <div class="ml-fg">
-        <label>Start Date From</label>
-        <input type="date" [(ngModel)]="filters.startDateFrom" (change)="onStatusFilterChange()" class="ml-fg-control" />
-      </div>
-      <div class="ml-fg">
-        <label>Start Date To</label>
-        <input type="date" [(ngModel)]="filters.startDateTo" (change)="onStatusFilterChange()" class="ml-fg-control" />
-      </div>
+<!-- ── Filter Panel ──────────────────────────────────────────────── -->
+<div class="ml-filter-panel" [class.open]="showFilters">
+  <div class="ml-filter-inner">
+    <div class="ml-fg">
+      <label>{{ langService.t('leave.filter.status') }}</label>
+      <select [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()" class="ml-fg-control">
+        <option value="">{{ langService.t('leave.filter.allStatuses') }}</option>
+        <option value="0">{{ langService.t('leave.status.pending') }}</option>
+        <option value="3">{{ langService.t('leave.status.fullyApproved') }}</option>
+        <option value="4">{{ langService.t('leave.status.rejected') }}</option>
+        <option value="5">{{ langService.t('leave.status.cancelled') }}</option>
+      </select>
+    </div>
+    <div class="ml-fg">
+      <label>{{ langService.t('leave.filter.startDateFrom') }}</label>
+      <input type="date" [(ngModel)]="filters.startDateFrom" (change)="onStatusFilterChange()" class="ml-fg-control" />
+    </div>
+    <div class="ml-fg">
+      <label>{{ langService.t('leave.filter.startDateTo') }}</label>
+      <input type="date" [(ngModel)]="filters.startDateTo" (change)="onStatusFilterChange()" class="ml-fg-control" />
     </div>
   </div>
+</div>
 
   <!-- ── Active Filters ────────────────────────────────────────────── -->
-  <div *ngIf="activeStatusFilter || activeFilterCount > 0" class="ml-active-filters">
-    <span class="ml-filter-label">Active Filters:</span>
-    <span *ngIf="activeStatusFilter" class="ml-filter-badge-tag">
-      Status: {{ activeStatusFilter }}
-      <i class="bi bi-x" (click)="filterByStat(null)" style="cursor:pointer;margin-left:4px;"></i>
-    </span>
-    <span *ngIf="selectedStatus" class="ml-filter-badge-tag">Status filter active</span>
-  </div>
+ <div *ngIf="activeStatusFilter || activeFilterCount > 0" class="ml-active-filters">
+  <span class="ml-filter-label">{{ langService.t('common.activeFilters') }}:</span>
+  <span *ngIf="activeStatusFilter" class="ml-filter-badge-tag">
+    {{ langService.t('leave.filter.status') }}: {{ activeStatusFilter }}
+    <i class="bi bi-x" (click)="filterByStat(null)" style="cursor:pointer;margin-left:4px;"></i>
+  </span>
+  <span *ngIf="selectedStatus" class="ml-filter-badge-tag">
+    {{ langService.t('leave.filter.status') }} {{ langService.t('common.filterActive') }}
+  </span>
+</div>
 
   <!-- ── Grid Card ─────────────────────────────────────────────────── -->
   <div class="ml-grid-card">
@@ -155,23 +156,23 @@
       <!-- Loading -->
       <div *ngIf="loading" class="ml-loading">
         <div class="ml-spinner"></div>
-        <span>Loading your leave requests...</span>
+        <span>{{ langService.t('leave.loading') }}</span>
       </div>
 
       <!-- Error -->
       <div *ngIf="error && !loading" class="ml-error">
         <i class="bi bi-exclamation-circle"></i>
         <span>{{ error }}</span>
-        <button class="ml-btn ml-btn-refresh" (click)="loadLeaves()">Try Again</button>
+        <button (click)="loadLeaves()">{{ langService.t('common.tryAgain') }}</button>
       </div>
 
       <!-- Empty -->
       <div *ngIf="!loading && !error && filteredLeaves.length === 0" class="ml-empty">
         <i class="bi bi-calendar-x"></i>
-        <span>{{ activeStatusFilter ? 'No ' + activeStatusFilter + ' requests found.' : 'You have no leave requests yet.' }}</span>
+        <span>{{ langService.t('leave.empty') }}</span>
         <button class="ml-btn ml-btn-primary" (click)="applyLeave()">
-          <i class="bi bi-plus-lg"></i> Apply Leave
-        </button>
+  <i class="bi bi-plus-lg"></i> {{ langService.t('leave.applyBtn') }}
+</button>
       </div>
 
       <!-- AG Grid -->
@@ -198,7 +199,7 @@
     <div class="ml-pagination" *ngIf="!loading && filteredLeaves.length > 0 && !activeStatusFilter">
       <div class="ml-pagination-inner">
         <div class="ml-page-size">
-          <label>Show:</label>
+          <label>{{ langService.t('common.show') }}:</label>
           <select [(ngModel)]="pageSize" (change)="onPageSizeChange($event)" class="ml-page-size-select">
             <option [value]="10">10</option>
             <option [value]="25">25</option>
@@ -208,7 +209,7 @@
         <span class="ml-pagination-text">
           {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }}
         </span>
-        <span class="ml-pagination-text">Page {{ currentPage }} of {{ totalPages || 1 }}</span>
+        <span>{{ langService.t('common.page') }} {{ currentPage }} {{ langService.t('common.of') }} {{ totalPages || 1 }}</span>
         <div class="ml-pagination-btns">
           <button class="ml-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(1)">«</button>
           <button class="ml-pgbtn" [disabled]="currentPage === 1" (click)="onPageChange(currentPage - 1)">‹</button>
@@ -222,9 +223,9 @@
       </div>
     </div>
 
-  </div><!-- /ml-grid-card -->
+  </div>
 
-</div><!-- /ml-page-container -->
+</div>
 
 
 <!-- ── Apply Leave Modal ─────────────────────────────────────────── -->
@@ -232,7 +233,7 @@
   <div class="ml-modal-container ml-modal-xlarge" (click)="$event.stopPropagation()">
     <div class="ml-modal-header">
       <h2 class="ml-modal-title">
-        <i class="bi bi-plus-circle-dotted"></i> Apply for Leave
+        <i class="bi bi-plus-circle-dotted"></i> {{ langService.t('leave.modal.apply') }}
       </h2>
       <button class="ml-modal-close" (click)="closeFormModal()" type="button">
         <i class="bi bi-x-lg"></i>
@@ -256,7 +257,7 @@
   <div class="ml-modal-container ml-modal-xlarge" (click)="$event.stopPropagation()">
     <div class="ml-modal-header">
       <h2 class="ml-modal-title">
-        <i class="bi bi-eye"></i> Leave Details
+        <i class="bi bi-eye"></i> {{ langService.t('leave.modal.details') }}
       </h2>
       <button class="ml-modal-close" (click)="closeDetailsModal()" type="button">
         <i class="bi bi-x-lg"></i>

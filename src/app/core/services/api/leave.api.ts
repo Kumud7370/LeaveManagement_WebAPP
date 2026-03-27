@@ -133,6 +133,13 @@ tehsildarApproveLeave(id: string): Observable<ApiResponse<boolean>> {
   );
 }
 
+getMyLeaveStatistics(): Observable<ApiResponse<{ [key: string]: number }>> {
+  return this.apiClient.get<ApiResponse<{ [key: string]: number }>>(
+    `${this.endpoint}/statistics/my-status`
+  );
+}
+
+
   validateLeaveRequest(request: ValidateLeaveRequestDto): Observable<ApiResponse<boolean>> {
     return this.apiClient.post<ApiResponse<boolean>>(
       `${this.endpoint}/validate`,

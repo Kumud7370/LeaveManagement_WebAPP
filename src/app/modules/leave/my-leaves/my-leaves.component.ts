@@ -17,6 +17,7 @@ import { LeaveBalance } from '../../../core/Models/leave-balance.model';
 import { LeaveFormComponent } from '../leave-form/leave-form.component';
 import { LeaveDetailsComponent } from '../leave-details/leave-details.component';
 import { LeaveActionCellRendererComponent } from '../leave-action-cell-renderer.component';
+import { LanguageService } from '../../../core/services/api/language.api';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -54,12 +55,18 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
   Math = Math;
 
   currentYear = new Date().getFullYear();
+
+  // ✅ employeeId resolved from all possible session keys
   employeeId: string = '';
+
   allLeaves: Leave[] = [];
   filteredLeaves: Leave[] = [];
   balances: LeaveBalance[] = [];
   gridApi!: GridApi;
   context = { componentParent: this, isEmployee: true };
+
+  statCounts: Record<string, number> = {};
+
 
   loading = false;
   balancesLoading = false;
@@ -67,7 +74,6 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
   searchTerm = '';
   showFilters = false;
   activeStatusFilter: string | null = null;
-
 
   // Modals
   showFormModal = false;
@@ -93,17 +99,17 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
 
   get statTotal(): number { return this.allLeaves.length; }
   get statPending(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Pending').length; }
-  get statInProgress(): number {
-    return this.allLeaves.filter(l => this.statusLabel(l) === 'In Progress').length;
-  }
-  get statApproved(): number {
-    return this.allLeaves.filter(l => this.statusLabel(l) === 'Approved').length;
-  }
+  get statInProgress(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'In Progress').length; }
+  get statApproved(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Approved').length; }
   get statRejected(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Rejected').length; }
   get statCancelled(): number { return this.allLeaves.filter(l => this.statusLabel(l) === 'Cancelled').length; }
 
   get activeFilterCount(): number {
-    return [this.selectedStatus, (this.filters as any).startDateFrom, (this.filters as any).startDateTo].filter(Boolean).length;
+    return [
+      this.selectedStatus,
+      (this.filters as any).startDateFrom,
+      (this.filters as any).startDateTo
+    ].filter(Boolean).length;
   }
 
   defaultColDef: ColDef = {
@@ -112,9 +118,12 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
     cellStyle: { display: 'flex', alignItems: 'center' }
   };
 
-  columnDefs: ColDef[] = [
+  columnDefs: ColDef[] = [];
+
+  buildColumnDefs(): void {
+  this.columnDefs = [
     {
-      headerName: 'Actions',
+      headerName: this.langService.t('leave.col.actions'),
       width: 120, minWidth: 120, maxWidth: 140,
       sortable: false, filter: false, floatingFilter: false,
       suppressFloatingFilterButton: true,
@@ -124,9 +133,8 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
       cellRenderer: LeaveActionCellRendererComponent
     },
     {
-      headerName: 'Leave Type',
-      field: 'leaveTypeName',
-      width: 150, minWidth: 130,
+      headerName: this.langService.t('leave.col.leaveType'),
+      field: 'leaveTypeName', width: 150, minWidth: 130,
       cellRenderer: (p: any) => {
         if (!p.value) return '';
         const c = p.data?.leaveTypeColor || '#3b82f6';
@@ -136,83 +144,106 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
       }
     },
     {
-      headerName: 'Start Date',
-      field: 'startDate',
-      width: 130, minWidth: 110,
+      headerName: this.langService.t('leave.col.startDate'),
+      field: 'startDate', width: 130, minWidth: 110,
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
     },
     {
-      headerName: 'End Date',
-      field: 'endDate',
-      width: 130, minWidth: 110,
+      headerName: this.langService.t('leave.col.endDate'),
+      field: 'endDate', width: 130, minWidth: 110,
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
     },
     {
-      headerName: 'Days',
-      field: 'totalDays',
-      width: 80, minWidth: 70,
+      headerName: this.langService.t('leave.col.days'),
+      field: 'totalDays', width: 80, minWidth: 70,
       cellRenderer: (p: any) =>
         `<span style="display:inline-flex;align-items:center;justify-content:center;
           width:28px;height:24px;background:#f1f5f9;border-radius:5px;
           font-size:12px;font-weight:700;color:#475569;">${p.value ?? 0}</span>`
     },
     {
-      headerName: 'Reason',
-      field: 'reason',
-      width: 220, minWidth: 180,
+      headerName: this.langService.t('leave.col.reason'),
+      field: 'reason', width: 220, minWidth: 180,
       cellRenderer: (p: any) => {
         const txt = p.value?.length > 40 ? p.value.substring(0, 40) + '…' : (p.value || '');
         const em = p.data?.isEmergencyLeave
           ? `<span style="display:inline-flex;align-items:center;background:#fee2e2;color:#991b1b;
               padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;
-              margin-left:5px;white-space:nowrap;">Emergency</span>` : '';
+              margin-left:5px;white-space:nowrap;">${this.langService.t('leave.emergency')}</span>` : '';
         return `<div style="display:flex;align-items:center;font-size:13px;color:#6b7280;">
           <span>${txt}</span>${em}</div>`;
       }
     },
     {
-      headerName: 'Status',
-      field: 'leaveStatus',
-      width: 120, minWidth: 110,
-      cellRenderer: (p: any) => {
-        const lbl = this.statusLabel(p.data);
-        const map: Record<string, [string, string]> = {
-          'Pending': ['#fef9c3', '#92400e'],
-          'In Progress': ['#dbeafe', '#1d4ed8'],
-          'Approved': ['#dcfce7', '#166534'],
-          'Rejected': ['#fee2e2', '#991b1b'],
-          'Cancelled': ['#f1f5f9', '#475569'],
-        };
-        const [bg, color] = map[lbl] ?? ['#fef9c3', '#92400e'];
-        return `<span style="display:inline-flex;padding:2px 12px;border-radius:9999px;
-    font-size:12px;font-weight:600;background:${bg};color:${color};">${lbl}</span>`;
-      }
-    },
+  headerName: this.langService.t('leave.col.status'),
+  field: 'leaveStatus', width: 120, minWidth: 110,
+  cellRenderer: (p: any) => {
+    const raw = String(p.data?.leaveStatus ?? '');
+    const statusKeyMap: Record<string, string> = {
+      '0': 'leave.status.pending',        'Pending':       'leave.status.pending',
+      '1': 'leave.status.adminApproved',  'AdminApproved': 'leave.status.adminApproved',
+      '2': 'leave.status.nayabApproved',  'NayabApproved': 'leave.status.nayabApproved',
+      '3': 'leave.status.fullyApproved',  'FullyApproved': 'leave.status.fullyApproved',
+      '4': 'leave.status.rejected',       'Rejected':      'leave.status.rejected',
+      '5': 'leave.status.cancelled',      'Cancelled':     'leave.status.cancelled',
+    };
+    const colorMap: Record<string, [string, string]> = {
+      '0': ['#fef9c3', '#92400e'], 'Pending':       ['#fef9c3', '#92400e'],
+      '1': ['#dbeafe', '#1d4ed8'], 'AdminApproved': ['#dbeafe', '#1d4ed8'],
+      '2': ['#e0e7ff', '#4338ca'], 'NayabApproved': ['#e0e7ff', '#4338ca'],
+      '3': ['#dcfce7', '#166534'], 'FullyApproved': ['#dcfce7', '#166534'],
+      '4': ['#fee2e2', '#991b1b'], 'Rejected':      ['#fee2e2', '#991b1b'],
+      '5': ['#f1f5f9', '#475569'], 'Cancelled':     ['#f1f5f9', '#475569'],
+    };
+    const [bg, color] = colorMap[raw] ?? ['#fef9c3', '#92400e'];
+    const lbl = this.langService.t(statusKeyMap[raw] ?? 'leave.status.pending');
+    return `<span style="display:inline-flex;padding:2px 12px;border-radius:9999px;
+      font-size:12px;font-weight:600;background:${bg};color:${color};">${lbl}</span>`;
+  }
+},
     {
-      headerName: 'Applied On',
-      field: 'appliedDate',
-      width: 130, minWidth: 110,
+      headerName: this.langService.t('leave.col.appliedOn'),
+      field: 'appliedDate', width: 130, minWidth: 110,
       valueFormatter: (p: any) => p.value
         ? new Date(p.value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',
       cellStyle: { color: '#6b7280', fontSize: '12px' }
     }
   ];
+}
 
   constructor(
     private leaveService: LeaveService,
     private leaveBalanceService: LeaveBalanceService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public langService: LanguageService
   ) { }
 
   ngOnInit(): void {
-    this.employeeId = sessionStorage.getItem('EmployeeId')
-      || sessionStorage.getItem('employeeId')
-      || sessionStorage.getItem('UserId')
-      || '';
+    // ✅ Try all possible session storage keys for employee ID
+    this.employeeId =
+      sessionStorage.getItem('EmployeeId') ||
+      sessionStorage.getItem('employeeId') ||
+      sessionStorage.getItem('UserId') ||
+      sessionStorage.getItem('userId') ||
+      '';
+
+    if (!this.employeeId) {
+      console.warn('[MyLeaves] No employeeId found in sessionStorage. Checked: EmployeeId, employeeId, UserId, userId');
+    } else {
+      console.log('[MyLeaves] Resolved employeeId:', this.employeeId);
+    }
+
     this.loadLeaves();
     this.loadBalances();
+    this.buildColumnDefs();
+
+    this.langService.lang$.subscribe(() => {
+    this.buildColumnDefs();
+    if (this.gridApi) this.gridApi.setGridOption('columnDefs', this.columnDefs);
+    this.cdr.detectChanges();
+  });
   }
 
   ngOnDestroy(): void {
@@ -242,16 +273,21 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
   }
 
   loadLeaves(): void {
-    this.loading = true; this.error = null;
+    this.loading = true;
+    this.error = null;
+
     const filter: LeaveFilterDto = {
       ...this.filters,
       searchTerm: this.searchTerm || undefined,
       pageNumber: this.currentPage,
       pageSize: this.pageSize,
       leaveStatus: this.selectedStatus !== '' ? Number(this.selectedStatus) : undefined,
+      // ✅ Always pass employeeId so only this employee's leaves are returned
       employeeId: this.employeeId || undefined
     };
+
     this.leaveService.getMyLeaves(filter).subscribe({
+
       next: (r) => {
         this.loading = false;
         if (r.success) {
@@ -259,11 +295,21 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
           this.filteredLeaves = r.data.items;
           this.totalPages = r.data.totalPages;
           this.totalCount = r.data.totalCount;
+
+          this.statCounts = {
+            Pending: this.allLeaves.filter(l => this.statusLabel(l) === 'Pending').length,
+            InProgress: this.allLeaves.filter(l => this.statusLabel(l) === 'In Progress').length,
+            Approved: this.allLeaves.filter(l => this.statusLabel(l) === 'Approved').length,
+            Rejected: this.allLeaves.filter(l => this.statusLabel(l) === 'Rejected').length,
+            Cancelled: this.allLeaves.filter(l => this.statusLabel(l) === 'Cancelled').length,
+          };
           if (this.gridApi) {
             this.gridApi.setGridOption('rowData', this.filteredLeaves);
             setTimeout(() => this.gridApi?.sizeColumnsToFit(), 50);
           }
-        } else { this.error = r.message || 'Failed to load leaves'; }
+        } else {
+          this.error = r.message || 'Failed to load leaves';
+        }
         this.cdr.detectChanges();
       },
       error: (e) => {
@@ -277,8 +323,10 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
   loadBalances(): void {
     this.balancesLoading = true;
     this.leaveBalanceService.getFilteredLeaveBalances({
-      pageNumber: 1, pageSize: 50,
+      pageNumber: 1,
+      pageSize: 50,
       year: new Date().getFullYear(),
+      // ✅ Always pass employeeId to only get this employee's balances
       employeeId: this.employeeId || undefined
     } as any).subscribe({
       next: (r) => {
@@ -286,16 +334,25 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
         if (r.success) { this.balances = r.data.items; }
         this.cdr.detectChanges();
       },
-      error: () => { this.balancesLoading = false; this.cdr.detectChanges(); }
+      error: () => {
+        this.balancesLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
   onSearch(): void {
     clearTimeout(this.searchDebounceTimer);
-    this.searchDebounceTimer = setTimeout(() => { this.currentPage = 1; this.loadLeaves(); }, 350);
+    this.searchDebounceTimer = setTimeout(() => {
+      this.currentPage = 1;
+      this.loadLeaves();
+    }, 350);
   }
 
-  onStatusFilterChange(): void { this.currentPage = 1; this.loadLeaves(); }
+  onStatusFilterChange(): void {
+    this.currentPage = 1;
+    this.loadLeaves();
+  }
 
   filterByStat(status: string | null): void {
     this.activeStatusFilter = status;
@@ -319,12 +376,14 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
 
   onPageChange(page: number): void {
     if (page < 1 || page > this.totalPages || page === this.currentPage) return;
-    this.currentPage = page; this.loadLeaves();
+    this.currentPage = page;
+    this.loadLeaves();
   }
 
   onPageSizeChange(e: Event): void {
     this.pageSize = +(e.target as HTMLSelectElement).value;
-    this.currentPage = 1; this.loadLeaves();
+    this.currentPage = 1;
+    this.loadLeaves();
   }
 
   get pages(): number[] {
@@ -335,29 +394,67 @@ export class MyLeavesComponent implements OnInit, OnDestroy {
     return Array.from({ length: e - s + 1 }, (_, i) => s + i);
   }
 
-  applyLeave(): void { this.formMode = 'create'; this.selectedLeaveId = null; this.showFormModal = true; }
-  viewDetails(leave: Leave): void { this.selectedLeaveId = leave.id; this.showDetailsModal = true; }
-  editLeave(leave: Leave): void { this.selectedLeaveId = leave.id; this.formMode = 'edit'; this.showFormModal = true; }
-  closeFormModal(): void { this.showFormModal = false; this.selectedLeaveId = null; }
-  closeDetailsModal(): void { this.showDetailsModal = false; this.selectedLeaveId = null; }
-  onFormSuccess(): void { this.closeFormModal(); this.loadLeaves(); this.loadBalances(); }
-  onLeaveUpdated(): void { this.loadLeaves(); this.loadBalances(); }
+  applyLeave(): void {
+    this.formMode = 'create';
+    this.selectedLeaveId = null;
+    this.showFormModal = true;
+  }
+
+  viewDetails(leave: Leave): void {
+    this.selectedLeaveId = leave.id;
+    this.showDetailsModal = true;
+  }
+
+  editLeave(leave: Leave): void {
+    this.selectedLeaveId = leave.id;
+    this.formMode = 'edit';
+    this.showFormModal = true;
+  }
+
+  closeFormModal(): void {
+    this.showFormModal = false;
+    this.selectedLeaveId = null;
+  }
+
+  closeDetailsModal(): void {
+    this.showDetailsModal = false;
+    this.selectedLeaveId = null;
+  }
+
+  onFormSuccess(): void {
+    this.closeFormModal();
+    this.loadLeaves();
+    this.loadBalances();
+  }
+
+  onLeaveUpdated(): void {
+    this.loadLeaves();
+    this.loadBalances();
+  }
 
   async cancelLeave(leave: Leave): Promise<void> {
     const { value: reason } = await Swal.fire({
-      title: 'Cancel Leave Request', input: 'textarea',
-      inputLabel: 'Reason for cancellation', inputPlaceholder: 'Enter reason...',
-      showCancelButton: true, confirmButtonColor: '#f59e0b', cancelButtonColor: '#6b7280',
+      title: 'Cancel Leave Request',
+      input: 'textarea',
+      inputLabel: 'Reason for cancellation',
+      inputPlaceholder: 'Enter reason...',
+      showCancelButton: true,
+      confirmButtonColor: '#f59e0b',
+      cancelButtonColor: '#6b7280',
       confirmButtonText: 'Cancel Request',
       inputValidator: (v) => !v ? 'Reason is required!' : null
     });
     if (!reason) return;
+
     this.leaveService.cancelLeave(leave.id, reason).subscribe({
       next: (res) => {
         if (res.success) {
           Swal.fire({ title: 'Cancelled!', icon: 'success', timer: 2000, showConfirmButton: false });
-          this.loadLeaves(); this.loadBalances();
-        } else { Swal.fire('Error!', res.message || 'Failed to cancel', 'error'); }
+          this.loadLeaves();
+          this.loadBalances();
+        } else {
+          Swal.fire('Error!', res.message || 'Failed to cancel', 'error');
+        }
       },
       error: (e) => Swal.fire('Error!', e.error?.message || 'Error occurred', 'error')
     });

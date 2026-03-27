@@ -35,7 +35,6 @@ export class PaginationDto implements IPaginationDto {
     else this._pageSize = value;
   }
 
-  /** Returns params object ready for Angular HttpClient */
   toHttpParams(): { [key: string]: string } {
     return {
       pageNumber: String(this._pageNumber),
@@ -61,23 +60,19 @@ export class PagedResultDto<T> implements IPagedResultDto<T> {
     this.pageSize = data.pageSize ?? 10;
   }
 
-  /** Mirrors: TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize) */
   get totalPages(): number {
     if (this.pageSize <= 0) return 0;
     return Math.ceil(this.totalCount / this.pageSize);
   }
 
-  /** Mirrors: HasPreviousPage => PageNumber > 1 */
   get hasPreviousPage(): boolean {
     return this.pageNumber > 1;
   }
 
-  /** Mirrors: HasNextPage => PageNumber < TotalPages */
   get hasNextPage(): boolean {
     return this.pageNumber < this.totalPages;
   }
 
-  /** Hydrate from raw API response */
   static fromApiResponse<T>(data: IPagedResultDto<T>): PagedResultDto<T> {
     return new PagedResultDto<T>(data);
   }
@@ -93,7 +88,6 @@ export class PaginationManager {
   get pageNumber(): number { return this.dto.pageNumber; }
   get pageSize(): number { return this.dto.pageSize; }
 
-  /** Returns params ready for Angular HttpClient's { params } option */
   toHttpParams(): { [key: string]: string } {
     return this.dto.toHttpParams();
   }
@@ -104,7 +98,7 @@ export class PaginationManager {
 
   setPageSize(size: number): void {
     this.dto.pageSize = size;
-    this.dto.pageNumber = 1; // reset to first page
+    this.dto.pageNumber = 1; 
   }
 
   nextPage<T>(result: PagedResultDto<T>): void {

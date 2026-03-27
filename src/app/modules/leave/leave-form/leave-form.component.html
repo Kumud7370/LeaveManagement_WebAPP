@@ -11,21 +11,28 @@
 
     <div class="hl-form-row">
 
-      <!-- Employee -->
-      <div class="hl-form-group">
-        <label for="lfEmployeeId">{{ langService.t('leave.form.employee') }} <span class="hl-required">*</span></label>
 
+      <div class="hl-form-group">
+        <label for="lfEmployeeId">
+          {{ langService.t('leave.form.employee') }} <span class="hl-required">*</span>
+        </label>
+
+        <!-- Restricted: one employee resolved — read-only display -->
         <div *ngIf="restrictToEmployeeId && employees.length === 1" class="hl-form-control hl-employee-readonly">
           <span class="hl-emp-code">{{ employees[0].employeeCode }}</span>
           <span class="hl-emp-name">{{ employees[0].fullName }}</span>
         </div>
 
-        <select *ngIf="!restrictToEmployeeId || employees.length !== 1"
-          id="lfEmployeeId" formControlName="employeeId" class="hl-form-control"
-          [class.hl-invalid]="isInvalid('employeeId')"
-          [style.pointer-events]="isEditMode ? 'none' : 'auto'"
-          [style.background]="isEditMode ? '#f8fafc' : '#ffffff'"
-          [style.color]="isEditMode ? '#6b7280' : '#1f2937'"
+        <!-- Restricted: profile failed to load — error display, no dropdown -->
+        <div *ngIf="restrictToEmployeeId && employees.length === 0" class="hl-form-control hl-employee-readonly"
+          style="color: var(--color-text-danger, #dc2626);">
+          Profile not found. Cannot apply leave.
+        </div>
+
+        <!-- Unrestricted: admin/manager dropdown -->
+        <select *ngIf="!restrictToEmployeeId" id="lfEmployeeId" formControlName="employeeId" class="hl-form-control"
+          [class.hl-invalid]="isInvalid('employeeId')" [style.pointer-events]="isEditMode ? 'none' : 'auto'"
+          [style.background]="isEditMode ? '#f8fafc' : '#ffffff'" [style.color]="isEditMode ? '#6b7280' : '#1f2937'"
           (change)="onLeaveTypeChange()">
           <option value="">{{ langService.t('leave.form.selectEmployee') }}</option>
           <option *ngFor="let emp of employees" [value]="emp.id">
@@ -40,7 +47,8 @@
 
       <!-- Leave Type -->
       <div class="hl-form-group">
-        <label for="lfLeaveTypeId">{{ langService.t('leave.form.leaveType') }} <span class="hl-required">*</span></label>
+        <label for="lfLeaveTypeId">{{ langService.t('leave.form.leaveType') }} <span
+            class="hl-required">*</span></label>
         <select id="lfLeaveTypeId" formControlName="leaveTypeId" class="hl-form-control"
           [class.hl-invalid]="isInvalid('leaveTypeId')" (change)="onLeaveTypeChange()">
           <option value="">{{ langService.t('leave.form.selectLeaveType') }}</option>
@@ -68,9 +76,11 @@
 
         <div class="hl-balance-info" *ngIf="remainingDays !== null && !balanceLoading && !balanceNotFound">
           <i class="bi bi-info-circle"></i>
-          <span>{{ langService.t('leave.form.available') }}: <strong>{{ remainingDays }} {{ langService.t('leave.form.days') }}</strong></span>
+          <span>{{ langService.t('leave.form.available') }}: <strong>{{ remainingDays }} {{
+              langService.t('leave.form.days') }}</strong></span>
           <span class="hl-balance-warn" *ngIf="computedDays > remainingDays">
-            &nbsp;— {{ langService.t('leave.form.exceedsBalance') }} {{ computedDays }} {{ langService.t('leave.form.days') }}
+            &nbsp;— {{ langService.t('leave.form.exceedsBalance') }} {{ computedDays }} {{
+            langService.t('leave.form.days') }}
           </span>
         </div>
       </div>
@@ -113,7 +123,8 @@
           <i class="bi bi-exclamation-circle"></i> {{ getError('totalDays') }}
         </span>
         <span class="hl-form-hint" *ngIf="computedDays > 0 && !isInvalid('totalDays')">
-          <i class="bi bi-calculator"></i> {{ langService.t('leave.form.autoComputed') }}: {{ computedDays }} {{ langService.t('leave.form.calendarDays') }}
+          <i class="bi bi-calculator"></i> {{ langService.t('leave.form.autoComputed') }}: {{ computedDays }} {{
+          langService.t('leave.form.calendarDays') }}
         </span>
       </div>
 
